@@ -5,18 +5,18 @@
 }
 
 @theme inline {
-  --color-background: var(--color-neutral-100);
+  --color-background: #fff;
   --font-inter: var(--font-inter);
-  --font-borel: var(--font-borel);
-  --font-outfit: var(--font-outfit);
-  --color-green: #58a446ff;
-  --color-custom-black: #19191fff;
-  --color-red:#DC6660FF;
+  --font-dancing_script: var(--font-dancing_script);
+  --color-gray:#565D6DFF;
+  --color-violet:#9077F3FF;
+  --color-darkBlue:#3B13DAFF;
+
 }
 
 body {
-  background: var(--background);
-  color: var(--neutral-600);
+  background: var(--color-background);
+  color: var(--color-neutral-900);
   font-family: var(--font-inter);
 }
 
@@ -28,42 +28,29 @@ body {
   @apply border-[1px]  border-neutral-300 shadow-xs;
 }
 .input {
-  @apply border-neutral-300 border-[1px] overflow-hidden p-2.5 rounded-md outline-0;
+  @apply border-neutral-300 border-[1px] overflow-hidden p-2.5  outline-none rounded-2xl;
 }
-.button-green {
-  @apply text-sm inline-flex  items-center justify-center leading-5.5 font-medium text-white bg-green rounded-md p-2.5 transition-colors hover:bg-[#468438FF] cursor-pointer;
+.button-violet {
+  @apply text-lg inline-flex  items-center justify-center leading-7 font-semibold text-white  rounded-2xl p-2.5 transition-colors hover:bg-darkBlue bg-violet cursor-pointer;
 }
+
 .button-transparent {
-  @apply text-sm inline-flex  items-center justify-center leading-5.5 font-medium  bg-transparent  p-2.5 transition-colors cursor-pointer rounded-md  border-[1px]  hover:text-green hover:border-green  border-neutral-300 text-neutral-900;
+  @apply text-lg inline-flex border-[1px] hover:border-neutral-600 border-neutral-300 shadow-xs  items-center justify-center leading-7 font-semibold text-neutral-900  rounded-2xl p-2.5 transition-colors  bg-transparent cursor-pointer;
 }
+
 .page-title {
-  @apply text-3xl leading-9 font-bold text-neutral-900 font-outfit;
+  @apply text-3xl leading-9 font-bold text-neutral-900 ;
 }
-.banner-title {
-  @apply text-2xl leading-8 font-bold text-[#19191FFF] font-outfit;
-}
+
 .section-title {
-  @apply text-2xl leading-8 font-bold text-neutral-900 font-outfit;
+  @apply text-2xl leading-8 font-bold text-neutral-900 ;
 }
 .link {
-  @apply text-sm leading-5.5 font-medium text-neutral-600 hover:text-green cursor-pointer transition-colors;
+  @apply text-sm leading-5.5 font-medium text-violet  cursor-pointer transition-colors hover:text-darkBlue;
 }
 @layer utilities {
-  ._dashboard-banner {
-    background: linear-gradient(102.09deg, #f5faf5ff 0%, #fff8f080 100%);
-    border-radius: 10px;
-    box-shadow: 0px 0px 1px #171a1f0d, 0px 0px 2px #171a1f14;
-  }
-  ._workout-plan-banner {
-    background: linear-gradient(
-      140.6deg,
-      #f5faf5ff 0%,
-      #58a446cc 50%,
-      #58a446cc 100%
-    );
-    border-radius: 10px;
-    box-shadow: 0px 0px 1px #171a1f0d, 0px 0px 2px #171a1f14;
-  }
+  
+
   .skeleton {
     background: linear-gradient(90deg, #eee 25%, #ddd 50%, #eee 75%);
     background-size: 200% 100%;

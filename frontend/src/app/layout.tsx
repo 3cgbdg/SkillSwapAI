@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Borel, Inter, Outfit } from "next/font/google";
+import { Dancing_Script, Inter } from "next/font/google";
 import "@/styles/globals.css";
 import QueryProvider from "@/providers/QueryProvider";
 import ReduxProvider from "@/providers/ReduxProvider";
@@ -7,24 +7,22 @@ import ReduxProvider from "@/providers/ReduxProvider";
 
 
 
-const BorelFont = Borel({
-  weight: "400",
-  variable: "--font-borel",
-  subsets: ["latin"],
-});
+
 const InterFont = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
 });
-const outfitFont = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin"]
-})
+
+const DancingScript = Dancing_Script({
+  variable: "--font-dancing_script",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
-  title: "Trainix",
-  description: "Trainix - best ai fitness web app",
+  title: "SkillSwapAI",
+  description: "SkillSwap AI is a skills exchange platform",
   icons: {
-    icon: "/logo.svg"
+    icon: "/logo.png"
   }
 };
 export default function RootLayout({
@@ -36,7 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${InterFont.variable} ${outfitFont.variable} ${BorelFont.variable} antialiased`}
+        className={`${InterFont.variable} ${DancingScript.variable}  antialiased`}
       >
         <QueryProvider>
           <ReduxProvider>

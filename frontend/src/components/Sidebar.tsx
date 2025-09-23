@@ -17,8 +17,7 @@ const links = [
 const Sidebar = () => {
     const path = usePathname();
     const [active, setActive] = useState<boolean>(false);
-    const { measurements } = useAppSelector(state => state.measurements);
-    const { workouts } = useAppSelector(state => state.workouts);
+
     return (
         <div className={`lg:basis-[254px] hidden md:block ${active ? "basis-[254px] " : ""} shrink-0 relative overflow-hidden  _border h-full bg-white`}>
 
@@ -27,7 +26,7 @@ const Sidebar = () => {
             </button>
             <div className={`p-2 ${active ? " left-0 " : " -left-[500px]"} transition-all absolute lg:left-0 flex flex-col gap-1  w-[254px] lg:w-full lg:relative`}>
                 {links.map(item => (
-                    <Link key={item.link} href={item.link} className={`p-2 ${!workouts && !["Dashboard", "Profile", "AI Photo Analysis"].includes(item.title)  && "pointer-events-none bg-neutral-300 text-neutral-500!"}   flex items-center gap-2 text-sm leading-5.5 font-medium text-neutral-600 rounded-lg  ${item.link === path ? "text-neutral-300 bg-[#CDE7C7FF]" : " "} `}>{item.icon} {item.title}</Link>
+                    <Link key={item.link} href={item.link} className={`p-2  flex items-center gap-2 text-sm leading-5.5 font-medium text-neutral-600 rounded-lg  ${item.link === path ? "text-neutral-300 bg-[#CDE7C7FF]" : " "} `}>{item.icon} {item.title}</Link>
                 ))}
             </div>
         </div>
