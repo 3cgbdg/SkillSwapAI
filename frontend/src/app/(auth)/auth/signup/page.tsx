@@ -27,16 +27,16 @@ const Page = () => {
   const [inputKnown, setInputKnown] = useState<string>("");
   const [inputToLearn, setInputToLearn] = useState<string>("");
   const [skillsToLearn, setSkillsToLearn] = useState<string[] | null>(null);
-  const [availableSkills, setAvailableSkills] = useState<string[] | null>(null);
+  const [availableSkills, setAvailableSkills] = useState<string[]>([]);
   const mutation = useMutation({
     mutationFn: async (data: formType) => {
-      api.post('/auth/signup', data);
+      api.post('/auth/signup', { ...data, knownSkills, skillsToLearn });
     },
     onSuccess: () => router.push("/dashboard"),
   })
 
 
-  const { mutate, isPending } = useMutation({
+  const { mutate } = useMutation({
     mutationFn: async ({ data }: { data: string }) => {
       const res = await api.get('/skills', { params: { chars: data } });
       return res.data;
@@ -136,14 +136,14 @@ const Page = () => {
               </span>
             )}
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 z-10">
             <label className="text-sm leading-[22px] font-medium" htmlFor="knownSkills">Known Skills</label>
             <div className="flex gap-2 relative">
               <input value={inputKnown} onChange={(e) => {
                 setInputKnown(e.target.value);
-                if(e.target.value.length>2)
-                mutate({ data: e.target.value });
-}              } className="w-full input" placeholder="e.g., Web Development, UI/UX Design, Data Analysis" id="password" />
+                if (e.target.value.length > 2)
+                  mutate({ data: e.target.value });
+              }} className="w-full input" placeholder="e.g., Web Development, UI/UX Design, Data Analysis" id="password" />
               <button onClick={() => {
                 if (inputKnown !== "") {
                   setKnownSkills(prev => prev ? [...prev, inputKnown] : [inputKnown]);
@@ -152,10 +152,10 @@ const Page = () => {
               }} type="button" className="button-violet text-sm! leading-5.5!">Add skill</button>
               {inputKnown.length > 2 &&
                 <div className="absolute top-full left-0">
-                  <div className="mt-1 input p-2 z-10 min-w-[150px] bg-white">
-                    {availableSkills ? <div className="flex flex-col gap-1">
+                  <div className="mt-1 input p-2  min-w-[150px] max-w-[350px] flex gap-1 flex-wrap bg-white">
+                    {availableSkills.length > 0 ? <div className="flex flex-col gap-1">
                       {availableSkills.map((skill, idx) => (
-                        <button onClick={() => setInputKnown(skill)} key={idx} className="input transition-colors hover:bg-violet">
+                        <button type="button" onClick={() => { setKnownSkills(prev => prev ? [...prev, skill] : [skill]); setInputKnown("") }} key={idx} className="input text-sm! cursor-pointer leading-5! font-medium transition-colors hover:bg-violet">
                           {skill}
                         </button>
                       ))}
@@ -178,39 +178,76 @@ const Page = () => {
 
 
             </div>
-            <input type="hidden"  {...register("knownSkills", {
+            {/* TODO!!! */}
+            {/* <input value={knownSkills?.join(",")} type="hidden"  {...register("knownSkills", {
               validate: {
                 isEmpty: (value) => {
                   return value.length !== 0 || "Field is required";
                 },
               }
-            })} />
+            })} /> 
             {errors.knownSkills && (
               <span data-testid='error' className="text-red-500 font-medium ">
                 {errors.knownSkills.message}
               </span>
-            )}
+            )}*/}
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label className="text-sm leading-[22px] font-medium" htmlFor="wantToLearnSkills">Skills to Learn</label>
-            <div className="flex gap-2">
-              <input className="w-full input " placeholder="e.g., Machine Learning, Cloud Computing, Project Management" id="password" />
-              <button type="button" className="button-violet text-sm! leading-5.5!">Add skill</button>
+          <div className="flex flex-col gap-2 ">
+            <label className="text-sm leading-[22px] font-medium" htmlFor="skillsToLearn">Skills To Learn</label>
+            <div className="flex gap-2 relative">
+              <input value={inputToLearn} onChange={(e) => {
+                setInputToLearn(e.target.value);
+                if (e.target.value.length > 2)
+                  mutate({ data: e.target.value });
+              }} className="w-full input" placeholder="e.g., Web Development, UI/UX Design, Data Analysis" id="password" />
+              <button onClick={() => {
+                if (inputToLearn !== "") {
+                  setSkillsToLearn(prev => prev ? [...prev, inputToLearn] : [inputToLearn]);
+                  setInputToLearn("");
+                }
+              }} type="button" className="button-violet text-sm! leading-5.5!">Add skill</button>
+              {inputToLearn.length > 2 &&
+                <div className="absolute top-full  left-0">
+                  <div className="mt-1 input p-2  min-w-[150px] max-w-[350px] flex gap-1 flex-wrap bg-white">
+                    {availableSkills.length > 0 ? <div className="flex flex-col gap-1">
+                      {availableSkills.map((skill, idx) => (
+                        <button type="button" onClick={() => { setSkillsToLearn(prev => prev ? [...prev, skill] : [skill]); setInputToLearn("") }} key={idx} className="input text-sm! cursor-pointer leading-5! font-medium transition-colors hover:bg-violet">
+                          {skill}
+                        </button>
+                      ))}
+                    </div> :
+                      <span className="text-sm leading-5 text-gray">Empty</span>
+                    }
+                  </div>
+                </div>
+              }
+
             </div>
-            <input type="hidden"  {...register("skillsToLearn", {
+            <div className="flex gap-1 flex-wrap">
+              {skillsToLearn?.map((skill, idx) => (
+                <button key={idx} type="button" onClick={() => { setSkillsToLearn(prev => prev ? prev.filter(item => item !== skill) : []) }} className="input cursor-pointer w-fit text-sm leading-5 py-1! transition-colors hover:bg-red-400 flex items-center gap-1">
+                  <span>{skill}</span>
+                  <X size={14} />
+                </button>
+              ))}
+
+
+
+            </div>
+            {/* TODO!!! */}
+            {/* <input value={knownSkills?.join(",")} type="hidden"  {...register("knownSkills", {
               validate: {
                 isEmpty: (value) => {
                   return value.length !== 0 || "Field is required";
                 },
               }
-            })} />
-
-            {errors.skillsToLearn && (
+            })} /> 
+            {errors.knownSkills && (
               <span data-testid='error' className="text-red-500 font-medium ">
-                {errors.skillsToLearn.message}
+                {errors.knownSkills.message}
               </span>
-            )}
+            )}*/}
           </div>
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">

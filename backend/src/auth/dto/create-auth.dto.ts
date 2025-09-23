@@ -1,5 +1,5 @@
 import { Transform, Type } from "class-transformer";
-import { IsEmail,  IsNotEmpty, IsString, Matches, matches, MinLength } from "class-validator";
+import { IsEmail,  IsNotEmpty, IsOptional, IsString, Matches, matches, MinLength } from "class-validator";
 
 export class CreateAuthDto {
     @IsString()
@@ -12,8 +12,9 @@ export class CreateAuthDto {
     @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/)
     password:string;
     confirmPassword:string;
-    @IsNotEmpty()
+    @IsOptional()
     knownSkills:string[];
-    @IsNotEmpty()
+    @IsOptional()
+
     skillsToLearn:string[];
 }

@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
+import { SkillsModule } from './skills/skills.module';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -19,7 +20,9 @@ import { JwtModule } from '@nestjs/jwt';
     }),
   }),
 
-    AuthModule],
+    AuthModule,
+
+    SkillsModule],
   controllers: [AppController],
   providers: [AppService],
 })
