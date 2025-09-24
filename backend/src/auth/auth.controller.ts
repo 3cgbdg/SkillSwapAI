@@ -57,7 +57,7 @@ export class AuthController {
   @Get("profile")
   @UseGuards(AuthGuard('jwt'))
   async profile(@Req() request: Request) {
-      const { password, ...user } = request.user as any;
+    const { password, ...user } = request.user as any;
     return user;
   }
 
@@ -81,10 +81,31 @@ export class AuthController {
     const newAccessToken = this.authService.createTokenForRefresh(user)
     res.cookie('jwt', newAccessToken, {
       httpOnly: true,
-      maxAge: 15 * 60 * 1000,
+      secure: this.configService.get<string>('NODE_ENV') === 'production',
+      sameSite: this.configService.get<string>('NODE_ENV') === 'production' ? 'none' : 'lax',
+      maxAge: 1000 * 60 * 15,
     });
 
     return { message: 'Access token refreshed' };
+
+  }
+
+  @Delete('logout')
+  async logout(@Res({ passthrough: true }) res: Response) {
+
+
+    res.clearCookie('access_token', {
+      httpOnly: true,
+      secure: this.configService.get<string>('NODE_ENV') === 'production',
+      sameSite: this.configService.get<string>('NODE_ENV') === 'production' ? 'none' : 'lax',
+    });
+    res.clearCookie('refresh_token', {
+      httpOnly: true,
+      secure: this.configService.get<string>('NODE_ENV') === 'production',
+      sameSite: this.configService.get<string>('NODE_ENV') === 'production' ? 'none' : 'lax',
+    });
+
+    return { message: 'Successfully logged out!' };
 
   }
 }
