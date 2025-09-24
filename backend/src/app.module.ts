@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
 import { SkillsModule } from './skills/skills.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -22,7 +23,9 @@ import { SkillsModule } from './skills/skills.module';
 
     AuthModule,
 
-    SkillsModule],
+    SkillsModule,
+
+    SearchModule],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -7,6 +7,7 @@ export class SkillsService {
   constructor(private readonly prisma: PrismaService) { };
 
   async findAll(dto: getSkillsDto) {
+    console.log(dto);
     const skills = await this.prisma.skill.findMany({ where: { title: { contains: dto.chars, mode: 'insensitive' } } });
     const arrayOfTitles = skills.map(item=>item.title);
     return arrayOfTitles;
