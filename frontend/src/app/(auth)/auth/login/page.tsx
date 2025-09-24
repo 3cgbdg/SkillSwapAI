@@ -19,7 +19,7 @@ const Page = () => {
     mutationFn: async (data: formType) => {
       api.post('/auth/login', data);
     },
-    // onSuccess: () => router.push("/dashboard"), later add
+    onSuccess: () => router.push("/dashboard"), 
   })
 
 

@@ -1,4 +1,7 @@
 export interface IUser {
+    id:string,
+    name:string,
     email: string,
-    dateOfBirth: Date,
+    knownSkills?:string[] |null ,
+    skillsToLearn?:string[] |null ,
 } 

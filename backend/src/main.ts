@@ -14,5 +14,6 @@ async function bootstrap() {
     credentials: true,
   });
   await app.listen(configService.get<string>('PORT') ?? 5200);
+   
 }
 bootstrap();

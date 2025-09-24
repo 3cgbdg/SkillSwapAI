@@ -5,13 +5,14 @@
 }
 
 @theme inline {
-  --color-background: #fff;
+  --color-background: #ffffff;
   --font-inter: var(--font-inter);
   --font-dancing_script: var(--font-dancing_script);
-  --color-gray:#565D6DFF;
-  --color-violet:#9077F3FF;
-  --color-darkBlue:#3B13DAFF;
-
+  --color-gray: #565d6dff;
+  --color-violet: #9077f3ff;
+  --color-darkBlue: #3b13daff;
+  --color-blue: #3a7ae9ff;
+  --color-orange:#ea7b48ff  ;
 }
 
 body {
@@ -34,23 +35,25 @@ body {
   @apply text-lg inline-flex  items-center justify-center leading-7 font-semibold text-white  rounded-2xl p-2.5 transition-colors hover:bg-darkBlue bg-violet cursor-pointer;
 }
 
+.button-blue {
+  @apply text-sm inline-flex  items-center justify-center leading-5.5 font-semibold text-white  rounded-md p-2.5 transition-colors hover:bg-darkBlue bg-blue cursor-pointer;
+}
+
 .button-transparent {
   @apply text-lg inline-flex border-[1px] hover:border-neutral-600 border-neutral-300 shadow-xs  items-center justify-center leading-7 font-semibold text-neutral-900  rounded-2xl p-2.5 transition-colors  bg-transparent cursor-pointer;
 }
 
 .page-title {
-  @apply text-3xl leading-9 font-bold text-neutral-900 ;
+  @apply text-3xl leading-9 font-bold text-neutral-900;
 }
 
 .section-title {
-  @apply text-2xl leading-8 font-bold text-neutral-900 ;
+  @apply text-2xl leading-8 font-bold text-neutral-900;
 }
 .link {
   @apply text-sm leading-5.5 font-medium text-violet  cursor-pointer transition-colors hover:text-darkBlue;
 }
 @layer utilities {
-  
-
   .skeleton {
     background: linear-gradient(90deg, #eee 25%, #ddd 50%, #eee 75%);
     background-size: 200% 100%;

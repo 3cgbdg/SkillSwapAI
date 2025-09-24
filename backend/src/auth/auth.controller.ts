@@ -19,14 +19,16 @@ export class AuthController {
     const response = await this.authService.signup(createAuthDto);
     res.cookie('access_token', response.access_token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "strict",
+      secure: this.configService.get<string>('NODE_ENV') === 'production',
+      sameSite: this.configService.get<string>('NODE_ENV') === 'production' ? 'none' : 'lax',
+
       maxAge: 1000 * 60 * 15,
     })
     res.cookie('refresh_token', response.refresh_token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "strict",
+      secure: this.configService.get<string>('NODE_ENV') === 'production',
+      sameSite: this.configService.get<string>('NODE_ENV') === 'production' ? 'none' : 'lax',
+
       maxAge: 1000 * 3600 * 24 * 7,
     })
     return { message: "Successfully logged in!" }
@@ -37,23 +39,26 @@ export class AuthController {
     const response = await this.authService.login(LoginAuthDto);
     res.cookie('access_token', response.access_token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "strict",
+      secure: this.configService.get<string>('NODE_ENV') === 'production',
+      sameSite: this.configService.get<string>('NODE_ENV') === 'production' ? 'none' : 'lax',
+
       maxAge: 1000 * 60 * 15,
     })
     res.cookie('refresh_token', response.refresh_token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "strict",
+      secure: this.configService.get<string>('NODE_ENV') === 'production',
+      sameSite: this.configService.get<string>('NODE_ENV') === 'production' ? 'none' : 'lax',
+
       maxAge: 1000 * 3600 * 24 * 7,
     })
-    return { message: "Successfully logged in!" }
+    return res.json({ message: "Successfully logged in!" });
   }
 
   @Get("profile")
   @UseGuards(AuthGuard('jwt'))
   async profile(@Req() request: Request) {
-    return request.user;
+      const { password, ...user } = request.user as any;
+    return user;
   }
 
   @Post('refresh')
