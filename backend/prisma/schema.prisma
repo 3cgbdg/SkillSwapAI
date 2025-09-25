@@ -23,6 +23,6 @@ model Skill {
   id String @id @default(uuid())
   title String @unique
   knownBy User[] @relation("knownSkills")
-  learnedBy User[] @relation("skillsToLearn")
+  learnedBy User[] @relation("skillsToLearn") 
 }
 

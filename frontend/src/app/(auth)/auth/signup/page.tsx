@@ -27,7 +27,7 @@ const Page = () => {
   const [inputKnown, setInputKnown] = useState<string>("");
   const [inputToLearn, setInputToLearn] = useState<string>("");
   const [skillsToLearn, setSkillsToLearn] = useState<string[] | null>(null);
-  const [availableSkills, setAvailableSkills] = useState<string[]>([]);
+  const [availableSkills, setAvailableSkills] = useState<{ id: string, title: string }[]>([]);
   const mutation = useMutation({
     mutationFn: async (data: formType) => {
       api.post('/auth/signup', { ...data, knownSkills, skillsToLearn });
@@ -36,12 +36,13 @@ const Page = () => {
   })
 
 
+
   const { mutate } = useMutation({
     mutationFn: async ({ data }: { data: string }) => {
       const res = await api.get('/skills', { params: { chars: data } });
       return res.data;
     },
-    onSuccess: (data: string[]) => setAvailableSkills(data),
+    onSuccess: (data: { id: string, title: string }[]) => setAvailableSkills(data),
   })
 
 
@@ -155,8 +156,8 @@ const Page = () => {
                   <div className="mt-1 input p-2  min-w-[150px] max-w-[350px] flex gap-1 flex-wrap bg-white">
                     {availableSkills.length > 0 ? <div className="flex flex-col gap-1">
                       {availableSkills.map((skill, idx) => (
-                        <button type="button" onClick={() => { setKnownSkills(prev => prev ? [...prev, skill] : [skill]); setInputKnown("") }} key={idx} className="input text-sm! cursor-pointer leading-5! font-medium transition-colors hover:bg-violet">
-                          {skill}
+                        <button type="button" onClick={() => { setKnownSkills(prev => prev ? [...prev, skill.title] : [skill.title]); setInputKnown("") }} key={idx} className="input text-sm! cursor-pointer leading-5! font-medium transition-colors hover:bg-violet">
+                          {skill.title}
                         </button>
                       ))}
                     </div> :
@@ -212,8 +213,8 @@ const Page = () => {
                   <div className="mt-1 input p-2  min-w-[150px] max-w-[350px] flex gap-1 flex-wrap bg-white">
                     {availableSkills.length > 0 ? <div className="flex flex-col gap-1">
                       {availableSkills.map((skill, idx) => (
-                        <button type="button" onClick={() => { setSkillsToLearn(prev => prev ? [...prev, skill] : [skill]); setInputToLearn("") }} key={idx} className="input text-sm! cursor-pointer leading-5! font-medium transition-colors hover:bg-violet">
-                          {skill}
+                        <button type="button" onClick={() => { setSkillsToLearn(prev => prev ? [...prev, skill.title] : [skill.title]); setInputToLearn("") }} key={idx} className="input text-sm! cursor-pointer leading-5! font-medium transition-colors hover:bg-violet">
+                          {skill.title}
                         </button>
                       ))}
                     </div> :
