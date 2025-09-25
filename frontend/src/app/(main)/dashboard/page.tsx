@@ -19,7 +19,7 @@ const Page = () => {
                     <p className="text-sm leading-5 text-gray">
                         Your journey to mastering new skills and sharing your expertise starts here. Explore your dashboard for an overview of your progress and matches.
                     </p>
-                    <button className="mt-1 button-blue w-fit">View My Profile</button>
+                    <Link href={"/profile"} className="mt-1 button-blue w-fit">View My Profile</Link>
                 </div>
                 <div className="w-64 aspect-square bg-black">
                 </div>

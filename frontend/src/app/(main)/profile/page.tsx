@@ -4,14 +4,13 @@ import { api } from "@/api/axiosInstance";
 import AddSkills from "@/components/profile/AddSkills";
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks"
 import { useMutation } from "@tanstack/react-query";
-import { GraduationCap, Pencil, Plus, X } from "lucide-react"
+import { GraduationCap, Pencil,} from "lucide-react"
 import Link from "next/link";
-import { useRef, useState } from "react";
 
 const Page = () => {
     const { user } = useAppSelector(state => state.auth);
     const dispatch = useAppDispatch();
-
+ 
     return (
         <div className="flex flex-col gap-8">
             <div className="_border p-8 flex items-start gap-6 rounded-2xl">
@@ -107,7 +106,7 @@ const Page = () => {
                     <div className="not-last:border-b py-3 border-b-neutral-300">
                         <div className="flex items-center justify-between">
                             <div className="flex gap-4 items-center">
-                                <div className="size-10 overflow-hidden rounded-full size-5 bg-[#3A7AE933] flex items-center justify-center">
+                                <div className="size-10 overflow-hidden rounded-full  bg-[#3A7AE933] flex items-center justify-center">
 
                                 </div>
                                 <div className="">

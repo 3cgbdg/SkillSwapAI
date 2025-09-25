@@ -2,13 +2,14 @@
 
 import { api } from "@/api/axiosInstance"
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks"
-import { logOut } from "@/redux/authSlice"
-import { useMutation } from "@tanstack/react-query"
+import { addWantToLearnSkill, logOut } from "@/redux/authSlice"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import { Banana, Camera, ChartNoAxesCombined, Dumbbell, Handshake, LayoutDashboard, Menu, Plus, Search, UserRound, X } from "lucide-react"
+import { Banana, Bell, Camera, ChartNoAxesCombined, Check, Dumbbell, Handshake, LayoutDashboard, Menu, Plus, Search, UserRound, X } from "lucide-react"
+import { motion } from "framer-motion";
 
 
 // links for burger menu for  md< screens
@@ -35,8 +36,19 @@ type Found = foundUsers & foundSkills & {
     name?: string;
     title?: string;
 };
+
+
+interface IRequest {
+    id: string,
+    fromId: string,
+    toId: string,
+    from: { name: string },
+    to: { name: string }
+}
+
+
 const Header = () => {
-    const [panel, setPanel] = useState<"menu" | "search" | null>(null);
+    const [panel, setPanel] = useState<"menu" | "search" | "notifs" | null>(null);
     const dispatch = useAppDispatch();
     const router = useRouter();
     const [word, setWord] = useState<string>("");
@@ -49,7 +61,13 @@ const Header = () => {
             router.push("/auth/login");
         }
     })
-
+    const { data: reqs } = useQuery({
+        queryKey: ['reqs'],
+        queryFn: async () => {
+            const res = await api.get("/requests");
+            return res.data;
+        }
+    })
     const mutationSearch = useMutation({
         mutationFn: async (chars: { chars: string }) => { const res = await api.get("/search", { params: chars }); return res.data },
         onSuccess: (data: Found[]) => {
@@ -57,6 +75,22 @@ const Header = () => {
             setFoundSkills(() => data.filter(item => item.title !== undefined));
         }
     })
+
+    // adding skill (want to learn)
+
+    const mutationAddLearn = useMutation({
+        mutationFn: async (str: string) => api.post("/skills/want-to-learn", { title: str }),
+    })
+    const mutationCreateFriendRequest = useMutation({
+        mutationFn: async (str: string) => api.post("/requests", { id: str }),
+    })
+
+    // inviting friend 
+
+    // const mutationAddLearn = useMutation({
+    //     mutationFn: async (str: string) => api.post("/skills/want-to-learn", { title: str }),
+    // })
+
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
@@ -85,6 +119,7 @@ const Header = () => {
     //         document.body.style.overflow = "auto";
     //     };
     // }, [active]);
+
     return (
         <div className="flex items-center justify-between bg-white py-[14px] px-2 md:px-6 relative ">
             <div className="flex items-center gap-6">
@@ -133,8 +168,8 @@ const Header = () => {
                                         {foundSkills.map((skill, index) => {
                                             return (
                                                 <div key={index} className="flex gap-2 items-center">
-                                                    <Link href={"#"} className="btn  w-fit _border p-1 rounded-xl transition-all hover:bg-blue-200 outline-0" >{skill.title}</Link>
-                                                    <button className="btn  w-fit _border p-1 rounded-xl transition-all hover:bg-green-400 outline-0" ><Plus size={20} /></button>
+                                                    <div className="  w-fit _border p-1 rounded-xl transition-all" >{skill.title}</div>
+                                                    <button onClick={() => { mutationAddLearn.mutate(skill.title); dispatch(addWantToLearnSkill(skill.title)) }} className="btn  w-fit _border p-1 rounded-xl transition-all hover:bg-green-400 outline-0" ><Plus size={20} /></button>
                                                 </div>
                                             )
                                         })}
@@ -148,8 +183,8 @@ const Header = () => {
                                         {foundUsers.map((user, index) => {
                                             return (
                                                 <div key={index} className="flex gap-2 items-center">
-                                                    <Link href={"#"} className="btn  w-fit _border p-1 rounded-xl transition-all hover:bg-blue-200 outline-0" >{user.name}</Link>
-                                                    <button className="btn  w-fit _border p-1 rounded-xl transition-all hover:bg-green-400 outline-0" ><Handshake size={20} /></button>
+                                                    <Link href={`/profile/${user.id}`} className="btn  w-fit _border p-1 rounded-xl transition-all hover:bg-blue-200 outline-0" >{user.name}</Link>
+                                                    <button onClick={() => mutationCreateFriendRequest.mutate(user.id)} className="btn  w-fit _border p-1 rounded-xl transition-all hover:bg-green-400 outline-0" ><Handshake size={20} /></button>
                                                 </div>
                                             )
                                         })}
@@ -164,6 +199,40 @@ const Header = () => {
 
 
 
+                </div>
+                {/* notifs */}
+                <div className="relative">
+                    <motion.button onClick={() => setPanel("notifs")} className="hover:text-blue relative transition-colors cursor-pointer"
+                        whileHover={{ rotate: [0, 15, -10, 5, -5, 0] }}
+                        transition={{ duration: 0.5 }}
+                    >
+                        <Bell size={32} />
+                        <span className="rounded-full p-1 px-2 text-white font-semibold text-xs bg-blue absolute -top-2 -right-2">{(reqs as IRequest[])?.length}</span>
+                    </motion.button>
+
+                    {/* notifs list */}
+                    {panel == "notifs" &&
+                        <div className="">
+                            <div className="_border mt-2 rounded-md p-3 absolute top-full bg-white panel right-0 min-w-[250px] flex flex-col gap-2">
+                                {(reqs as IRequest[]).map((req, idx) => (
+                                    <div className="flex flex-col gap-2 pb-4 not-last:border-b-[1px] border-neutral-300 w-full">
+                                        <h3 className="text-lg leading-7 font-medium">Friends Requests🧑‍🦰</h3>
+                                        <div className="flex flex-col gap-1  border-neutral-300 max-h-[450px] overflow-x-auto">
+                                            {(reqs as IRequest[]).map((req, index) => {
+                                                return (
+                                                    <div key={index} className="flex gap-2 w-full _border p-2 flex-col">
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="     rounded-xl transition-all" >{req.from.name}</div>
+                                                            <div className="button-transparent"><Check size={16} /></div>
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>}
                 </div>
 
 

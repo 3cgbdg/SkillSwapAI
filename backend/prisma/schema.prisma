@@ -1,4 +1,3 @@
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -8,21 +7,67 @@ generator client {
   provider = "prisma-client-js"
 }
 
-
-
 model User {
-  id String @id @default(uuid())
-  name String 
-  password String
-  email String @unique
-  knownSkills Skill[] @relation("knownSkills") 
-  skillsToLearn Skill[] @relation("skillsToLearn")
+  id               String    @id @default(uuid())
+  name             String
+  password         String
+  email            String    @unique
+  knownSkills      Skill[]   @relation("knownSkills")
+  skillsToLearn    Skill[]   @relation("skillsToLearn")
+  chats            Chat[]    @relation("userChats")
+  messagesSent     Message[] @relation("sender")
+  messagesReceived Message[] @relation("receiver")
+  messages         Message[]
+  sentRequests     Request[] @relation("sentRequests")
+  receivedRequests Request[] @relation("receivedRequests")
+
+  friends  Friend[] @relation("UserFriends")
+  friendOf Friend[] @relation("UserFriendsInverse")
+}
+
+model Friend {
+  id      String @id @default(uuid())
+  user1   User   @relation("UserFriends", fields: [user1Id], references: [id])
+  user1Id String
+  user2   User   @relation("UserFriendsInverse", fields: [user2Id], references: [id])
+  user2Id String
+
+  @@unique([user1Id, user2Id])
+}
+
+model Request {
+  id     String @id @default(uuid())
+  from   User   @relation("sentRequests", fields: [fromId], references: [id])
+  fromId String
+  to     User   @relation("receivedRequests", fields: [toId], references: [id])
+  toId   String
+  status String @default("pending")
+
+  @@unique([fromId, toId])
 }
 
 model Skill {
-  id String @id @default(uuid())
-  title String @unique
-  knownBy User[] @relation("knownSkills")
-  learnedBy User[] @relation("skillsToLearn") 
+  id        String @id @default(uuid())
+  title     String @unique
+  knownBy   User[] @relation("knownSkills")
+  learnedBy User[] @relation("skillsToLearn")
 }
 
+model Chat {
+  id       String    @id @default(uuid())
+  users    User[]    @relation("userChats")
+  messages Message[]
+}
+
+model Message {
+  id      String  @id @default(uuid())
+  from    User    @relation("sender", fields: [fromId], references: [id])
+  fromId  String
+  to      User    @relation("receiver", fields: [toId], references: [id])
+  toId    String
+  chat    Chat    @relation(fields: [chatId], references: [id])
+  chatId  String
+  content String
+  User    User?   @relation(fields: [userId], references: [id])
+  userId  String?
+}
