@@ -3,28 +3,21 @@
 import { api } from "@/api/axiosInstance"
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks"
 import { addWantToLearnSkill, logOut } from "@/redux/authSlice"
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import { Banana, Bell, Camera, ChartNoAxesCombined, Check, Dumbbell, Handshake, LayoutDashboard, Menu, Plus, Search, UserRound, X } from "lucide-react"
+import { Bell, Check, Handshake, Plus, Search, UserRound, X } from "lucide-react"
 import { motion } from "framer-motion";
+import { io, Socket } from 'socket.io-client';
 
 
-// links for burger menu for  md< screens
-
-const links = [
-    { title: "Dashboard", link: "/dashboard", icon: <LayoutDashboard size={30} /> },
-    { title: "Workout Plan", link: "/workout-plan", icon: <Dumbbell size={30} /> },
-    { title: "Nutrition Plan", link: "/nutrition-plan", icon: <Banana size={30} /> },
-    { title: "AI Photo Analysis", link: "/ai-analysis", icon: <Camera size={30} /> },
-    { title: "Progress", link: "/progress", icon: <ChartNoAxesCombined size={30} /> },
-    { title: "Profile", link: "/profile", icon: <UserRound size={30} /> },
-]
+// interfaces & types
 interface foundUsers {
     id: string,
     name: string,
+    isFriend: string,
 }
 
 
@@ -54,6 +47,8 @@ const Header = () => {
     const [word, setWord] = useState<string>("");
     const [foundUsers, setFoundUsers] = useState<foundUsers[]>([]);
     const [foundSkills, setFoundSkills] = useState<foundSkills[]>([]);
+    const queryClient = useQueryClient();
+    const [socket, setSocket] = useState<Socket | null>(null);
     const mutation = useMutation({
         mutationFn: async () => await api.delete("/auth/logout"),
         onSuccess: () => {
@@ -68,6 +63,18 @@ const Header = () => {
             return res.data;
         }
     })
+
+    const mutationAddFriend = useMutation({
+        mutationFn: async ({ fromId, id }: { fromId: string, id: string }) => { await api.post("/friends", { id: fromId }); return id; },
+        onSuccess: (id: string) => {
+            queryClient.setQueryData(["reqs"], (old: any) => {
+                if (!old) return [];
+                return old.filter((req: any) => req.id !== id)
+            })
+        }
+
+    })
+
     const mutationSearch = useMutation({
         mutationFn: async (chars: { chars: string }) => { const res = await api.get("/search", { params: chars }); return res.data },
         onSuccess: (data: Found[]) => {
@@ -85,40 +92,28 @@ const Header = () => {
         mutationFn: async (str: string) => api.post("/requests", { id: str }),
     })
 
-    // inviting friend 
-
-    // const mutationAddLearn = useMutation({
-    //     mutationFn: async (str: string) => api.post("/skills/want-to-learn", { title: str }),
-    // })
 
     useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
-            const target = e.target as HTMLElement;
+        const sock = io(`${process.env.NEXT_PUBLIC_API_URL}`, { withCredentials: true });
+        setSocket(sock);
+        return () => { sock.disconnect() };
+    }, [])
 
-            if (!target.closest(".panel")) {
-                setPanel(null);
-            }
-        };
-
-        if (panel) {
-            document.addEventListener("click", handleClickOutside);
+    useEffect(() => {
+        if (socket) {
+            socket.on('connect', () => { });
+            socket.on('friendRequest', (payload) => {
+                queryClient.setQueryData(['reqs'], (old: any) => {
+                    return [...old, payload]
+                })
+            })
+            return () => {
+                socket.off("friendRequest");
+            };
         }
 
-        return () => {
-            document.removeEventListener("click", handleClickOutside);
-        };
-    }, [panel]);
-    // useEffect(() => {
-    //     if (active) {
-    //         document.body.style.overflow = "hidden";
-    //     } else {
-    //         document.body.style.overflow = "auto";
-    //     }
+    }, [socket])
 
-    //     return () => {
-    //         document.body.style.overflow = "auto";
-    //     };
-    // }, [active]);
 
     return (
         <div className="flex items-center justify-between bg-white py-[14px] px-2 md:px-6 relative ">
@@ -169,6 +164,7 @@ const Header = () => {
                                             return (
                                                 <div key={index} className="flex gap-2 items-center">
                                                     <div className="  w-fit _border p-1 rounded-xl transition-all" >{skill.title}</div>
+
                                                     <button onClick={() => { mutationAddLearn.mutate(skill.title); dispatch(addWantToLearnSkill(skill.title)) }} className="btn  w-fit _border p-1 rounded-xl transition-all hover:bg-green-400 outline-0" ><Plus size={20} /></button>
                                                 </div>
                                             )
@@ -184,7 +180,10 @@ const Header = () => {
                                             return (
                                                 <div key={index} className="flex gap-2 items-center">
                                                     <Link href={`/profile/${user.id}`} className="btn  w-fit _border p-1 rounded-xl transition-all hover:bg-blue-200 outline-0" >{user.name}</Link>
-                                                    <button onClick={() => mutationCreateFriendRequest.mutate(user.id)} className="btn  w-fit _border p-1 rounded-xl transition-all hover:bg-green-400 outline-0" ><Handshake size={20} /></button>
+                                                    {user.isFriend ? <button onClick={() => mutationCreateFriendRequest.mutate(user.id)} className="btn  w-fit _border p-1 rounded-xl transition-all hover:bg-green-400 outline-0" ><Handshake size={20} /></button>
+                                                        :
+                                                        <span className="text-green-400">Friend</span>
+                                                        }
                                                 </div>
                                             )
                                         })}
@@ -214,7 +213,7 @@ const Header = () => {
                     {panel == "notifs" &&
                         <div className="">
                             <div className="_border mt-2 rounded-md p-3 absolute top-full bg-white panel right-0 min-w-[250px] flex flex-col gap-2">
-                                {(reqs as IRequest[]).map((req, idx) => (
+                                {reqs.length > 0 ? (reqs as IRequest[]).map((req, idx) => (
                                     <div className="flex flex-col gap-2 pb-4 not-last:border-b-[1px] border-neutral-300 w-full">
                                         <h3 className="text-lg leading-7 font-medium">Friends Requests🧑‍🦰</h3>
                                         <div className="flex flex-col gap-1  border-neutral-300 max-h-[450px] overflow-x-auto">
@@ -223,14 +222,14 @@ const Header = () => {
                                                     <div key={index} className="flex gap-2 w-full _border p-2 flex-col">
                                                         <div className="flex items-center justify-between">
                                                             <div className="     rounded-xl transition-all" >{req.from.name}</div>
-                                                            <div className="button-transparent"><Check size={16} /></div>
+                                                            <button onClick={() => mutationAddFriend.mutate({ fromId: req.fromId, id: req.id })} className="button-transparent"><Check size={16} /></button>
                                                         </div>
                                                     </div>
                                                 )
                                             })}
                                         </div>
                                     </div>
-                                ))}
+                                )) : <span className="text-sm leading-5">No notifications</span>}
                             </div>
                         </div>}
                 </div>

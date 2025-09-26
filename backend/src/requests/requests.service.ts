@@ -8,8 +8,18 @@ import { RequestGateway } from 'src/webSockets/request.gateway';
 export class RequestsService {
   constructor(private readonly prisma: PrismaService, private readonly requestGateway: RequestGateway) { };
   async create(dto: CreateRequestDto, userId: string) {
-    await this.prisma.request.create({ data: { toId: dto.id, fromId: userId } });
-    this.requestGateway.notifyUser(dto.id, { from: userId, to: dto.id })
+    const exist = await this.prisma.request.findFirst({
+      where: {
+        OR: [
+          { fromId: userId, toId: dto.id },
+          { fromId: dto.id, toId: userId },
+        ]
+      }
+    })
+    if (exist) return;
+    
+    const request = await this.prisma.request.create({ data: { toId: dto.id, fromId: userId }, include: { from: { select: { name: true } }, to: { select: { name: true } } } });
+    this.requestGateway.notifyUser(dto.id, { request })
     return { message: "Successfully created!" }
   }
 

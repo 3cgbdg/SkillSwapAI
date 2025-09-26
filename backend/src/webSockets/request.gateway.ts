@@ -5,7 +5,10 @@ import * as cookie from "cookie"
 import { JwtService } from "@nestjs/jwt";
 
 @WebSocketGateway({
-    cors: { origin: "*", }
+    cors: {
+        origin: "http://localhost:3000",
+        credentials: true
+    }
 })
 export class RequestGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
