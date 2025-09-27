@@ -4,23 +4,35 @@ import { Socket, Server } from "socket.io";
 import * as cookie from "cookie"
 import { JwtService } from "@nestjs/jwt";
 
+
 @WebSocketGateway({
-    cors: { origin: "*", }
+    cors: {
+        origin: "http://localhost:3000",
+        credentials: true
+    }
 })
+
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     constructor(private readonly prisma: PrismaService, private readonly jwtService: JwtService) { };
     @WebSocketServer()
     server: Server
     private users = new Map<string, string>() // userid--Socketid
-    handleConnection(client: Socket) {
+     handleConnection(client: Socket) {
         const cookies = client.handshake.headers.cookie;
         if (cookies) {
             const parsed = cookie.parse(cookies);
             const token = parsed['access_token'];
-            const payload = this.jwtService.verify(token as string) as { userId: string };
-            this.users.set(payload.userId, client.id);
-            client.data.userId = payload.userId;
+            try {
+                const payload = this.jwtService.verify(token as string) as { userId: string };
+                this.users.set(payload.userId, client.id);
+                client.data.userId = payload.userId;
+            }
+            catch (err) {
+                console.error("Error");
+                client.disconnect();
+            }
+
         }
     }
 
@@ -34,8 +46,43 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     @SubscribeMessage("sendMessage")
     async sendPrivateMessage(client: Socket, payload: { to: string; message: string }) {
-        const socketId = this.users.get(payload.to);
         const fromId = client.data.userId;
+        // saving in db
+        let chat = await this.prisma.chat.findFirst({
+            where: {
+                AND: [
+                    { users: { some: { id: fromId } } },
+                    { users: { some: { id: payload.to } } },
+
+                ]
+            },
+        })
+
+        if (!chat) {
+            chat = await this.prisma.chat.create({
+                data: {
+                    users: {
+                        connect: [
+                            { id: fromId },
+                            { id: payload.to },
+                        ]
+                    },
+                    messages: {
+                        create: {
+                            fromId: fromId, toId: payload.to, content: payload.message
+                        }
+                    }
+                }
+            })
+
+        } else {
+
+            await this.prisma.message.create({ data: { fromId: fromId, toId: payload.to, content: payload.message, chatId: chat.id } })
+        }
+        //otherwise simply creating new message 
+
+
+        const socketId = this.users.get(payload.to);
 
 
         if (socketId) {
@@ -43,34 +90,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                 from: fromId,
                 message: payload.message,
             });
-            let chat = await this.prisma.chat.findFirst({
-                where: {
-                    AND: [
-                        { users: { some: { id: fromId } } },
-                        { users: { some: { id: payload.to } } },
-
-                    ]
-                },
-            })
-            if (!chat) {
-                chat = await this.prisma.chat.create({
-                    data: {
-                        users: {
-                            connect: [
-                                { id: fromId },
-                                { id: payload.to },
-                            ]
-                        },
-                        messages: {
-                            create: {
-                                fromId: fromId, toId: payload.to, content: payload.message
-                            }
-                        }
-                    }
-                })
-            }
-
-
         }
 
 

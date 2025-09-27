@@ -79,14 +79,14 @@ export class AuthController {
       throw new NotFoundException();
     }
     const newAccessToken = this.authService.createTokenForRefresh(user)
-    res.cookie('jwt', newAccessToken, {
+    res.cookie('access_token', newAccessToken, {
       httpOnly: true,
       secure: this.configService.get<string>('NODE_ENV') === 'production',
       sameSite: this.configService.get<string>('NODE_ENV') === 'production' ? 'none' : 'lax',
       maxAge: 1000 * 60 * 15,
     });
 
-    return { message: 'Access token refreshed' };
+    return res.json({ message: 'Access token refreshed' });
 
   }
 

@@ -18,12 +18,20 @@ export class RequestGateway implements OnGatewayConnection, OnGatewayDisconnect 
     private users = new Map<string, string>() // userid--Socketid
     handleConnection(client: Socket) {
         const cookies = client.handshake.headers.cookie;
+        console.log("hello2")
+
         if (cookies) {
             const parsed = cookie.parse(cookies);
             const token = parsed['access_token'];
-            const payload = this.jwtService.verify(token as string) as { userId: string };
-            this.users.set(payload.userId, client.id);
-            client.data.userId = payload.userId;
+            try {
+                const payload = this.jwtService.verify(token as string) as { userId: string };
+                this.users.set(payload.userId, client.id);
+                client.data.userId = payload.userId;
+            }
+            catch (err) {
+                console.error("Error");
+                client.disconnect();
+            }
         }
     }
 

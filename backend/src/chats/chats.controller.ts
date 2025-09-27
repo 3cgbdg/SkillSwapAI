@@ -1,34 +1,24 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Req } from '@nestjs/common';
 import { ChatsService } from './chats.service';
-import { CreateChatDto } from './dto/create-chat.dto';
-import { UpdateChatDto } from './dto/update-chat.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { GetChatDto } from './dto/get-chat.dto';
+import type { Request } from 'express';
 
 @Controller('chats')
+@UseGuards(AuthGuard('jwt'))
 export class ChatsController {
-  constructor(private readonly chatsService: ChatsService) {}
-
-  @Post()
-  create(@Body() createChatDto: CreateChatDto) {
-    return this.chatsService.create(createChatDto);
-  }
+  constructor(private readonly chatsService: ChatsService) { }
 
   @Get()
-  findAll() {
-    return this.chatsService.findAll();
+  async findAll(@Req() req: Request) {
+    return this.chatsService.findAll((req as any).user.id);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.chatsService.findOne(+id);
+
+  @Get()
+  async findOne(@Query() dto: GetChatDto, @Req() req: Request) {
+    return this.chatsService.findOne((req as any).user.id, dto.with);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateChatDto: UpdateChatDto) {
-    return this.chatsService.update(+id, updateChatDto);
-  }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.chatsService.remove(+id);
-  }
 }
