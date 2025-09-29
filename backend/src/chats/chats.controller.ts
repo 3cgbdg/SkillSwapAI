@@ -15,10 +15,12 @@ export class ChatsController {
   }
 
 
-  @Get()
+  @Get("messages")
   async findOne(@Query() dto: GetChatDto, @Req() req: Request) {
     return this.chatsService.findOne((req as any).user.id, dto.with);
   }
+
+  
 
 
 }

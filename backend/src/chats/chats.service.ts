@@ -7,7 +7,6 @@ export class ChatsService {
   constructor(private readonly prisma: PrismaService) { };
 
   async findOne(myId: string, friendId: string) {
-
     const chat = await this.prisma.chat.findFirst({
       where: {
         AND: [
@@ -58,9 +57,8 @@ export class ChatsService {
           friend: friend
         })
     })
-    console.log(newChats)
+ 
     return newChats;
 
   }
-
 }

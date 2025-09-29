@@ -13,9 +13,10 @@ export interface IFriend {
     lastMessage: { content: string, createdAt: string }
 }
 
-export interface IChats{
-    _max :{createdAt:string},
-    _count:{id:number},
-    chatId:string,
-    lastMessageContent:string,
+export interface IChat {
+    _max: { createdAt: string },
+    _count: { id: number },
+    chatId: string,
+    lastMessageContent: string,
+    friend: IFriend,
 }

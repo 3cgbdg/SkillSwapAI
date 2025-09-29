@@ -18,7 +18,6 @@ export class RequestGateway implements OnGatewayConnection, OnGatewayDisconnect 
     private users = new Map<string, string>() // userid--Socketid
     handleConnection(client: Socket) {
         const cookies = client.handshake.headers.cookie;
-        console.log("hello2")
 
         if (cookies) {
             const parsed = cookie.parse(cookies);

@@ -2,6 +2,7 @@
 
 import { api } from "@/api/axiosInstance"
 import { useAppSelector } from "@/hooks/reduxHooks"
+import { IChat, IFriend } from "@/types/types"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { EllipsisVertical, Send } from "lucide-react"
 import { useParams } from "next/navigation"
@@ -19,7 +20,10 @@ const Page = () => {
     const queryClient = useQueryClient();
     const { user } = useAppSelector(state => state.auth)
     const [messageInput, setMessageInput] = useState<string>("")
-    const { id } = useParams() as { id: string }
+    const { id } = useParams() as { id: string };
+    const { chats } = useAppSelector(state => state.chats);
+    const [currentChat, setCurrentChat] = useState<IChat | null>(null);
+    const [inputError,setInputError] = useState<string|null>(null);
     const endRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
         const sock = io(`${process.env.NEXT_PUBLIC_API_URL}`, { withCredentials: true });
@@ -28,16 +32,23 @@ const Page = () => {
         return () => { sock.disconnect() };
     }, [])
 
-    // query for gettingall messages from db
+    // useQuery for getting all messages from db
 
     const { data: messages } = useQuery({
         queryKey: ['messages'],
         queryFn: async () => {
-            const res = await api.get(`/chats?with=${id}`);
+            const res = await api.get(`/chats/messages?with=${currentChat?.friend.id}`);
             return res.data;
-        }
+            
+        },
+        enabled:!!currentChat
     })
 
+    useEffect(() => {
+        if (chats && id) {
+            setCurrentChat( chats.find(chat => chat.chatId === id) ?? null);
+        }
+    }, [chats,id])
 
     useEffect(() => {
         if (socket) {
@@ -48,7 +59,7 @@ const Page = () => {
                 })
             })
             return () => {
-                socket.off("friendRequest");
+                socket.off("receiveMessage");
             };
         }
 
@@ -97,7 +108,7 @@ const Page = () => {
                         <p className={`text-wrap mb-1   leading-5 text-sm ${msg.fromId === user?.id ? "text-neutral-900" : ""}`}>{msg.content}</p>
                         <div className="flex justify-end text-xs leading-4 ">10:20 AM</div>
                     </div>
-                )) : <span className="flex mt-40 justify-center w-full">Start conversation...</span>
+                )) : <span className="flex mt-40 justify-center w-full">Start conversation</span>
                 }
 
 
