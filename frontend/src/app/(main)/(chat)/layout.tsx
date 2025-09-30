@@ -35,7 +35,7 @@ export default function ChatLayout({
 
 
     <div className="flex gap-8 h-[705px]">
-      <ChatSidebar chats={chats} />
+      <ChatSidebar  />
       {children}
     </div>
 

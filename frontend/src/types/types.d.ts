@@ -9,14 +9,20 @@ export interface IUser {
 export interface IFriend {
     name: string,
     id: string,
-    newMessagesQuantity: number,
-    lastMessage: { content: string, createdAt: string }
+    newMessagesQuantity?: number,
+    lastMessage?: { content: string, createdAt: string }
 }
 
 export interface IChat {
     _max: { createdAt: string },
     _count: { id: number },
     chatId: string,
-    lastMessageContent: string,
+    lastMessageContent?: string,
     friend: IFriend,
+}
+
+interface IMessage {
+    content: string,
+    fromId: string,
+    createdAt: Date,
 }

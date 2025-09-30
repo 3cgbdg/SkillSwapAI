@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
+import { CreateChatDto } from './dto/create-chat.dto';
 
 @Injectable()
 export class ChatsService {
@@ -13,14 +14,14 @@ export class ChatsService {
           { users: { some: { id: myId } } },
           { users: { some: { id: friendId } } },
         ]
-      }, include: { messages: { select: { fromId: true, content: true } } }
+      }, include: { messages: { select: { fromId: true, content: true,createdAt:true } } }
     })
 
     return [...(chat?.messages ?? [])]
 
   }
 
-// later optimize it 
+  // later optimize it 
   async findAll(myId: string) {
 
     const chats = await this.prisma.message.groupBy({
@@ -34,31 +35,66 @@ export class ChatsService {
       _max: { createdAt: true },
       _count: { id: true },
     })
-    const lastMessages = await this.prisma.message.findMany({
-      where: {
-        OR: [
-          { fromId: myId },
-          { toId: myId },
-        ],
-        isSeen: false
-      }, orderBy: { createdAt: 'desc' }, distinct: ['chatId'], include: {
-        from: { select: { id: true, name: true } },
-        to: { select: { id: true, name: true } },
+    if (chats.length>0) {
+      const lastMessages = await this.prisma.message.findMany({
+        where: {
+          OR: [
+            { fromId: myId },
+            { toId: myId },
+          ],
+          isSeen: false
+        }, orderBy: { createdAt: 'desc' }, distinct: ['chatId'], include: {
+          from: { select: { id: true, name: true } },
+          to: { select: { id: true, name: true } },
+        }
+      })
+      const newChats = chats.map(chat => {
+        const lastMsg = lastMessages.find(msg => msg.chatId == chat.chatId);
+        if (!lastMsg) return { ...chat, lastMessageContent: null, friend: null };
+        const friend = lastMsg.fromId == myId ? lastMsg.to : lastMsg.from;
+        return (
+          {
+            ...chat,
+            lastMessageContent: lastMsg.content,
+            friend: friend
+          })
+      })
+
+      return newChats;
+    } else {
+      const chats = await this.prisma.chat.findMany({
+        where: { users: { some: { id: myId } } }, include: {
+          users: {
+            where: { NOT: { id: myId } },
+            select: { id: true, name: true }
+          },
+        }
+      })
+      const newChats = chats.map(chat => {
+        return (
+          {
+            chatId:chat.id,
+            friend: chat.users[0]
+          })
+      })
+      console.log(newChats)
+      return newChats;
+    }
+  }
+
+  async createChat(dto: CreateChatDto, myId: string) {
+    const chat = await this.prisma.chat.create({
+      data: {
+        users: {
+          connect: [
+            { id: dto.friendId },
+            { id: myId },
+          ]
+        },
       }
     })
-    const newChats = chats.map(chat => {
-      const lastMsg = lastMessages.find(msg => msg.chatId == chat.chatId);
-      if (!lastMsg) return { ...chat, lastMessageContent: null, friend: null };
-      const friend = lastMsg.fromId == myId ? lastMsg.to : lastMsg.from;
-      return (
-        {
-          ...chat,
-          lastMessageContent: lastMsg.content,
-          friend: friend
-        })
-    })
- 
-    return newChats;
+    return { chatId: chat.id, friend: { name: dto.friendName, id: dto.friendId } }
+  };
 
-  }
+
 }

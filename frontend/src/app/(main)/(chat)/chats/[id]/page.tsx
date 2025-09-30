@@ -1,19 +1,16 @@
 "use client"
 
 import { api } from "@/api/axiosInstance"
-import { useAppSelector } from "@/hooks/reduxHooks"
-import { IChat, IFriend } from "@/types/types"
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks"
+import { updateChatNewMessages } from "@/redux/chatsSlice"
+import { IChat, IFriend, IMessage } from "@/types/types"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { EllipsisVertical, Send } from "lucide-react"
 import { useParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { io, Socket } from "socket.io-client"
 
-interface IMessage {
-    content: string,
-    fromId: string,
-    createdAt: Date,
-}
+
 
 const Page = () => {
     const [socket, setSocket] = useState<Socket | null>(null);
@@ -23,7 +20,8 @@ const Page = () => {
     const { id } = useParams() as { id: string };
     const { chats } = useAppSelector(state => state.chats);
     const [currentChat, setCurrentChat] = useState<IChat | null>(null);
-    const [inputError,setInputError] = useState<string|null>(null);
+    const [inputError, setInputError] = useState<string | null>(null);
+    const dispatch = useAppDispatch();
     const endRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
         const sock = io(`${process.env.NEXT_PUBLIC_API_URL}`, { withCredentials: true });
@@ -39,25 +37,30 @@ const Page = () => {
         queryFn: async () => {
             const res = await api.get(`/chats/messages?with=${currentChat?.friend.id}`);
             return res.data;
-            
+
         },
-        enabled:!!currentChat
+        enabled: !!currentChat
     })
 
     useEffect(() => {
         if (chats && id) {
-            setCurrentChat( chats.find(chat => chat.chatId === id) ?? null);
+            setCurrentChat(chats.find(chat => chat.chatId === id) ?? null);
         }
-    }, [chats,id])
+    }, [chats, id])
 
     useEffect(() => {
         if (socket) {
             socket.on('connect', () => { });
             socket.on('receiveMessage', ({ from, message }) => {
                 queryClient.setQueryData(['messages'], (old: any) => {
+                    if (currentChat) {
+                        console.log("hello")
+                        dispatch(updateChatNewMessages({ chatId: currentChat.chatId, message: message }));
+                    }
                     return [...old, { fromId: from, content: message }]
                 })
             })
+
             return () => {
                 socket.off("receiveMessage");
             };
@@ -67,7 +70,7 @@ const Page = () => {
 
     const handleSend = () => {
         if (socket && user) {
-            socket.emit("sendMessage", { to: id, message: messageInput });
+            socket.emit("sendMessage", { to: currentChat?.friend.id, message: messageInput });
             queryClient.setQueryData(['messages'], (old: any) => {
                 return [...old, { fromId: user.id, content: messageInput }]
             })
@@ -106,7 +109,10 @@ const Page = () => {
                 {messages && messages.length > 0 ? (messages as IMessage[]).map((msg, idx) => (
                     <div key={idx} className={`w-fit rounded-[10px] text-gray  p-3  ${msg.fromId === user?.id ? 'bg-lightBlue self-end' : "bg-neutral-200"}`}>
                         <p className={`text-wrap mb-1   leading-5 text-sm ${msg.fromId === user?.id ? "text-neutral-900" : ""}`}>{msg.content}</p>
-                        <div className="flex justify-end text-xs leading-4 ">10:20 AM</div>
+                        <div className="flex justify-end text-xs leading-4 ">{new Date(msg.createdAt).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}</div>
                     </div>
                 )) : <span className="flex mt-40 justify-center w-full">Start conversation</span>
                 }

@@ -59,9 +59,10 @@ const Page = () => {
                 Start Chat</button>
               <button className="button-transparent rounded-md! flex gap-2 items-center  font-medium!">
                 <Calendar size={16} />
-                Schedule Session</button>
+                Schedule Session
+                </button>
             </div>
-         
+
           </div>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { ChatsService } from './chats.service';
 import { AuthGuard } from '@nestjs/passport';
 import { GetChatDto } from './dto/get-chat.dto';
 import type { Request } from 'express';
+import { CreateChatDto } from './dto/create-chat.dto';
 
 @Controller('chats')
 @UseGuards(AuthGuard('jwt'))
@@ -20,7 +21,13 @@ export class ChatsController {
     return this.chatsService.findOne((req as any).user.id, dto.with);
   }
 
-  
+  @Post()
+  async createChat(@Body() dto: CreateChatDto, @Req() req: Request) {
+    console.log(dto)
+    return this.chatsService.createChat(dto, (req as any).user.id);
+
+  }
+
 
 
 }
