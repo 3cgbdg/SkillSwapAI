@@ -62,6 +62,7 @@ const ChatSidebar = () => {
                                     {friends.filter(friend => friend.name.toLowerCase().includes(chars.toLocaleLowerCase())).map((friend, index) => {
                                         return (
                                             <button onClick={() => {
+                                                setChars("");
                                                 mutationCreateChat.mutate({payload:{friendId:friend.id,friendName:friend.name}});
                                             }} key={index} className="flex gap-2 button-transparent items-center  rounded-xl  ">
                                                 <Users size={20} />
@@ -78,7 +79,7 @@ const ChatSidebar = () => {
             <div className="flex flex-col gap-2">
                 {chats?.map((chat, idx) => (
 
-                    <button key={idx} onClick={() => router.push(`/chats/${chat.chatId}`)} className={`rounded-[6px] p-3.5 cursor-pointer ${path == `/chat/${chat.chatId}` ? "bg-lightBlue" : ""} transition-all  hover:bg-lightBlue flex gap-4 justify-between`}>
+                    <button key={idx} onClick={() => router.push(`/chats/${chat.chatId}`)} className={`rounded-[6px] p-3.5 cursor-pointer ${path == `/chats/${chat.chatId}` ? "bg-lightBlue" : ""} transition-all  hover:bg-lightBlue flex gap-4 justify-between`}>
                         <div className="flex  gap-4 items-center">
                             <div className="rounded-full size-10 bg-black"></div>
                             <div className="text-left">

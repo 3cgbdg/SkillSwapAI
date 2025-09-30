@@ -12,8 +12,8 @@
   --color-violet: #9077f3ff;
   --color-darkBlue: #3b13daff;
   --color-blue: #3a7ae9ff;
-  --color-orange:#ea7b48ff;
-  --color-lightBlue:#f2f6fdff;
+  --color-orange: #ea7b48ff;
+  --color-lightBlue: #f2f6fdff;
 }
 
 body {
@@ -53,6 +53,9 @@ body {
 }
 .link {
   @apply text-sm leading-5.5 font-medium text-blue  cursor-pointer transition-colors hover:text-darkBlue;
+}
+.banner_gradient {
+  background: linear-gradient(124.82deg, #f2f6fdff 0%, #fbe5daff 100%);
 }
 @layer utilities {
   .skeleton {

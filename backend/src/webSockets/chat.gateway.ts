@@ -47,7 +47,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     @SubscribeMessage("updateSeen")
     async updateSeenMessage(client: Socket, payload: { messageId: string }) {
-        await this.prisma.message.update({where:{id:payload.messageId},data:{isSeen:true}})
+        try {
+            const updatedMessage = await this.prisma.message.update({ where: { id: payload.messageId }, data: { isSeen: true } });
+            const senderSocketId = this.users.get(updatedMessage.fromId);
+            if (senderSocketId) {
+                this.server.to(senderSocketId).emit('updateSeen', {
+                    messageId: payload.messageId
+                });
+            }
+        }
+        catch (e) {
+            console.error("Failed to update seen message:", e);
+        }
     }
 
     @SubscribeMessage("sendMessage")

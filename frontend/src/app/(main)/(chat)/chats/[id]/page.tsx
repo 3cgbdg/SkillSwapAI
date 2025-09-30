@@ -20,7 +20,7 @@ const Page = () => {
     const { id } = useParams() as { id: string };
     const { chats } = useAppSelector(state => state.chats);
     const [currentChat, setCurrentChat] = useState<IChat | null>(null);
-    
+
     const dispatch = useAppDispatch();
     const endRef = useRef<HTMLDivElement>(null);
     const refs = useRef<HTMLDivElement[]>([]);
@@ -40,37 +40,42 @@ const Page = () => {
     useEffect(() => {
         const sock = io(`${process.env.NEXT_PUBLIC_API_URL}`, { withCredentials: true });
         setSocket(sock);
+        return () => {
+            sock.disconnect();
+        };
+    }, [messages])
+
+
+    useEffect(() => {
+        if (!messages || !socket || !user) return;
+
+        
+        refs.current = Array(messages.length).fill(null);
+
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
                     if (entry.isIntersecting) {
                         const idx = refs.current.findIndex(el => el === entry.target);
                         if (idx !== -1) {
-                            observer.unobserve(entry.target);
-
-                            if (messages[idx].isSeen !== true && messages[idx].fromId !== user?.id) {
-                                dispatch(updateChatSeen({ chatId: currentChat ? currentChat.chatId : "" }))
-                                if (socket)
-                                    socket.emit("updateSeen", {messageId: messages[idx].id });
+                            const msg = messages[idx];
+                            if (!msg.isSeen && msg.fromId !== user.id) {
+                                socket.emit("updateSeen", { messageId: msg.id });
                             }
+                            observer.unobserve(entry.target);
                         }
                     }
                 });
             },
-            {
-                threshold: 0.5,
-            }
-        )
+            { threshold: 0.5 }
+        );
 
         refs.current.forEach(el => el && observer.observe(el));
+
         return () => {
-            sock.disconnect();
             observer.disconnect();
-
         };
-    }, [messages])
-
-
+    }, [messages, socket, user, currentChat]);
 
 
     useEffect(() => {
@@ -85,10 +90,9 @@ const Page = () => {
             socket.on('receiveMessage', ({ from, message }) => {
                 queryClient.setQueryData(['messages'], (old: any) => {
                     if (currentChat) {
-                        console.log("hello")
                         dispatch(updateChatNewMessages({ chatId: currentChat.chatId, message: message }));
                     }
-                    return [...old, { fromId: from, content: message }]
+                    return [...old, { fromId: from, content: message, createdAt: new Date() }]
                 })
             })
             socket.on('updateSeen', ({ messageId }) => {
@@ -99,7 +103,6 @@ const Page = () => {
                             return ({ ...item, isSeen: true });
                         } else {
                             return (item);
-
                         }
                     })
                 })
@@ -113,15 +116,17 @@ const Page = () => {
 
     }, [socket])
 
+
     const handleSend = () => {
-        if (socket && user) {
+        if (socket && user && messageInput.trim() !== "") {
             socket.emit("sendMessage", { to: currentChat?.friend.id, message: messageInput });
-            queryClient.setQueryData(['messages'], (old: IMessage[]) => {
-                return [...old, { fromId: user.id, content: messageInput, createdAt: new Date(), isSeen: true }]
-            })
+            queryClient.setQueryData(['messages'], (old: IMessage[] = []) => {
+                return [...old, { fromId: user.id, content: messageInput, createdAt: new Date(), isSeen: false }];
+            });
             setMessageInput("");
         }
     }
+
 
     useEffect(() => {
         if (refs && messages) {

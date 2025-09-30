@@ -17,7 +17,6 @@ model User {
   chats            Chat[]    @relation("userChats")
   messagesSent     Message[] @relation("sender")
   messagesReceived Message[] @relation("receiver")
-  messages         Message[]
   sentRequests     Request[] @relation("sentRequests")
   receivedRequests Request[] @relation("receivedRequests")
 
@@ -56,20 +55,18 @@ model Skill {
 model Chat {
   id       String    @id @default(uuid())
   users    User[]    @relation("userChats")
-  messages Message[] 
+  messages Message[]
 }
 
 model Message {
-  id      String  @id @default(uuid())
-  from    User    @relation("sender", fields: [fromId], references: [id])
-  fromId  String
-  to      User    @relation("receiver", fields: [toId], references: [id])
-  toId    String
-  chat    Chat    @relation(fields: [chatId], references: [id])
-  chatId  String
-  content String
-  User    User?   @relation(fields: [userId], references: [id])
-  userId  String?
+  id        String   @id @default(uuid())
+  from      User     @relation("sender", fields: [fromId], references: [id])
+  fromId    String
+  to        User     @relation("receiver", fields: [toId], references: [id])
+  toId      String
+  chat      Chat     @relation(fields: [chatId], references: [id])
+  chatId    String
+  content   String
   createdAt DateTime @default(now())
-  isSeen Boolean @default(false)
+  isSeen    Boolean  @default(false)
 }

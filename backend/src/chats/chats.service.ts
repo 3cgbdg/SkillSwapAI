@@ -96,18 +96,31 @@ export class ChatsService {
   }
 
   async createChat(dto: CreateChatDto, myId: string) {
-    const chat = await this.prisma.chat.create({
-      data: {
-        users: {
-          connect: [
-            { id: dto.friendId },
-            { id: myId },
-          ]
+    let chat = await this.prisma.chat.findFirst({
+      where: {
+        users: { some: { id: myId } },
+        AND: { users: { some: { id: dto.friendId } } },
+      },
+    });
+
+    if (!chat) {
+      chat = await this.prisma.chat.create({
+        data: {
+          users: {
+            connect: [
+              { id: myId },
+              { id: dto.friendId },
+            ],
+          },
         },
-      }
-    })
+      });
+    }
+
     return { chatId: chat.id, friend: { name: dto.friendName, id: dto.friendId } }
   };
 
-
 }
+
+
+
+

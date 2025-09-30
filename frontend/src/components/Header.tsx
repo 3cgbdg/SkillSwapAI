@@ -1,9 +1,9 @@
 "use client"
 
 import { api } from "@/api/axiosInstance"
-import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks"
+import { useAppDispatch, } from "@/hooks/reduxHooks"
 import { addWantToLearnSkill, logOut } from "@/redux/authSlice"
-import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {  useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -17,7 +17,7 @@ import { io, Socket } from 'socket.io-client';
 interface foundUsers {
     id: string,
     name: string,
-    isFriend: string,
+    isFriend: boolean,
 }
 
 
@@ -104,7 +104,7 @@ const Header = () => {
             socket.on('connect', () => { });
             socket.on('friendRequest', (payload) => {
                 queryClient.setQueryData(['reqs'], (old: any) => {
-                    return [...old, payload]
+                    return [...old, payload.request]
                 })
             })
             return () => {
@@ -146,7 +146,9 @@ const Header = () => {
                         if (e.target.value.length > 2) {
                             await mutationSearch.mutate({ chars: e.target.value });
                             setPanel("search");
-
+                            console.log(foundUsers)
+                        }else{
+                            setPanel(null)
                         }
 
                     }}
@@ -165,7 +167,7 @@ const Header = () => {
                                                 <div key={index} className="flex gap-2 items-center">
                                                     <div className="  w-fit _border p-1 rounded-xl transition-all" >{skill.title}</div>
 
-                                                    <button onClick={() => { mutationAddLearn.mutate(skill.title); dispatch(addWantToLearnSkill(skill.title)) }} className="btn  w-fit _border p-1 rounded-xl transition-all hover:bg-green-400 outline-0" ><Plus size={20} /></button>
+                                                    <button onClick={() => { mutationAddLearn.mutate(skill.title); dispatch(addWantToLearnSkill(skill.title));setFoundSkills(prev=>prev.filter(item=>item.id!==skill.id)) }} className="btn  w-fit _border p-1 rounded-xl cursor-pointer transition-all hover:bg-green-400 outline-0" ><Plus size={20} /></button>
                                                 </div>
                                             )
                                         })}
@@ -179,8 +181,8 @@ const Header = () => {
                                         {foundUsers.map((user, index) => {
                                             return (
                                                 <div key={index} className="flex gap-2 items-center">
-                                                    <Link href={`/profile/${user.id}`} className="btn  w-fit _border p-1 rounded-xl transition-all hover:bg-blue-200 outline-0" >{user.name}</Link>
-                                                    {!user.isFriend ? <button onClick={() => mutationCreateFriendRequest.mutate(user.id)} className="btn  w-fit _border p-1 rounded-xl transition-all hover:bg-green-400 outline-0" ><Handshake size={20} /></button>
+                                                    <Link href={`/profiles/${user.id}`} className="btn  w-fit _border p-1 rounded-xl transition-all hover:bg-blue-200 outline-0" >{user.name}</Link>
+                                                    {!user.isFriend ? <button onClick={() => mutationCreateFriendRequest.mutate(user.id)} className="btn cursor-pointer  w-fit _border p-1 rounded-xl transition-all hover:bg-green-400 outline-0" ><Handshake size={20} /></button>
                                                         :
                                                         <span className="text-green-400">Friend</span>
                                                         }
@@ -201,7 +203,7 @@ const Header = () => {
                 </div>
                 {/* notifs */}
                 <div className="relative">
-                    <motion.button onClick={() => setPanel("notifs")} className="hover:text-blue relative transition-colors cursor-pointer"
+                    <motion.button onClick={() => setPanel(panel !== "notifs" ? "notifs" : null)} className="hover:text-blue relative transition-colors cursor-pointer"
                         whileHover={{ rotate: [0, 15, -10, 5, -5, 0] }}
                         transition={{ duration: 0.5 }}
                     >
@@ -213,15 +215,16 @@ const Header = () => {
                     {panel == "notifs" &&
                         <div className="">
                             <div className="_border mt-2 rounded-md p-3 absolute top-full bg-white panel right-0 min-w-[250px] flex flex-col gap-2">
-                                {reqs.length > 0 ? (reqs as IRequest[]).map((req, idx) => (
+                                {reqs.length > 0 ?  (
                                     <div className="flex flex-col gap-2 pb-4 not-last:border-b-[1px] border-neutral-300 w-full">
                                         <h3 className="text-lg leading-7 font-medium">Friends Requests🧑‍🦰</h3>
                                         <div className="flex flex-col gap-1  border-neutral-300 max-h-[450px] overflow-x-auto">
-                                            {(reqs as IRequest[]).map((req, index) => {
+                                            {reqs && (reqs as IRequest[]).map((req, index) => {
+                                                console.log(req)
                                                 return (
                                                     <div key={index} className="flex gap-2 w-full _border p-2 flex-col">
                                                         <div className="flex items-center justify-between">
-                                                            <div className="     rounded-xl transition-all" >{req.from.name}</div>
+                                                            <div className="     rounded-xl transition-all" >{req.from?.name}</div>
                                                             <button onClick={() => mutationAddFriend.mutate({ fromId: req.fromId, id: req.id })} className="button-transparent"><Check size={16} /></button>
                                                         </div>
                                                     </div>
@@ -229,7 +232,7 @@ const Header = () => {
                                             })}
                                         </div>
                                     </div>
-                                )) : <span className="text-sm leading-5">No notifications</span>}
+                                ) : <span className="text-sm leading-5">No notifications</span>}
                             </div>
                         </div>}
                 </div>

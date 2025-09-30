@@ -9,6 +9,7 @@ import { SearchModule } from './search/search.module';
 import { ChatsModule } from './chats/chats.module';
 import { RequestsModule } from './requests/requests.module';
 import { FriendsModule } from './friends/friends.module';
+import { ProfilesModule } from './profiles/profiles.module';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -34,7 +35,9 @@ import { FriendsModule } from './friends/friends.module';
 
     RequestsModule,
 
-    FriendsModule],
+    FriendsModule,
+
+    ProfilesModule],
   controllers: [AppController],
   providers: [AppService],
 })

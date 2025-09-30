@@ -18,7 +18,10 @@ const chatsSlice = createSlice({
             state.chats = action.payload;
         },
         updateChats: (state, action: PayloadAction<IChat>) => {
-            state.chats = state.chats ? [...state.chats, action.payload] : [action.payload];
+            const realIdx = state.chats?.findIndex(chat => chat.chatId == action.payload.chatId);
+            if (realIdx == -1) {
+                state.chats = state.chats ? [...state.chats, action.payload] : [action.payload]
+            }
         },
         updateChatNewMessages: (state, action: PayloadAction<{ chatId: string, message: string }>) => {
             if (state.chats) {
@@ -34,12 +37,13 @@ const chatsSlice = createSlice({
             }
 
 
+
         },
         updateChatSeen: (state, action: PayloadAction<{ chatId: string }>) => {
-            if (state.chats && action.payload.chatId !=="") {
+            if (state.chats && action.payload.chatId !== "") {
                 const chatIdx = state.chats.findIndex(chat => chat.chatId === action.payload.chatId);
                 if (chatIdx !== -1) {
-                    state.chats[chatIdx]._count.id-=1
+                    state.chats[chatIdx]._count.id -= 1
                 }
             }
 
@@ -51,5 +55,5 @@ const chatsSlice = createSlice({
 }
 )
 
-export const { getChats, updateChats, updateChatNewMessages,updateChatSeen } = chatsSlice.actions;
+export const { getChats, updateChats, updateChatNewMessages, updateChatSeen } = chatsSlice.actions;
 export default chatsSlice.reducer;

@@ -11,10 +11,9 @@ export class SearchService {
     const newUsers = users.map(user => ({
       id: user.id,
       name: user.name,
-      isFriend: user.friends.some(f => f.user1Id === id) ||
-        user.friendOf.some(f => f.user2Id === id)
+      isFriend: user.friends.some(f => f.user2Id == id) ||
+        user.friendOf.some(f => f.user2Id == id)
     }))
-    console.log(newUsers)
     const newSkills =  skills.filter(skill=>!skill.knownBy.some(user=>user.id===id) && !skill.learnedBy.some(user=>user.id===id))
     return [...newSkills, ...newUsers.filter(user => user.id !== id)];
   }
