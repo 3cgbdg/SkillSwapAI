@@ -154,7 +154,7 @@ const Header = () => {
                         className="outline-0" placeholder="Search for skills or users..."
                     />
 
-                    {panel === "search" ? <div className="min-w-[250px] flex flex-col top-full panel bg-white  left-0 absolute _border mt-1  bg-primary  p-3  rounded-[6px]">
+                    {panel === "search" ? <div className="min-w-[250px] flex flex-col top-full panel bg-white z-10  left-0 absolute _border mt-1  bg-primary  p-3  rounded-[6px]">
                         <div className="flex flex-col gap-4 items-start text-sm font-semibold">
                             {foundSkills.length > 0 &&
                                 <div className="flex flex-col gap-2 pb-4 not-last:border-b-[1px] border-neutral-300 w-full">
@@ -180,7 +180,7 @@ const Header = () => {
                                             return (
                                                 <div key={index} className="flex gap-2 items-center">
                                                     <Link href={`/profile/${user.id}`} className="btn  w-fit _border p-1 rounded-xl transition-all hover:bg-blue-200 outline-0" >{user.name}</Link>
-                                                    {user.isFriend ? <button onClick={() => mutationCreateFriendRequest.mutate(user.id)} className="btn  w-fit _border p-1 rounded-xl transition-all hover:bg-green-400 outline-0" ><Handshake size={20} /></button>
+                                                    {!user.isFriend ? <button onClick={() => mutationCreateFriendRequest.mutate(user.id)} className="btn  w-fit _border p-1 rounded-xl transition-all hover:bg-green-400 outline-0" ><Handshake size={20} /></button>
                                                         :
                                                         <span className="text-green-400">Friend</span>
                                                         }

@@ -1,5 +1,6 @@
 import { IChat, IUser } from "@/types/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { ChartArea } from "lucide-react";
 
 interface IinitialState {
     chats: IChat[] | null,
@@ -33,11 +34,22 @@ const chatsSlice = createSlice({
             }
 
 
-        }
+        },
+        updateChatSeen: (state, action: PayloadAction<{ chatId: string }>) => {
+            if (state.chats && action.payload.chatId !=="") {
+                const chatIdx = state.chats.findIndex(chat => chat.chatId === action.payload.chatId);
+                if (chatIdx !== -1) {
+                    state.chats[chatIdx]._count.id-=1
+                }
+            }
+
+
+        },
+
     },
 
 }
 )
 
-export const { getChats, updateChats,updateChatNewMessages } = chatsSlice.actions;
+export const { getChats, updateChats, updateChatNewMessages,updateChatSeen } = chatsSlice.actions;
 export default chatsSlice.reducer;

@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import AuthClientUpload from "@/components/AuthClientUpload";
 import Sidebar from "@/components/Sidebar";
+import Footer from "@/components/Footer";
 
 export default async function RootLayout({
   children,
@@ -18,6 +19,7 @@ export default async function RootLayout({
           {children}
         </div>
       </div>
+      <Footer/>
     </div>
 
 

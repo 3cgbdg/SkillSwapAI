@@ -56,8 +56,8 @@ const ChatSidebar = () => {
                     }} placeholder="Create a new conversation with..." value={chars} className="basis-full text-sm px-2 outline-none" />
                     <div className="flex items-center justify-center"><Search size={20} /></div>
                     {friends && chars.length > 0 && friends.length > 0 &&
-                        <div className="left-0 top-full absolute z-10 min-w-[250px]">
-                            <div className="flex flex-col gap-2 mt-2 p-2  _border  rounded-md ">
+                        <div className="left-0 top-full absolute z-10 min-w-[250px] ">
+                            <div className="flex flex-col gap-2 mt-2 p-2  _border bg-white rounded-md ">
                                 <div className="flex flex-col  gap-1 max-h-[500px]  border-neutral-300">
                                     {friends.filter(friend => friend.name.toLowerCase().includes(chars.toLocaleLowerCase())).map((friend, index) => {
                                         return (

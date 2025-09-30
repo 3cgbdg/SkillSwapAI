@@ -22,7 +22,9 @@ export interface IChat {
 }
 
 interface IMessage {
+    id:string
     content: string,
     fromId: string,
     createdAt: Date,
+    isSeen:boolean,
 }

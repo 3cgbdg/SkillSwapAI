@@ -2,10 +2,10 @@
 
 import { api } from "@/api/axiosInstance"
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks"
-import { updateChatNewMessages } from "@/redux/chatsSlice"
-import { IChat, IFriend, IMessage } from "@/types/types"
+import { updateChatNewMessages, updateChatSeen } from "@/redux/chatsSlice"
+import { IChat, IMessage } from "@/types/types"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { EllipsisVertical, Send } from "lucide-react"
+import { CheckCheck, EllipsisVertical, Send } from "lucide-react"
 import { useParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { io, Socket } from "socket.io-client"
@@ -20,15 +20,10 @@ const Page = () => {
     const { id } = useParams() as { id: string };
     const { chats } = useAppSelector(state => state.chats);
     const [currentChat, setCurrentChat] = useState<IChat | null>(null);
-    const [inputError, setInputError] = useState<string | null>(null);
+    
     const dispatch = useAppDispatch();
     const endRef = useRef<HTMLDivElement>(null);
-    useEffect(() => {
-        const sock = io(`${process.env.NEXT_PUBLIC_API_URL}`, { withCredentials: true });
-        setSocket(sock);
-        console.log(sock)
-        return () => { sock.disconnect() };
-    }, [])
+    const refs = useRef<HTMLDivElement[]>([]);
 
     // useQuery for getting all messages from db
 
@@ -41,6 +36,42 @@ const Page = () => {
         },
         enabled: !!currentChat
     })
+
+    useEffect(() => {
+        const sock = io(`${process.env.NEXT_PUBLIC_API_URL}`, { withCredentials: true });
+        setSocket(sock);
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        const idx = refs.current.findIndex(el => el === entry.target);
+                        if (idx !== -1) {
+                            observer.unobserve(entry.target);
+
+                            if (messages[idx].isSeen !== true && messages[idx].fromId !== user?.id) {
+                                dispatch(updateChatSeen({ chatId: currentChat ? currentChat.chatId : "" }))
+                                if (socket)
+                                    socket.emit("updateSeen", {messageId: messages[idx].id });
+                            }
+                        }
+                    }
+                });
+            },
+            {
+                threshold: 0.5,
+            }
+        )
+
+        refs.current.forEach(el => el && observer.observe(el));
+        return () => {
+            sock.disconnect();
+            observer.disconnect();
+
+        };
+    }, [messages])
+
+
+
 
     useEffect(() => {
         if (chats && id) {
@@ -60,9 +91,23 @@ const Page = () => {
                     return [...old, { fromId: from, content: message }]
                 })
             })
+            socket.on('updateSeen', ({ messageId }) => {
+                queryClient.setQueryData(['messages'], (old: IMessage[]) => {
+
+                    return old.map((item) => {
+                        if (item.id == messageId) {
+                            return ({ ...item, isSeen: true });
+                        } else {
+                            return (item);
+
+                        }
+                    })
+                })
+            })
 
             return () => {
                 socket.off("receiveMessage");
+                socket.off("updateSeen");
             };
         }
 
@@ -71,15 +116,18 @@ const Page = () => {
     const handleSend = () => {
         if (socket && user) {
             socket.emit("sendMessage", { to: currentChat?.friend.id, message: messageInput });
-            queryClient.setQueryData(['messages'], (old: any) => {
-                return [...old, { fromId: user.id, content: messageInput }]
+            queryClient.setQueryData(['messages'], (old: IMessage[]) => {
+                return [...old, { fromId: user.id, content: messageInput, createdAt: new Date(), isSeen: true }]
             })
             setMessageInput("");
         }
     }
 
     useEffect(() => {
-        endRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (refs && messages) {
+            endRef.current?.scrollIntoView({ behavior: "smooth" });
+            refs.current = Array((messages as IMessage[]).length).fill(null);
+        }
     }, [messages]);
 
 
@@ -107,12 +155,21 @@ const Page = () => {
             {/* content */}
             <div className="flex gap-4 flex-col p-4 w-full h-[502px]   overflow-y-scroll">
                 {messages && messages.length > 0 ? (messages as IMessage[]).map((msg, idx) => (
-                    <div key={idx} className={`w-fit rounded-[10px] text-gray  p-3  ${msg.fromId === user?.id ? 'bg-lightBlue self-end' : "bg-neutral-200"}`}>
+                    <div ref={(el) => { refs.current[idx] = el! }} key={idx} className={`w-fit rounded-[10px] text-gray  p-3  ${msg.fromId === user?.id ? 'bg-lightBlue self-end' : "bg-neutral-200"}`}>
                         <p className={`text-wrap mb-1   leading-5 text-sm ${msg.fromId === user?.id ? "text-neutral-900" : ""}`}>{msg.content}</p>
-                        <div className="flex justify-end text-xs leading-4 ">{new Date(msg.createdAt).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                        })}</div>
+                        <div className="flex justify-between items-center flex-row-reverse gap-2">
+                            {
+                                msg.fromId == user?.id &&
+                                <div className={`${msg.isSeen ? "text-blue" : ""}`}><CheckCheck size={16} /></div>
+
+                            }
+                            <div className=" text-xs leading-4 ">{new Date(msg.createdAt).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                            })}</div>
+                        </div>
+
+
                     </div>
                 )) : <span className="flex mt-40 justify-center w-full">Start conversation</span>
                 }
