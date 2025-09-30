@@ -14,7 +14,7 @@ export class ChatsService {
           { users: { some: { id: myId } } },
           { users: { some: { id: friendId } } },
         ]
-      }, include: { messages: { select: { fromId: true, content: true,createdAt:true } } }
+      }, include: { messages: true }
     })
 
     return [...(chat?.messages ?? [])]
@@ -35,7 +35,7 @@ export class ChatsService {
       _max: { createdAt: true },
       _count: { id: true },
     })
-    if (chats.length>0) {
+    if (chats.length > 0) {
       const lastMessages = await this.prisma.message.findMany({
         where: {
           OR: [
@@ -48,17 +48,30 @@ export class ChatsService {
           to: { select: { id: true, name: true } },
         }
       })
-      const newChats = chats.map(chat => {
-        const lastMsg = lastMessages.find(msg => msg.chatId == chat.chatId);
-        if (!lastMsg) return { ...chat, lastMessageContent: null, friend: null };
-        const friend = lastMsg.fromId == myId ? lastMsg.to : lastMsg.from;
-        return (
-          {
+
+
+      const newChats = await Promise.all(
+        chats.map(async chat => {
+          const lastMsg = lastMessages.find(msg => msg.chatId == chat.chatId);
+          if (!lastMsg) {
+            return { ...chat, lastMessageContent: null, friend: null };
+          }
+
+          const friend = lastMsg.fromId === myId ? lastMsg.to : lastMsg.from;
+
+          return {
             ...chat,
+            _count: {
+              id: await this.prisma.message.count({
+                where: { toId: myId, chatId: chat.chatId, isSeen: false }
+              })
+            },
             lastMessageContent: lastMsg.content,
-            friend: friend
-          })
-      })
+            friend
+          };
+        })
+      );
+
 
       return newChats;
     } else {
@@ -73,7 +86,7 @@ export class ChatsService {
       const newChats = chats.map(chat => {
         return (
           {
-            chatId:chat.id,
+            chatId: chat.id,
             friend: chat.users[0]
           })
       })

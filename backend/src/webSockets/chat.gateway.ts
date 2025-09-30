@@ -18,7 +18,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @WebSocketServer()
     server: Server
     private users = new Map<string, string>() // userid--Socketid
-     handleConnection(client: Socket) {
+    handleConnection(client: Socket) {
         const cookies = client.handshake.headers.cookie;
         if (cookies) {
             const parsed = cookie.parse(cookies);
@@ -42,6 +42,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                 this.users.delete(userId);
             }
         }
+    }
+
+
+    @SubscribeMessage("updateSeen")
+    async updateSeenMessage(client: Socket, payload: { messageId: string }) {
+        await this.prisma.message.update({where:{id:payload.messageId},data:{isSeen:true}})
     }
 
     @SubscribeMessage("sendMessage")
