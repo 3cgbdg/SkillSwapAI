@@ -42,7 +42,7 @@ export class ChatsService {
             { fromId: myId },
             { toId: myId },
           ],
-          isSeen: false
+
         }, orderBy: { createdAt: 'desc' }, distinct: ['chatId'], include: {
           from: { select: { id: true, name: true } },
           to: { select: { id: true, name: true } },
@@ -52,9 +52,12 @@ export class ChatsService {
 
       const newChats = await Promise.all(
         chats.map(async chat => {
+
           const lastMsg = lastMessages.find(msg => msg.chatId == chat.chatId);
           if (!lastMsg) {
-            return { ...chat, lastMessageContent: null, friend: null };
+            return {
+              ...chat, lastMessageContent: null, friend: null
+            };
           }
 
           const friend = lastMsg.fromId === myId ? lastMsg.to : lastMsg.from;

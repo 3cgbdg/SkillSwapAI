@@ -20,7 +20,7 @@ const ChatSidebar = () => {
     const [chars, setChars] = useState<string>("");
     const [friends, setFriends] = useState<IFriend[] | null>(null);
     const dispatch = useAppDispatch();
-    const {chats} = useAppSelector(state=>state.chats);
+    const { chats } = useAppSelector(state => state.chats);
     const mutationSearch = useMutation({
         mutationFn: async () => { const res = await api.get("/friends"); return res.data },
         onSuccess: (data) => {
@@ -29,12 +29,11 @@ const ChatSidebar = () => {
     })
 
     const mutationCreateChat = useMutation({
-        mutationFn: async ({payload}:{payload:{friendId:string,friendName:string}}) => { const res = await api.post("/chats",payload); return res.data },
-        onSuccess: (data:IChat) => {
+        mutationFn: async ({ payload }: { payload: { friendId: string, friendName: string } }) => { const res = await api.post("/chats", payload); return res.data },
+        onSuccess: (data: IChat) => {
             dispatch(updateChats(data));
         }
     })
-
 
     return (
         <div className="_border rounded-[10px] py-6 px-4 basis-[368px] grow-0 shrink-0 ">
@@ -63,7 +62,7 @@ const ChatSidebar = () => {
                                         return (
                                             <button onClick={() => {
                                                 setChars("");
-                                                mutationCreateChat.mutate({payload:{friendId:friend.id,friendName:friend.name}});
+                                                mutationCreateChat.mutate({ payload: { friendId: friend.id, friendName: friend.name } });
                                             }} key={index} className="flex gap-2 button-transparent items-center  rounded-xl  ">
                                                 <Users size={20} />
                                                 {friend.name}
@@ -88,8 +87,10 @@ const ChatSidebar = () => {
                             </div>
                         </div>
                         <div className="flex flex-col gap-1 items-end">
-                            <span className="text-xs leading-4 text-gray">{chat._max ?new Date(chat._max.createdAt).toLocaleTimeString():null}</span>
-                            <span className="rounded-full bg-blue text-white text-xs leading-5 font-semibold px-2 py-.5">{chat._count ?chat._count.id : null}</span>
+                            <span className="text-xs leading-4 text-gray">{chat._max ? new Date(chat._max.createdAt).toLocaleTimeString() : null}</span>
+                            {(chat._count && chat._count.id > 0) &&
+                                < span className="rounded-full bg-blue text-white text-xs leading-5 font-semibold px-2 py-.5">{chat._count.id}</span >
+                            }
                         </div>
                     </button>
 
@@ -97,7 +98,7 @@ const ChatSidebar = () => {
 
 
             </div>
-        </div>
+        </div >
     )
 }
 

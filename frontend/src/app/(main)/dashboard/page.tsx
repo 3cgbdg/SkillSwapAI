@@ -56,7 +56,7 @@ const Page = () => {
                         <Users size={40} className="text-orange " />
                         <span className=" leading-7 text-lg font-semibold">Matches</span>
                     </Link>
-                    <Link href={"/chat"} className="h-33 _border rounded-[10px] bg-white py-6! transition-all hover:opacity-80  flex items-center flex-col gap-5">
+                    <Link href={"/chats"} className="h-33 _border rounded-[10px] bg-white py-6! transition-all hover:opacity-80  flex items-center flex-col gap-5">
                         <MessageSquare size={40} className="text-orange " />
                         <span className=" leading-7 text-lg font-semibold">Chat</span>
                     </Link>

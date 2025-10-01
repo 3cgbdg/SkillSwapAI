@@ -74,9 +74,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                 ]
             },
         })
-
+        let messageId;
         if (!chat) {
-            chat = await this.prisma.chat.create({
+            const chat = await this.prisma.chat.create({
                 data: {
                     users: {
                         connect: [
@@ -89,12 +89,23 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                             fromId: fromId, toId: payload.to, content: payload.message
                         }
                     }
-                }
+                },
+                include: { messages: true }
             })
-
+            messageId = chat.messages[0].id;
+            client.emit('messageSent', {
+                id: chat.messages[0].id,
+                createdAt: chat.messages[0].createdAt,
+            });
         } else {
 
-            await this.prisma.message.create({ data: { fromId: fromId, toId: payload.to, content: payload.message, chatId: chat.id } })
+            const message = await this.prisma.message.create({ data: { fromId: fromId, toId: payload.to, content: payload.message, chatId: chat.id } })
+            client.emit('messageSent', {
+                id: message.id,
+                createdAt: message.createdAt,
+            });
+            messageId = message.id;
+
         }
         //otherwise simply creating new message 
 
@@ -105,7 +116,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         if (socketId) {
             this.server.to(socketId).emit('receiveMessage', {
                 from: fromId,
-                message: payload.message,
+                messageContent: payload.message,
+                id: messageId
             });
         }
 

@@ -4,6 +4,7 @@ import { api } from "@/api/axiosInstance"
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks"
 import { updateChatNewMessages, updateChatSeen } from "@/redux/chatsSlice"
 import { IChat, IMessage } from "@/types/types"
+import { current } from "@reduxjs/toolkit"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { CheckCheck, EllipsisVertical, Send } from "lucide-react"
 import { useParams } from "next/navigation"
@@ -20,15 +21,14 @@ const Page = () => {
     const { id } = useParams() as { id: string };
     const { chats } = useAppSelector(state => state.chats);
     const [currentChat, setCurrentChat] = useState<IChat | null>(null);
-
     const dispatch = useAppDispatch();
     const endRef = useRef<HTMLDivElement>(null);
     const refs = useRef<HTMLDivElement[]>([]);
+    const lastMessageRef = useRef<string>("");
 
     // useQuery for getting all messages from db
-
     const { data: messages } = useQuery({
-        queryKey: ['messages'],
+        queryKey: ['messages', currentChat?.chatId],
         queryFn: async () => {
             const res = await api.get(`/chats/messages?with=${currentChat?.friend.id}`);
             return res.data;
@@ -37,21 +37,21 @@ const Page = () => {
         enabled: !!currentChat
     })
 
+    // initializing io-client
     useEffect(() => {
         const sock = io(`${process.env.NEXT_PUBLIC_API_URL}`, { withCredentials: true });
         setSocket(sock);
         return () => {
             sock.disconnect();
         };
-    }, [messages])
+    }, [])
 
-
+    // tracking new messages for actions
     useEffect(() => {
         if (!messages || !socket || !user) return;
-
-        
-        refs.current = Array(messages.length).fill(null);
-
+        const elements = refs.current.filter(Boolean);
+        if (!elements.length) return;
+        // getting obserrver to define new message to mark it seen 
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
@@ -61,6 +61,7 @@ const Page = () => {
                             const msg = messages[idx];
                             if (!msg.isSeen && msg.fromId !== user.id) {
                                 socket.emit("updateSeen", { messageId: msg.id });
+                                dispatch(updateChatSeen({ chatId: id }))
                             }
                             observer.unobserve(entry.target);
                         }
@@ -70,7 +71,7 @@ const Page = () => {
             { threshold: 0.5 }
         );
 
-        refs.current.forEach(el => el && observer.observe(el));
+        elements.forEach(el => el && observer.observe(el));
 
         return () => {
             observer.disconnect();
@@ -84,50 +85,67 @@ const Page = () => {
         }
     }, [chats, id])
 
+    // listening to socket events
     useEffect(() => {
-        if (socket) {
-            socket.on('connect', () => { });
-            socket.on('receiveMessage', ({ from, message }) => {
-                queryClient.setQueryData(['messages'], (old: any) => {
-                    if (currentChat) {
-                        dispatch(updateChatNewMessages({ chatId: currentChat.chatId, message: message }));
+        if (!socket || !user) return;
+
+        socket.on('connect', () => { });
+        socket.on('receiveMessage', ({ from, id, messageContent }) => {
+            queryClient.setQueryData(['messages', currentChat?.chatId], (old: any) => {
+                if (currentChat) {
+                    dispatch(updateChatNewMessages({ chatId: currentChat.chatId, message: messageContent }));
+                }
+                return [...old, { fromId: from, content: messageContent, createdAt: new Date(), id: id }]
+            })
+        })
+
+        socket.on('updateSeen', ({ messageId }) => {
+            queryClient.setQueryData(['messages', currentChat?.chatId], (old: IMessage[]) => {
+
+                return old.map((item) => {
+                    if (item.id == messageId) {
+                        return ({ ...item, isSeen: true });
+                    } else {
+                        return (item);
                     }
-                    return [...old, { fromId: from, content: message, createdAt: new Date() }]
                 })
             })
-            socket.on('updateSeen', ({ messageId }) => {
-                queryClient.setQueryData(['messages'], (old: IMessage[]) => {
+        })
 
-                    return old.map((item) => {
-                        if (item.id == messageId) {
-                            return ({ ...item, isSeen: true });
-                        } else {
-                            return (item);
-                        }
-                    })
-                })
-            })
+        return () => {
+            socket.off("receiveMessage");
+            socket.off("messageSent");
+            socket.off("updateSeen");
+        };
 
-            return () => {
-                socket.off("receiveMessage");
-                socket.off("updateSeen");
-            };
-        }
 
     }, [socket])
 
+    // listening to message sent event
+    useEffect(() => {
+        if (!socket || !user) return;
+        socket.on('messageSent', (data) => {
+            queryClient.setQueryData(['messages', currentChat?.chatId], (old: IMessage[] = []) => {
+                return [...old, { fromId: user.id, content: lastMessageRef.current, createdAt: new Date(data.createdAt), isSeen: false, id: data.id }];
+            });
+        })
+        return () => {
+            socket.off("messageSent");
+        };
+    }, [user, socket])
 
+    // func for  sending new message
     const handleSend = () => {
         if (socket && user && messageInput.trim() !== "") {
+            lastMessageRef.current = messageInput;
             socket.emit("sendMessage", { to: currentChat?.friend.id, message: messageInput });
-            queryClient.setQueryData(['messages'], (old: IMessage[] = []) => {
-                return [...old, { fromId: user.id, content: messageInput, createdAt: new Date(), isSeen: false }];
-            });
+
             setMessageInput("");
         }
+
     }
 
-
+    // getting down to the latest messages with scroll 
     useEffect(() => {
         if (refs && messages) {
             endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -160,7 +178,7 @@ const Page = () => {
             {/* content */}
             <div className="flex gap-4 flex-col p-4 w-full h-[502px]   overflow-y-scroll">
                 {messages && messages.length > 0 ? (messages as IMessage[]).map((msg, idx) => (
-                    <div ref={(el) => { refs.current[idx] = el! }} key={idx} className={`w-fit rounded-[10px] text-gray  p-3  ${msg.fromId === user?.id ? 'bg-lightBlue self-end' : "bg-neutral-200"}`}>
+                    <div ref={(el) => { refs.current[idx] = el! }} key={msg.id ?? idx} className={`w-fit rounded-[10px] text-gray  p-3  ${msg.fromId === user?.id ? 'bg-lightBlue self-end' : "bg-neutral-200"}`}>
                         <p className={`text-wrap mb-1   leading-5 text-sm ${msg.fromId === user?.id ? "text-neutral-900" : ""}`}>{msg.content}</p>
                         <div className="flex justify-between items-center flex-row-reverse gap-2">
                             {
