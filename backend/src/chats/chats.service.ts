@@ -119,7 +119,7 @@ export class ChatsService {
       });
     }
 
-    return { chatId: chat.id, friend: { name: dto.friendName, id: dto.friendId } }
+    return { chatId: chat.id, friend: { name: dto.friendName, id: dto.friendId }, lastMessageContent: null }
   };
 
 }

@@ -1,13 +1,17 @@
 "use client"
 
 import { api } from "@/api/axiosInstance";
-import { useQuery } from "@tanstack/react-query";
+import { useAppDispatch } from "@/hooks/reduxHooks";
+import { updateChats } from "@/redux/chatsSlice";
+import { IChat } from "@/types/types";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Calendar, MessageSquare, MessageSquareMore } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 const page = () => {
     const { id } = useParams() as { id: string };
-
+    const dispatch = useAppDispatch();
+    const router = useRouter();
     const { data: profile } = useQuery({
         queryKey: ['profile', id],
         queryFn: async () => {
@@ -15,6 +19,19 @@ const page = () => {
             return res.data;
         }
     })
+    // for getting 
+    const mutationCreateChat = useMutation({
+        mutationFn: async ({ payload }: { payload: { friendId: string, friendName: string } }) => { const res = await api.post("/chats", payload); return res.data },
+        onSuccess: (data: IChat) => {
+            router.push(`/chats/${data.chatId}`);
+            dispatch(updateChats(data));
+        }
+    })
+
+    const redirectToChat = (friendName: string) => {
+        // getting chat whether its created or whether its not then creating a new one and getting its id to get route of the chats page of it 
+        mutationCreateChat.mutate({ payload: { friendId: id, friendName } });
+    }
     return (
         <div className="grid gap-8 grid-cols-3">
             <div className="_border rounded-[10px] col-span-2 banner_gradient flex flex-col gap-4  p-8">
@@ -40,7 +57,7 @@ const page = () => {
                     <div className="size-24 rounded-full bg-black"></div>
                     <h2 className="section-title">{profile?.name}</h2>
                     <div className="flex flex-col gap-3 mt-4 w-full">
-                        <button className="button-blue flex items-center gap-5">
+                        <button onClick={() => redirectToChat(profile.name)} className="button-blue flex items-center gap-5">
                             <MessageSquareMore size={20} />
                             <span>Message {profile?.name}</span>
                         </button>

@@ -4,7 +4,6 @@ import { api } from "@/api/axiosInstance"
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks"
 import { updateChatNewMessages, updateChatSeen } from "@/redux/chatsSlice"
 import { IChat, IMessage } from "@/types/types"
-import { current } from "@reduxjs/toolkit"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { CheckCheck, EllipsisVertical, Send } from "lucide-react"
 import { useParams } from "next/navigation"
@@ -126,7 +125,7 @@ const Page = () => {
         if (!socket || !user) return;
         socket.on('messageSent', (data) => {
             queryClient.setQueryData(['messages', currentChat?.chatId], (old: IMessage[] = []) => {
-                return [...old, { fromId: user.id, content: lastMessageRef.current, createdAt: new Date(data.createdAt), isSeen: false, id: data.id }];
+                const updated = [...old, { fromId: user.id, content: lastMessageRef.current, createdAt: new Date(data.createdAt), isSeen: false, id: data.id }];
             });
         })
         return () => {
