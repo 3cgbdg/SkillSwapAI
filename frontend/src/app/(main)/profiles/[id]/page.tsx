@@ -5,7 +5,7 @@ import { useAppDispatch } from "@/hooks/reduxHooks";
 import { updateChats } from "@/redux/chatsSlice";
 import { IChat } from "@/types/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Calendar, MessageSquare, MessageSquareMore } from "lucide-react";
+import { Calendar, MessageSquareMore } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 
 const page = () => {

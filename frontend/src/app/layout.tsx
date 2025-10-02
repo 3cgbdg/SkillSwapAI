@@ -34,13 +34,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${InterFont.variable} ${DancingScript.variable}  antialiased`}
+        className={`${InterFont.variable} ${DancingScript.variable} relative  antialiased`}
       >
         <QueryProvider>
           <ReduxProvider>
-          <div className="">
-            {children}
-          </div>
+            <div className="">
+              {children}
+            </div>
           </ReduxProvider>
         </QueryProvider>
       </body>

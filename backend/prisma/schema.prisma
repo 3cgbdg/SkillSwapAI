@@ -70,3 +70,13 @@ model Message {
   createdAt DateTime @default(now())
   isSeen    Boolean  @default(false)
 }
+
+model Session {
+  id          String   @id @default(uuid())
+  title       String   @unique
+  start       Int
+  end         Int
+  description String?
+  date        DateTime
+  color      String
+}

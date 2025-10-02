@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@nestjs/mapped-types": "*",
+    "@tanstack/react-table": "^8.21.3",
     "react-hook-form": "^7.63.0"
   }
 }

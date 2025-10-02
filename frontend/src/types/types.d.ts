@@ -30,3 +30,13 @@ interface IMessage {
 }
 
 
+export interface ISession {
+    id: string;
+    title: string;
+    start: string;
+    end: string;
+    description?: string;
+    color: string;
+    date: Date;
+}
+
