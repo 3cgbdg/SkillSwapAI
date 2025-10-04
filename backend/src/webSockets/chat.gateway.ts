@@ -27,6 +27,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                 const payload = this.jwtService.verify(token as string) as { userId: string };
                 this.users.set(payload.userId, client.id);
                 client.data.userId = payload.userId;
+                this.server.emit("setToOnline", { id: payload.userId });
             }
             catch (err) {
                 console.error("Error");
@@ -37,10 +38,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     handleDisconnect(client: Socket) {
-        for (const [userId, socketId] of this.users.entries()) {
-            if (socketId === client.id) {
-                this.users.delete(userId);
-            }
+        const userId = client.data.userId;
+        if (userId) {
+            this.users.delete(userId);
+            this.server.emit("setToOffline", { id: userId });
         }
     }
 

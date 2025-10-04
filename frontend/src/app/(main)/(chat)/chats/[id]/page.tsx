@@ -1,19 +1,22 @@
 "use client"
 
 import { api } from "@/api/axiosInstance"
+import { useSocket } from "@/context/SocketContext"
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks"
 import { updateChatNewMessages, updateChatSeen } from "@/redux/chatsSlice"
 import { IChat, IMessage } from "@/types/types"
+import { current } from "@reduxjs/toolkit"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { CheckCheck, EllipsisVertical, Send } from "lucide-react"
 import { useParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
-import { io, Socket } from "socket.io-client"
+
 
 
 
 const Page = () => {
-    const [socket, setSocket] = useState<Socket | null>(null);
+    const { onlineUsers } = useAppSelector(state => state.onlineUsers)
+    const { socket } = useSocket();
     const queryClient = useQueryClient();
     const { user } = useAppSelector(state => state.auth)
     const [messageInput, setMessageInput] = useState<string>("")
@@ -36,14 +39,7 @@ const Page = () => {
         enabled: !!currentChat
     })
 
-    // initializing io-client
-    useEffect(() => {
-        const sock = io(`${process.env.NEXT_PUBLIC_API_URL}`, { withCredentials: true });
-        setSocket(sock);
-        return () => {
-            sock.disconnect();
-        };
-    }, [])
+
 
     // tracking new messages for actions
     useEffect(() => {
@@ -88,8 +84,8 @@ const Page = () => {
     useEffect(() => {
         if (!socket || !user) return;
 
-        socket.on('connect', () => { });
-        socket.on('receiveMessage', ({ from, id, messageContent }) => {
+       
+        socket.on('receiveMessage', ({ from, id, messageContent }: { from: string, id: string, messageContent: string }) => {
             queryClient.setQueryData(['messages', currentChat?.chatId], (old: any) => {
                 if (currentChat) {
                     dispatch(updateChatNewMessages({ chatId: currentChat.chatId, message: messageContent }));
@@ -98,7 +94,7 @@ const Page = () => {
             })
         })
 
-        socket.on('updateSeen', ({ messageId }) => {
+        socket.on('updateSeen', ({ messageId }: { messageId: string }) => {
             queryClient.setQueryData(['messages', currentChat?.chatId], (old: IMessage[]) => {
 
                 return old.map((item) => {
@@ -123,7 +119,7 @@ const Page = () => {
     // listening to message sent event
     useEffect(() => {
         if (!socket || !user) return;
-        socket.on('messageSent', (data) => {
+        socket.on('messageSent', (data: { id: string, createdAt: string | Date }) => {
             queryClient.setQueryData(['messages', currentChat?.chatId], (old: IMessage[] = []) => {
                 const updated = [...old, { fromId: user.id, content: lastMessageRef.current, createdAt: new Date(data.createdAt), isSeen: false, id: data.id }];
             });
@@ -165,7 +161,7 @@ const Page = () => {
                         <div className="rounded-full size-12 bg-black"></div>
                         <div className="">
                             <h3 className="text-xl leading-7 font-semibold">Alice User</h3>
-                            <span className="text-sm leading-5 text-green-300">Online</span>
+                            <span className={`text-sm leading-5  ${currentChat && onlineUsers.includes(currentChat.friend.id) ? "text-green-300" : "text-gray"}`}>{currentChat && onlineUsers.includes(currentChat.friend.id) ? "Online" : "Offline"}</span>
                         </div>
                     </div>
                     <button className="cursor-pointer p-1 rounded-md transition-all hover:bg-neutral-50">

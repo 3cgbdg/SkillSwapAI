@@ -19,6 +19,7 @@ export interface IChat {
     chatId: string,
     lastMessageContent?: string,
     friend: IFriend,
+    
 }
 
 interface IMessage {

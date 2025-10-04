@@ -1,6 +1,6 @@
-import { IChat, IUser } from "@/types/types";
+import { IChat} from "@/types/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { ChartArea } from "lucide-react";
+
 
 interface IinitialState {
     chats: IChat[] | null,

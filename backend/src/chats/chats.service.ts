@@ -70,7 +70,8 @@ export class ChatsService {
               })
             },
             lastMessageContent: lastMsg.content,
-            friend
+            friend,
+            
           };
         })
       );
@@ -90,10 +91,10 @@ export class ChatsService {
         return (
           {
             chatId: chat.id,
-            friend: chat.users[0]
+            friend: chat.users[0],
+            
           })
       })
-      console.log(newChats)
       return newChats;
     }
   }

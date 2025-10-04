@@ -1,8 +1,10 @@
 "use client"
 
 import { api } from "@/api/axiosInstance";
+import { useSocket } from "@/context/SocketContext";
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
 import { updateChats } from "@/redux/chatsSlice";
+import { addOnlineUser, removeOnlineUser } from "@/redux/onlineUsersSlice";
 import { IChat, IFriend } from "@/types/types";
 import { useMutation } from "@tanstack/react-query";
 import { Plus, Search, Users } from "lucide-react";
@@ -21,6 +23,29 @@ const ChatSidebar = () => {
     const [friends, setFriends] = useState<IFriend[] | null>(null);
     const dispatch = useAppDispatch();
     const { chats } = useAppSelector(state => state.chats);
+    const { onlineUsers } = useAppSelector(state => state.onlineUsers)
+    const { socket } = useSocket();
+
+
+    useEffect(() => {
+        if (!socket) return
+        socket.on('connect', () => { });
+        socket.on('setToOnline', ({ id }: { id: string }) => {
+            dispatch(addOnlineUser(id));
+            console.log(id + "is online");
+        });
+        socket.on('setToOffline', ({ id }: { id: string }) => {
+            dispatch(removeOnlineUser(id));
+            console.log(id + "is offine");
+
+        });
+        return () => {
+            socket.off('setToOffline');
+            socket.off('setToOnline');
+        }
+    }, [socket])
+
+
     const mutationSearch = useMutation({
         mutationFn: async () => { const res = await api.get("/friends"); return res.data },
         onSuccess: (data) => {
@@ -80,7 +105,10 @@ const ChatSidebar = () => {
 
                     <button key={idx} onClick={() => router.push(`/chats/${chat.chatId}`)} className={`rounded-[6px] p-3.5 cursor-pointer ${path == `/chats/${chat.chatId}` ? "bg-lightBlue" : ""} transition-all  hover:bg-lightBlue flex gap-4 justify-between`}>
                         <div className="flex  gap-4 items-center">
-                            <div className="rounded-full size-10 bg-black"></div>
+                            <div className=" size-10   relative">
+                                <div className="bg-black size-full rounded-full overflow-hidden"></div>
+                                <div className={`absolute bottom-0  right-0 border-2 border-white rounded-full size-3 ${onlineUsers.includes(chat.friend.id) ? "bg-green-500" : "bg-gray"}`}></div>
+                            </div>
                             <div className="text-left">
                                 <h3 className="">{chat.friend.name}</h3>
                                 <p className="text-gray leading-5 text-sm">{chat.lastMessageContent}</p>
