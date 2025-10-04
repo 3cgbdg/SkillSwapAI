@@ -86,7 +86,7 @@ const Calendar = () => {
                     {
                         tableCells.slice(7 * monthWeekIdx, (monthWeekIdx + 1) * 7).map((cell, idx) => (
                             <div className="flex flex-col gap-0.5   items-center " key={idx}>
-                                <span className="text-sm leading-5 font-medium">{cell.date.toLocaleDateString('eu-US', { weekday: 'short' })}</span>
+                                <span className="text-sm leading-5 font-medium">{cell.date.toLocaleDateString('en-US', { weekday: 'short' })}</span>
                                 <span className="leading-7 text-lg font-bold ">{cell.date.getDate()}</span>
                             </div>
                         ))

@@ -42,10 +42,8 @@ export default function ChatLayout({
 
 
     <div className="flex gap-8 h-[705px]">
-      <SocketProvider>
         <ChatSidebar />
         {children}
-      </SocketProvider>
     </div>
 
 

@@ -33,7 +33,7 @@ const Page = () => {
         queryKey: ['messages', currentChat?.chatId],
         queryFn: async () => {
             const res = await api.get(`/chats/messages?with=${currentChat?.friend.id}`);
-            return res.data;
+            return res.data as IMessage[];
 
         },
         enabled: !!currentChat
@@ -41,7 +41,7 @@ const Page = () => {
 
 
 
-    // tracking new messages for actions
+    // tracking new messages for seeing it
     useEffect(() => {
         if (!messages || !socket || !user) return;
         const elements = refs.current.filter(Boolean);
@@ -73,30 +73,44 @@ const Page = () => {
         };
     }, [messages, socket, user, currentChat]);
 
-
+    // getting current chat
     useEffect(() => {
         if (chats && id) {
             setCurrentChat(chats.find(chat => chat.chatId === id) ?? null);
         }
     }, [chats, id])
 
+    useEffect(() => {
+        console.log(messages)
+    }, [messages])
+
     // listening to socket events
     useEffect(() => {
-        if (!socket || !user) return;
+        if (!socket || !user || !currentChat) return;
 
-       
+
         socket.on('receiveMessage', ({ from, id, messageContent }: { from: string, id: string, messageContent: string }) => {
-            queryClient.setQueryData(['messages', currentChat?.chatId], (old: any) => {
+            console.log(from, id, messageContent);
+            queryClient.setQueryData(['messages', currentChat.chatId], (old: IMessage[]) => {
                 if (currentChat) {
                     dispatch(updateChatNewMessages({ chatId: currentChat.chatId, message: messageContent }));
                 }
+
                 return [...old, { fromId: from, content: messageContent, createdAt: new Date(), id: id }]
             })
         })
 
+
+        socket.on('messageSent', (data: { id: string, createdAt: string | Date }) => {
+            queryClient.setQueryData(['messages', currentChat.chatId], (old: IMessage[] = []) => {
+                return [...old, { fromId: user.id, content: lastMessageRef.current, createdAt: new Date(data.createdAt), isSeen: false, id: data.id }];
+            });
+        })
+
+        // updating status of seen message (from unseen to seen)
         socket.on('updateSeen', ({ messageId }: { messageId: string }) => {
             queryClient.setQueryData(['messages', currentChat?.chatId], (old: IMessage[]) => {
-
+                if (!old) return old;
                 return old.map((item) => {
                     if (item.id == messageId) {
                         return ({ ...item, isSeen: true });
@@ -106,35 +120,24 @@ const Page = () => {
                 })
             })
         })
-
         return () => {
             socket.off("receiveMessage");
-            socket.off("messageSent");
             socket.off("updateSeen");
-        };
-
-
-    }, [socket])
-
-    // listening to message sent event
-    useEffect(() => {
-        if (!socket || !user) return;
-        socket.on('messageSent', (data: { id: string, createdAt: string | Date }) => {
-            queryClient.setQueryData(['messages', currentChat?.chatId], (old: IMessage[] = []) => {
-                const updated = [...old, { fromId: user.id, content: lastMessageRef.current, createdAt: new Date(data.createdAt), isSeen: false, id: data.id }];
-            });
-        })
-        return () => {
             socket.off("messageSent");
+
         };
-    }, [user, socket])
+
+
+    }, [socket, user, currentChat])
+
+
 
     // func for  sending new message
     const handleSend = () => {
-        if (socket && user && messageInput.trim() !== "") {
+        if (socket && currentChat && user && messageInput.trim() !== "") {
             lastMessageRef.current = messageInput;
-            socket.emit("sendMessage", { to: currentChat?.friend.id, message: messageInput });
-
+            console.log(lastMessageRef.current, currentChat?.friend.id)
+            socket.emit("sendMessage", { to: currentChat.friend.id, message: messageInput });
             setMessageInput("");
         }
 
@@ -172,7 +175,7 @@ const Page = () => {
 
             {/* content */}
             <div className="flex gap-4 flex-col p-4 w-full h-[502px]   overflow-y-scroll">
-                {messages && messages.length > 0 ? (messages as IMessage[]).map((msg, idx) => (
+                {messages && messages.length > 0 ? messages.map((msg, idx) => (
                     <div ref={(el) => { refs.current[idx] = el! }} key={msg.id ?? idx} className={`w-fit rounded-[10px] text-gray  p-3  ${msg.fromId === user?.id ? 'bg-lightBlue self-end' : "bg-neutral-200"}`}>
                         <p className={`text-wrap mb-1   leading-5 text-sm ${msg.fromId === user?.id ? "text-neutral-900" : ""}`}>{msg.content}</p>
                         <div className="flex justify-between items-center flex-row-reverse gap-2">

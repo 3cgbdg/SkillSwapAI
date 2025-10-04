@@ -3,6 +3,7 @@ import { Dancing_Script, Inter } from "next/font/google";
 import "@/styles/globals.css";
 import QueryProvider from "@/providers/QueryProvider";
 import ReduxProvider from "@/providers/ReduxProvider";
+import { SocketProvider } from "@/context/SocketContext";
 
 
 
@@ -38,9 +39,11 @@ export default function RootLayout({
       >
         <QueryProvider>
           <ReduxProvider>
-            <div className="">
-              {children}
-            </div>
+            <SocketProvider>
+              <div className="">
+                {children}
+              </div>
+            </SocketProvider>
           </ReduxProvider>
         </QueryProvider>
       </body>

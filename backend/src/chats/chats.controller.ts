@@ -23,7 +23,7 @@ export class ChatsController {
 
   @Post()
   async createChat(@Body() dto: CreateChatDto, @Req() req: Request) {
-    console.log(dto)
+
     return this.chatsService.createChat(dto, (req as any).user.id);
 
   }

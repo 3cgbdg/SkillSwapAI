@@ -14,7 +14,7 @@ export class ChatsService {
           { users: { some: { id: myId } } },
           { users: { some: { id: friendId } } },
         ]
-      }, include: { messages: true }
+      }, include: { messages: { orderBy: { createdAt: 'asc' } } }
     })
 
     return [...(chat?.messages ?? [])]
@@ -71,7 +71,7 @@ export class ChatsService {
             },
             lastMessageContent: lastMsg.content,
             friend,
-            
+
           };
         })
       );
@@ -92,7 +92,7 @@ export class ChatsService {
           {
             chatId: chat.id,
             friend: chat.users[0],
-            
+
           })
       })
       return newChats;

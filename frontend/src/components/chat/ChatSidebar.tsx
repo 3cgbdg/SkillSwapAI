@@ -4,7 +4,7 @@ import { api } from "@/api/axiosInstance";
 import { useSocket } from "@/context/SocketContext";
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
 import { updateChats } from "@/redux/chatsSlice";
-import { addOnlineUser, removeOnlineUser } from "@/redux/onlineUsersSlice";
+import { addOnlineUser, removeOnlineUser, setOnlineUsers } from "@/redux/onlineUsersSlice";
 import { IChat, IFriend } from "@/types/types";
 import { useMutation } from "@tanstack/react-query";
 import { Plus, Search, Users } from "lucide-react";
@@ -30,18 +30,24 @@ const ChatSidebar = () => {
     useEffect(() => {
         if (!socket) return
         socket.on('connect', () => { });
-        socket.on('setToOnline', ({ id }: { id: string }) => {
-            dispatch(addOnlineUser(id));
-            console.log(id + "is online");
+        socket.on('friendsOnline', ({ users }: { users: string[] }) => {
+            dispatch(setOnlineUsers(users));
+            console.log(users + "is online");
         });
         socket.on('setToOffline', ({ id }: { id: string }) => {
             dispatch(removeOnlineUser(id));
             console.log(id + "is offine");
 
         });
+        socket.on('setToOnline', ({ id }: { id: string }) => {
+            dispatch(addOnlineUser(id));
+            console.log(id + "is online");
+
+        });
         return () => {
             socket.off('setToOffline');
             socket.off('setToOnline');
+            socket.off('friendsOnline');
         }
     }, [socket])
 
