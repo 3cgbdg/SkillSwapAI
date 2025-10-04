@@ -15,6 +15,7 @@ model User {
   knownSkills      Skill[]   @relation("knownSkills")
   skillsToLearn    Skill[]   @relation("skillsToLearn")
   chats            Chat[]    @relation("userChats")
+  sessions         Session[] @relation("userSessions")
   messagesSent     Message[] @relation("sender")
   messagesReceived Message[] @relation("receiver")
   sentRequests     Request[] @relation("sentRequests")
@@ -78,5 +79,6 @@ model Session {
   end         Int
   description String?
   date        DateTime
-  color      String
+  color       String
+  users       User[]   @relation("userSessions")
 }

@@ -38,5 +38,6 @@ export interface ISession {
     description?: string;
     color: string;
     date: Date;
+    friendId: string,
 }
 

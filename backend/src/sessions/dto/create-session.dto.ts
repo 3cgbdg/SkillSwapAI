@@ -1,31 +1,34 @@
 import { Type } from "class-transformer";
 import { IsDateString, IsNotEmpty, IsOptional, Matches, Max, Min, ValidateIf } from "class-validator";
 export class CreateSessionDto {
-    @IsNotEmpty()
+    @IsNotEmpty({ message: 'Empty title' })
     title: string;
 
     @IsOptional()
     description?: string;
 
-    @IsNotEmpty()
-    @IsDateString()
+    @IsNotEmpty({ message: 'Value is empty' })
+    @IsDateString({}, { message: 'Invalid time' })
     date: string;
 
     @Type(() => Number)
-    @IsNotEmpty()
-    @Min(0)
-    @Max(23)
+    @IsNotEmpty({ message: 'Value is empty' })
+    @Min(0, { message: 'Invalid time' })
+    @Max(23, { message: 'Invalid time' })
     start: number;
 
-    @ValidateIf(o => o.start < o.end)
+    @ValidateIf(o => o.start < o.end, { message: 'Invalid time' })
 
     @Type(() => Number)
-    @IsNotEmpty()
+    @IsNotEmpty({ message: 'Value is empty' })
     @Min(0)
     @Max(23)
     end: number;
 
-    @IsNotEmpty()
+    @IsNotEmpty({ message: 'Invalid color' })
     @Matches(/^#/)
     color: string;
+
+    @IsNotEmpty({ message: 'Value is empty' })
+    friendId: string;
 }
