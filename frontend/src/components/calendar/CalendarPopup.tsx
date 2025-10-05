@@ -9,6 +9,7 @@ import { useMutation } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { Dispatch, SetStateAction, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
+import { TableCellType } from "./Calendar";
 
 
 
@@ -17,17 +18,16 @@ import { SubmitHandler, useForm } from "react-hook-form";
 const colors = ['#5C6BC0', '#FF7043', '#43A047']
 
 // type for form
-type formType = ISession & { friendName: string }
+type formType = Omit<ISession, "start" | "end"> & { friendName: string, start: string, end: string }
 
-const CalendarPopup = ({ year, month, setAddSessionPopup }: { year: number, month: number, setAddSessionPopup: Dispatch<SetStateAction<boolean>> }) => {
+const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup }: { year: number, month: number, setAddSessionPopup: Dispatch<SetStateAction<boolean>>, setTableCells: Dispatch<SetStateAction<TableCellType[]>> }) => {
     const { register, watch, handleSubmit, setValue, formState: { errors } } = useForm<formType>();
     const dispatch = useAppDispatch();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const [chars, setChars] = useState<string>("");
     const [friends, setFriends] = useState<IFriend[] | null>(null);
-
-
+    const [badRequestErrorMessage, setBadRequestErrorMessage] = useState<string | null>(null);
     // searching friends by name
     const mutationSearch = useMutation({
         mutationFn: async () => { const res = await api.get("/friends"); return res.data },
@@ -39,20 +39,35 @@ const CalendarPopup = ({ year, month, setAddSessionPopup }: { year: number, mont
     // mutation for creating session request
     const createSessionMutation = useMutation({
         mutationKey: ["session"],
-        mutationFn: async (data: ISession) => {
+        mutationFn: async (data: Omit<formType, 'friendName'>) => {
             const res = await api.post("/sessions", { ...data, color: colors[Math.floor(Math.random() * 3)] });
-            return res.data;
+            return res.data as ISession;
         },
         onSuccess: (data) => {
             setAddSessionPopup(false);
+            // if its current day event adding to global state
+            if ((data.date).getDate() == new Date().getDate())
+                dispatch(addSession(data));
+
+            setTableCells(prev => prev.map(item => {
+                if (new Date(item.date).getDate() === new Date(data.date).getDate()) {
+                    const updatedSessions = [...item.sessions, data].sort((a, b) => a.start - b.start)
+                    return ({ date: item.date, sessions: updatedSessions })
+                } else {
+                    return item
+                }
+            }))
+        },
+        onError: (error: any) => {
+            setBadRequestErrorMessage(error.response?.data?.message || error.message);
         }
     })
     const createSession: SubmitHandler<formType> = async (data) => {
-        dispatch(addSession(data));
         const { friendName, ...newData } = data;
         createSessionMutation.mutate(newData)
     }
     const startHour = watch('start');
+
     return (
         <div className=" absolute   top-0 left-0 size-full bg-[#6B72808C] flex items-center justify-center">
 
@@ -169,6 +184,11 @@ const CalendarPopup = ({ year, month, setAddSessionPopup }: { year: number, mont
                             </span>
                         )}
                     </div>
+                    {badRequestErrorMessage && (
+                        <span data-testid='error' className="text-red-500 font-medium ">
+                            {badRequestErrorMessage}
+                        </span>
+                    )}
                     <button className="button-blue">Create</button>
                 </form>
             </div>

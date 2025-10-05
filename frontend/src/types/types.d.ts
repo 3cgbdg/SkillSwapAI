@@ -19,7 +19,7 @@ export interface IChat {
     chatId: string,
     lastMessageContent?: string,
     friend: IFriend,
-    
+
 }
 
 interface IMessage {
@@ -34,8 +34,8 @@ interface IMessage {
 export interface ISession {
     id: string;
     title: string;
-    start: string;
-    end: string;
+    start: number;
+    end: number;
     description?: string;
     color: string;
     date: Date;

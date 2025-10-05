@@ -3,11 +3,12 @@ import { api } from "@/api/axiosInstance";
 import { useAppDispatch } from "@/hooks/reduxHooks";
 import { ISession } from "@/types/types";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import CalendarPopup from "./CalendarPopup";
+import { setSessions } from "@/redux/sessionsSlice";
 
-type TableCellType = {
+export type TableCellType = {
     sessions: ISession[],
     date: Date,
 };
@@ -34,6 +35,7 @@ const Calendar = () => {
             const res = await api.get("/sessions", { params: { month } });
             return res.data as ISession[];
         },
+        refetchInterval: 60 * 60 * 1000,
     })
     //
 
@@ -54,11 +56,20 @@ const Calendar = () => {
 
 
     useEffect(() => {
-        if (data)
+        if (data) {
             setTableCells(prev => prev.map(dayCell => ({
                 ...dayCell,
-                sessions: data.filter(session => new Date(session.date).getDay() === new Date(dayCell.date).getDay())
+                sessions: data.filter(session => new Date(session.date).getDate() === new Date(dayCell.date).getDate()).sort((a, b) => a.start - b.start)
             })));
+            // getting right month week idx
+            const today = new Date();
+            const dayIdx = today.getDate() - 1;
+            const weekIdx = Math.floor(dayIdx / 7);
+            setMonthWeekIdx(weekIdx);
+            const currentSessions = data.filter(session => new Date(session.date).getDate() === today.getDate());
+            //    adding current day sesions to global state 
+            dispatch(setSessions(currentSessions));
+        }
     }, [data]);
 
     return (
@@ -67,7 +78,11 @@ const Calendar = () => {
             <div className="bg-neutral-200 px-4 py-4.5 flex justify-between items-center border-b-1 border-neutral-300">
                 <h2 className="text-xl leading-7 font-semibold">October 2024</h2>
                 <div className="flex items-center gap-4">
-                    <button onClick={() => setMonthWeekIdx(prev => { return (prev + 1) })} className="button-transparent bg-white! flex gap-2">
+                    <button disabled={monthWeekIdx == 0} onClick={() => setMonthWeekIdx(prev => prev != 0 ? prev - 1 : 0)} className="button-transparent disabled:bg-gray! bg-white! flex gap-2">
+                        <ArrowLeft size={16} />
+                        <span>Previous 7 days</span>
+                    </button>
+                    <button disabled={monthWeekIdx == 4} onClick={() => setMonthWeekIdx(prev => prev != 4 ? prev + 1 : 4)} className="button-transparent disabled:bg-gray! bg-white! flex gap-2">
                         <span>Next 7 days</span>
                         <ArrowRight size={16} />
                     </button>
@@ -96,7 +111,7 @@ const Calendar = () => {
                         {Array.from({ length: 24 }, (_, i) =>
                             `${i.toString().padStart(2, "0")}:00`
                         ).map((value, idx) => (
-                            <div key={idx} className="h-[73px] flex text-sm leading-4 text-gray items-center  justify-center">{value}</div>
+                            <div key={idx} className="min-h-[73px] flex text-sm leading-4 text-gray items-center  justify-center">{value}</div>
                         ))}
                     </div>
                     <div className="col-span-7 grid grid-cols-7">
@@ -104,14 +119,14 @@ const Calendar = () => {
                             tableCells
                                 .slice(7 * monthWeekIdx, 7 * (monthWeekIdx + 1))
                                 .map((cell) => (
-                                    <div key={cell.date.toISOString()} className="_border p-1 ">
+                                    <div key={cell.date.toISOString()} className="_border p-1 relative overflow-hidden">
                                         {cell.sessions.map((session) => (
                                             <div
                                                 key={session.id}
-                                                style={{ backgroundColor: session.color, marginTop: 73 * Number(session.start), height: 73 * (Number(session.end) - Number(session.start)+1) }}
-                                                className="text-xs text-white rounded p-1 flex flex-col gap-1   h-[73px]"
+                                                style={{ backgroundColor: session.color, marginTop: 73.5 * (session.start), height: 73 * (session.end - session.start + 1) }}
+                                                className="text-xs text-white rounded p-2 flex flex-col gap-1 top-0 left-0 absolute w-full  h-[73px]"
                                             >
-                                                <span>{session.title} { }</span>
+                                                <span>{session.title}</span>
                                                 <span>({session.start} - {session.end})</span>
 
                                             </div>
@@ -127,7 +142,7 @@ const Calendar = () => {
             {/* popup for adding session */}
             {
                 addSessionPopup &&
-                <CalendarPopup month={month} year={year} setAddSessionPopup={setAddSessionPopup} />
+                <CalendarPopup month={month} year={year} setTableCells={setTableCells} setAddSessionPopup={setAddSessionPopup} />
             }
         </div >
 

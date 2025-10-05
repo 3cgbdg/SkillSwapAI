@@ -13,8 +13,8 @@ const sessionsSlice = createSlice({
     name: "sessions",
     initialState,
     reducers: {
-        getSessions: (state, action: PayloadAction<ISession[]>) => {
-            state.sessions = { ...action.payload }
+        setSessions: (state, action: PayloadAction<ISession[]>) => {
+            state.sessions = [...action.payload]
         },
         addSession: (state, action: PayloadAction<ISession>) => {
             if (state.sessions) {
@@ -29,5 +29,5 @@ const sessionsSlice = createSlice({
 }
 )
 
-export const { getSessions, addSession } = sessionsSlice.actions;
+export const { setSessions, addSession } = sessionsSlice.actions;
 export default sessionsSlice.reducer;
