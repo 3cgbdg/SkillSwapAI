@@ -81,7 +81,6 @@ const Calendar = () => {
             <div className="mt-6 w-full">
                 <div className="grid grid-cols-8 border-b-1 border-neutral-300 pr-[15px]">
                     <div className="flex flex-col gap-0.5 not-last:border-r-1  items-center border-neutral-300" >
-
                     </div>
                     {
                         tableCells.slice(7 * monthWeekIdx, (monthWeekIdx + 1) * 7).map((cell, idx) => (
@@ -109,8 +108,8 @@ const Calendar = () => {
                                         {cell.sessions.map((session) => (
                                             <div
                                                 key={session.id}
-                                                style={{ backgroundColor: session.color }}
-                                                className="text-xs text-white rounded p-1 flex flex-col gap-1  h-[73px]"
+                                                style={{ backgroundColor: session.color, marginTop: 73 * Number(session.start), height: 73 * (Number(session.end) - Number(session.start)+1) }}
+                                                className="text-xs text-white rounded p-1 flex flex-col gap-1   h-[73px]"
                                             >
                                                 <span>{session.title} { }</span>
                                                 <span>({session.start} - {session.end})</span>

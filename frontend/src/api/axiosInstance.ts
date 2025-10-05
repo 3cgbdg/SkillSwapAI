@@ -6,11 +6,11 @@ export const api = axios.create({
 })
 
 
-api.interceptors.response.use(
+api.interceptors.response.use( 
     response => response,
     async error => {
         const originalReq = error.config;
-        if (error.response.status === 401 && !originalReq._retry && !originalReq.url.includes("/api/auth/refresh")) {
+        if (error.response.status === 401 && !originalReq._retry && !originalReq.url.includes("/auth/refresh")) {
             originalReq._retry = true;
             try {
                 await api.post("/auth/refresh");

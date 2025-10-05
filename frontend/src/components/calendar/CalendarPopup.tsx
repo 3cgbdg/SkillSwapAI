@@ -36,7 +36,7 @@ const CalendarPopup = ({ year, month, setAddSessionPopup }: { year: number, mont
         }
     })
 
-    // mutation for createing session request
+    // mutation for creating session request
     const createSessionMutation = useMutation({
         mutationKey: ["session"],
         mutationFn: async (data: ISession) => {
@@ -44,7 +44,6 @@ const CalendarPopup = ({ year, month, setAddSessionPopup }: { year: number, mont
             return res.data;
         },
         onSuccess: (data) => {
-            console.log(data);
             setAddSessionPopup(false);
         }
     })

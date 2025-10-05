@@ -4,6 +4,7 @@ import "@/styles/globals.css";
 import QueryProvider from "@/providers/QueryProvider";
 import ReduxProvider from "@/providers/ReduxProvider";
 import { SocketProvider } from "@/context/SocketContext";
+import CheckEmptyPath from "@/components/CheckEmptyPath";
 
 
 
@@ -40,6 +41,7 @@ export default function RootLayout({
         <QueryProvider>
           <ReduxProvider>
             <SocketProvider>
+              <CheckEmptyPath />
               <div className="">
                 {children}
               </div>

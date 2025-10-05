@@ -63,6 +63,7 @@ export class AuthController {
 
   @Post('refresh')
   async refreshToken(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    console.log("hello");
     const refreshToken = req.cookies['refresh_token'];
     if (!refreshToken) {
       throw new HttpException("No refresh token", HttpStatus.UNAUTHORIZED);
@@ -85,6 +86,8 @@ export class AuthController {
       sameSite: this.configService.get<string>('NODE_ENV') === 'production' ? 'none' : 'lax',
       maxAge: 1000 * 60 * 15,
     });
+
+
 
     return res.json({ message: 'Access token refreshed' });
 
