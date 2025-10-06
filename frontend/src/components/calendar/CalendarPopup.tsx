@@ -18,7 +18,16 @@ import { TableCellType } from "./Calendar";
 const colors = ['#5C6BC0', '#FF7043', '#43A047']
 
 // type for form
-type formType = Omit<ISession, "start" | "end"> & { friendName: string, start: string, end: string }
+type formType = {
+    friendName: string,
+    friendId: string,
+    start: string,
+    end: string,
+    title: string,
+    description?: string,
+    color: string,
+    date: Date,
+}
 
 const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup }: { year: number, month: number, setAddSessionPopup: Dispatch<SetStateAction<boolean>>, setTableCells: Dispatch<SetStateAction<TableCellType[]>> }) => {
     const { register, watch, handleSubmit, setValue, formState: { errors } } = useForm<formType>();
@@ -46,7 +55,7 @@ const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup }: { yea
         onSuccess: (data) => {
             setAddSessionPopup(false);
             // if its current day event adding to global state
-            if ((data.date).getDate() == new Date().getDate())
+            if (new Date(data.date).getDate() == new Date().getDate())
                 dispatch(addSession(data));
 
             setTableCells(prev => prev.map(item => {
@@ -64,7 +73,19 @@ const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup }: { yea
     })
     const createSession: SubmitHandler<formType> = async (data) => {
         const { friendName, ...newData } = data;
-        createSessionMutation.mutate(newData)
+        if (friends) {
+            console.log(friendName,friends);
+            const realFriend = friends.find(item => item.name === friendName);
+            if (realFriend) {
+                newData.friendId = realFriend.id;
+                createSessionMutation.mutate(newData)
+
+            }
+            else {
+                setBadRequestErrorMessage('There`s no such friend in your list')
+                return;
+            }
+        }
     }
     const startHour = watch('start');
 
@@ -127,8 +148,12 @@ const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup }: { yea
                                         isNotEmpty: value => value.trim() !== "" || "Field is required",
                                         onlyNumbers: value => /^[0-9]+$/.test(value) || "Must be only numbers",
                                         validNumRange: value => Number(value) >= 0 && Number(value) < 24 || "Must be valid hour",
-                                        validTimeRange: value => Number(value) > Number(startHour) || "Must be valid time range"
-
+                                        validTimeRange: value => {
+                                       
+                                            
+                                            if (Number(value) === 0 && Number(startHour) <= 23) return true;
+                                            return Number(value) > Number(startHour) || "Must be valid time range";
+                                        }
                                     }
                                 })} className="w-full outline-none" placeholder="Enter end hour" type="text" id="end" />
                             </div>
@@ -169,7 +194,7 @@ const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup }: { yea
                                         <div className="flex flex-col  gap-1 max-h-[500px]  border-neutral-300">
                                             {friends.filter(friend => friend.name.toLowerCase().includes(chars.toLocaleLowerCase())).map((friend, idx) => {
                                                 return (
-                                                    <button className="cursor-pointer hover:opacity-75" key={idx} onClick={() => { setValue('friendId', friend.id); setValue('friendName', friend.name); setChars("") }}>
+                                                    <button className="cursor-pointer hover:opacity-75" key={idx} onClick={() => { setValue('friendName', friend.name); setChars("") }}>
                                                         {friend.name}
                                                     </button>
                                                 )

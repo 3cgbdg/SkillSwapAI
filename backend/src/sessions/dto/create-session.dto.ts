@@ -7,20 +7,20 @@ export class CreateSessionDto {
     @IsOptional()
     description?: string;
 
-    @IsNotEmpty({ message: 'Value is empty' })
+    @IsNotEmpty({ message: 'Date value  is empty' })
     @IsDateString({}, { message: 'Invalid time' })
     date: string;
 
     @Type(() => Number)
-    @IsNotEmpty({ message: 'Value is empty' })
+    @IsNotEmpty({ message: 'Start hour range is empty' })
     @Min(0, { message: 'Invalid time' })
     @Max(23, { message: 'Invalid time' })
     start: number;
 
-    @ValidateIf(o => o.start < o.end, { message: 'Invalid time' })
+    @ValidateIf(o =>o.end!==0 && o.start < o.end , { message: 'Invalid time' })
 
     @Type(() => Number)
-    @IsNotEmpty({ message: 'Value is empty' })
+    @IsNotEmpty({ message: 'End hour is empty' })
     @Min(0)
     @Max(23)
     end: number;
@@ -29,6 +29,6 @@ export class CreateSessionDto {
     @Matches(/^#/)
     color: string;
 
-    @IsNotEmpty({ message: 'Value is empty' })
+    @IsNotEmpty({ message: 'Friend ID is empty' })
     friendId: string;
 }

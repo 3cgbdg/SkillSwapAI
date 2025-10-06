@@ -39,6 +39,9 @@ export interface ISession {
     description?: string;
     color: string;
     date: Date;
-    friendId: string,
+    friend: {
+        id: string,
+        name: string,
+    }
 }
 

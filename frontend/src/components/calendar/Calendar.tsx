@@ -123,7 +123,7 @@ const Calendar = () => {
                                         {cell.sessions.map((session) => (
                                             <div
                                                 key={session.id}
-                                                style={{ backgroundColor: session.color, marginTop: 73.5 * (session.start), height: 73 * (session.end - session.start + 1) }}
+                                                style={{ backgroundColor: session.color, marginTop: 73.5 * (session.start), height: session.end != 0 ? 73 * (session.end - session.start) :73 * (24 - session.start) }}
                                                 className="text-xs text-white rounded p-2 flex flex-col gap-1 top-0 left-0 absolute w-full  h-[73px]"
                                             >
                                                 <span>{session.title}</span>
