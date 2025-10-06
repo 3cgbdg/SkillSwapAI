@@ -3,7 +3,7 @@
 import { api } from "@/api/axiosInstance"
 import { useSocket } from "@/context/SocketContext"
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks"
-import { updateChatNewMessages, updateChatSeen } from "@/redux/chatsSlice"
+import {updateChatNewMessagesForReceiver, updateChatNewMessagesForSender, updateChatSeen } from "@/redux/chatsSlice"
 import { IChat, IMessage } from "@/types/types"
 import { current } from "@reduxjs/toolkit"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
@@ -93,7 +93,7 @@ const Page = () => {
             console.log(from, id, messageContent);
             queryClient.setQueryData(['messages', currentChat.chatId], (old: IMessage[]) => {
                 if (currentChat) {
-                    dispatch(updateChatNewMessages({ chatId: currentChat.chatId, message: messageContent }));
+                    dispatch(updateChatNewMessagesForReceiver({ chatId: currentChat.chatId, message: lastMessageRef.current }));
                 }
 
                 return [...old, { fromId: from, content: messageContent, createdAt: new Date(), id: id }]
@@ -103,6 +103,9 @@ const Page = () => {
 
         socket.on('messageSent', (data: { id: string, createdAt: string | Date }) => {
             queryClient.setQueryData(['messages', currentChat.chatId], (old: IMessage[] = []) => {
+                if (currentChat) {
+                    dispatch(updateChatNewMessagesForSender({ chatId: currentChat.chatId, message: lastMessageRef.current }));
+                }
                 return [...old, { fromId: user.id, content: lastMessageRef.current, createdAt: new Date(data.createdAt), isSeen: false, id: data.id }];
             });
         })
@@ -136,8 +139,8 @@ const Page = () => {
     const handleSend = () => {
         if (socket && currentChat && user && messageInput.trim() !== "") {
             lastMessageRef.current = messageInput;
-            console.log(lastMessageRef.current, currentChat?.friend.id)
             socket.emit("sendMessage", { to: currentChat.friend.id, message: messageInput });
+
             setMessageInput("");
         }
 

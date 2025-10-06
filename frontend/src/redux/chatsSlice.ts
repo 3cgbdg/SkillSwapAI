@@ -1,4 +1,4 @@
-import { IChat} from "@/types/types";
+import { IChat } from "@/types/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 
@@ -23,12 +23,29 @@ const chatsSlice = createSlice({
                 state.chats = state.chats ? [...state.chats, action.payload] : [action.payload]
             }
         },
-        updateChatNewMessages: (state, action: PayloadAction<{ chatId: string, message: string }>) => {
+        updateChatNewMessagesForReceiver: (state, action: PayloadAction<{ chatId: string, message: string }>) => {
             if (state.chats) {
                 state.chats = state.chats.map((chat) => {
                     if (chat.chatId == action.payload.chatId) {
                         return (
                             { ...chat, _count: { id: chat._count.id + 1 }, lastMessageContent: action.payload.message }
+                        )
+                    } else {
+                        return ({ ...chat })
+                    }
+                })
+            }
+
+
+
+        },
+
+        updateChatNewMessagesForSender: (state, action: PayloadAction<{ chatId: string, message: string }>) => {
+            if (state.chats) {
+                state.chats = state.chats.map((chat) => {
+                    if (chat.chatId == action.payload.chatId) {
+                        return (
+                            { ...chat, lastMessageContent: action.payload.message }
                         )
                     } else {
                         return ({ ...chat })
@@ -55,5 +72,5 @@ const chatsSlice = createSlice({
 }
 )
 
-export const { getChats, updateChats, updateChatNewMessages, updateChatSeen } = chatsSlice.actions;
+export const { getChats, updateChats, updateChatNewMessagesForReceiver,updateChatNewMessagesForSender, updateChatSeen } = chatsSlice.actions;
 export default chatsSlice.reducer;
