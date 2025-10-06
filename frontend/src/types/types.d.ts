@@ -43,5 +43,10 @@ export interface ISession {
         id: string,
         name: string,
     }
-}
+    status:SessionStatusEnum
+} 
 
+export const SessionStatusEnum =  {
+  PENDING = "PENDING",
+  AGREED = "AGREED",
+} as const;

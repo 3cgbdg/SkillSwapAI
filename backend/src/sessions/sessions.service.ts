@@ -6,27 +6,27 @@ import { PrismaService } from 'prisma/prisma.service';
 export class SessionsService {
   constructor(private readonly prisma: PrismaService) { };
   async create(dto: CreateSessionDto, myId: string) {
-
+    const now = new Date();
     const overlappingSessions = await this.prisma.session.findMany({ where: { date: new Date(dto.date), start: { lt: dto.end }, end: { gt: dto.start } } });
     if (overlappingSessions.length > 0) {
       throw new BadRequestException('This time range is busy.')
     }
-    else if (new Date(dto.date).getDate() < new Date().getDate()) {
-      throw new BadRequestException('The date must not have passed.')
+    else if (new Date(dto.date).getDate() < now.getDate() || dto.start < now.getHours() && new Date(dto.date).getDate() == now.getDate()) {
+      throw new BadRequestException('The time must not have passed.')
 
     }
-   const friendship = await this.prisma.friend.findFirst({
-  where: {
-    OR: [
-      { user1Id: myId, user2Id: dto.friendId },
-      { user2Id: myId, user1Id: dto.friendId }
-    ]
-  },
-  include:{
-    user1:{select:{name:true,id:true}},
-    user2:{select:{name:true,id:true}},
-  }
-});
+    const friendship = await this.prisma.friend.findFirst({
+      where: {
+        OR: [
+          { user1Id: myId, user2Id: dto.friendId },
+          { user2Id: myId, user1Id: dto.friendId }
+        ]
+      },
+      include: {
+        user1: { select: { name: true, id: true } },
+        user2: { select: { name: true, id: true } },
+      }
+    });
 
     if (!friendship) {
       throw new BadRequestException('There`s no such friend in your list')
@@ -41,12 +41,16 @@ export class SessionsService {
         },
       }
     });
-    return friendship.user1.id==myId ?{...session,friend:{
-      id:friendship.user2.id,name:friendship.user2.name
-    }} :{...session,friend:{
-      id:friendship.user1.id,name:friendship.user1.name
-    }} 
-   
+    return friendship.user1.id == myId ? {
+      ...session, friend: {
+        id: friendship.user2.id, name: friendship.user2.name
+      }
+    } : {
+      ...session, friend: {
+        id: friendship.user1.id, name: friendship.user1.name
+      }
+    }
+
   }
 
   async findAll(month: number, myId: string) {

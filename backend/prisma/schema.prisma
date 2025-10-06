@@ -7,6 +7,11 @@ generator client {
   provider = "prisma-client-js"
 }
 
+enum SessionStatus {
+  PENDING
+  AGREED
+}
+
 model User {
   id               String    @id @default(uuid())
   name             String
@@ -78,6 +83,7 @@ model Session {
   start       Int
   end         Int
   description String?
+  status    SessionStatus   @default(PENDING)
   date        DateTime
   color       String
   users       User[]   @relation("userSessions")

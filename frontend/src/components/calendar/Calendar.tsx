@@ -1,7 +1,7 @@
 "use client";
 import { api } from "@/api/axiosInstance";
 import { useAppDispatch } from "@/hooks/reduxHooks";
-import { ISession } from "@/types/types";
+import { ISession, SessionStatusEnum } from "@/types/types";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -57,6 +57,7 @@ const Calendar = () => {
 
     useEffect(() => {
         if (data) {
+            console.log(data)
             setTableCells(prev => prev.map(dayCell => ({
                 ...dayCell,
                 sessions: data.filter(session => new Date(session.date).getDate() === new Date(dayCell.date).getDate()).sort((a, b) => a.start - b.start)
@@ -124,11 +125,12 @@ const Calendar = () => {
                                             <div
                                                 key={session.id}
                                                 style={{ backgroundColor: session.color, marginTop: 73.5 * (session.start), height: session.end != 0 ? 73 * (session.end - session.start) :73 * (24 - session.start) }}
-                                                className="text-xs text-white rounded p-2 flex flex-col gap-1 top-0 left-0 absolute w-full  h-[73px]"
+                                                className="text-xs text-white rounded p-2 flex flex-col gap-1 top-0 left-0 absolute w-full  font-semibold h-[73px]"
                                             >
                                                 <span>{session.title}</span>
                                                 <span>({session.start} - {session.end})</span>
-
+                                                <span className="">Status: {session.status == "PENDING" ? 'Pending' : 'Agreed'}</span>
+                                               
                                             </div>
                                         ))}
                                     </div>

@@ -14,7 +14,7 @@ const Page = () => {
         return () => clearInterval(interval);
     }, []);
 
-    const upcoming = sessions && sessions.filter(s => s.start > now.getHours()).sort((a,b)=>a.start-b.start);
+    const upcoming = sessions && sessions.filter(s => s.start > now.getHours()).sort((a, b) => a.start - b.start);
     console.log(upcoming)
     return (
         <div className="grid grid-cols-3 gap-8 items-start">
@@ -29,17 +29,20 @@ const Page = () => {
                     </div>
                 </div>
                 <div className="flex flex-col gap-8">
-                    {upcoming && upcoming.slice(0, 6).map(item => (
+                    {upcoming && upcoming.length > 0 ? upcoming.slice(0, 6).map(item => (
                         <div key={item.id} className="flex flex-col gap-2 w-full   p-4">
                             <div className="flex justify-between  items-center ">
                                 <span className="text-sm font-semibold">Today</span>
                                 <span className=" text-xs leading-4 ">{item.start}:00</span>
                             </div>
                             <h3 className="leading-5 font-semibold">{item.title} with {item.friend.name}</h3>
-                            <span style={{backgroundColor:item.color}} className="text-xs  laeding-4 font-semibold px-3 py-1  rounded-xl w-fit text-white">Tag</span>
+                            <span style={{ backgroundColor: item.color }} className="text-xs  laeding-4 font-semibold px-3 py-1  rounded-xl w-fit text-white">Tag</span>
 
                         </div>
-                    ))}
+                    )) :
+                        <h3 className="p-10 text-center ">
+                            There are no upcoming events</h3>
+                    }
 
                 </div>
             </div>
