@@ -12,6 +12,11 @@ enum SessionStatus {
   AGREED
 }
 
+enum RequestType {
+  FRIEND
+  SESSION
+}
+
 model User {
   id               String    @id @default(uuid())
   name             String
@@ -26,8 +31,9 @@ model User {
   sentRequests     Request[] @relation("sentRequests")
   receivedRequests Request[] @relation("receivedRequests")
 
-  friends  Friend[] @relation("UserFriends")
-  friendOf Friend[] @relation("UserFriendsInverse")
+  friends  Friend[]  @relation("UserFriends")
+  friendOf Friend[]  @relation("UserFriendsInverse")
+  
 }
 
 model Friend {
@@ -41,14 +47,15 @@ model Friend {
 }
 
 model Request {
-  id     String @id @default(uuid())
-  from   User   @relation("sentRequests", fields: [fromId], references: [id])
-  fromId String
-  to     User   @relation("receivedRequests", fields: [toId], references: [id])
-  toId   String
-  status String @default("pending")
-
-  @@unique([fromId, toId])
+  id        String      @id @default(uuid())
+  type      RequestType
+  from      User        @relation("sentRequests", fields: [fromId], references: [id])
+  fromId    String
+  to        User        @relation("receivedRequests", fields: [toId], references: [id])
+  toId      String
+  session   Session?    @relation("sessionRequest")
+  sessionId String?     @unique
+  status    String      @default("pending")
 }
 
 model Skill {
@@ -78,13 +85,16 @@ model Message {
 }
 
 model Session {
-  id          String   @id @default(uuid())
-  title       String   @unique
+  id          String        @id @default(uuid())
+  title       String        @unique
   start       Int
   end         Int
   description String?
-  status    SessionStatus   @default(PENDING)
+  status      SessionStatus @default(PENDING)
   date        DateTime
   color       String
-  users       User[]   @relation("userSessions")
+  users       User[]        @relation("userSessions")
+  request     Request?      @relation("sessionRequest", fields: [requestId], references: [id])
+  requestId   String?       @unique
+
 }

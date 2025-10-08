@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateFriendDto } from './dto/create-friend.dto';
 import { UpdateFriendDto } from './dto/update-friend.dto';
 import { PrismaService } from 'prisma/prisma.service';
@@ -7,8 +7,19 @@ import { PrismaService } from 'prisma/prisma.service';
 export class FriendsService {
   constructor(private readonly prisma: PrismaService) { };
   async create(dto: CreateFriendDto, id: string) {
+    const friends = await this.prisma.friend.findMany({
+      where: {
+        OR: [
+          { user1Id: id, user2Id: dto.id },
+          { user2Id: id, user1Id: dto.id }
+        ]
+      }
+    });
+    if (friends.length > 0) {
+      throw new BadRequestException('Such friendship already exists')
+    }
     await this.prisma.friend.create({ data: { user1Id: dto.id, user2Id: id } });
-    await this.prisma.request.delete({ where: { fromId_toId: { fromId: dto.id, toId: id } } })
+    await this.prisma.request.deleteMany({ where: { fromId: dto.id, toId: id, type: 'FRIEND' } })
     return { message: "Sucessfully added to friends!" }
   }
 

@@ -1,33 +1,33 @@
 export interface IUser {
-    id: string,
-    name: string,
-    email: string,
-    knownSkills?: { id: string, title: string }[],
-    skillsToLearn?: { id: string, title: string }[],
+    id: string;
+    name: string;
+    email: string;
+    knownSkills?: { id: string; title: string }[];
+    skillsToLearn?: { id: string; title: string }[];
 }
 
 export interface IFriend {
-    name: string,
-    id: string,
-    newMessagesQuantity?: number,
-    lastMessage?: { content: string, createdAt: string }
+    name: string;
+    id: string;
+    newMessagesQuantity?: number;
+    lastMessage?: { content: string; createdAt: string }
 }
 
 export interface IChat {
-    _max: { createdAt: string },
-    _count: { id: number },
-    chatId: string,
-    lastMessageContent?: string,
-    friend: IFriend,
+    _max: { createdAt: string };
+    _count: { id: number };
+    chatId: string;
+    lastMessageContent?: string;
+    friend: IFriend;
 
 }
 
 interface IMessage {
     id: string
-    content: string,
-    fromId: string,
-    createdAt: Date,
-    isSeen: boolean,
+    content: string;
+    fromId: string;
+    createdAt: Date;
+    isSeen: boolean;
 }
 
 
@@ -40,13 +40,30 @@ export interface ISession {
     color: string;
     date: Date;
     friend: {
-        id: string,
-        name: string,
-    }
-    status:SessionStatusEnum
+        id: string;
+        name: string;
+    };
+    status:SessionStatusEnum;
 } 
 
 export const SessionStatusEnum =  {
   PENDING = "PENDING",
   AGREED = "AGREED",
 } as const;
+
+
+interface IRequest {
+    id: string;
+    fromId: string;
+    toId: string;
+    from: { name: string };
+    to: { name: string };
+    type:"FRIEND"| "SESSION";
+    sessionId:string,
+    session:{
+    date:string,
+    start:number,
+    end:number
+    }//if request type is session 
+
+}

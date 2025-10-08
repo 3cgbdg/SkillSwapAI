@@ -8,5 +8,6 @@ import { RequestGateway } from 'src/webSockets/request.gateway';
   imports: [PrismModule],
   controllers: [RequestsController],
   providers: [RequestsService, RequestGateway],
+  exports: [RequestsService],
 })
 export class RequestsModule { }

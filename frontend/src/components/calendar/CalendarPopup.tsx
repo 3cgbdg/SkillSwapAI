@@ -10,6 +10,7 @@ import { X } from "lucide-react";
 import { Dispatch, SetStateAction, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { TableCellType } from "./Calendar";
+import { useSocket } from "@/context/SocketContext";
 
 
 
@@ -34,6 +35,7 @@ const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup }: { yea
     const dispatch = useAppDispatch();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
+    const { socket } = useSocket();
     const [chars, setChars] = useState<string>("");
     const [friends, setFriends] = useState<IFriend[] | null>(null);
     const [badRequestErrorMessage, setBadRequestErrorMessage] = useState<string | null>(null);
@@ -57,7 +59,8 @@ const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup }: { yea
             // if its current day event adding to global state
             if (new Date(data.date).getDate() == new Date().getDate())
                 dispatch(addSession(data));
-
+            if (socket)
+                socket.emit('createSessionRequest', { id: data.id })
             setTableCells(prev => prev.map(item => {
                 if (new Date(item.date).getDate() === new Date(data.date).getDate()) {
                     const updatedSessions = [...item.sessions, data].sort((a, b) => a.start - b.start)
@@ -74,7 +77,7 @@ const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup }: { yea
     const createSession: SubmitHandler<formType> = async (data) => {
         const { friendName, ...newData } = data;
         if (friends) {
-            console.log(friendName,friends);
+            console.log(friendName, friends);
             const realFriend = friends.find(item => item.name === friendName);
             if (realFriend) {
                 newData.friendId = realFriend.id;
@@ -149,8 +152,8 @@ const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup }: { yea
                                         onlyNumbers: value => /^[0-9]+$/.test(value) || "Must be only numbers",
                                         validNumRange: value => Number(value) >= 0 && Number(value) < 24 || "Must be valid hour",
                                         validTimeRange: value => {
-                                       
-                                            
+
+
                                             if (Number(value) === 0 && Number(startHour) <= 23) return true;
                                             return Number(value) > Number(startHour) || "Must be valid time range";
                                         }

@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import CalendarPopup from "./CalendarPopup";
 import { setSessions } from "@/redux/sessionsSlice";
+import { useSocket } from "@/context/SocketContext";
 
 export type TableCellType = {
     sessions: ISession[],
@@ -20,7 +21,7 @@ const Calendar = () => {
     const currentDate = new Date();
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-
+    const { socket } = useSocket();
     ///
     const [tableCells, setTableCells] = useState<TableCellType[]>([]);
     const [addSessionPopup, setAddSessionPopup] = useState<boolean>(false);
@@ -57,7 +58,6 @@ const Calendar = () => {
 
     useEffect(() => {
         if (data) {
-            console.log(data)
             setTableCells(prev => prev.map(dayCell => ({
                 ...dayCell,
                 sessions: data.filter(session => new Date(session.date).getDate() === new Date(dayCell.date).getDate()).sort((a, b) => a.start - b.start)
@@ -112,7 +112,7 @@ const Calendar = () => {
                         {Array.from({ length: 24 }, (_, i) =>
                             `${i.toString().padStart(2, "0")}:00`
                         ).map((value, idx) => (
-                            <div key={idx} className="min-h-[73px] flex text-sm leading-4 text-gray items-center  justify-center">{value}</div>
+                            <div key={idx} className="min-h-[100px] flex text-sm leading-4 text-gray items-center  justify-center">{value}</div>
                         ))}
                     </div>
                     <div className="col-span-7 grid grid-cols-7">
@@ -124,13 +124,13 @@ const Calendar = () => {
                                         {cell.sessions.map((session) => (
                                             <div
                                                 key={session.id}
-                                                style={{ backgroundColor: session.color, marginTop: 73.5 * (session.start), height: session.end != 0 ? 73 * (session.end - session.start) :73 * (24 - session.start) }}
-                                                className="text-xs text-white rounded p-2 flex flex-col gap-1 top-0 left-0 absolute w-full  font-semibold h-[73px]"
+                                                style={{ backgroundColor: session.color, marginTop: 100.5 * (session.start), height: session.end != 0 ? 100 * (session.end - session.start) : 100 * (24 - session.start) }}
+                                                className="text-xs text-white rounded p-2 flex flex-col gap-1 top-0 left-0 absolute w-full  font-semibold h-[100px]"
                                             >
                                                 <span>{session.title}</span>
                                                 <span>({session.start} - {session.end})</span>
                                                 <span className="">Status: {session.status == "PENDING" ? 'Pending' : 'Agreed'}</span>
-                                               
+
                                             </div>
                                         ))}
                                     </div>

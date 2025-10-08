@@ -3,7 +3,7 @@
 import { api } from "@/api/axiosInstance"
 import { useAppDispatch, } from "@/hooks/reduxHooks"
 import { addWantToLearnSkill, logOut } from "@/redux/authSlice"
-import {  useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -11,6 +11,7 @@ import { useEffect, useState } from "react"
 import { Bell, Check, Handshake, Plus, Search, UserRound, X } from "lucide-react"
 import { motion } from "framer-motion";
 import { io, Socket } from 'socket.io-client';
+import { IRequest } from "@/types/types"
 
 
 // interfaces & types
@@ -31,13 +32,7 @@ type Found = foundUsers & foundSkills & {
 };
 
 
-interface IRequest {
-    id: string,
-    fromId: string,
-    toId: string,
-    from: { name: string },
-    to: { name: string }
-}
+
 
 
 const Header = () => {
@@ -60,7 +55,8 @@ const Header = () => {
         queryKey: ['reqs'],
         queryFn: async () => {
             const res = await api.get("/requests");
-            return res.data;
+            console.log(res.data)
+            return res.data as IRequest[];
         }
     })
 
@@ -88,6 +84,25 @@ const Header = () => {
     const mutationAddLearn = useMutation({
         mutationFn: async (str: string) => api.post("/skills/want-to-learn", { title: str }),
     })
+
+    const mutationAcceptSession = useMutation({
+        mutationFn: async ({ sessionId, requestId }: { sessionId: string, requestId: string }) => { const res = await api.post("/sessions/status", { sessionId, requestId }); return res.data; },
+        onSuccess: (id: string) => {
+            queryClient.setQueryData(["reqs"], (old: any) => {
+                if (!old) return [];
+                return old.filter((req: any) => req.id !== id)
+            })
+        }
+    })
+    const mutationRejectSession = useMutation({
+        mutationFn: async ({ sessionId, requestId }: { sessionId: string, requestId: string }) => { const res = await api.post(`/sessions/${sessionId}`, { requestId }); return res.data; },
+        onSuccess: (id: string) => {
+            queryClient.setQueryData(["reqs"], (old: any) => {
+                if (!old) return [];
+                return old.filter((req: any) => req.id !== id)
+            })
+        }
+    })
     const mutationCreateFriendRequest = useMutation({
         mutationFn: async (str: string) => api.post("/requests", { id: str }),
     })
@@ -107,8 +122,16 @@ const Header = () => {
                     return [...old, payload.request]
                 })
             })
+            socket.on('sessionRequest', (payload) => {
+                console.log("socket working", payload)
+                queryClient.setQueryData(['reqs'], (old: any) => {
+                    return [...old, payload.request]
+                })
+            })
+            console.log(reqs);
             return () => {
                 socket.off("friendRequest");
+                socket.off("sessionRequest");
             };
         }
 
@@ -147,7 +170,7 @@ const Header = () => {
                             await mutationSearch.mutate({ chars: e.target.value });
                             setPanel("search");
                             console.log(foundUsers)
-                        }else{
+                        } else {
                             setPanel(null)
                         }
 
@@ -167,7 +190,7 @@ const Header = () => {
                                                 <div key={index} className="flex gap-2 items-center">
                                                     <div className="  w-fit _border p-1 rounded-xl transition-all" >{skill.title}</div>
 
-                                                    <button onClick={() => { mutationAddLearn.mutate(skill.title); dispatch(addWantToLearnSkill(skill.title));setFoundSkills(prev=>prev.filter(item=>item.id!==skill.id)) }} className="btn  w-fit _border p-1 rounded-xl cursor-pointer transition-all hover:bg-green-400 outline-0" ><Plus size={20} /></button>
+                                                    <button onClick={() => { mutationAddLearn.mutate(skill.title); dispatch(addWantToLearnSkill(skill.title)); setFoundSkills(prev => prev.filter(item => item.id !== skill.id)) }} className="btn  w-fit _border p-1 rounded-xl cursor-pointer transition-all hover:bg-green-400 outline-0" ><Plus size={20} /></button>
                                                 </div>
                                             )
                                         })}
@@ -185,7 +208,7 @@ const Header = () => {
                                                     {!user.isFriend ? <button onClick={() => mutationCreateFriendRequest.mutate(user.id)} className="btn cursor-pointer  w-fit _border p-1 rounded-xl transition-all hover:bg-green-400 outline-0" ><Handshake size={20} /></button>
                                                         :
                                                         <span className="text-green-400">Friend</span>
-                                                        }
+                                                    }
                                                 </div>
                                             )
                                         })}
@@ -215,20 +238,39 @@ const Header = () => {
                     {panel == "notifs" &&
                         <div className="">
                             <div className="_border mt-2 rounded-md p-3 absolute top-full bg-white panel right-0 min-w-[250px] flex flex-col gap-2">
-                                {reqs.length > 0 ?  (
+                                {reqs && reqs.length > 0 ? (
                                     <div className="flex flex-col gap-2 pb-4 not-last:border-b-[1px] border-neutral-300 w-full">
-                                        <h3 className="text-lg leading-7 font-medium">Friends Requests🧑‍🦰</h3>
+                                        <h3 className="text-lg leading-7 font-medium">Latest requests</h3>
                                         <div className="flex flex-col gap-1  border-neutral-300 max-h-[450px] overflow-x-auto">
-                                            {reqs && (reqs as IRequest[]).map((req, index) => {
-                                                console.log(req)
-                                                return (
+                                            {reqs && reqs.map((req, index) => {
+                                                return (req.type == 'FRIEND' ?
                                                     <div key={index} className="flex gap-2 w-full _border p-2 flex-col">
-                                                        <div className="flex items-center justify-between">
-                                                            <div className="     rounded-xl transition-all" >{req.from?.name}</div>
+                                                        <div className="flex flex-col  ">
+                                                            <h2 className="text-lg leading-7 font-semibold">Friends Request 🧑‍🦰</h2>
+                                                            <div className="     rounded-xl transition-all mb-4" > <span className="font-semibold">From:</span> {req.from?.name}</div>
                                                             <button onClick={() => mutationAddFriend.mutate({ fromId: req.fromId, id: req.id })} className="button-transparent"><Check size={16} /></button>
                                                         </div>
                                                     </div>
-                                                )
+                                                    :
+                                                    <div key={index} className="flex gap-2 w-full _border p-2 flex-col">
+                                                        <div className="flex flex-col  ">
+                                                            <h2 className="text-lg leading-7 font-semibold">Session  Request 🗓️</h2>
+                                                            <div className="     rounded-xl transition-all " > <span className="font-semibold">From:</span> {req.from?.name}</div>
+                                                            {req.session && <div className="flex  flex-col  mb-4">
+
+
+                                                                <div className="     rounded-xl transition-all  font-medium" > <span className="font-semibold">Date:</span>{new Date(req.session.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                                                                <div className="     rounded-xl transition-all  font-medium" > <span className="font-semibold">Time range:</span> {req.session.start}:00 - {req.session.end}:00</div>
+                                                            </div>
+                                                            }
+                                                            <div className="grid grid-cols-2 items-center gap-2 ">
+                                                                <button onClick={() => mutationAcceptSession.mutate({ sessionId: req.sessionId, requestId: req.id })} className="button-transparent"><Check size={16} /></button>
+                                                                <button onClick={() => mutationRejectSession.mutate({ sessionId: req.sessionId, requestId: req.id })} className="button-transparent"><X size={16} /></button>
+                                                            </div>
+                                                        </div>
+                                                    </div>)
+
+
                                             })}
                                         </div>
                                     </div>

@@ -1,5 +1,4 @@
 import { OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
-import { PrismaService } from "prisma/prisma.service";
 import { Socket, Server } from "socket.io";
 import * as cookie from "cookie"
 import { JwtService } from "@nestjs/jwt";
@@ -12,7 +11,7 @@ import { JwtService } from "@nestjs/jwt";
 })
 export class RequestGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
-    constructor(private readonly prisma: PrismaService, private readonly jwtService: JwtService) { };
+    constructor(private readonly jwtService: JwtService) { };
     @WebSocketServer()
     server: Server
     private users = new Map<string, string>() // userid--Socketid
@@ -48,4 +47,14 @@ export class RequestGateway implements OnGatewayConnection, OnGatewayDisconnect 
             this.server.to(socketId).emit("friendRequest", payload);
         }
     }
+
+    notifyUserSession(toId: string, payload) {
+        const socketId = this.users.get(toId);
+        if (socketId) {
+            this.server.to(socketId).emit("sessionRequest", payload);
+        }
+    }
+
+
+
 }

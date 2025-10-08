@@ -1,10 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { PrismaService } from 'prisma/prisma.service';
+import { RequestsService } from 'src/requests/requests.service';
+import { RequestGateway } from 'src/webSockets/request.gateway';
 
 @Injectable()
 export class SessionsService {
-  constructor(private readonly prisma: PrismaService) { };
+  constructor(private readonly prisma: PrismaService, private readonly requests: RequestsService, private readonly requestGateway: RequestGateway) { };
   async create(dto: CreateSessionDto, myId: string) {
     const now = new Date();
     const overlappingSessions = await this.prisma.session.findMany({ where: { date: new Date(dto.date), start: { lt: dto.end }, end: { gt: dto.start } } });
@@ -41,6 +43,8 @@ export class SessionsService {
         },
       }
     });
+    const request = await this.requests.createForSession(session.id, myId, dto.friendId);
+    this.requestGateway.notifyUserSession(dto.friendId, { request });
     return friendship.user1.id == myId ? {
       ...session, friend: {
         id: friendship.user2.id, name: friendship.user2.name
@@ -78,6 +82,18 @@ export class SessionsService {
       return session;
     })
     return newSessions;
+  }
+
+  async acceptSessionRequest(sessionId: string, requestId: string) {
+    await this.prisma.session.update({ where: { id: sessionId }, data: { status: 'AGREED' } })
+    const req = await this.prisma.request.delete({ where: { id: requestId } });
+    return req.id
+  }
+  // rejecting the session request, in other words -- deleting the session
+  async rejectSessionRequest(sessionId: string, requestId: string) {
+    await this.prisma.session.delete({ where: { id: sessionId } });
+    const req = await this.prisma.request.delete({ where: { id: requestId } });
+    return req.id
   }
 
 

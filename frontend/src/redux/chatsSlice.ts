@@ -28,7 +28,7 @@ const chatsSlice = createSlice({
                 state.chats = state.chats.map((chat) => {
                     if (chat.chatId == action.payload.chatId) {
                         return (
-                            { ...chat, _count: { id: chat._count.id + 1 }, lastMessageContent: action.payload.message }
+                            { ...chat, _count: { id: chat._count.id + 1 }, lastMessageContent: action.payload.message,_max:{createdAt:String(new Date())} }
                         )
                     } else {
                         return ({ ...chat })
@@ -45,7 +45,7 @@ const chatsSlice = createSlice({
                 state.chats = state.chats.map((chat) => {
                     if (chat.chatId == action.payload.chatId) {
                         return (
-                            { ...chat, lastMessageContent: action.payload.message }
+                            { ...chat, lastMessageContent: action.payload.message,_max:{createdAt:String(new Date())} }
                         )
                     } else {
                         return ({ ...chat })
