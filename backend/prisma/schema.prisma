@@ -14,7 +14,9 @@ enum SessionStatus {
 
 enum RequestType {
   FRIEND
-  SESSION
+  SESSIONCREATED
+  SESSIONACCEPTED
+  SESSIONREJECTED
 }
 
 model User {
@@ -31,9 +33,8 @@ model User {
   sentRequests     Request[] @relation("sentRequests")
   receivedRequests Request[] @relation("receivedRequests")
 
-  friends  Friend[]  @relation("UserFriends")
-  friendOf Friend[]  @relation("UserFriendsInverse")
-  
+  friends  Friend[] @relation("UserFriends")
+  friendOf Friend[] @relation("UserFriendsInverse")
 }
 
 model Friend {
@@ -53,8 +54,8 @@ model Request {
   fromId    String
   to        User        @relation("receivedRequests", fields: [toId], references: [id])
   toId      String
-  session   Session?    @relation("sessionRequest")
-  sessionId String?     @unique
+  session   Session?    @relation("sessionRequest",fields:[sessionId],references: [id])
+  sessionId String?     
   status    String      @default("pending")
 }
 
@@ -94,7 +95,5 @@ model Session {
   date        DateTime
   color       String
   users       User[]        @relation("userSessions")
-  request     Request?      @relation("sessionRequest", fields: [requestId], references: [id])
-  requestId   String?       @unique
-
+  request     Request[]      @relation("sessionRequest")
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { UpdateRequestDto } from './dto/update-request.dto';
 import { PrismaService } from 'prisma/prisma.service';
@@ -29,13 +29,44 @@ export class RequestsService {
   }
 
   async createForSession(sessionId: string, myId: string, friendId: string) {
-
-    const request = await this.prisma.request.create({ data: { toId: friendId, fromId: myId,sessionId:sessionId, session: { connect: { id: sessionId } }, type: "SESSION" }, include: {  session: { select: { start: true, end: true, date: true } }, from: { select: { name: true } }, to: { select: { name: true } } } });
-
+    const request = await this.prisma.request.create({
+      data: {
+        from: { connect: { id: myId } },
+        to: { connect: { id: friendId } },
+        session: { connect: { id: sessionId } }, type: "SESSIONCREATED"
+      }, include: { session: { select: { start: true, end: true, date: true } }, from: { select: { name: true } }, to: { select: { name: true } } }
+    });
     return request;
   }
 
-
+  async createForStatusSession(sessionId: string, myId: string, friendId: string, option: 'REJECTED' | 'ACCEPTED') {
+    if (option == 'ACCEPTED') {
+      const request = await this.prisma.request.create({
+        data: {
+          from: { connect: { id: myId } },
+          to: { connect: { id: friendId } },
+          session: { connect: { id: sessionId } }, type: "SESSIONACCEPTED"
+        }, include: { session: { select: { title: true } }, from: { select: { name: true } }, to: { select: { name: true } } }
+      });
+      return request;
+    }
+    else if (option == 'REJECTED') {
+      const request = await this.prisma.request.create({
+        data: {
+          from: { connect: { id: myId } },
+          to: { connect: { id: friendId } },
+          session: { connect: { id: sessionId } }, type: "SESSIONREJECTED"
+        }, include: { session: { select: { title: true } }, from: { select: { name: true } }, to: { select: { name: true } } }
+      });
+      return request;
+    } else {
+      throw new InternalServerErrorException();
+    }
+  }
+  async deleteOne(requestId: string) {
+    const req = await this.prisma.request.delete({ where: { id: requestId } });
+    return req.id;
+  }
 
 
 }

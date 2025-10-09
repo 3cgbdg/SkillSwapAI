@@ -51,9 +51,24 @@ export class RequestGateway implements OnGatewayConnection, OnGatewayDisconnect 
     notifyUserSession(toId: string, payload) {
         const socketId = this.users.get(toId);
         if (socketId) {
-            this.server.to(socketId).emit("sessionRequest", payload);
+            this.server.to(socketId).emit("sessionCreationRequest", payload);
         }
     }
+
+    notifyUserAcceptedSession(toId: string, payload) {
+        const socketId = this.users.get(toId);
+        if (socketId) {
+            this.server.to(socketId).emit("sessionAcceptedRequest", payload);
+        }
+    }
+    notifyUserRejectedSession(toId: string, payload) {
+        const socketId = this.users.get(toId);
+        if (socketId) {
+            this.server.to(socketId).emit("sessionRejectedRequest", payload);
+        }
+    }
+
+
 
 
 

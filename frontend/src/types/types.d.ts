@@ -43,12 +43,12 @@ export interface ISession {
         id: string;
         name: string;
     };
-    status:SessionStatusEnum;
-} 
+    status: SessionStatusEnum;
+}
 
-export const SessionStatusEnum =  {
-  PENDING = "PENDING",
-  AGREED = "AGREED",
+export const SessionStatusEnum = {
+    PENDING = "PENDING",
+    AGREED = "AGREED"
 } as const;
 
 
@@ -58,12 +58,16 @@ interface IRequest {
     toId: string;
     from: { name: string };
     to: { name: string };
-    type:"FRIEND"| "SESSION";
-    sessionId:string,
-    session:{
-    date:string,
-    start:number,
-    end:number
+    type: "FRIEND" |
+    "SESSIONCREATED" |
+    "SESSIONACCEPTED" |
+    "SESSIONREJECTED";
+    sessionId: string;
+    session: {
+        date?: string;
+        start?: number;
+        end?: number;
+        title?: string;
     }//if request type is session 
 
 }

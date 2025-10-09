@@ -18,5 +18,9 @@ export class RequestsController {
   async findAll(@Req() req: Request) {
     return this.requestsService.findAll((req as any).user.id);
   }
+  @Delete(':id')
+  async deleteOne(@Param('id') requestId:string) {
+    return this.requestsService.deleteOne(requestId);
+  }
 
 }

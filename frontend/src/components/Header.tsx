@@ -86,7 +86,7 @@ const Header = () => {
     })
 
     const mutationAcceptSession = useMutation({
-        mutationFn: async ({ sessionId, requestId }: { sessionId: string, requestId: string }) => { const res = await api.post("/sessions/status", { sessionId, requestId }); return res.data; },
+        mutationFn: async ({ sessionId, requestId, friendId }: { sessionId: string, requestId: string, friendId: string }) => { const res = await api.post(`/sessions/${sessionId}/accepted`, { requestId, friendId }); return res.data; },
         onSuccess: (id: string) => {
             queryClient.setQueryData(["reqs"], (old: any) => {
                 if (!old) return [];
@@ -95,7 +95,7 @@ const Header = () => {
         }
     })
     const mutationRejectSession = useMutation({
-        mutationFn: async ({ sessionId, requestId }: { sessionId: string, requestId: string }) => { const res = await api.post(`/sessions/${sessionId}`, { requestId }); return res.data; },
+        mutationFn: async ({ sessionId, requestId, friendId }: { sessionId: string, requestId: string, friendId: string }) => { const res = await api.post(`/sessions/${sessionId}/rejected`, { requestId, friendId }); return res.data; },
         onSuccess: (id: string) => {
             queryClient.setQueryData(["reqs"], (old: any) => {
                 if (!old) return [];
@@ -103,6 +103,18 @@ const Header = () => {
             })
         }
     })
+
+    const mutationRequestDelete = useMutation({
+        mutationFn: async ({ requestId }: { requestId: string }) => { const res = await api.delete(`/requests/${requestId}`); return res.data; },
+        onSuccess: (id: string) => {
+            queryClient.setQueryData(["reqs"], (old: any) => {
+                if (!old) return [];
+                return old.filter((req: any) => req.id !== id)
+            })
+        }
+    })
+
+
     const mutationCreateFriendRequest = useMutation({
         mutationFn: async (str: string) => api.post("/requests", { id: str }),
     })
@@ -122,8 +134,20 @@ const Header = () => {
                     return [...old, payload.request]
                 })
             })
-            socket.on('sessionRequest', (payload) => {
-                console.log("socket working", payload)
+            socket.on('sessionCreationRequest', (payload) => {
+                console.log("socket working1", payload)
+                queryClient.setQueryData(['reqs'], (old: any) => {
+                    return [...old, payload.request]
+                })
+            })
+            socket.on('sessionAcceptedRequest', (payload) => {
+                console.log("socket working2", payload)
+                queryClient.setQueryData(['reqs'], (old: any) => {
+                    return [...old, payload.request]
+                })
+            })
+            socket.on('sessionRejectedRequest', (payload) => {
+                console.log("socket working3", payload)
                 queryClient.setQueryData(['reqs'], (old: any) => {
                     return [...old, payload.request]
                 })
@@ -131,7 +155,9 @@ const Header = () => {
             console.log(reqs);
             return () => {
                 socket.off("friendRequest");
-                socket.off("sessionRequest");
+                socket.off("sessionCreationRequest");
+                socket.off("sessionAcceptedRequest");
+                socket.off("sessionRejectedRequest");
             };
         }
 
@@ -251,24 +277,49 @@ const Header = () => {
                                                             <button onClick={() => mutationAddFriend.mutate({ fromId: req.fromId, id: req.id })} className="button-transparent"><Check size={16} /></button>
                                                         </div>
                                                     </div>
-                                                    :
-                                                    <div key={index} className="flex gap-2 w-full _border p-2 flex-col">
-                                                        <div className="flex flex-col  ">
-                                                            <h2 className="text-lg leading-7 font-semibold">Session  Request 🗓️</h2>
-                                                            <div className="     rounded-xl transition-all " > <span className="font-semibold">From:</span> {req.from?.name}</div>
-                                                            {req.session && <div className="flex  flex-col  mb-4">
+                                                    : req.type == 'SESSIONCREATED' ?
+                                                        <div key={index} className="flex gap-2 w-full _border p-2 flex-col">
+                                                            <div className="flex flex-col  ">
+                                                                <h2 className="text-lg leading-7 font-semibold">Session  Request 🗓️</h2>
+                                                                <div className="     rounded-xl transition-all " > <span className="font-semibold">From:</span> {req.from?.name}</div>
+                                                                {req.session.date && <div className="flex  flex-col  mb-4">
 
 
-                                                                <div className="     rounded-xl transition-all  font-medium" > <span className="font-semibold">Date:</span>{new Date(req.session.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
-                                                                <div className="     rounded-xl transition-all  font-medium" > <span className="font-semibold">Time range:</span> {req.session.start}:00 - {req.session.end}:00</div>
+                                                                    <div className="     rounded-xl transition-all  font-medium" > <span className="font-semibold">Date:</span>{new Date(req.session.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                                                                    <div className="     rounded-xl transition-all  font-medium" > <span className="font-semibold">Time range:</span> {req.session.start}:00 - {req.session.end}:00</div>
+                                                                </div>
+                                                                }
+                                                                <div className="grid grid-cols-2 items-center gap-2 ">
+                                                                    <button onClick={() => mutationAcceptSession.mutate({ sessionId: req.sessionId, requestId: req.id, friendId: req.toId })} className="button-transparent"><Check size={16} /></button>
+                                                                    <button onClick={() => mutationRejectSession.mutate({ sessionId: req.sessionId, requestId: req.id, friendId: req.toId })} className="button-transparent"><X size={16} /></button>
+                                                                </div>
                                                             </div>
-                                                            }
-                                                            <div className="grid grid-cols-2 items-center gap-2 ">
-                                                                <button onClick={() => mutationAcceptSession.mutate({ sessionId: req.sessionId, requestId: req.id })} className="button-transparent"><Check size={16} /></button>
-                                                                <button onClick={() => mutationRejectSession.mutate({ sessionId: req.sessionId, requestId: req.id })} className="button-transparent"><X size={16} /></button>
+                                                        </div> : req.type == 'SESSIONACCEPTED' ?
+                                                            <div className="flex flex-col  ">
+                                                                <h2 className="text-lg leading-7 font-semibold">Session  Request 🗓️</h2>
+                                                                <div className="     rounded-xl transition-all " > <span className="font-semibold">From:</span> {req.from?.name}</div>
+                                                                {req.session.title && <div className="flex  flex-col  mb-4">
+
+                                                                    <div className="rounded-xl transition-all  font-medium" > <span className="font-semibold">Accepted</span> session: "{req.session.title}"</div>
+                                                                </div>
+                                                                }
+                                                                <div className="grid grid-cols-2 items-center gap-2 ">
+                                                                    <button onClick={() => mutationRequestDelete.mutate({ requestId: req.id })} className="button-transparent">OK</button>
+                                                                </div>
+                                                            </div> :
+                                                            <div className="flex flex-col  ">
+                                                                <h2 className="text-lg leading-7 font-semibold">Session  Request 🗓️</h2>
+                                                                <div className="     rounded-xl transition-all " > <span className="font-semibold">From:</span> {req.from?.name}</div>
+                                                                {req.session.title && <div className="flex  flex-col  mb-4">
+
+                                                                    <div className="rounded-xl transition-all  font-medium" > <span className="font-semibold">Rejected</span> session: "{req.session.title}"</div>
+                                                                </div>
+                                                                }
+                                                                <div className="grid grid-cols-2 items-center gap-2 ">
+                                                                    <button onClick={() => mutationRequestDelete.mutate({ requestId: req.id })} className="button-transparent">OK</button>
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    </div>)
+                                                )
 
 
                                             })}

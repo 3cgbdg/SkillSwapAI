@@ -3,6 +3,7 @@ import { CreateSessionDto } from './dto/create-session.dto';
 import { PrismaService } from 'prisma/prisma.service';
 import { RequestsService } from 'src/requests/requests.service';
 import { RequestGateway } from 'src/webSockets/request.gateway';
+import { UpdateSessionStatusDto } from './dto/update-session-status.dto';
 
 @Injectable()
 export class SessionsService {
@@ -84,15 +85,19 @@ export class SessionsService {
     return newSessions;
   }
 
-  async acceptSessionRequest(sessionId: string, requestId: string) {
-    await this.prisma.session.update({ where: { id: sessionId }, data: { status: 'AGREED' } })
-    const req = await this.prisma.request.delete({ where: { id: requestId } });
+  async acceptSessionRequest(dto: UpdateSessionStatusDto, myId: string, sessionId: string) {
+    const session = await this.prisma.session.update({ where: { id: sessionId }, data: { status: 'AGREED' } })
+    const request = await this.requests.createForStatusSession(session.id, myId, dto.friendId, 'ACCEPTED');
+    const req = await this.prisma.request.delete({ where: { id: dto.requestId } });
+    this.requestGateway.notifyUserAcceptedSession(dto.friendId, { request });
     return req.id
   }
   // rejecting the session request, in other words -- deleting the session
-  async rejectSessionRequest(sessionId: string, requestId: string) {
-    await this.prisma.session.delete({ where: { id: sessionId } });
-    const req = await this.prisma.request.delete({ where: { id: requestId } });
+  async rejectSessionRequest(dto: UpdateSessionStatusDto, myId: string, sessionId: string) {
+    const session = await this.prisma.session.delete({ where: { id: sessionId } });
+    const request = await this.requests.createForStatusSession(session.id, myId, dto.friendId, 'REJECTED');
+    const req = await this.prisma.request.delete({ where: { id: dto.requestId } });
+    this.requestGateway.notifyUserRejectedSession(dto.friendId, { request });
     return req.id
   }
 
