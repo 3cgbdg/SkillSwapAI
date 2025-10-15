@@ -1,0 +1,197 @@
+[33mcommit f6d4a8e647a9362346b574d8b42b9f4f559c4907[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Thu Oct 9 13:53:06 2025 +0300
+
+    Fixed some bugs with request to session connection
+
+[33mcommit d8da4a700c96bedc61a1d6e7d2689f1eea198eb8[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Wed Oct 8 20:48:40 2025 +0300
+
+    Added sessions requests
+
+[33mcommit a242c738f18b8450391bf4cf12546676bd6c609d[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Mon Oct 6 18:35:55 2025 +0300
+
+    Added status to session
+
+[33mcommit 6371c5690b92f20bf50b04e4e530913a5ce93bbd[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Mon Oct 6 15:53:45 2025 +0300
+
+    Fixed last message bar update
+
+[33mcommit 614ecc30a5f74b66031912969a4864bf5ea387f8[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Mon Oct 6 15:32:36 2025 +0300
+
+    Added better validation into calendar managing
+
+[33mcommit 579938b905177955af3779cb29c7dbedb00f521e[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Mon Oct 6 01:52:41 2025 +0300
+
+    Finished calendar component
+
+[33mcommit 7e36ef9d5415bedc2230551285a8dc5540af2d9e[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Sun Oct 5 20:30:44 2025 +0300
+
+    Added component csr middleware to check if path is empty
+
+[33mcommit 3179fca4d59cb59e603df8606a8e6fae01aaa528[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Sat Oct 4 21:56:12 2025 +0300
+
+    Finished socket chat using
+
+[33mcommit 29c5711eaf7d279ac1e8e85434ab61688dbfc54a[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Sat Oct 4 18:33:40 2025 +0300
+
+    Added logic to socket online status tracking
+
+[33mcommit a269e1c04bb840f4f884d6dbbb197b2aa82998a5[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Sat Oct 4 17:25:53 2025 +0300
+
+    Finished calendar + creating session
+
+[33mcommit 0c486d2e1ac3dc8a951fcf74d9644c0a9deb9a10[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Fri Oct 3 00:33:51 2025 +0300
+
+    Started Session api
+
+[33mcommit 12b64826026946698f748a224d0442bc089af116[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Wed Oct 1 20:38:47 2025 +0300
+
+    addded calendar page (starting)
+
+[33mcommit 07b5bbf1c514853914f950f64f9333f40a8617e5[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Wed Oct 1 17:49:56 2025 +0300
+
+    added mark-seen-massage logic
+
+[33mcommit 68c444a127f54c59445cddec554e410f5f181293[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Tue Sep 30 22:48:57 2025 +0300
+
+    Solved some issues with header + added primary ui to profiles page
+
+[33mcommit 091ac86515bb7052ae8269d478a051f6b2efb843[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Tue Sep 30 17:45:42 2025 +0300
+
+    Footer
+
+[33mcommit f4a0a3a353b8386985e3808858acfc03d95738f1[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Tue Sep 30 17:44:47 2025 +0300
+
+    Footer + reading unseen messages system
+
+[33mcommit c16f8e98507ca33600b68929f1bf3df4311537f5[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Tue Sep 30 11:21:49 2025 +0300
+
+    Finished left-chat bar socket stuff (except socket reading message)
+
+[33mcommit c2b993686446407ef872065708c5e768b2501949[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Tue Sep 30 00:38:51 2025 +0300
+
+    add ui to matches page + optimized socket for chats
+
+[33mcommit 787795bb04cf0c67b258f8591b96ff9b5b5f6005[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Sun Sep 28 11:47:27 2025 +0300
+
+    Y
+
+[33mcommit cbb62aa6d2cff652ebef10962832b8fdb79298e4[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Sat Sep 27 14:38:17 2025 +0300
+
+    Add websockets to chat
+
+[33mcommit 83e40a7101406044494f83eb3e95b9254663aacd[m
+Author: Bogdan <139235847+3cgbdg@users.noreply.github.com>
+Date:   Fri Sep 26 22:18:31 2025 +0300
+
+    Delete frontend/src/api/profile.ts
+
+[33mcommit 78681efc88b248cacf813defc5067fbd204d0885[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Fri Sep 26 22:05:22 2025 +0300
+
+    Finished header-search api
+
+[33mcommit 3881ebe933b545a14ba0a6acfd30f090590f47f6[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Thu Sep 25 23:30:01 2025 +0300
+
+    api for request dom
+
+[33mcommit cfc18ba612b7d8f4fb69ec476c4542fc3488ff7b[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Thu Sep 25 14:03:18 2025 +0300
+
+    Add logic for skills into profile page
+
+[33mcommit 24d59030b397b9679e15fd73501ae8c4fc849e68[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Wed Sep 24 20:03:34 2025 +0300
+
+    logout auth api route
+
+[33mcommit 817c9c91d615323a43d62822cc5a24ff4fe9e9db[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Wed Sep 24 19:49:19 2025 +0300
+
+    Add header searching
+
+[33mcommit df93fda8ec097c197c5473f245d644c6d361c47a[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Wed Sep 24 18:50:45 2025 +0300
+
+    Finished jwt auth
+
+[33mcommit caff6f7958e6d557f52c11346af60f8d0565c146[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Wed Sep 24 00:41:20 2025 +0300
+
+    Added skills adding system to signup page
+
+[33mcommit f9c74aec653ef78d49cc936ce06f60d0c835b3a3[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Tue Sep 23 23:36:18 2025 +0300
+
+    Added ui Auth + jwtAuth(cookie storage)
+
+[33mcommit 89946b69980c1e74d59a37ab0df6eb9c20d68397[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Mon Sep 22 21:15:40 2025 +0300
+
+    Add backend folder as normal folder
+
+[33mcommit 43d006a29b5b6b395f6c0b6de8896b5e4cb6ba4c[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Mon Sep 22 11:09:38 2025 +0300
+
+    Add frontend as normal folder
+
+[33mcommit 158a740023ad9a110fb2039a243a39607c0e239f[m
+Author: gaykun1 <139235847+gaykun1@users.noreply.github.com>
+Date:   Mon Sep 22 10:53:54 2025 +0300
+
+    First commit + only front(later backend folders)
+
+[33mcommit 4388c5a1a4893a6b2d98d8f7f211213088adc7f9[m
+Author: Bogdan <139235847+3cgbdg@users.noreply.github.com>
+Date:   Mon Sep 22 10:59:58 2025 +0300
+
+    Initial commit

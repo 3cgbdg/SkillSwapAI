@@ -11,6 +11,7 @@ import { RequestsModule } from './requests/requests.module';
 import { FriendsModule } from './friends/friends.module';
 import { ProfilesModule } from './profiles/profiles.module';
 import { SessionsModule } from './sessions/sessions.module';
+import { MatchesModule } from './matches/matches.module';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -40,7 +41,9 @@ import { SessionsModule } from './sessions/sessions.module';
 
     ProfilesModule,
 
-    SessionsModule],
+    SessionsModule,
+
+    MatchesModule],
   controllers: [AppController],
   providers: [AppService],
 })

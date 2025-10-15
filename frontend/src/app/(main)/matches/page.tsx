@@ -1,10 +1,21 @@
 "use client"
 
+import { api } from "@/api/axiosInstance"
+import Spinner from "@/components/Spinner"
+import { useAppSelector } from "@/hooks/reduxHooks"
+import { useMutation } from "@tanstack/react-query"
 import Image from "next/image"
 
-
+// Finish stuff with isSuccess
 const Page = () => {
-  
+  const {user} = useAppSelector(state=>state.auth)
+  const {mutate:generateMatches,isError,isPending,isSuccess} = useMutation({
+    mutationFn:async()=>{
+      const res = await api.post('matches');
+      return res.data;
+    }
+  })
+
   return (
     <div className="text-center items-center flex-col flex pt-8">
       <div className="flex flex-col gap-4 mb-11">
@@ -15,8 +26,8 @@ const Page = () => {
         <Image className="object-contain" src={"/matchesImage.png"} alt="matches image" width={256} height={256}></Image>
       </div>
       <div className="flex flex-col items-center gap-8">
-        <div className="button-violet rounded-4xl! w-[262px] h-16">Generate Matches</div>
         <p className="text-sm laeding-5 text-gray">Your matches will appear here shortly after generation.</p>
+        <button disabled={isError? true :false} onClick={()=>generateMatches()} className={`button-violet rounded-4xl! disabled:cursor-auto! ${isPending && 'bg-darkBlue!'} disabled:bg-gray! w-[262px] h-16`}>{ !isPending ?!isError ?'Generate Matches':'Error':<Spinner color="blue" size={32}/>}</button>
       </div>
     </div>
   )

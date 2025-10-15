@@ -141,13 +141,11 @@ const Header = () => {
                 })
             })
             socket.on('sessionAcceptedRequest', (payload) => {
-                console.log("socket working2", payload)
                 queryClient.setQueryData(['reqs'], (old: any) => {
                     return [...old, payload.request]
                 })
             })
             socket.on('sessionRejectedRequest', (payload) => {
-                console.log("socket working3", payload)
                 queryClient.setQueryData(['reqs'], (old: any) => {
                     return [...old, payload.request]
                 })
@@ -290,8 +288,8 @@ const Header = () => {
                                                                 </div>
                                                                 }
                                                                 <div className="grid grid-cols-2 items-center gap-2 ">
-                                                                    <button onClick={() => mutationAcceptSession.mutate({ sessionId: req.sessionId, requestId: req.id, friendId: req.toId })} className="button-transparent"><Check size={16} /></button>
-                                                                    <button onClick={() => mutationRejectSession.mutate({ sessionId: req.sessionId, requestId: req.id, friendId: req.toId })} className="button-transparent"><X size={16} /></button>
+                                                                    <button onClick={() => mutationAcceptSession.mutate({ sessionId: req.sessionId, requestId: req.id, friendId: req.fromId })} className="button-transparent"><Check size={16} /></button>
+                                                                    <button onClick={() => mutationRejectSession.mutate({ sessionId: req.sessionId, requestId: req.id, friendId: req.fromId })} className="button-transparent"><X size={16} /></button>
                                                                 </div>
                                                             </div>
                                                         </div> : req.type == 'SESSIONACCEPTED' ?

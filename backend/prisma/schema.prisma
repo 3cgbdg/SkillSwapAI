@@ -21,7 +21,7 @@ enum RequestType {
 
 model User {
   id               String    @id @default(uuid())
-  name             String
+  name             String    @unique
   password         String
   email            String    @unique
   knownSkills      Skill[]   @relation("knownSkills")
@@ -32,7 +32,8 @@ model User {
   messagesReceived Message[] @relation("receiver")
   sentRequests     Request[] @relation("sentRequests")
   receivedRequests Request[] @relation("receivedRequests")
-
+  matchesInitiated  Match[]   @relation("MatchInitiator")
+  matchesReceived   Match[]   @relation("MatchReceiver")
   friends  Friend[] @relation("UserFriends")
   friendOf Friend[] @relation("UserFriendsInverse")
 }
@@ -96,4 +97,19 @@ model Session {
   color       String
   users       User[]        @relation("userSessions")
   request     Request[]      @relation("sessionRequest")
+
+}
+
+model Match {
+  id          String        @id @default(uuid())
+  initiator   User        @relation("MatchInitiator", fields: [initiatorId], references: [id], onDelete: Cascade)
+  initiatorId String
+  receiver    User        @relation("MatchReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  receiverId  String
+  
+  createdAt   DateTime    @default(now())
+  @@unique([initiatorId, receiverId])
+  // check if indexes would be good here
+  // @@index([initiatorId])
+  // @@index([receiverId])
 }

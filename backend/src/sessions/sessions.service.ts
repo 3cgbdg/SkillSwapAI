@@ -87,17 +87,21 @@ export class SessionsService {
 
   async acceptSessionRequest(dto: UpdateSessionStatusDto, myId: string, sessionId: string) {
     const session = await this.prisma.session.update({ where: { id: sessionId }, data: { status: 'AGREED' } })
-    const request = await this.requests.createForStatusSession(session.id, myId, dto.friendId, 'ACCEPTED');
+    const originalReq = await this.prisma.request.findUnique({ where: { id: dto.requestId } });
+    if (!originalReq) throw new BadRequestException('Original request not found');
+    const request = await this.requests.createForStatusSession(session.id, myId, originalReq.fromId, 'ACCEPTED');
     const req = await this.prisma.request.delete({ where: { id: dto.requestId } });
-    this.requestGateway.notifyUserAcceptedSession(dto.friendId, { request });
+    this.requestGateway.notifyUserAcceptedSession(originalReq.fromId, { request });
     return req.id
   }
   // rejecting the session request, in other words -- deleting the session
   async rejectSessionRequest(dto: UpdateSessionStatusDto, myId: string, sessionId: string) {
-    const session = await this.prisma.session.delete({ where: { id: sessionId } });
-    const request = await this.requests.createForStatusSession(session.id, myId, dto.friendId, 'REJECTED');
+    const originalReq = await this.prisma.request.findUnique({ where: { id: dto.requestId } });
+    if (!originalReq) throw new BadRequestException('Original request not found');
+    const request = await this.requests.createForStatusSession(sessionId, myId, originalReq.fromId, 'REJECTED');
     const req = await this.prisma.request.delete({ where: { id: dto.requestId } });
-    this.requestGateway.notifyUserRejectedSession(dto.friendId, { request });
+    const session = await this.prisma.session.delete({ where: { id: sessionId } });
+    this.requestGateway.notifyUserRejectedSession(originalReq.fromId, { request });
     return req.id
   }
 

@@ -23,14 +23,12 @@ export class SessionsController {
   }
   @Post(':id/accepted')
   async acceptSessionRequest(@Param('id') sessionId: string, @Body() dto: UpdateSessionStatusDto, @Req() req: Request) {
-    console.log("hello1")
     return this.sessionService.acceptSessionRequest(dto, (req as any).user.id, sessionId)
   }
 
 
-  @Post(':id/status/rejected')
+  @Post(':id/rejected')
   async rejectSessionRequest(@Param('id') sessionId: string, @Body() dto: UpdateSessionStatusDto, @Req() req: Request) {
-    console.log("hello2")
     return this.sessionService.rejectSessionRequest(dto, (req as any).user.id, sessionId)
   }
 
