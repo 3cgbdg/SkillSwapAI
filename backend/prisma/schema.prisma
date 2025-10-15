@@ -33,7 +33,7 @@ model User {
   sentRequests     Request[] @relation("sentRequests")
   receivedRequests Request[] @relation("receivedRequests")
   matchesInitiated  Match[]   @relation("MatchInitiator")
-  matchesReceived   Match[]   @relation("MatchReceiver")
+  matchesReceived   Match[]   @relation("otherUser")
   friends  Friend[] @relation("UserFriends")
   friendOf Friend[] @relation("UserFriendsInverse")
 }
@@ -104,12 +104,13 @@ model Match {
   id          String        @id @default(uuid())
   initiator   User        @relation("MatchInitiator", fields: [initiatorId], references: [id], onDelete: Cascade)
   initiatorId String
-  receiver    User        @relation("MatchReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
-  receiverId  String
-  
+  other    User        @relation("otherUser", fields: [otherId], references: [id], onDelete: Cascade)
+  otherId  String
+  compatibility Int
+  aiExplanation String 
   createdAt   DateTime    @default(now())
-  @@unique([initiatorId, receiverId])
+  @@unique([initiatorId, otherId])
   // check if indexes would be good here
   // @@index([initiatorId])
-  // @@index([receiverId])
+  // @@index([otherId])
 }

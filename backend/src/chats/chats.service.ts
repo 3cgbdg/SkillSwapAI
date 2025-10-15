@@ -17,7 +17,7 @@ export class ChatsService {
       }, include: { messages: { orderBy: { createdAt: 'asc' } } }
     })
 
-    return [...(chat?.messages ?? [])]
+    return [...(chat?.messages ?? [])];
 
   }
 

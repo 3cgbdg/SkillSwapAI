@@ -1,36 +1,33 @@
 "use client"
 
 import { api } from "@/api/axiosInstance"
-import Spinner from "@/components/Spinner"
+import GeneratedMatches from "@/components/matches/GeneratedMatches"
+import GeneratingMatchesPage from "@/components/matches/GeneratingMatchesPage"
 import { useAppSelector } from "@/hooks/reduxHooks"
+import { IMatch } from "@/types/types"
 import { useMutation } from "@tanstack/react-query"
-import Image from "next/image"
+
 
 // Finish stuff with isSuccess
 const Page = () => {
-  const {user} = useAppSelector(state=>state.auth)
-  const {mutate:generateMatches,isError,isPending,isSuccess} = useMutation({
-    mutationFn:async()=>{
+  const {matches} = useAppSelector(state=>state.matches)
+  const { mutate: generateMatches, data: matchesCreated, isError, isPending, isSuccess } = useMutation({
+    mutationFn: async () => {
       const res = await api.post('matches');
-      return res.data;
+      return res.data as IMatch[];
     }
   })
+  console.log(matches);
+  if ( (matches && matches.length>0)|| matchesCreated ) {
+    return (
+      <GeneratedMatches matches={matches ?? matchesCreated    ?? []} />
+    )
+  } else {
+    return (
+      <GeneratingMatchesPage isPending={isPending} isError={isError} generateMatches={generateMatches} />
+    )
+  }
 
-  return (
-    <div className="text-center items-center flex-col flex pt-8">
-      <div className="flex flex-col gap-4 mb-11">
-      <h1 className="page-title">Discover Your Perfect Connections</h1>
-      <p className="text-lg leading-7.5 text-gray max-w-[670px]  w-full">Our  AI  analyzes your preferences to find the most compatible matches. Initiate the journey to new connections now.</p>
-      </div>
-      <div className="overflow-hidden mb-12">
-        <Image className="object-contain" src={"/matchesImage.png"} alt="matches image" width={256} height={256}></Image>
-      </div>
-      <div className="flex flex-col items-center gap-8">
-        <p className="text-sm laeding-5 text-gray">Your matches will appear here shortly after generation.</p>
-        <button disabled={isError? true :false} onClick={()=>generateMatches()} className={`button-violet rounded-4xl! disabled:cursor-auto! ${isPending && 'bg-darkBlue!'} disabled:bg-gray! w-[262px] h-16`}>{ !isPending ?!isError ?'Generate Matches':'Error':<Spinner color="blue" size={32}/>}</button>
-      </div>
-    </div>
-  )
 }
 
 export default Page

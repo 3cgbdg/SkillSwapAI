@@ -71,3 +71,21 @@ interface IRequest {
     }//if request type is session 
 
 }
+
+export interface IMatch {
+  compatibility: number,
+  aiExplanation: string,
+  id: string,
+  initiatorId: string,
+  otherId: string,
+  other: {
+    name:string
+    knownSkills: {
+      title: string
+    }[],
+
+    skillsToLearn: {
+      title: string
+    }[],
+  }
+}

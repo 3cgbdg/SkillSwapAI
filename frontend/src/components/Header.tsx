@@ -51,6 +51,27 @@ const Header = () => {
             router.push("/auth/login");
         }
     })
+
+
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+
+            if (!target.closest(".panel")) {
+                setPanel(null);
+            }
+        };
+
+        if (panel) {
+            document.addEventListener("click", handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener("click", handleClickOutside);
+        };
+    }, [panel]);
+
     const { data: reqs } = useQuery({
         queryKey: ['reqs'],
         queryFn: async () => {
@@ -180,7 +201,7 @@ const Header = () => {
 
 
                 <div className="flex items-center gap-2 input">
-                    {panel === "search" ? (<button className={`cursor-pointer flex items-center ${panel === "search" ? "text-primary" : ""} `} onClick={() => { setPanel(null); setWord(""); }}> <X /></button>
+                    {panel === "search" ? (<button className={`cursor-pointer panel flex items-center ${panel === "search" ? "text-primary" : ""} `} onClick={() => { setPanel(null); setWord(""); }}> <X /></button>
                     ) : (<button className={`  cursor-pointer flex items-center    transition-all hover:text-primary  `} onClick={() => {
 
 
@@ -203,7 +224,7 @@ const Header = () => {
                         className="outline-0" placeholder="Search for skills or users..."
                     />
 
-                    {panel === "search" ? <div className="min-w-[250px] flex flex-col top-full panel bg-white z-10  left-0 absolute _border mt-1  bg-primary  p-3  rounded-[6px]">
+                    {panel === "search" ? <div className="min-w-[250px] flex flex-col panel top-full panel bg-white z-10  left-0 absolute _border mt-1  bg-primary  p-3  rounded-[6px]">
                         <div className="flex flex-col gap-4 items-start text-sm font-semibold">
                             {foundSkills.length > 0 &&
                                 <div className="flex flex-col gap-2 pb-4 not-last:border-b-[1px] border-neutral-300 w-full">
@@ -261,7 +282,7 @@ const Header = () => {
                     {/* notifs list */}
                     {panel == "notifs" &&
                         <div className="">
-                            <div className="_border mt-2 rounded-md p-3 absolute top-full bg-white panel right-0 min-w-[250px] flex flex-col gap-2">
+                            <div className="_border panel mt-2 rounded-md p-3 absolute z-10 top-full bg-white panel right-0 min-w-[250px] flex flex-col gap-2">
                                 {reqs && reqs.length > 0 ? (
                                     <div className="flex flex-col gap-2 pb-4 not-last:border-b-[1px] border-neutral-300 w-full">
                                         <h3 className="text-lg leading-7 font-medium">Latest requests</h3>
@@ -333,7 +354,7 @@ const Header = () => {
                     {panel !== "menu" ? <UserRound /> : <X />}
                 </button>
                 {panel == "menu" &&
-                    <div className=" absolute min-w-[250px] right-0 top-[140%] panel">
+                    <div className=" absolute min-w-[250px] right-0 top-[140%] panel z-10">
                         <div className="_border  rounded-lg p-5 bg-white">
                             <h3 className="font-semibold pb-1 border-b mb-2">Profile</h3>
                             <div className="flex flex-col gap-4 items-start">

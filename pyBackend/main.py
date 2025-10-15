@@ -38,7 +38,7 @@ async def analyzeMatches(usersForMatch:List[User],thisUser:User):
     - If both users can teach each other something (mutual skill exchange), compatibility is higher (70–100%).
     - If only one side can teach something, compatibility is medium (40–70%).
     - If overlap is weak, compatibility is low (0–40%).
-    - Return clear JSON: [{{ "name": str, "compatibility": int, "aiExplanation": str,"id":str }}]
+    - Return clear JSON: [{{"compatibility": int, "aiExplanation": str,"id":str }}]
     - aiExplanation must be 2–3 sentences in human tone explaining why they match.
      
      """
