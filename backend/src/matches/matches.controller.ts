@@ -10,6 +10,12 @@ export class MatchesController {
   create(@Req() req: Request) {
     return this.matchesService.create((req as any).user.id);
   }
+
+  @Post('plan')
+  createPlan(@Req() req: Request) {
+    return this.matchesService.createPlan((req as any).user.id);
+  }
+
   @Get()
   getMatches(@Req() req: Request) {
     return this.matchesService.getMatches((req as any).user.id);

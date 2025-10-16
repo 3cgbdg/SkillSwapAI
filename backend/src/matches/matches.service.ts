@@ -1,13 +1,31 @@
 import { HttpService } from '@nestjs/axios';
 import { HttpException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ModuleStatus } from '@prisma/client';
+import { link } from 'fs';
 import { PrismaService } from 'prisma/prisma.service';
 import { firstValueFrom } from 'rxjs';
 
-interface IAiReportItem {
+interface IAiReportAnalyzedMatch {
   compatibility: number,
   aiExplanation: string,
   id?: string,
+  keyBenefits: string[],
+}
+
+interface IAiReportGeneratedPlan {
+  modules:{
+    title:string,
+    status:ModuleStatus,
+    objectives:string[],
+    activities:string[],
+    timeline:number,
+    resources:{
+      title:string,
+      description?:string,
+      link:string
+    }[]
+  }[]
 }
 
 export interface IMatchResponse {
@@ -30,6 +48,7 @@ export interface IMatchResponse {
 export class MatchesService {
   constructor(private readonly prisma: PrismaService, private readonly configService: ConfigService, private readonly httpService: HttpService) { };
   async create(myId: string) {
+
     const user = await this.prisma.user.findUnique({ where: { id: myId }, include: { skillsToLearn: true, knownSkills: true } });
     if (!user) throw new NotFoundException('User was not found!');
     const skillsToLearnTitles = user.skillsToLearn.map(skill => skill.title);
@@ -61,7 +80,7 @@ export class MatchesService {
           })
       );
       const rawAiArray = fastApiResponse?.data?.AIReport;
-      let readyAiArray: IAiReportItem[] | null = null;
+      let readyAiArray: IAiReportAnalyzedMatch[] | null = null;
       if (typeof rawAiArray == 'string') {
         const str = rawAiArray.match(/```json\s([\s\S]+?)```/)
         readyAiArray = str ? JSON.parse(str[1]) : JSON.parse(rawAiArray);
@@ -72,11 +91,10 @@ export class MatchesService {
         let matches: IMatchResponse[] = [];
 
         for (let item of readyAiArray) {
-          const match = await this.prisma.match.create({ data: { compatibility: item.compatibility, aiExplanation: item.aiExplanation, other: { connect: { id: item.id } }, initiator: { connect: { id: myId } } }, include: { other: { select: { name: true, skillsToLearn: { select: { title: true } }, knownSkills: { select: { title: true } } } } } });
+          const match = await this.prisma.match.create({ data: { compatibility: item.compatibility, aiExplanation: item.aiExplanation, keyBenefits: item.keyBenefits, other: { connect: { id: item.id } }, initiator: { connect: { id: myId } } }, include: { other: { select: { name: true, skillsToLearn: { select: { title: true } }, knownSkills: { select: { title: true } } } } } });
           matches.push(match);
         }
-        console.log(readyAiArray, matches)
-        return  matches;
+        return matches;
       } else {
         throw new InternalServerErrorException();
       }
@@ -90,9 +108,73 @@ export class MatchesService {
   }
 
   async getMatches(myId: string) {
-    const matches = await this.prisma.match.findMany({ where: { initiatorId: myId }
-    , include: { other: { select: { name: true, skillsToLearn: { select: { title: true } }, knownSkills: { select: { title: true } } } } }});
-    return  matches;
+    const matches = await this.prisma.match.findMany({
+      where: { initiatorId: myId }
+      , include: { other: { select: { name: true, skillsToLearn: { select: { title: true } }, knownSkills: { select: { title: true } } } } }
+    });
+    return matches;
+  }
+
+
+  async createPlan(myId: string) {
+    const match = await this.prisma.match.findFirst({
+      where: { initiatorId: myId }
+      , include: { other: { select: { knownSkills: true, skillsToLearn: true, name: true, id: true } }, initiator: { select: { knownSkills: true, skillsToLearn: true, name: true, id: true } } }
+    });
+    if (!match) throw new NotFoundException('Match was not found!');
+    const initiator = { ...match.initiator, skillsToLearn: match.initiator.skillsToLearn.map(item => item.title), knownSkills: match.initiator.knownSkills.map(item => item.title) }
+    const other = { ...match.other, skillsToLearn: match.other.skillsToLearn.map(item => item.title), knownSkills: match.other.knownSkills.map(item => item.title) }
+    const fastApiResponse = await firstValueFrom(
+      this.httpService.post(`${this.configService.get<string>('FASTAPI_URL')}/plan`, { users: [initiator, other], compatibility: match.compatibility },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        })
+    );
+    const rawAiObject = fastApiResponse.data.AIReport;
+    let readyAiObject: IAiReportGeneratedPlan | null = null;
+    if (typeof rawAiObject == 'string') {
+      const str = rawAiObject.match(/```json\s([\s\S]+?)```/)
+      readyAiObject = str ? JSON.parse(str[1]) : JSON.parse(rawAiObject);
+    } else {
+      readyAiObject = rawAiObject;
+    }
+    if (readyAiObject) {
+    console.log(readyAiObject)
+   const plan = await this.prisma.plan.create({
+    data: {
+      modules: {
+        create: readyAiObject.modules.map(module => ({
+          title: module.title,
+          status: module.status,
+          objectives: module.objectives,
+          activities: module.activities,
+          timeline: module.timeline,
+          resources: {
+            create: module.resources.map(res => ({
+              title: res.title,
+              description: res.description,
+              link:res.link
+            }))
+          }
+        }))
+      }
+    },
+    include: {
+      modules: {
+        include: {
+          resources: true
+        }
+      }
+    }
+  });
+
+  console.log(plan)
+    } else {
+      throw new InternalServerErrorException();
+    }
+   
   }
 
 }

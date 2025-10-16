@@ -12,6 +12,11 @@ enum SessionStatus {
   AGREED
 }
 
+enum ModuleStatus {
+  COMPLETED
+  INPROGRESS
+}
+
 enum RequestType {
   FRIEND
   SESSIONCREATED
@@ -32,10 +37,10 @@ model User {
   messagesReceived Message[] @relation("receiver")
   sentRequests     Request[] @relation("sentRequests")
   receivedRequests Request[] @relation("receivedRequests")
-  matchesInitiated  Match[]   @relation("MatchInitiator")
-  matchesReceived   Match[]   @relation("otherUser")
-  friends  Friend[] @relation("UserFriends")
-  friendOf Friend[] @relation("UserFriendsInverse")
+  matchesInitiated Match[]   @relation("MatchInitiator")
+  matchesReceived  Match[]   @relation("otherUser")
+  friends          Friend[]  @relation("UserFriends")
+  friendOf         Friend[]  @relation("UserFriendsInverse")
 }
 
 model Friend {
@@ -55,8 +60,8 @@ model Request {
   fromId    String
   to        User        @relation("receivedRequests", fields: [toId], references: [id])
   toId      String
-  session   Session?    @relation("sessionRequest",fields:[sessionId],references: [id])
-  sessionId String?     
+  session   Session?    @relation("sessionRequest", fields: [sessionId], references: [id])
+  sessionId String?
   status    String      @default("pending")
 }
 
@@ -96,21 +101,48 @@ model Session {
   date        DateTime
   color       String
   users       User[]        @relation("userSessions")
-  request     Request[]      @relation("sessionRequest")
-
+  request     Request[]     @relation("sessionRequest")
 }
 
 model Match {
-  id          String        @id @default(uuid())
-  initiator   User        @relation("MatchInitiator", fields: [initiatorId], references: [id], onDelete: Cascade)
-  initiatorId String
-  other    User        @relation("otherUser", fields: [otherId], references: [id], onDelete: Cascade)
-  otherId  String
+  id            String   @id @default(uuid())
+  initiator     User     @relation("MatchInitiator", fields: [initiatorId], references: [id], onDelete: Cascade)
+  initiatorId   String
+  other         User     @relation("otherUser", fields: [otherId], references: [id], onDelete: Cascade)
+  otherId       String
   compatibility Int
-  aiExplanation String 
-  createdAt   DateTime    @default(now())
-  @@unique([initiatorId, otherId])
+  aiExplanation String
+  keyBenefits   String[]
+  createdAt     DateTime @default(now())
   // check if indexes would be good here
   // @@index([initiatorId])
   // @@index([otherId])
+
+  @@unique([initiatorId, otherId])
+}
+
+model Plan {
+  id      String   @id @default(uuid())
+  modules Module[]
+}
+
+model Module {
+  id         String       @id @default(uuid())
+  title      String
+  status     ModuleStatus @default(INPROGRESS)
+  objectives String[]
+  activities String[]
+  timeline   Int
+  resources  Resource[]
+  planId     String
+  plan       Plan         @relation(fields: [planId], references: [id])
+}
+
+model Resource {
+  id          String  @id @default(uuid())
+  moduleId    String
+  module      Module  @relation(fields: [moduleId], references: [id])
+  title       String
+  link        String
+  description String?
 }

@@ -20,7 +20,7 @@ const page = () => {
         }
     })
     // for getting 
-    const mutationCreateChat = useMutation({
+    const {mutate:createChat} = useMutation({
         mutationFn: async ({ payload }: { payload: { friendId: string, friendName: string } }) => { const res = await api.post("/chats", payload); return res.data },
         onSuccess: (data: IChat) => {
             router.push(`/chats/${data.chatId}`);
@@ -28,10 +28,6 @@ const page = () => {
         }
     })
 
-    const redirectToChat = (friendName: string) => {
-        // getting chat whether its created or whether its not then creating a new one and getting its id to get route of the chats page of it 
-        mutationCreateChat.mutate({ payload: { friendId: id, friendName } });
-    }
     return (
         <div className="grid gap-8 grid-cols-3">
             <div className="_border rounded-[10px] col-span-2 banner_gradient flex flex-col gap-4  p-8">
@@ -57,7 +53,7 @@ const page = () => {
                     <div className="size-24 rounded-full bg-black"></div>
                     <h2 className="section-title">{profile?.name}</h2>
                     <div className="flex flex-col gap-3 mt-4 w-full">
-                        <button onClick={() => redirectToChat(profile.name)} className="button-blue flex items-center gap-5">
+                        <button onClick={() => createChat({ payload: { friendId: id, friendName:profile.name } })} className="button-blue flex items-center gap-5">
                             <MessageSquareMore size={20} />
                             <span>Message {profile?.name}</span>
                         </button>

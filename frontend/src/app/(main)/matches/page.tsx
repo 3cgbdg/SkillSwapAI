@@ -3,21 +3,27 @@
 import { api } from "@/api/axiosInstance"
 import GeneratedMatches from "@/components/matches/GeneratedMatches"
 import GeneratingMatchesPage from "@/components/matches/GeneratingMatchesPage"
-import { useAppSelector } from "@/hooks/reduxHooks"
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks"
+import { getMatches } from "@/redux/matchesSlice"
 import { IMatch } from "@/types/types"
 import { useMutation } from "@tanstack/react-query"
+import { useEffect } from "react"
 
 
 // Finish stuff with isSuccess
 const Page = () => {
-  const {matches} = useAppSelector(state=>state.matches)
+  const {matches} = useAppSelector(state=>state.matches);
+  const dispatch = useAppDispatch();
   const { mutate: generateMatches, data: matchesCreated, isError, isPending, isSuccess } = useMutation({
     mutationFn: async () => {
       const res = await api.post('matches');
       return res.data as IMatch[];
+    },
+    onSuccess:(data)=>{
+      dispatch(getMatches(data))
     }
   })
-  console.log(matches);
+
   if ( (matches && matches.length>0)|| matchesCreated ) {
     return (
       <GeneratedMatches matches={matches ?? matchesCreated    ?? []} />
