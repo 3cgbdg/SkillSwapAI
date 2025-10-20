@@ -76,7 +76,7 @@ export interface IMatch {
     compatibility: number,
     aiExplanation: string,
     keyBenefits: string[]
-    
+
     id: string,
     initiatorId: string,
     otherId: string,
@@ -90,4 +90,23 @@ export interface IMatch {
             title: string
         }[],
     }
+}
+
+export interface IGeneratedPlan {
+    modules: IGeneratedModule[]
+}
+
+export interface IGeneratedModule {
+      id: string;
+        title: string,
+        status: ModuleStatus,
+        objectives: string[],
+        activities: string[],
+        timeline: number,
+        resources: {
+            id: string
+            title: string,
+            description?: string,
+            link: string
+        }[]
 }

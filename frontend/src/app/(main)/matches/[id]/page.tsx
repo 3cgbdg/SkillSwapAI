@@ -5,8 +5,8 @@ import ModuleAccordion from "@/components/matches/ModuleAccordion";
 import Spinner from "@/components/Spinner";
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
 import { updateChats } from "@/redux/chatsSlice";
-import { IChat, IMatch } from "@/types/types";
-import { useMutation } from "@tanstack/react-query";
+import { IChat, IGeneratedPlan, IMatch } from "@/types/types";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Calendar, MessageSquareMore } from "lucide-react";
 import { useParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react";
@@ -15,6 +15,8 @@ const Page = () => {
     const { id } = useParams() as { id: string };
     const { matches } = useAppSelector(state => state.matches);
     const [currentMatch, setCurrentMatch] = useState<IMatch | null>(null);
+    const [isActive, setIsActive] = useState<null | number>(null);
+
     const router = useRouter();
     const dispatch = useAppDispatch();
     useEffect(() => {
@@ -37,11 +39,21 @@ const Page = () => {
     })
 
     // mutation for generating plan
-    const {mutate:generatePlan} = useMutation({
-        mutationFn:async()=>{
-            const res = await api.post('/matches/plan');
+    const { mutate: generatePlan } = useMutation({
+        mutationFn: async () => {
+            await api.post('/matches/plan');
 
         }
+    })
+
+    const { data: plan } = useQuery({
+        queryKey: ['matches', id],
+        queryFn: async () => {
+            if (!currentMatch) return null;
+            const res = await api.get(`/matches/${currentMatch.id}/plan`);
+            return res.data as IGeneratedPlan;
+        },
+        enabled: !!currentMatch,
     })
 
     return (<>
@@ -51,7 +63,6 @@ const Page = () => {
                     <div className="_border rounded-[10px] col-span-2 banner_gradient flex flex-col gap-4  p-8">
                         <div className="flex flex-col gap-2">
                             <h1 className="page-title">Your AI-Powered Training Plan with Alex Rivera</h1>
-                            <p className="text-lg leading-7 ">Mastering Advanced JavaScript</p>
                         </div>
                         <div className="">
                             {currentMatch.aiExplanation}
@@ -86,24 +97,41 @@ const Page = () => {
                 <div className="grid gap-8 grid-cols-3 ">
                     <div className="_border col-span-2 rounded-[10px] p-6 h-[254px] flex items-center justify-center text-center">
                         <div className="flex flex-col gap-4 items-center">
-                            <div className="flex flex-col  gap-1.5">
-                                <h2 className="section-title">Overall Progress</h2>
-                                <p className="tex-sm leading-5 text-gray">Your AI-generated training journey</p>
-                            </div>
-                            <button onClick={()=>generatePlan()} className="button-transparent">sdad</button>
+
+                            {plan ?
+
+                                <div className="flex flex-col  gap-1.5">
+                                    <h2 className="section-title">Overall Progress</h2>
+                                    <p className="tex-sm leading-5 text-gray">Your AI-generated training journey</p>
+                                    <h3 className="page-title mt-4 text-blue!">{plan.modules.reduce((acc, cur) => acc + (cur.status == 'INPROGRESS' ? 0 : 1), 0) / plan.modules.length}%</h3>
+                                </div>
+
+                                :
+
+                                <div className="flex flex-col  gap-3">
+                                    <h2 className="section-title">Start your journey with {currentMatch.other.name}!</h2>
+                                    <p className="tex-sm leading-5 text-gray">To start you need to create a plan</p>
+                                    <button onClick={() => generatePlan()} className="button-transparent">Generate plan</button>
+
+                                </div>
+                            }
                         </div>
                     </div>
-                </div>
+                </div>{plan && 
                 <div className="w-full _border rounded-[10px] p-6">
                     <div className="flex flex-col gap-2 mb-6">
                         <h2 className="page-title">Training Modules</h2>
                         <p className="text-sm leading-5 text-gray">Breakdown of your skill exchange journey</p>
                     </div>
                     <div className="flex flex-col gap-4">
-                        <ModuleAccordion/>
-                        {/* { accordion map} */}
+                        {plan &&
+                            plan.modules.map((module, idx) => (
+                                <ModuleAccordion idx={idx} key={module.id} module={module} isActive={isActive} setIsActive={setIsActive} />
+                            ))
+                        }
+
                     </div>
-                </div>
+                </div>}
             </div>
 
             : <div className="h-100 flex items-center justify-center"><Spinner color='blue' size={44} /></div>

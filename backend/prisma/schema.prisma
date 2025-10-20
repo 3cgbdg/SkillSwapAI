@@ -113,6 +113,7 @@ model Match {
   compatibility Int
   aiExplanation String
   keyBenefits   String[]
+  plan          Plan?
   createdAt     DateTime @default(now())
   // check if indexes would be good here
   // @@index([initiatorId])
@@ -124,6 +125,8 @@ model Match {
 model Plan {
   id      String   @id @default(uuid())
   modules Module[]
+  matchId String  @unique
+  match   Match    @relation(fields: [matchId], references: [id])
 }
 
 model Module {

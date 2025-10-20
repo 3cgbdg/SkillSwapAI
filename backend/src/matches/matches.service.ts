@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import { HttpException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, HttpException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ModuleStatus } from '@prisma/client';
 import { link } from 'fs';
@@ -115,13 +115,26 @@ export class MatchesService {
     return matches;
   }
 
+    async getPlan(matchId) {
+    const match = await this.prisma.match.findUnique({
+      where:{id:matchId},include:{plan:{include:{modules:{include:{resources:true}}}}}
+    });
+    if(!match){
+      throw new NotFoundException('Match was not found!');
+    }
+    console.log(match.plan,'getting plan ');
+
+    return match.plan;
+  }
+
 
   async createPlan(myId: string) {
     const match = await this.prisma.match.findFirst({
       where: { initiatorId: myId }
-      , include: { other: { select: { knownSkills: true, skillsToLearn: true, name: true, id: true } }, initiator: { select: { knownSkills: true, skillsToLearn: true, name: true, id: true } } }
+      , include: { other: { select: { knownSkills: true, skillsToLearn: true, name: true, id: true } },plan:{select:{id:true}}, initiator: { select: { knownSkills: true, skillsToLearn: true, name: true, id: true } } }
     });
-    if (!match) throw new NotFoundException('Match was not found!');
+    if (!match) throw new NotFoundException('Match was - not found!');
+    if(match.plan && match.plan.id) throw new ForbiddenException('Plan has been already created!');
     const initiator = { ...match.initiator, skillsToLearn: match.initiator.skillsToLearn.map(item => item.title), knownSkills: match.initiator.knownSkills.map(item => item.title) }
     const other = { ...match.other, skillsToLearn: match.other.skillsToLearn.map(item => item.title), knownSkills: match.other.knownSkills.map(item => item.title) }
     const fastApiResponse = await firstValueFrom(
@@ -143,7 +156,9 @@ export class MatchesService {
     if (readyAiObject) {
     console.log(readyAiObject)
    const plan = await this.prisma.plan.create({
+    
     data: {
+      match:{connect:{id:match.id}},
       modules: {
         create: readyAiObject.modules.map(module => ({
           title: module.title,
