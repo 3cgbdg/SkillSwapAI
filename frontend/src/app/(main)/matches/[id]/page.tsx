@@ -6,7 +6,7 @@ import Spinner from "@/components/Spinner";
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
 import { updateChats } from "@/redux/chatsSlice";
 import { IChat, IGeneratedPlan, IMatch } from "@/types/types";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, MessageSquareMore } from "lucide-react";
 import { useParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react";
@@ -16,7 +16,7 @@ const Page = () => {
     const { matches } = useAppSelector(state => state.matches);
     const [currentMatch, setCurrentMatch] = useState<IMatch | null>(null);
     const [isActive, setIsActive] = useState<null | number>(null);
-
+   const queryClient = useQueryClient();
     const router = useRouter();
     const dispatch = useAppDispatch();
     useEffect(() => {
@@ -39,9 +39,12 @@ const Page = () => {
     })
 
     // mutation for generating plan
-    const { mutate: generatePlan } = useMutation({
+    const { mutate: generatePlan,isPending } = useMutation({
         mutationFn: async () => {
-            await api.post('/matches/plan');
+           const res =  await api.post('/matches/plan');
+                queryClient.setQueryData(['matches', id], () => {
+                        return res.data;
+                       })
 
         }
     })
@@ -111,7 +114,7 @@ const Page = () => {
                                 <div className="flex flex-col  gap-3">
                                     <h2 className="section-title">Start your journey with {currentMatch.other.name}!</h2>
                                     <p className="tex-sm leading-5 text-gray">To start you need to create a plan</p>
-                                    <button onClick={() => generatePlan()} className="button-transparent">Generate plan</button>
+                                    <button onClick={() => generatePlan()} className="button-transparent">{!isPending ? "Generate plan" : <Spinner size={22} color="blue"/>}</button>
 
                                 </div>
                             }

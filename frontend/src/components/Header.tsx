@@ -1,7 +1,7 @@
 "use client"
 
 import { api } from "@/api/axiosInstance"
-import { useAppDispatch, } from "@/hooks/reduxHooks"
+import { useAppDispatch, useAppSelector, } from "@/hooks/reduxHooks"
 import { addWantToLearnSkill, logOut } from "@/redux/authSlice"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import Image from "next/image"
@@ -44,6 +44,7 @@ const Header = () => {
     const [foundSkills, setFoundSkills] = useState<foundSkills[]>([]);
     const queryClient = useQueryClient();
     const [socket, setSocket] = useState<Socket | null>(null);
+    const {user} = useAppSelector(state=>state.auth);
     const mutation = useMutation({
         mutationFn: async () => await api.delete("/auth/logout"),
         onSuccess: () => {
@@ -142,10 +143,11 @@ const Header = () => {
 
 
     useEffect(() => {
+        if(!user)return;
         const sock = io(`${process.env.NEXT_PUBLIC_API_URL}`, { withCredentials: true });
         setSocket(sock);
         return () => { sock.disconnect() };
-    }, [])
+    }, [user])
 
     useEffect(() => {
         if (socket) {

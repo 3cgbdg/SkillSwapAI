@@ -65,8 +65,6 @@ export class AuthService {
   }
 
   async createTokenForRefresh(user: User) {
-    return this.jwtService.sign(
-      { userId: user.id }
-    );
+    return this.jwtService.sign({ userId: user.id })
   }
 }

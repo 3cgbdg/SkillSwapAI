@@ -11,7 +11,7 @@ const ModuleAccordion = ({ module,setIsActive ,isActive,idx}: { module: IGenerat
         <div className="bg-neutral-100 flex flex-col _border rounded-[10px] p-4 min-h-[94px]">
             <div className="w-full flex justify-between items-center h-[60px]">
                 <div className="flex items-center gap-4 max-w-[450px]">
-                    <input checked={module.status != 'INPROGRESS'} className="size-4" type="checkbox" />
+                    <input defaultChecked={module.status != 'INPROGRESS'} className="size-4" type="checkbox" />
                     <h3 className="text-lg leading-7 font-semibold ">{module.title}</h3>
                 </div>
                 <div className="flex items-center gap-10">

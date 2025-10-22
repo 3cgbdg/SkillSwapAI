@@ -14,16 +14,16 @@ interface IAiReportAnalyzedMatch {
 }
 
 interface IAiReportGeneratedPlan {
-  modules:{
-    title:string,
-    status:ModuleStatus,
-    objectives:string[],
-    activities:string[],
-    timeline:number,
-    resources:{
-      title:string,
-      description?:string,
-      link:string
+  modules: {
+    title: string,
+    status: ModuleStatus,
+    objectives: string[],
+    activities: string[],
+    timeline: number,
+    resources: {
+      title: string,
+      description?: string,
+      link: string
     }[]
   }[]
 }
@@ -51,11 +51,16 @@ export class MatchesService {
 
     const user = await this.prisma.user.findUnique({ where: { id: myId }, include: { skillsToLearn: true, knownSkills: true } });
     if (!user) throw new NotFoundException('User was not found!');
+    // if matches had has been created before
+    const matches = await this.prisma.match.findFirst({ where: { OR: [{ initiatorId: myId }, { otherId: myId }] } });
+    if (matches) {
+      throw new ForbiddenException();
+    }
     const skillsToLearnTitles = user.skillsToLearn.map(skill => skill.title);
     const knownSkillsTitles = user.knownSkills.map(skill => skill.title);
     const users = await this.prisma.user.findMany({ where: { knownSkills: { some: { title: { in: skillsToLearnTitles } } } }, include: { knownSkills: true, skillsToLearn: true } });
-
-    const sortedUsers = users
+    const updatedUsers = users.filter(item => item.id != myId);
+    const sortedUsers = updatedUsers
       .map(user => {
         const knowsMySkills = user.knownSkills.some(skill =>
           skillsToLearnTitles.includes(skill.title)
@@ -109,20 +114,20 @@ export class MatchesService {
 
   async getMatches(myId: string) {
     const matches = await this.prisma.match.findMany({
-      where: { initiatorId: myId }
+      where: { OR: [{ initiatorId: myId }, { otherId: myId }] }
       , include: { other: { select: { name: true, skillsToLearn: { select: { title: true } }, knownSkills: { select: { title: true } } } } }
     });
     return matches;
   }
 
-    async getPlan(matchId) {
+  async getPlan(matchId) {
     const match = await this.prisma.match.findUnique({
-      where:{id:matchId},include:{plan:{include:{modules:{include:{resources:true}}}}}
+      where: { id: matchId }, include: { plan: { include: { modules: { include: { resources: true } } } } }
     });
-    if(!match){
+    if (!match) {
       throw new NotFoundException('Match was not found!');
     }
-    console.log(match.plan,'getting plan ');
+    console.log(match.plan, 'getting plan ');
 
     return match.plan;
   }
@@ -131,10 +136,10 @@ export class MatchesService {
   async createPlan(myId: string) {
     const match = await this.prisma.match.findFirst({
       where: { initiatorId: myId }
-      , include: { other: { select: { knownSkills: true, skillsToLearn: true, name: true, id: true } },plan:{select:{id:true}}, initiator: { select: { knownSkills: true, skillsToLearn: true, name: true, id: true } } }
+      , include: { other: { select: { knownSkills: true, skillsToLearn: true, name: true, id: true } }, plan: { select: { id: true } }, initiator: { select: { knownSkills: true, skillsToLearn: true, name: true, id: true } } }
     });
     if (!match) throw new NotFoundException('Match was - not found!');
-    if(match.plan && match.plan.id) throw new ForbiddenException('Plan has been already created!');
+    if (match.plan && match.plan.id) throw new ForbiddenException('Plan has been already created!');
     const initiator = { ...match.initiator, skillsToLearn: match.initiator.skillsToLearn.map(item => item.title), knownSkills: match.initiator.knownSkills.map(item => item.title) }
     const other = { ...match.other, skillsToLearn: match.other.skillsToLearn.map(item => item.title), knownSkills: match.other.knownSkills.map(item => item.title) }
     const fastApiResponse = await firstValueFrom(
@@ -154,42 +159,41 @@ export class MatchesService {
       readyAiObject = rawAiObject;
     }
     if (readyAiObject) {
-    console.log(readyAiObject)
-   const plan = await this.prisma.plan.create({
-    
-    data: {
-      match:{connect:{id:match.id}},
-      modules: {
-        create: readyAiObject.modules.map(module => ({
-          title: module.title,
-          status: module.status,
-          objectives: module.objectives,
-          activities: module.activities,
-          timeline: module.timeline,
-          resources: {
-            create: module.resources.map(res => ({
-              title: res.title,
-              description: res.description,
-              link:res.link
+      console.log(readyAiObject)
+      const plan = await this.prisma.plan.create({
+
+        data: {
+          match: { connect: { id: match.id } },
+          modules: {
+            create: readyAiObject.modules.map(module => ({
+              title: module.title,
+              status: module.status,
+              objectives: module.objectives,
+              activities: module.activities,
+              timeline: module.timeline,
+              resources: {
+                create: module.resources.map(res => ({
+                  title: res.title,
+                  description: res.description,
+                  link: res.link
+                }))
+              }
             }))
           }
-        }))
-      }
-    },
-    include: {
-      modules: {
+        },
         include: {
-          resources: true
+          modules: {
+            include: {
+              resources: true
+            }
+          }
         }
-      }
-    }
-  });
-
-  console.log(plan)
+      });
+      return plan;
     } else {
       throw new InternalServerErrorException();
     }
-   
+
   }
 
 }

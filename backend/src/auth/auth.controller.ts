@@ -79,7 +79,7 @@ export class AuthController {
     if (!user) {
       throw new NotFoundException();
     }
-    const newAccessToken = this.authService.createTokenForRefresh(user)
+    const newAccessToken =  await this.authService.createTokenForRefresh(user)
     res.cookie('access_token', newAccessToken, {
       httpOnly: true,
       secure: this.configService.get<string>('NODE_ENV') === 'production',
