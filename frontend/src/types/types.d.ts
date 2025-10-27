@@ -4,6 +4,8 @@ export interface IUser {
     email: string;
     knownSkills?: { id: string; title: string }[];
     skillsToLearn?: { id: string; title: string }[];
+    imageUrl:string,
+    bio:string,
 }
 
 export interface IFriend {

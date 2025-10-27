@@ -1,0 +1,16 @@
+import { toDependency } from '../../util/input.js';
+import { hasDependency } from '../../util/plugin.js';
+const title = 'Hardhat';
+const enablers = ['hardhat'];
+const isEnabled = ({ dependencies }) => hasDependency(dependencies, enablers);
+const entry = ['hardhat.config.{js,cjs,mjs,ts}'];
+const resolve = async () => {
+    return [toDependency('hardhat')];
+};
+export default {
+    title,
+    enablers,
+    isEnabled,
+    entry,
+    resolve,
+};

@@ -12,6 +12,7 @@ import { FriendsModule } from './friends/friends.module';
 import { ProfilesModule } from './profiles/profiles.module';
 import { SessionsModule } from './sessions/sessions.module';
 import { MatchesModule } from './matches/matches.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -26,7 +27,7 @@ import { MatchesModule } from './matches/matches.module';
       signOptions: { expiresIn: '15m' },
     }),
   }),
-
+    ScheduleModule.forRoot(),
     AuthModule,
 
     SkillsModule,

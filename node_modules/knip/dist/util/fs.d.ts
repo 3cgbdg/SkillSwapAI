@@ -1,0 +1,10 @@
+export declare const isDirectory: (filePath: string) => boolean;
+export declare const isFile: (filePath: string) => boolean;
+export declare const findFile: (workingDir: string, fileName: string) => string | undefined;
+export declare const loadFile: (filePath: string) => Promise<string>;
+export declare const loadJSON: (filePath: string) => Promise<any>;
+export declare const loadJSONC: (filePath: string) => Promise<any>;
+export declare const loadYAML: (filePath: string) => Promise<unknown>;
+export declare const loadTOML: (filePath: string) => Promise<import("smol-toml").TomlTable>;
+export declare const parseJSONC: (filePath: string, contents: string) => Promise<any>;
+export declare const parseYAML: (contents: string) => unknown;

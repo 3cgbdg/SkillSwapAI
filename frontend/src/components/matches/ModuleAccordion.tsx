@@ -1,21 +1,26 @@
 "use client"
 
 import { IGeneratedModule } from "@/types/types";
+import { useMutation } from "@tanstack/react-query";
 import { ChevronDown, Clock, Link as LinkIcon } from "lucide-react"
 import Link from "next/link";
-import { Dispatch, SetStateAction, useState } from "react"
+import { Dispatch, SetStateAction } from "react"
 
 const ModuleAccordion = ({ module,setIsActive ,isActive,idx}: { module: IGeneratedModule,isActive:null|number,idx:number, setIsActive:Dispatch<SetStateAction<null|number>> }) => {
-
+    const {mutate} = useMutation({
+        mutationFn:async()=>{
+            
+        }
+    })
     return (
         <div className="bg-neutral-100 flex flex-col _border rounded-[10px] p-4 min-h-[94px]">
             <div className="w-full flex justify-between items-center h-[60px]">
                 <div className="flex items-center gap-4 max-w-[450px]">
-                    <input defaultChecked={module.status != 'INPROGRESS'} className="size-4" type="checkbox" />
+                    <input disabled defaultChecked={module.status != 'INPROGRESS'} className="size-4" type="checkbox" />
                     <h3 className="text-lg leading-7 font-semibold ">{module.title}</h3>
                 </div>
                 <div className="flex items-center gap-10">
-                    <div className={`p-1 text-sm font-medium text-white rounded-xl ${module.status != 'INPROGRESS' ? 'bg-blue ' : 'bg-neutral-200 text-gray!'}`}>{module.status == 'INPROGRESS' ? 'Completed' : 'In Progress'}</div>
+                    <div className={`p-1 text-sm font-medium text-white rounded-xl ${module.status != 'INPROGRESS' ? 'bg-blue ' : 'bg-neutral-200 text-gray!'}`}>{module.status != 'INPROGRESS' ? 'Completed' : 'In Progress'}</div>
                     <button onClick={() => setIsActive(isActive == idx ?null : idx )} className={`${isActive==idx ? 'rotate-180' : ''} hover:shadow-2xs p-1 rounded-4xl  cursor-pointer transition-all`}>
                         <ChevronDown />
                     </button>
@@ -55,6 +60,7 @@ const ModuleAccordion = ({ module,setIsActive ,isActive,idx}: { module: IGenerat
                             ))}
                         </div>
                     </div>
+                    <button onClick={()=>} className="button-blue w-fit">Set to completed</button>
                 </div>}
         </div>
     )

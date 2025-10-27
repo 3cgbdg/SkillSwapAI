@@ -1,0 +1,15 @@
+import { hasDependency } from '../../util/plugin.js';
+const title = 'Oxlint';
+const enablers = ['oxlint'];
+const isEnabled = ({ dependencies }) => hasDependency(dependencies, enablers);
+const config = ['.oxlintrc.json'];
+const args = {
+    config: true,
+};
+export default {
+    title,
+    enablers,
+    isEnabled,
+    config,
+    args,
+};

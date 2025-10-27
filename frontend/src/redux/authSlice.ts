@@ -12,6 +12,8 @@ const initialState: IinitialState = {
         email: "",
         knownSkills: [],
         skillsToLearn: [],
+        imageUrl:"",
+        bio:"",
     }
 }
 

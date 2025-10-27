@@ -1,0 +1,18 @@
+import { toProductionEntry } from '../../util/input.js';
+import { hasDependency } from '../../util/plugin.js';
+import { config } from '../astro/index.js';
+import { getComponentPathsFromSourceFile } from './resolveFromAST.js';
+const title = 'Starlight';
+const enablers = ['@astrojs/starlight'];
+const isEnabled = ({ dependencies }) => hasDependency(dependencies, enablers);
+const resolveFromAST = (sourceFile) => {
+    const componentPaths = getComponentPathsFromSourceFile(sourceFile);
+    return Array.from(componentPaths).map(id => toProductionEntry(id));
+};
+export default {
+    title,
+    enablers,
+    isEnabled,
+    config,
+    resolveFromAST,
+};
