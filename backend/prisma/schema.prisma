@@ -29,6 +29,7 @@ model User {
   name             String    @unique
   password         String
   email            String    @unique
+  bio              String?
   knownSkills      Skill[]   @relation("knownSkills")
   skillsToLearn    Skill[]   @relation("skillsToLearn")
   chats            Chat[]    @relation("userChats")
@@ -125,7 +126,7 @@ model Match {
 model Plan {
   id      String   @id @default(uuid())
   modules Module[]
-  matchId String  @unique
+  matchId String   @unique
   match   Match    @relation(fields: [matchId], references: [id])
 }
 

@@ -13,6 +13,7 @@ import { ProfilesModule } from './profiles/profiles.module';
 import { SessionsModule } from './sessions/sessions.module';
 import { MatchesModule } from './matches/matches.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { S3Module } from './s3/s3module';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -21,15 +22,15 @@ import { ScheduleModule } from '@nestjs/schedule';
   JwtModule.registerAsync({
     imports: [ConfigModule],
     inject: [ConfigService],
-    global:true,
+    global: true,
     useFactory: (configService: ConfigService) => ({
       secret: configService.get<string>('JWT_SECRET'),
       signOptions: { expiresIn: '15m' },
     }),
   }),
-    ScheduleModule.forRoot(),
+  ScheduleModule.forRoot(),
     AuthModule,
-
+    S3Module,
     SkillsModule,
 
     SearchModule,
