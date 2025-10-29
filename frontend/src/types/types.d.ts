@@ -4,8 +4,8 @@ export interface IUser {
     email: string;
     knownSkills?: { id: string; title: string }[];
     skillsToLearn?: { id: string; title: string }[];
-    imageUrl:string,
-    bio:string,
+    imageUrl: string,
+    bio: string,
 }
 
 export interface IFriend {
@@ -24,7 +24,7 @@ export interface IChat {
 
 }
 
-interface IMessage {
+export interface IMessage {
     id: string
     content: string;
     fromId: string;
@@ -99,16 +99,35 @@ export interface IGeneratedPlan {
 }
 
 export interface IGeneratedModule {
-      id: string;
+    id: string;
+    title: string,
+    status: ModuleStatus,
+    objectives: string[],
+    activities: string[],
+    timeline: number,
+    resources: {
+        id: string
         title: string,
-        status: ModuleStatus,
-        objectives: string[],
-        activities: string[],
-        timeline: number,
-        resources: {
-            id: string
-            title: string,
-            description?: string,
-            link: string
-        }[]
+        description?: string,
+        link: string
+    }[]
 }
+
+export type formTypeLogIn = {
+    email: string,
+    password: string,
+}
+export type formTypeSignUp = formTypeLogIn & {
+    name: string;
+    confirmPassword: string;
+    knownSkills: string;
+    skillsToLearn: string;
+    checkBox?: boolean;
+};
+
+export type ApiResponse<T> = {
+    success: boolean;
+    data?: T;
+    message?: string;
+    errors?: string[];
+};

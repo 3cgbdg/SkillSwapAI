@@ -1,6 +1,6 @@
 "use client"
 
-import { api } from "@/api/axiosInstance"
+import { api } from "@/services/axiosInstance"
 import GeneratedMatches from "@/components/matches/GeneratedMatches"
 import GeneratingMatchesPage from "@/components/matches/GeneratingMatchesPage"
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks"

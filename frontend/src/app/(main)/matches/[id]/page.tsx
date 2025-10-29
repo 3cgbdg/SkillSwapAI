@@ -1,6 +1,6 @@
 "use client"
 
-import { api } from "@/api/axiosInstance";
+import { api } from "@/services/axiosInstance";
 import ModuleAccordion from "@/components/matches/ModuleAccordion";
 import Spinner from "@/components/Spinner";
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";

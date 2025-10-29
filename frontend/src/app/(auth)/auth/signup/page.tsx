@@ -1,6 +1,8 @@
 "use client"
-import { api } from "@/api/axiosInstance";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import AuthService from "@/services/AuthService";
+import SkillsService from "@/services/SkillsService";
+import { formTypeSignUp } from "@/types/types";
+import { useMutation } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import Image from "next/image"
 import Link from "next/link";
@@ -8,20 +10,12 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 
-type formType = {
-  name: string,
-  email: string,
-  password: string,
-  confirmPassword: string,
-  knownSkills: string,
-  skillsToLearn: string,
-  checkBox?: boolean,
-}
+
 
 // request->available -----
 
 const Page = () => {
-  const { register, handleSubmit, formState: { errors }, watch } = useForm<formType>();
+  const { register, handleSubmit, formState: { errors }, watch } = useForm<formTypeSignUp>();
   const router = useRouter();
   const [knownSkills, setKnownSkills] = useState<string[] | null>(null);
   const [inputKnown, setInputKnown] = useState<string>("");
@@ -29,24 +23,17 @@ const Page = () => {
   const [skillsToLearn, setSkillsToLearn] = useState<string[] | null>(null);
   const [availableSkills, setAvailableSkills] = useState<{ id: string, title: string }[]>([]);
   const mutation = useMutation({
-    mutationFn: async (data: formType) => {
-      api.post('/auth/signup', { ...data, knownSkills, skillsToLearn });
-    },
+    mutationFn: async (data: formTypeSignUp) => AuthService.signUp(data, knownSkills, skillsToLearn),
     onSuccess: () => router.push("/dashboard"),
   })
 
-
-
-  const { mutate } = useMutation({
-    mutationFn: async ({ data }: { data: string }) => {
-      const res = await api.get('/skills', { params: { chars: data } });
-      return res.data;
-    },
+  const { mutate:getSkills } = useMutation({
+    mutationFn: async ({ chars }: { chars: string }) => SkillsService.getSkills(chars),
     onSuccess: (data: { id: string, title: string }[]) => setAvailableSkills(data),
   })
 
 
-  const onSubmit: SubmitHandler<formType> = async (data) => {
+  const onSubmit: SubmitHandler<formTypeSignUp> = async (data) => {
     if (!data.checkBox) {
       console.error("Didn`t accept terms and conditions!");
       return null;
@@ -143,7 +130,7 @@ const Page = () => {
               <input value={inputKnown} onChange={(e) => {
                 setInputKnown(e.target.value);
                 if (e.target.value.length > 2)
-                  mutate({ data: e.target.value });
+                  getSkills({ chars: e.target.value });
               }} className="w-full input" placeholder="e.g., Web Development, UI/UX Design, Data Analysis" id="password" />
               <button onClick={() => {
                 if (inputKnown !== "") {
@@ -200,7 +187,7 @@ const Page = () => {
               <input value={inputToLearn} onChange={(e) => {
                 setInputToLearn(e.target.value);
                 if (e.target.value.length > 2)
-                  mutate({ data: e.target.value });
+                  getSkills({ chars: e.target.value });
               }} className="w-full input" placeholder="e.g., Web Development, UI/UX Design, Data Analysis" id="password" />
               <button onClick={() => {
                 if (inputToLearn !== "") {

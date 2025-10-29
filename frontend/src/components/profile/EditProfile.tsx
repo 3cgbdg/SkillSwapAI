@@ -7,6 +7,7 @@ import { useAppSelector } from "@/hooks/reduxHooks";
 import Image from "next/image";
 import { UserRound } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { useMutation } from "@tanstack/react-query";
 
 type formType = {
     fullName: string,
@@ -16,8 +17,15 @@ type formType = {
 
 const EditProfile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<boolean>> }) => {
     const { user } = useAppSelector(state => state.auth);
-    const { register, handleSubmit, formState: { errors } } = useForm<formType>();
+    const { register, handleSubmit, formState: { errors }, reset } = useForm<formType>();
     const [isCurrentlyEditing, setIsCurrentlyEditing] = useState<boolean>(false);
+
+    const { mutate: saveChanges } = useMutation({
+        mutationFn: async () => {
+
+        }
+    })
+
     return (
         <div className="flex flex-col gap-7.5">
             <h1 className="page-title">Edit Profile</h1>
@@ -49,7 +57,7 @@ const EditProfile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<b
                             <div className="col-span-1 flex flex-col gap-2">
 
                                 <label className="text-sm leading-[22px] font-medium" htmlFor="fullname">Full Name</label>
-                                <input  defaultValue={user?.name} {...register("fullName", {
+                                <input defaultValue={user?.name} {...register("fullName", {
                                     validate: {
                                         isEmpty: (value) => {
                                             return value.length !== 0 || "Field is required";
@@ -116,8 +124,8 @@ const EditProfile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<b
                 {isCurrentlyEditing &&
                     <div className="_border rounded-[10px] w-full p-4 flex items-center justify-end">
                         <div className="flex items-center gap-4">
-                            <button className="button-transparent rounded-md!">Cancel</button>
-                            <button className="button-blue">Save Changes</button>
+                            <button onClick={() => { reset(); setIsCurrentlyEditing(false) }} className="button-transparent rounded-md!">Cancel</button>
+                            <button onClick={() => saveChanges()} className="button-blue">Save Changes</button>
                         </div>
                     </div>
                 }

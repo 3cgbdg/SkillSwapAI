@@ -1,6 +1,6 @@
 "use client"
 
-import { api } from "@/api/axiosInstance";
+import { api } from "@/services/axiosInstance";
 import { formatDate } from "@/app/utils/calendar";
 import { useAppDispatch } from "@/hooks/reduxHooks";
 import { addSession } from "@/redux/sessionsSlice";

@@ -28,6 +28,7 @@ model User {
   id               String    @id @default(uuid())
   name             String    @unique
   password         String
+  imageUrl         String?
   email            String    @unique
   bio              String?
   knownSkills      Skill[]   @relation("knownSkills")

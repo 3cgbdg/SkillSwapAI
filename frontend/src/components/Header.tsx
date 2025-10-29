@@ -1,6 +1,6 @@
 "use client"
 
-import { api } from "@/api/axiosInstance"
+import { api } from "@/services/axiosInstance"
 import { useAppDispatch, useAppSelector, } from "@/hooks/reduxHooks"
 import { addWantToLearnSkill, logOut } from "@/redux/authSlice"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"

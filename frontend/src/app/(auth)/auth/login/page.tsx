@@ -1,5 +1,6 @@
 "use client"
-import { api } from "@/api/axiosInstance";
+import AuthService from "@/services/AuthService";
+import { formTypeLogIn } from "@/types/types";
 import { useMutation } from "@tanstack/react-query";
 import { ChromeIcon, GithubIcon, Lock, Mail } from "lucide-react";
 import Image from "next/image"
@@ -7,23 +8,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SubmitHandler, useForm } from "react-hook-form";
 
-type formType = {
-  email: string,
-  password: string,
-}
+
 
 const Page = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm<formType>();
+  const { register, handleSubmit, formState: { errors } } = useForm<formTypeLogIn>();
   const router = useRouter();
   const mutation = useMutation({
-    mutationFn: async (data: formType) => {
-      api.post('/auth/login', data);
-    },
-    onSuccess: () => router.push("/dashboard"), 
+    mutationFn: async (data: formTypeLogIn) => AuthService.logIn(data),
+    onSuccess: () => router.push("/dashboard"),
   })
 
 
-  const onSubmit: SubmitHandler<formType> = async (data) => {
+  const onSubmit: SubmitHandler<formTypeLogIn> = async (data) => {
     mutation.mutate(data);
   }
   return (

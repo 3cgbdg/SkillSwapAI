@@ -1,10 +1,11 @@
 "use client"
-import { api } from '@/api/axiosInstance';
+import AuthService from '@/services/AuthService';
+import { api } from '@/services/axiosInstance';
+import MatchesService from '@/services/MatchesService';
 import { useAppDispatch } from '@/hooks/reduxHooks';
 import { getProfile } from '@/redux/authSlice';
 import { getMatches } from '@/redux/matchesSlice';
-import { IMatch } from '@/types/types';
-import axios from 'axios';
+import { IMatch, IUser } from '@/types/types';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
@@ -16,10 +17,10 @@ const AuthClientUpload = () => {
     useEffect(() => {
         const getUser = async () => {
             try {
-                const res1 = await api.get(`/auth/profile`);
-                dispatch(getProfile(res1.data));
-                const res2 = await api.get(`/matches`);
-                dispatch(getMatches(res2.data as IMatch[]));
+                const user: IUser = await AuthService.getProfile();
+                dispatch(getProfile(user));
+                const matches: IMatch[] = await MatchesService.getMatches();
+                dispatch(getMatches(matches));
             } catch {
                 router.push("/auth/login");
             }

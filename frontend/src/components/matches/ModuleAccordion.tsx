@@ -9,7 +9,7 @@ import { Dispatch, SetStateAction } from "react"
 const ModuleAccordion = ({ module,setIsActive ,isActive,idx}: { module: IGeneratedModule,isActive:null|number,idx:number, setIsActive:Dispatch<SetStateAction<null|number>> }) => {
     const {mutate} = useMutation({
         mutationFn:async()=>{
-            
+            // TODO!
         }
     })
     return (
@@ -60,7 +60,7 @@ const ModuleAccordion = ({ module,setIsActive ,isActive,idx}: { module: IGenerat
                             ))}
                         </div>
                     </div>
-                    <button onClick={()=>} className="button-blue w-fit">Set to completed</button>
+                    <button onClick={()=>mutate()} className="button-blue w-fit">Set to completed</button>
                 </div>}
         </div>
     )

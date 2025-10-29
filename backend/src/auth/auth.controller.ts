@@ -17,6 +17,7 @@ export class AuthController {
   @Post("signup")
   async signup(@Body() createAuthDto: CreateAuthDto, @Res() res: Response) {
     const response = await this.authService.signup(createAuthDto);
+    console.log(response);
     res.cookie('access_token', response.access_token, {
       httpOnly: true,
       secure: this.configService.get<string>('NODE_ENV') === 'production',
@@ -31,7 +32,7 @@ export class AuthController {
 
       maxAge: 1000 * 3600 * 24 * 7,
     })
-    return { message: "Successfully logged in!" }
+    return res.json({ message: "Successfully logged in!" });
   }
 
   @Post("login")
@@ -79,7 +80,7 @@ export class AuthController {
     if (!user) {
       throw new NotFoundException();
     }
-    const newAccessToken =  await this.authService.createTokenForRefresh(user)
+    const newAccessToken = await this.authService.createTokenForRefresh(user)
     res.cookie('access_token', newAccessToken, {
       httpOnly: true,
       secure: this.configService.get<string>('NODE_ENV') === 'production',

@@ -1,6 +1,6 @@
 "use client"
 
-import { api } from "@/api/axiosInstance";
+import { api } from "@/services/axiosInstance";
 import { useAppDispatch } from "@/hooks/reduxHooks";
 import { updateChats } from "@/redux/chatsSlice";
 import { IChat } from "@/types/types";
