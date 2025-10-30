@@ -1,8 +1,8 @@
 "use client"
 
-import { api } from "@/services/axiosInstance";
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
 import { addKnownSkill, addWantToLearnSkill, deleteKnownSkill, deleteWantToLearnSkill } from "@/redux/authSlice";
+import SkillsService from "@/services/SkillsService";
 import { useMutation } from "@tanstack/react-query";
 import { Plus, X } from "lucide-react";
 import { useRef, useState } from "react";
@@ -18,32 +18,29 @@ const AddSkills = () => {
 
     // for chars searching skills
     const availableMutation = useMutation({
-        mutationFn: async ({ data }: { data: string }) => {
-            const res = await api.get('/skills', { params: { chars: data } });
-            return res.data;
-        },
+        mutationFn: async ({ data }: { data: string }) => SkillsService.getSkills(data),
         onSuccess: (data: { id: string, title: string }[]) => setAvailableSkills(data),
     })
 
     // adding skill (known)
     const mutationAddKnown = useMutation({
-        mutationFn: async (str: string) => api.post("/skills/known", { title: str }),
+        mutationFn: async (str: string) => SkillsService.addKnownSkill(str),
     })
 
     // adding skill (want to learn)
 
     const mutationAddLearn = useMutation({
-        mutationFn: async (str: string) => api.post("/skills/want-to-learn", { title: str }),
+        mutationFn: async (str: string) => SkillsService.addWantToLearnSkill(str),
     })
     // deleting skill (known)
 
     const mutationDeleteKnown = useMutation({
-        mutationFn: async (str: string) => api.delete("/skills/known", { params: { title: str } }),
+        mutationFn: async (str: string) => SkillsService.deleteKnownSkill(str),
     })
     // deleting skill (want to learn)
 
     const mutationDeleteLearn = useMutation({
-        mutationFn: async (str: string) => api.delete("/skills/want-to-learn", { params: { title: str } }),
+        mutationFn: async (str: string) => SkillsService.deleteWantToLearnSkill(str),
     })
     // input ref
     const ref1 = useRef<HTMLInputElement>(null);

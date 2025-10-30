@@ -113,11 +113,11 @@ export interface IGeneratedModule {
     }[]
 }
 
-export type formTypeLogIn = {
+export type FormTypeLogIn = {
     email: string,
     password: string,
 }
-export type formTypeSignUp = formTypeLogIn & {
+export type FormTypeSignUp = FormTypeLogIn & {
     name: string;
     confirmPassword: string;
     knownSkills: string;
@@ -131,3 +131,34 @@ export type ApiResponse<T> = {
     message?: string;
     errors?: string[];
 };
+
+// type for form
+export type FormTypeSession = {
+    friendName: string,
+    friendId: string,
+    start: string,
+    end: string,
+    title: string,
+    description?: string,
+    color: string,
+    date: Date,
+}
+
+export interface FoundUsers {
+    id: string,
+    name: string,
+    isFriend: boolean,
+}
+
+export interface FoundSkills {
+    id: string,
+    title: string,
+}
+export type Found = FoundUsers & FoundSkills & {
+    name?: string;
+    title?: string;
+};
+
+export interface SocketContextType {
+    socket: Socket | null;
+}

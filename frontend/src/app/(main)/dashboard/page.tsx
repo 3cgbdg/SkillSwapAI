@@ -2,7 +2,6 @@
 
 import { useAppSelector } from "@/hooks/reduxHooks"
 import { Award, Calendar, MessageSquare, Star, User, Users } from "lucide-react";
-import Image from "next/image"
 import Link from "next/link";
 
 const Page = () => {

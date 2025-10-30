@@ -1,7 +1,6 @@
 "use client"
 
-import { useAppSelector } from "@/hooks/reduxHooks"
-import { Banana, Calendar, Camera, ChartNoAxesCombined, Dumbbell, LayoutDashboard, Menu, MessageSquare, User, UserRound, Users } from "lucide-react"
+import { Calendar,LayoutDashboard, Menu, MessageSquare, User, Users } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"

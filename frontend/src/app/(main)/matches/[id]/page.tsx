@@ -1,11 +1,12 @@
 "use client"
 
-import { api } from "@/services/axiosInstance";
 import ModuleAccordion from "@/components/matches/ModuleAccordion";
 import Spinner from "@/components/Spinner";
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
 import { updateChats } from "@/redux/chatsSlice";
-import { IChat, IGeneratedPlan, IMatch } from "@/types/types";
+import ChatsService from "@/services/ChatsService";
+import MatchesService from "@/services/MatchesService";
+import { IChat, IMatch } from "@/types/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, MessageSquareMore } from "lucide-react";
 import { useParams, useRouter } from "next/navigation"
@@ -16,7 +17,7 @@ const Page = () => {
     const { matches } = useAppSelector(state => state.matches);
     const [currentMatch, setCurrentMatch] = useState<IMatch | null>(null);
     const [isActive, setIsActive] = useState<null | number>(null);
-   const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
     const router = useRouter();
     const dispatch = useAppDispatch();
     useEffect(() => {
@@ -31,7 +32,7 @@ const Page = () => {
 
     // for getting 
     const { mutate: createChat } = useMutation({
-        mutationFn: async ({ payload }: { payload: { friendId: string, friendName: string } }) => { const res = await api.post("/chats", payload); return res.data },
+        mutationFn: async ({ payload }: { payload: { friendId: string, friendName: string } }) => ChatsService.createChat(payload),
         onSuccess: (data: IChat) => {
             router.push(`/chats/${data.chatId}`);
             dispatch(updateChats(data));
@@ -39,23 +40,19 @@ const Page = () => {
     })
 
     // mutation for generating plan
-    const { mutate: generatePlan,isPending } = useMutation({
+    const { mutate: generatePlan, isPending } = useMutation({
         mutationFn: async () => {
-           const res =  await api.post('/matches/plan');
-                queryClient.setQueryData(['matches', id], () => {
-                        return res.data;
-                       })
+            const plan = await MatchesService.generatePlan()
+            queryClient.setQueryData(['matches', id], () => {
+                return plan;
+            })
 
         }
     })
 
     const { data: plan } = useQuery({
         queryKey: ['matches', id],
-        queryFn: async () => {
-            if (!currentMatch) return null;
-            const res = await api.get(`/matches/${currentMatch.id}/plan`);
-            return res.data as IGeneratedPlan;
-        },
+        queryFn: async () => MatchesService.getPlan(currentMatch?.id),
         enabled: !!currentMatch,
     })
 
@@ -114,27 +111,27 @@ const Page = () => {
                                 <div className="flex flex-col  gap-3">
                                     <h2 className="section-title">Start your journey with {currentMatch.other.name}!</h2>
                                     <p className="tex-sm leading-5 text-gray">To start you need to create a plan</p>
-                                    <button onClick={() => generatePlan()} className="button-transparent">{!isPending ? "Generate plan" : <Spinner size={22} color="blue"/>}</button>
+                                    <button onClick={() => generatePlan()} className="button-transparent">{!isPending ? "Generate plan" : <Spinner size={22} color="blue" />}</button>
 
                                 </div>
                             }
                         </div>
                     </div>
-                </div>{plan && 
-                <div className="w-full _border rounded-[10px] p-6">
-                    <div className="flex flex-col gap-2 mb-6">
-                        <h2 className="page-title">Training Modules</h2>
-                        <p className="text-sm leading-5 text-gray">Breakdown of your skill exchange journey</p>
-                    </div>
-                    <div className="flex flex-col gap-4">
-                        {plan &&
-                            plan.modules.map((module, idx) => (
-                                <ModuleAccordion idx={idx} key={module.id} module={module} isActive={isActive} setIsActive={setIsActive} />
-                            ))
-                        }
+                </div>{plan &&
+                    <div className="w-full _border rounded-[10px] p-6">
+                        <div className="flex flex-col gap-2 mb-6">
+                            <h2 className="page-title">Training Modules</h2>
+                            <p className="text-sm leading-5 text-gray">Breakdown of your skill exchange journey</p>
+                        </div>
+                        <div className="flex flex-col gap-4">
+                            {plan &&
+                                plan.modules.map((module, idx) => (
+                                    <ModuleAccordion idx={idx} key={module.id} module={module} isActive={isActive} setIsActive={setIsActive} />
+                                ))
+                            }
 
-                    </div>
-                </div>}
+                        </div>
+                    </div>}
             </div>
 
             : <div className="h-100 flex items-center justify-center"><Spinner color='blue' size={44} /></div>

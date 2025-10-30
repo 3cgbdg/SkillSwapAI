@@ -1,13 +1,14 @@
 "use client"
 
-import { api } from "@/services/axiosInstance";
 import { useSocket } from "@/context/SocketContext";
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
 import { updateChats } from "@/redux/chatsSlice";
 import { addOnlineUser, removeOnlineUser, setOnlineUsers } from "@/redux/onlineUsersSlice";
+import ChatsService from "@/services/ChatsService";
+import FriendsService from "@/services/FriendsService";
 import { IChat, IFriend } from "@/types/types";
 import { useMutation } from "@tanstack/react-query";
-import { Plus, Search, Users } from "lucide-react";
+import { Search, Users } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation"
 import React, { useEffect, useState } from "react"
 
@@ -53,14 +54,14 @@ const ChatSidebar = () => {
 
 
     const mutationSearch = useMutation({
-        mutationFn: async () => { const res = await api.get("/friends"); return res.data },
+        mutationFn: async () => FriendsService.getFriends(),
         onSuccess: (data) => {
             setFriends(data);
         }
     })
 
     const mutationCreateChat = useMutation({
-        mutationFn: async ({ payload }: { payload: { friendId: string, friendName: string } }) => { const res = await api.post("/chats", payload); return res.data },
+        mutationFn: async ({ payload }: { payload: { friendId: string, friendName: string } }) => ChatsService.createChat(payload),
         onSuccess: (data: IChat) => {
             dispatch(updateChats(data));
         }

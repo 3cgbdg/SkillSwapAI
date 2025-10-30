@@ -1,37 +1,19 @@
 "use client"
-
-import { api } from "@/services/axiosInstance";
 import { formatDate } from "@/app/utils/calendar";
 import { useAppDispatch } from "@/hooks/reduxHooks";
 import { addSession } from "@/redux/sessionsSlice";
-import { IFriend, ISession } from "@/types/types";
+import {FormTypeSession , IFriend } from "@/types/types";
 import { useMutation } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { Dispatch, SetStateAction, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { TableCellType } from "./Calendar";
 import { useSocket } from "@/context/SocketContext";
-
-
-
-
-// colors for events bg
-const colors = ['#5C6BC0', '#FF7043', '#43A047']
-
-// type for form
-type formType = {
-    friendName: string,
-    friendId: string,
-    start: string,
-    end: string,
-    title: string,
-    description?: string,
-    color: string,
-    date: Date,
-}
+import FriendsService from "@/services/FriendsService";
+import SessionsService from "@/services/SessionsService";
 
 const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup }: { year: number, month: number, setAddSessionPopup: Dispatch<SetStateAction<boolean>>, setTableCells: Dispatch<SetStateAction<TableCellType[]>> }) => {
-    const { register, watch, handleSubmit, setValue, formState: { errors } } = useForm<formType>();
+    const { register, watch, handleSubmit, setValue, formState: { errors } } = useForm<FormTypeSession>();
     const dispatch = useAppDispatch();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
@@ -41,7 +23,7 @@ const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup }: { yea
     const [badRequestErrorMessage, setBadRequestErrorMessage] = useState<string | null>(null);
     // searching friends by name
     const mutationSearch = useMutation({
-        mutationFn: async () => { const res = await api.get("/friends"); return res.data },
+        mutationFn: async () => FriendsService.getFriends(),
         onSuccess: (data) => {
             setFriends(data);
         }
@@ -50,10 +32,7 @@ const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup }: { yea
     // mutation for creating session request
     const createSessionMutation = useMutation({
         mutationKey: ["session"],
-        mutationFn: async (data: Omit<formType, 'friendName'>) => {
-            const res = await api.post("/sessions", { ...data, color: colors[Math.floor(Math.random() * 3)] });
-            return res.data as ISession;
-        },
+        mutationFn: async (data: Omit<FormTypeSession, 'friendName'>) => SessionsService.createSession(data),
         onSuccess: (data) => {
             setAddSessionPopup(false);
             // if its current day event adding to global state
@@ -74,7 +53,7 @@ const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup }: { yea
             setBadRequestErrorMessage(error.response?.data?.message || error.message);
         }
     })
-    const createSession: SubmitHandler<formType> = async (data) => {
+    const createSession: SubmitHandler<FormTypeSession> = async (data) => {
         const { friendName, ...newData } = data;
         if (friends) {
             console.log(friendName, friends);

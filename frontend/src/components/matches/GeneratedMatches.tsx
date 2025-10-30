@@ -1,7 +1,7 @@
 "use client"
-import { api } from "@/services/axiosInstance"
 import { useAppDispatch } from "@/hooks/reduxHooks"
 import { updateChats } from "@/redux/chatsSlice"
+import ChatsService from "@/services/ChatsService"
 import { IChat, IMatch } from "@/types/types"
 import { useMutation } from "@tanstack/react-query"
 import { Book, Calendar, MessageSquare, Search, Users } from "lucide-react"
@@ -12,7 +12,7 @@ const GeneratedMatches = ({ matches }: { matches: IMatch[] }) => {
     const [filteredMatch, setFilteredMatch] = useState<IMatch[]>(matches);
     const [panel, setPanel] = useState<'skill' | 'compatibility' | null>(null);
     const dispatch = useAppDispatch();
-    const  router = useRouter();
+    const router = useRouter();
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
@@ -31,12 +31,9 @@ const GeneratedMatches = ({ matches }: { matches: IMatch[] }) => {
         };
     }, [panel]);
 
-    const {mutate:getOrCreateChat,data:chat } = useMutation({
-        mutationFn: async ({friendId,friendName}:{friendId: string, friendName: string}):Promise<IChat> => {
-            const res = await api.post('chats', { friendId: friendId, friendName: friendName });
-            return res.data as IChat;
-        },
-        onSuccess:(data)=>{
+    const { mutate: getOrCreateChat, data: chat } = useMutation({
+        mutationFn: async ({ friendId, friendName }: { friendId: string, friendName: string }): Promise<IChat> => ChatsService.createChat({ friendName, friendId }),
+        onSuccess: (data) => {
             dispatch(updateChats(data));
             router.push(`chats/${data.chatId}`);
         }
@@ -122,15 +119,15 @@ const GeneratedMatches = ({ matches }: { matches: IMatch[] }) => {
                             </div>
                             {/* todo */}
                             <div className="flex gap-3 items-center mt-6 flew-wrap max-w-[400px] place-self-end basis-full">
-                                <button onClick={() =>getOrCreateChat({friendId:match.otherId,friendName:match.other.name})} className="button-blue flex gap-2 items-center  font-medium!">
+                                <button onClick={() => getOrCreateChat({ friendId: match.otherId, friendName: match.other.name })} className="button-blue flex gap-2 items-center  font-medium!">
                                     <MessageSquare size={16} />
                                     Start Chat</button>
-                                    {/* todo button */}
+                                {/* todo button */}
                                 <button className="button-transparent rounded-md! flex gap-2 items-center  font-medium!">
                                     <Calendar size={16} />
                                     Schedule Session
                                 </button>
-                                  <button onClick={()=>router.push(`/matches/${match.id}`)} className="button-transparent rounded-md! flex gap-2 items-center  font-medium!">
+                                <button onClick={() => router.push(`/matches/${match.id}`)} className="button-transparent rounded-md! flex gap-2 items-center  font-medium!">
                                     <Book size={16} />
                                     Go to teach material
                                 </button>

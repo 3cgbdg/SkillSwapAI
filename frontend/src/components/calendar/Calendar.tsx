@@ -1,13 +1,12 @@
 "use client";
-import { api } from "@/services/axiosInstance";
 import { useAppDispatch } from "@/hooks/reduxHooks";
-import { ISession, SessionStatusEnum } from "@/types/types";
+import { ISession } from "@/types/types";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import CalendarPopup from "./CalendarPopup";
 import { setSessions } from "@/redux/sessionsSlice";
-import { useSocket } from "@/context/SocketContext";
+import SessionsService from "@/services/SessionsService";
 
 export type TableCellType = {
     sessions: ISession[],
@@ -21,7 +20,6 @@ const Calendar = () => {
     const currentDate = new Date();
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-    const { socket } = useSocket();
     ///
     const [tableCells, setTableCells] = useState<TableCellType[]>([]);
     const [addSessionPopup, setAddSessionPopup] = useState<boolean>(false);
@@ -32,10 +30,7 @@ const Calendar = () => {
     //query for getting sessions 
     const { data } = useQuery({
         queryKey: ['sessions', month],
-        queryFn: async () => {
-            const res = await api.get("/sessions", { params: { month } });
-            return res.data as ISession[];
-        },
+        queryFn: async () => SessionsService.getSessions(month),
         refetchInterval: 60 * 60 * 1000,
     })
     //

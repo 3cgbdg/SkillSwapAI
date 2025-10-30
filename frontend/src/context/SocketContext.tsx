@@ -3,11 +3,10 @@
 import { io, Socket } from "socket.io-client";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react"
 import { useAppSelector } from "@/hooks/reduxHooks";
+import { SocketContextType } from "@/types/types";
 
 
-interface SocketContextType {
-    socket: Socket | null;
-}
+
 
 const SocketContext = createContext<SocketContextType>({ socket: null });
 

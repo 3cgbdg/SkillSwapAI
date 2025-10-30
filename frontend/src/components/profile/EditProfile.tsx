@@ -1,7 +1,6 @@
 "use client"
 import AddSkills from "@/components/profile/AddSkills";
 import { Dispatch, useState } from "react";
-import Link from "next/link";
 import { SetStateAction } from "react";
 import { useAppSelector } from "@/hooks/reduxHooks";
 import Image from "next/image";

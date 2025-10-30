@@ -1,6 +1,5 @@
 "use client"
 
-import { api } from "@/services/axiosInstance"
 import { useAppDispatch, useAppSelector, } from "@/hooks/reduxHooks"
 import { addWantToLearnSkill, logOut } from "@/redux/authSlice"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
@@ -11,25 +10,13 @@ import { useEffect, useState } from "react"
 import { Bell, Check, Handshake, Plus, Search, UserRound, X } from "lucide-react"
 import { motion } from "framer-motion";
 import { io, Socket } from 'socket.io-client';
-import { IRequest } from "@/types/types"
+import { Found, FoundSkills, FoundUsers, IRequest } from "@/types/types"
+import AuthService from "@/services/AuthService"
+import RequestsService from "@/services/RequestsService"
+import FriendsService from "@/services/FriendsService"
+import SearchService from "@/services/SearchService"
+import SkillsService from "@/services/SkillsService"
 
-
-// interfaces & types
-interface foundUsers {
-    id: string,
-    name: string,
-    isFriend: boolean,
-}
-
-
-interface foundSkills {
-    id: string,
-    title: string,
-}
-type Found = foundUsers & foundSkills & {
-    name?: string;
-    title?: string;
-};
 
 
 
@@ -40,13 +27,15 @@ const Header = () => {
     const dispatch = useAppDispatch();
     const router = useRouter();
     const [word, setWord] = useState<string>("");
-    const [foundUsers, setFoundUsers] = useState<foundUsers[]>([]);
-    const [foundSkills, setFoundSkills] = useState<foundSkills[]>([]);
+    const [foundUsers, setFoundUsers] = useState<FoundUsers[]>([]);
+    const [foundSkills, setFoundSkills] = useState<FoundSkills[]>([]);
     const queryClient = useQueryClient();
     const [socket, setSocket] = useState<Socket | null>(null);
-    const {user} = useAppSelector(state=>state.auth);
+    const { user } = useAppSelector(state => state.auth);
+
+    // log out
     const mutation = useMutation({
-        mutationFn: async () => await api.delete("/auth/logout"),
+        mutationFn: async () => await AuthService.logOut(),
         onSuccess: () => {
             dispatch(logOut());
             router.push("/auth/login");
@@ -54,7 +43,7 @@ const Header = () => {
     })
 
 
-
+    // event for tracking mouse clicking in order to close unnecessary panels
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
@@ -73,17 +62,16 @@ const Header = () => {
         };
     }, [panel]);
 
+
+    // get requests
     const { data: reqs } = useQuery({
         queryKey: ['reqs'],
-        queryFn: async () => {
-            const res = await api.get("/requests");
-            console.log(res.data)
-            return res.data as IRequest[];
-        }
+        queryFn: async () => RequestsService.getRequests()
     })
 
+    // add a new friend 
     const mutationAddFriend = useMutation({
-        mutationFn: async ({ fromId, id }: { fromId: string, id: string }) => { await api.post("/friends", { id: fromId }); return id; },
+        mutationFn: async ({ fromId, id }: { fromId: string, id: string }) => FriendsService.createFriend(fromId, id),
         onSuccess: (id: string) => {
             queryClient.setQueryData(["reqs"], (old: any) => {
                 if (!old) return [];
@@ -93,22 +81,23 @@ const Header = () => {
 
     })
 
+    // search with chars (dynamically)
     const mutationSearch = useMutation({
-        mutationFn: async (chars: { chars: string }) => { const res = await api.get("/search", { params: chars }); return res.data },
-        onSuccess: (data: Found[]) => {
+        mutationFn: async (chars: string) => SearchService.searchUsersAndSkillsByChars(chars),
+        onSuccess: (data) => {
             setFoundUsers(() => data.filter(item => item.name !== undefined));
             setFoundSkills(() => data.filter(item => item.title !== undefined));
         }
     })
 
     // adding skill (want to learn)
-
     const mutationAddLearn = useMutation({
-        mutationFn: async (str: string) => api.post("/skills/want-to-learn", { title: str }),
+        mutationFn: async (str: string) => SkillsService.addWantToLearnSkill(str),
     })
 
+    // accept session-request
     const mutationAcceptSession = useMutation({
-        mutationFn: async ({ sessionId, requestId, friendId }: { sessionId: string, requestId: string, friendId: string }) => { const res = await api.post(`/sessions/${sessionId}/accepted`, { requestId, friendId }); return res.data; },
+        mutationFn: async ({ sessionId, requestId, friendId }: { sessionId: string, requestId: string, friendId: string }) => RequestsService.acceptSessionRequest({ sessionId, requestId, friendId }),
         onSuccess: (id: string) => {
             queryClient.setQueryData(["reqs"], (old: any) => {
                 if (!old) return [];
@@ -116,8 +105,10 @@ const Header = () => {
             })
         }
     })
+
+    // reject session-request
     const mutationRejectSession = useMutation({
-        mutationFn: async ({ sessionId, requestId, friendId }: { sessionId: string, requestId: string, friendId: string }) => { const res = await api.post(`/sessions/${sessionId}/rejected`, { requestId, friendId }); return res.data; },
+        mutationFn: async ({ sessionId, requestId, friendId }: { sessionId: string, requestId: string, friendId: string }) => RequestsService.rejectSessionRequest({ sessionId, requestId, friendId }),
         onSuccess: (id: string) => {
             queryClient.setQueryData(["reqs"], (old: any) => {
                 if (!old) return [];
@@ -126,8 +117,9 @@ const Header = () => {
         }
     })
 
+    // delete request
     const mutationRequestDelete = useMutation({
-        mutationFn: async ({ requestId }: { requestId: string }) => { const res = await api.delete(`/requests/${requestId}`); return res.data; },
+        mutationFn: async ({ requestId }: { requestId: string }) => RequestsService.deleteRequest(requestId),
         onSuccess: (id: string) => {
             queryClient.setQueryData(["reqs"], (old: any) => {
                 if (!old) return [];
@@ -136,19 +128,20 @@ const Header = () => {
         }
     })
 
-
+    // create a friend request
     const mutationCreateFriendRequest = useMutation({
-        mutationFn: async (str: string) => api.post("/requests", { id: str }),
+        mutationFn: async (str: string) => RequestsService.createFriendRequest(str),
     })
 
 
     useEffect(() => {
-        if(!user)return;
+        if (!user) return;
         const sock = io(`${process.env.NEXT_PUBLIC_API_URL}`, { withCredentials: true });
         setSocket(sock);
         return () => { sock.disconnect() };
     }, [user])
 
+    // connecting socket for tracking requests
     useEffect(() => {
         if (socket) {
             socket.on('connect', () => { });
@@ -214,7 +207,7 @@ const Header = () => {
                         setWord(e.target.value);
 
                         if (e.target.value.length > 2) {
-                            await mutationSearch.mutate({ chars: e.target.value });
+                            await mutationSearch.mutate(e.target.value);
                             setPanel("search");
                             console.log(foundUsers)
                         } else {

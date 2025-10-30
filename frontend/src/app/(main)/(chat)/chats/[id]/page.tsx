@@ -1,14 +1,14 @@
 "use client"
 
-import { api } from "@/services/axiosInstance"
 import { useSocket } from "@/context/SocketContext"
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks"
-import {updateChatNewMessagesForReceiver, updateChatNewMessagesForSender, updateChatSeen } from "@/redux/chatsSlice"
+import { updateChatNewMessagesForReceiver, updateChatNewMessagesForSender, updateChatSeen } from "@/redux/chatsSlice"
 import { IChat, IMessage } from "@/types/types"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { CheckCheck, EllipsisVertical, Send } from "lucide-react"
 import { useParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
+import ChatsService from "@/services/ChatsService"
 
 
 
@@ -26,19 +26,12 @@ const Page = () => {
     const endRef = useRef<HTMLDivElement>(null);
     const refs = useRef<HTMLDivElement[]>([]);
     const lastMessageRef = useRef<string>("");
-
     // useQuery for getting all messages from db
     const { data: messages } = useQuery({
         queryKey: ['messages', currentChat?.chatId],
-        queryFn: async () => {
-            const res = await api.get(`/chats/messages?with=${currentChat?.friend.id}`);
-            return res.data as IMessage[];
-
-        },
+        queryFn: async () => ChatsService.getChat(currentChat?.friend.id),
         enabled: !!currentChat
     })
-
-
 
     // tracking new messages for seeing it
     useEffect(() => {

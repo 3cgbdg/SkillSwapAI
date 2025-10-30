@@ -5,8 +5,6 @@ import { ProfilesService } from './profiles.service';
 export class ProfilesController {
   constructor(private readonly profilesService: ProfilesService) { }
 
-
-
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.profilesService.findOne(id);
