@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import CalendarPopup from "./CalendarPopup";
 import { setSessions } from "@/redux/sessionsSlice";
 import SessionsService from "@/services/SessionsService";
+import { useSearchParams } from "next/navigation";
 
 export type TableCellType = {
     sessions: ISession[],
@@ -21,6 +22,8 @@ const Calendar = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     ///
+    const searchParams = useSearchParams();
+    const [otherName, setOtherName] = useState<string | null>(null);
     const [tableCells, setTableCells] = useState<TableCellType[]>([]);
     const [addSessionPopup, setAddSessionPopup] = useState<boolean>(false);
     const [monthWeekIdx, setMonthWeekIdx] = useState<number>(0);
@@ -35,6 +38,14 @@ const Calendar = () => {
     })
     //
 
+    useEffect(() => {
+
+        const schedule = searchParams.get('schedule');
+        const name = searchParams.get('name');
+        if (schedule !== 'true' || !name) return;
+        setAddSessionPopup(true);
+        setOtherName(name);
+    }, [searchParams])
 
     useEffect(() => {
         const firstDay = new Date(year, month, 1);
@@ -139,7 +150,7 @@ const Calendar = () => {
             {/* popup for adding session */}
             {
                 addSessionPopup &&
-                <CalendarPopup month={month} year={year} setTableCells={setTableCells} setAddSessionPopup={setAddSessionPopup} />
+                <CalendarPopup otherName={otherName} month={month} year={year} setTableCells={setTableCells} setAddSessionPopup={setAddSessionPopup} />
             }
         </div >
 

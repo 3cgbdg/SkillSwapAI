@@ -10,7 +10,7 @@ import { useEffect, useState } from "react"
 import { Bell, Check, Handshake, Plus, Search, UserRound, X } from "lucide-react"
 import { motion } from "framer-motion";
 import { io, Socket } from 'socket.io-client';
-import { Found, FoundSkills, FoundUsers, IRequest } from "@/types/types"
+import { FoundSkills, FoundUsers, IRequest } from "@/types/types"
 import AuthService from "@/services/AuthService"
 import RequestsService from "@/services/RequestsService"
 import FriendsService from "@/services/FriendsService"
@@ -130,7 +130,7 @@ const Header = () => {
 
     // create a friend request
     const mutationCreateFriendRequest = useMutation({
-        mutationFn: async (str: string) => RequestsService.createFriendRequest(str),
+        mutationFn: async (str: string) => RequestsService.createFriendRequest({ id: str }),
     })
 
 

@@ -12,7 +12,7 @@ import { useMutation } from "@tanstack/react-query"
 const Page = () => {
   const {matches} = useAppSelector(state=>state.matches);
   const dispatch = useAppDispatch();
-  const { mutate: generateMatches, data: matchesCreated, isError, isPending, isSuccess } = useMutation({
+  const { mutate: generateMatches, data: matchesCreated, isError, isPending } = useMutation({
     mutationFn: async () => MatchesService.generateMatches(),
     onSuccess:(data)=>{
       dispatch(getMatches(data))

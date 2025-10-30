@@ -23,9 +23,9 @@ class RequestsService {
         return res.data;
     }
 
-    async createFriendRequest(str: string): Promise<ApiResponse<null>> {
-        const res = await api.post("/requests", { id: str })
-        return res.data;
+    async createFriendRequest({ name, id }: { name?: string, id?: string }): Promise<ApiResponse<null> | null> {
+        const res = name ? await api.post("/requests", { name }) : id ? await api.post("/requests", { id }) : null;
+        return res ? res.data : null;
     }
 
 }

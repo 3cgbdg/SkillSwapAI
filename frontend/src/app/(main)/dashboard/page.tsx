@@ -28,7 +28,7 @@ const Page = () => {
                 <div className="grid grid-cols-3 gap-6">
                     <div className="h-42 _border rounded-[10px] bg-white py-6! flex items-center flex-col gap-[5px]">
                         <Award size={40} className="text-blue mb-[5px]" />
-                        <span className="text-4xl leading-10 font-bold text-blue">{user?.skillsToLearn ? user?.skillsToLearn.length : 0}</span>
+                        <span className="text-4xl leading-10 font-bold text-blue">{user?.knownSkills ? user?.knownSkills.length : 0}</span>
                         <span className="text-gray leading-7 text-lg">Skills Learned</span>
                     </div>
                     <div className="h-42 _border rounded-[10px] bg-white py-6! flex items-center flex-col gap-[5px]">

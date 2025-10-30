@@ -1,26 +1,38 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { UpdateRequestDto } from './dto/update-request.dto';
 import { PrismaService } from 'prisma/prisma.service';
 import { RequestGateway } from 'src/webSockets/request.gateway';
+import { NotFound } from '@aws-sdk/client-s3';
 
 @Injectable()
 export class RequestsService {
   constructor(private readonly prisma: PrismaService, private readonly requestGateway: RequestGateway) { };
   async createForFriendship(dto: CreateRequestDto, userId: string) {
-    const exist = await this.prisma.request.findFirst({
-      where: {
-        OR: [
-          { fromId: userId, toId: dto.id },
-          { fromId: dto.id, toId: userId },
-        ]
+    if (dto.id) {
+      const exist = await this.prisma.request.findFirst({
+        where: {
+          OR: [
+            { fromId: userId, toId: dto.id },
+            { fromId: dto.id, toId: userId },
+          ]
+        }
+      })
+      if (exist) return;
+      const request = await this.prisma.request.create({ data: { toId: dto.id, fromId: userId, type: "FRIEND" }, include: { from: { select: { name: true } }, to: { select: { name: true } } } });
+      this.requestGateway.notifyUser(dto.id, { request })
+      return { message: "Successfully created!" }
+    } else {
+      const foundUser = await this.prisma.user.findUnique({ where: { name: dto.name }, select: { id: true } })
+      if (foundUser) {
+        const request = await this.prisma.request.create({ data: { toId: foundUser.id, fromId: userId, type: "FRIEND" }, include: { from: { select: { name: true } }, to: { select: { name: true } } } });
+        this.requestGateway.notifyUser(foundUser.id, { request })
+        return { message: "Successfully created!" }
+      } else {
+        throw new NotFoundException('User with such username wasn`t found')
       }
-    })
-    if (exist) return;
 
-    const request = await this.prisma.request.create({ data: { toId: dto.id, fromId: userId, type: "FRIEND" }, include: { from: { select: { name: true } }, to: { select: { name: true } } } });
-    this.requestGateway.notifyUser(dto.id, { request })
-    return { message: "Successfully created!" }
+    }
   }
 
   async findAll(userId: string) {

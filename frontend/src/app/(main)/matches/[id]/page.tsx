@@ -5,7 +5,7 @@ import Spinner from "@/components/Spinner";
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
 import { updateChats } from "@/redux/chatsSlice";
 import ChatsService from "@/services/ChatsService";
-import MatchesService from "@/services/MatchesService";
+import PlansService from "@/services/PlansService";
 import { IChat, IMatch } from "@/types/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, MessageSquareMore } from "lucide-react";
@@ -42,7 +42,7 @@ const Page = () => {
     // mutation for generating plan
     const { mutate: generatePlan, isPending } = useMutation({
         mutationFn: async () => {
-            const plan = await MatchesService.generatePlan()
+            const plan = await PlansService.generatePlan()
             queryClient.setQueryData(['matches', id], () => {
                 return plan;
             })
@@ -52,7 +52,7 @@ const Page = () => {
 
     const { data: plan } = useQuery({
         queryKey: ['matches', id],
-        queryFn: async () => MatchesService.getPlan(currentMatch?.id),
+        queryFn: async () => PlansService.getPlan(currentMatch?.id),
         enabled: !!currentMatch,
     })
 
@@ -86,7 +86,9 @@ const Page = () => {
                                     <MessageSquareMore size={20} />
                                     <span>Message {currentMatch.other.name}</span>
                                 </button>
-                                <button className="button-transparent rounded-md! flex items-center gap-5">
+                                <button onClick={() =>
+                                    router.push(`/calendar?schedule=true&name=${encodeURIComponent(currentMatch.other.name)}`)
+                                } className="button-transparent rounded-md! flex items-center gap-5">
                                     <Calendar size={20} />
                                     <span>Schedule Session</span>
                                 </button>
@@ -103,7 +105,7 @@ const Page = () => {
                                 <div className="flex flex-col  gap-1.5">
                                     <h2 className="section-title">Overall Progress</h2>
                                     <p className="tex-sm leading-5 text-gray">Your AI-generated training journey</p>
-                                    <h3 className="page-title mt-4 text-blue!">{plan.modules.reduce((acc, cur) => acc + (cur.status == 'INPROGRESS' ? 0 : 1), 0) / plan.modules.length}%</h3>
+                                    <h3 className="page-title mt-4 text-blue!">{(plan.modules.reduce((acc, cur) => acc + (cur.status == 'INPROGRESS' ? 0 : 1), 0) / plan.modules.length) * 100}%</h3>
                                 </div>
 
                                 :
@@ -126,7 +128,7 @@ const Page = () => {
                         <div className="flex flex-col gap-4">
                             {plan &&
                                 plan.modules.map((module, idx) => (
-                                    <ModuleAccordion idx={idx} key={module.id} module={module} isActive={isActive} setIsActive={setIsActive} />
+                                    <ModuleAccordion planId={plan.id} idx={idx} key={module.id} module={module} isActive={isActive} setIsActive={setIsActive} />
                                 ))
                             }
 

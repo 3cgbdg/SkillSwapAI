@@ -95,6 +95,7 @@ export interface IMatch {
 }
 
 export interface IGeneratedPlan {
+    id:string,
     modules: IGeneratedModule[]
 }
 

@@ -2,23 +2,25 @@
 import { formatDate } from "@/app/utils/calendar";
 import { useAppDispatch } from "@/hooks/reduxHooks";
 import { addSession } from "@/redux/sessionsSlice";
-import {FormTypeSession , IFriend } from "@/types/types";
+import { FormTypeSession, IFriend } from "@/types/types";
 import { useMutation } from "@tanstack/react-query";
-import { X } from "lucide-react";
-import { Dispatch, SetStateAction, useState } from "react";
+import { Plus, Users, X } from "lucide-react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { TableCellType } from "./Calendar";
 import { useSocket } from "@/context/SocketContext";
 import FriendsService from "@/services/FriendsService";
 import SessionsService from "@/services/SessionsService";
+import RequestsService from "@/services/RequestsService";
 
-const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup }: { year: number, month: number, setAddSessionPopup: Dispatch<SetStateAction<boolean>>, setTableCells: Dispatch<SetStateAction<TableCellType[]>> }) => {
+const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup, otherName }: { otherName: string | null, year: number, month: number, setAddSessionPopup: Dispatch<SetStateAction<boolean>>, setTableCells: Dispatch<SetStateAction<TableCellType[]>> }) => {
     const { register, watch, handleSubmit, setValue, formState: { errors } } = useForm<FormTypeSession>();
     const dispatch = useAppDispatch();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const { socket } = useSocket();
     const [chars, setChars] = useState<string>("");
+    const [addFriendButton, setAddFriendButton] = useState<boolean>(false);
     const [friends, setFriends] = useState<IFriend[] | null>(null);
     const [badRequestErrorMessage, setBadRequestErrorMessage] = useState<string | null>(null);
     // searching friends by name
@@ -27,6 +29,11 @@ const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup }: { yea
         onSuccess: (data) => {
             setFriends(data);
         }
+    })
+
+    //create friend request 
+    const { mutate: createFriendRequest } = useMutation({
+        mutationFn: async (str: string) => RequestsService.createFriendRequest({ name: str }),
     })
 
     // mutation for creating session request
@@ -56,7 +63,6 @@ const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup }: { yea
     const createSession: SubmitHandler<FormTypeSession> = async (data) => {
         const { friendName, ...newData } = data;
         if (friends) {
-            console.log(friendName, friends);
             const realFriend = friends.find(item => item.name === friendName);
             if (realFriend) {
                 newData.friendId = realFriend.id;
@@ -64,11 +70,20 @@ const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup }: { yea
 
             }
             else {
-                setBadRequestErrorMessage('There`s no such friend in your list')
+                setBadRequestErrorMessage('There`s no such friend in your list. Firstly add Friend!')
+                setAddFriendButton(true);
                 return;
             }
         }
     }
+
+    useEffect(() => {
+        if (otherName) {
+            setValue("friendName", otherName);
+            mutationSearch.mutate();
+        }
+    }, [otherName])
+
     const startHour = watch('start');
 
     return (
@@ -163,7 +178,7 @@ const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup }: { yea
                             <input type="text" placeholder="Find by name" id="friendName"   {...register("friendName", { required: "Field is required" })} className="w-full outline-none " onChange={async (e) => {
 
                                 setChars(e.target.value);
-                                if (e.target.value.length === 1) {
+                                if (e.target.value.length === 1 && !friends) {
                                     await mutationSearch.mutate();
                                     console.log(chars)
 
@@ -196,7 +211,14 @@ const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup }: { yea
                             {badRequestErrorMessage}
                         </span>
                     )}
-                    <button className="button-blue">Create</button>
+                    <div className="flex w-full gap-4 items-center">
+                        <button className="button-blue w-full">Create</button>
+                        {
+                            addFriendButton && otherName &&
+                            <button onClick={() => createFriendRequest(otherName)} className="button-transparent w-full rounded-md! flex items-center gap-2">Add friend <Users size={16} /></button>
+
+                        }
+                    </div>
                 </form>
             </div>
         </div>

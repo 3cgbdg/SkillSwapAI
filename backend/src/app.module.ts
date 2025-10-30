@@ -14,6 +14,7 @@ import { SessionsModule } from './sessions/sessions.module';
 import { MatchesModule } from './matches/matches.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { S3Module } from './s3/s3module';
+import { PlansModule } from './plans/plans.module';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -45,7 +46,9 @@ import { S3Module } from './s3/s3module';
 
     SessionsModule,
 
-    MatchesModule],
+    MatchesModule,
+
+    PlansModule],
   controllers: [AppController],
   providers: [AppService],
 })

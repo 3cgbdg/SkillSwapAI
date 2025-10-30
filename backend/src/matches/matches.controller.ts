@@ -11,15 +11,6 @@ export class MatchesController {
     return this.matchesService.create((req as any).user.id);
   }
 
-  @Post('plan')
-  async createPlan(@Req() req: Request) {
-    return this.matchesService.createPlan((req as any).user.id);
-  }
-    @Get(':id/plan')
-  async getPlan(@Param('id') matchId:string) {
-    return this.matchesService.getPlan(matchId);
-  }
-
   @Get()
   async getMatches(@Req() req: Request) {
     return this.matchesService.getMatches((req as any).user.id);

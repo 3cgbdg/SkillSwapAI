@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 const Page = () => {
     const [now, setNow] = useState(new Date());
+
     const { sessions } = useAppSelector(state => state.sessions)
     useEffect(() => {
         const interval = setInterval(() => {
@@ -14,8 +15,9 @@ const Page = () => {
         return () => clearInterval(interval);
     }, []);
 
+
+
     const upcoming = sessions && sessions.filter(s => s.start > now.getHours()).sort((a, b) => a.start - b.start);
-    console.log(upcoming)
     return (
         <div className="grid grid-cols-3 gap-8 items-start">
             <div className="_border overflow-hidden rounded-[10px] col-span-2">
