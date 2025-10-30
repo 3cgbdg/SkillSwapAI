@@ -1,5 +1,6 @@
-import { ApiResponse, FormTypeLogIn, FormTypeSignUp } from "@/types/types";
+import { ApiResponse, FormTypeLogIn } from "@/types/types";
 import { api } from "./axiosInstance";
+import { signUpFormData } from "@/validation/signUp";
 
 class AuthService {
     async logIn(data: FormTypeLogIn): Promise<ApiResponse<null>> {
@@ -7,7 +8,7 @@ class AuthService {
         return res.data;
     }
 
-    async signUp(data: FormTypeSignUp, knownSkills: string[] | null, skillsToLearn: string[] | null): Promise<ApiResponse<null>> {
+    async signUp(data: Omit<signUpFormData, 'checkBox'>, knownSkills: string[] | null, skillsToLearn: string[] | null): Promise<ApiResponse<null>> {
         const res = await api.post('/auth/signup', { ...data, knownSkills, skillsToLearn });
         return res.data
     }

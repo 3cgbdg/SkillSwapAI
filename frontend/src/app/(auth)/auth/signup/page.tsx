@@ -1,7 +1,7 @@
 "use client"
 import AuthService from "@/services/AuthService";
 import SkillsService from "@/services/SkillsService";
-import { formTypeSignUp } from "@/types/types";
+import { signUpFormData, signUpSchema } from "@/validation/signUp";
 import { useMutation } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import Image from "next/image"
@@ -9,39 +9,71 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { deleteWantToLearnSkill } from "@/redux/authSlice";
 
 
 
 // request->available -----
 
 const Page = () => {
-  const { register, handleSubmit, formState: { errors }, watch } = useForm<formTypeSignUp>();
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<signUpFormData>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      knownSkills: [],
+      skillsToLearn: [],
+      checkBox: false,
+    }
+  });
   const router = useRouter();
-  const [knownSkills, setKnownSkills] = useState<string[] | null>(null);
   const [inputKnown, setInputKnown] = useState<string>("");
   const [inputToLearn, setInputToLearn] = useState<string>("");
-  const [skillsToLearn, setSkillsToLearn] = useState<string[] | null>(null);
   const [availableSkills, setAvailableSkills] = useState<{ id: string, title: string }[]>([]);
   const mutation = useMutation({
-    mutationFn: async (data: formTypeSignUp) => AuthService.signUp(data, knownSkills, skillsToLearn),
+    mutationFn: async (data: Omit<signUpFormData, 'checkBox'>) => AuthService.signUp(data, knownSkills, skillsToLearn),
     onSuccess: () => router.push("/dashboard"),
+
   })
 
-  const { mutate:getSkills } = useMutation({
+  const { mutate: getSkills } = useMutation({
     mutationFn: async ({ chars }: { chars: string }) => SkillsService.getSkills(chars),
     onSuccess: (data: { id: string, title: string }[]) => setAvailableSkills(data),
   })
 
 
-  const onSubmit: SubmitHandler<formTypeSignUp> = async (data) => {
+  const onSubmit: SubmitHandler<signUpFormData> = async (data) => {
     if (!data.checkBox) {
-      console.error("Didn`t accept terms and conditions!");
+      console.error("Terms and conditions are not accepted!");
       return null;
     }
+    console.log("hello");
     const { checkBox, ...newData } = data;
     mutation.mutate(newData);
   }
-  const passwordValue = watch("password");
+
+  /// managing adding-skills system 
+  const knownSkills = watch("knownSkills") || [];
+  const skillsToLearn = watch("skillsToLearn") || [];
+
+
+  const addKnownSkill = (skill: string) => {
+    setValue("knownSkills", [...knownSkills, skill], { shouldValidate: true });
+  }
+
+
+  const removeKnownSkill = (skill: string) => {
+    setValue("knownSkills", knownSkills.filter(s => s !== skill), { shouldValidate: true });
+  }
+
+  const addWantToLearnSkill = (skill: string) => {
+    setValue("skillsToLearn", [...skillsToLearn, skill], { shouldValidate: true });
+  }
+
+
+  const removeWantToLearnSkill = (skill: string) => {
+    setValue("skillsToLearn", skillsToLearn.filter(s => s !== skill), { shouldValidate: true });
+  }
+  ///
   return (
     <div className="basis-[512px] w-full _border rounded-[32px] p-[57px] flex justify-center bg-white z-10">
       <div className="flex flex-col gap-4 items-center mb-[46px] w-full">
@@ -56,13 +88,7 @@ const Page = () => {
 
           <div className="flex flex-col gap-2">
             <label className="text-sm leading-[22px] font-medium" htmlFor="email">Name</label>
-            <input    {...register("name", {
-              validate: {
-                isEmpty: (value) => {
-                  return value.length !== 0 || "Field is required";
-                },
-              }
-            })} className=" w-full input" placeholder="Enter your name" type="text" id="name" />
+            <input    {...register("name")} className=" w-full input" placeholder="Enter your name" type="text" id="name" />
 
 
             {errors.name && (
@@ -74,18 +100,7 @@ const Page = () => {
 
           <div className="flex flex-col gap-2">
             <label className="text-sm leading-[22px] font-medium" htmlFor="email">Email</label>
-            <input    {...register("email", {
-              validate: {
-
-                isValidEmailForm: (value) => {
-                  if (!value) return true;
-                  return /^\w+@\w+\.\w{2,3}$/.test(value) || "Wrong email format";
-                },
-                isEmpty: (value) => {
-                  return value.length !== 0 || "Field is required";
-                },
-              }
-            })} className=" w-full input" placeholder="Enter your email" type="text" id="email" />
+            <input    {...register("email")} className=" w-full input" placeholder="Enter your email" type="text" id="email" />
 
 
             {errors.email && (
@@ -97,11 +112,7 @@ const Page = () => {
 
           <div className="flex flex-col gap-2">
             <label className="text-sm leading-[22px] font-medium" htmlFor="password">Password</label>
-            <input  {...register("password", {
-              validate: {
-                password: (value) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/.test(value) || "Password must have at least one lowercase, one uppercase, one digit and minimum 8 characters",
-              }
-            })} className="w-full input" placeholder="Enter your password" type="password" id="password" />
+            <input  {...register("password")} className="w-full input" placeholder="Enter your password" type="password" id="password" />
 
             {errors.password && (
               <span data-testid='error' className="text-red-500 font-medium ">
@@ -112,11 +123,7 @@ const Page = () => {
 
           <div className="flex flex-col gap-2">
             <label className="text-sm leading-[22px] font-medium" htmlFor="password">Confirm Password</label>
-            <input  {...register("confirmPassword", {
-              validate: {
-                confirmPassword: (value) => value == passwordValue || "Passwords do not match",
-              }
-            })} className="w-full input" placeholder="Confirm your  password" type="password" id="password" />
+            <input  {...register("confirmPassword")} className="w-full input" placeholder="Confirm your  password" type="password" id="password" />
 
             {errors.confirmPassword && (
               <span data-testid='error' className="text-red-500 font-medium ">
@@ -134,7 +141,7 @@ const Page = () => {
               }} className="w-full input" placeholder="e.g., Web Development, UI/UX Design, Data Analysis" id="password" />
               <button onClick={() => {
                 if (inputKnown !== "") {
-                  setKnownSkills(prev => prev ? [...prev, inputKnown] : [inputKnown]);
+                  addKnownSkill(inputKnown);
                   setInputKnown("");
                 }
               }} type="button" className="button-violet text-sm! leading-5.5!">Add skill</button>
@@ -143,7 +150,10 @@ const Page = () => {
                   <div className="mt-1 input p-2  min-w-[150px] max-w-[350px] flex gap-1 flex-wrap bg-white">
                     {availableSkills.length > 0 ? <div className="flex flex-col gap-1">
                       {availableSkills.map((skill, idx) => (
-                        <button type="button" onClick={() => { setKnownSkills(prev => prev ? [...prev, skill.title] : [skill.title]); setInputKnown("") }} key={idx} className="input text-sm! cursor-pointer leading-5! font-medium transition-colors hover:bg-violet">
+                        <button type="button" onClick={() => {
+                          addKnownSkill(inputKnown);
+                          setInputKnown("")
+                        }} key={idx} className="input text-sm! cursor-pointer leading-5! font-medium transition-colors hover:bg-violet">
                           {skill.title}
                         </button>
                       ))}
@@ -157,7 +167,7 @@ const Page = () => {
             </div>
             <div className="flex gap-1 flex-wrap">
               {knownSkills?.map((skill, idx) => (
-                <button key={idx} type="button" onClick={() => { setKnownSkills(prev => prev ? prev.filter(item => item !== skill) : []) }} className="input cursor-pointer w-fit text-sm leading-5 py-1! transition-colors hover:bg-red-400 flex items-center gap-1">
+                <button key={idx} type="button" onClick={() => { removeKnownSkill(skill) }} className="input cursor-pointer w-fit text-sm leading-5 py-1! transition-colors hover:bg-red-400 flex items-center gap-1">
                   <span>{skill}</span>
                   <X size={14} />
                 </button>
@@ -165,20 +175,13 @@ const Page = () => {
 
 
 
+              {errors.knownSkills && (
+                <span data-testid='error' className="text-red-500 font-medium ">
+                  {errors.knownSkills.message}
+                </span>)}
             </div>
-            {/* TODO!!! */}
-            {/* <input value={knownSkills?.join(",")} type="hidden"  {...register("knownSkills", {
-              validate: {
-                isEmpty: (value) => {
-                  return value.length !== 0 || "Field is required";
-                },
-              }
-            })} /> 
-            {errors.knownSkills && (
-              <span data-testid='error' className="text-red-500 font-medium ">
-                {errors.knownSkills.message}
-              </span>
-            )}*/}
+
+
           </div>
 
           <div className="flex flex-col gap-2 ">
@@ -191,16 +194,17 @@ const Page = () => {
               }} className="w-full input" placeholder="e.g., Web Development, UI/UX Design, Data Analysis" id="password" />
               <button onClick={() => {
                 if (inputToLearn !== "") {
-                  setSkillsToLearn(prev => prev ? [...prev, inputToLearn] : [inputToLearn]);
+                  addWantToLearnSkill(inputToLearn)
                   setInputToLearn("");
                 }
               }} type="button" className="button-violet text-sm! leading-5.5!">Add skill</button>
+
               {inputToLearn.length > 2 &&
                 <div className="absolute top-full  left-0">
                   <div className="mt-1 input p-2  min-w-[150px] max-w-[350px] flex gap-1 flex-wrap bg-white">
                     {availableSkills.length > 0 ? <div className="flex flex-col gap-1">
                       {availableSkills.map((skill, idx) => (
-                        <button type="button" onClick={() => { setSkillsToLearn(prev => prev ? [...prev, skill.title] : [skill.title]); setInputToLearn("") }} key={idx} className="input text-sm! cursor-pointer leading-5! font-medium transition-colors hover:bg-violet">
+                        <button type="button" onClick={() => { addWantToLearnSkill(inputToLearn); setInputToLearn("") }} key={idx} className="input text-sm! cursor-pointer leading-5! font-medium transition-colors hover:bg-violet">
                           {skill.title}
                         </button>
                       ))}
@@ -214,35 +218,23 @@ const Page = () => {
             </div>
             <div className="flex gap-1 flex-wrap">
               {skillsToLearn?.map((skill, idx) => (
-                <button key={idx} type="button" onClick={() => { setSkillsToLearn(prev => prev ? prev.filter(item => item !== skill) : []) }} className="input cursor-pointer w-fit text-sm leading-5 py-1! transition-colors hover:bg-red-400 flex items-center gap-1">
+                <button key={idx} type="button" onClick={() => { deleteWantToLearnSkill(skill) }} className="input cursor-pointer w-fit text-sm leading-5 py-1! transition-colors hover:bg-red-400 flex items-center gap-1">
                   <span>{skill}</span>
                   <X size={14} />
                 </button>
               ))}
 
-
+              {errors.skillsToLearn && (
+                <span data-testid='error' className="text-red-500 font-medium ">
+                  {errors.skillsToLearn.message}
+                </span>)}
 
             </div>
-            {/* TODO!!! */}
-            {/* <input value={knownSkills?.join(",")} type="hidden"  {...register("knownSkills", {
-              validate: {
-                isEmpty: (value) => {
-                  return value.length !== 0 || "Field is required";
-                },
-              }
-            })} /> 
-            {errors.knownSkills && (
-              <span data-testid='error' className="text-red-500 font-medium ">
-                {errors.knownSkills.message}
-              </span>
-            )}*/}
+
           </div>
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
-              <input  {...register("checkBox", {
-                required: "Accept to Continue"
-
-              })}
+              <input  {...register("checkBox")}
                 className="checked:bg-violet" type="checkbox" />
               <label className="text-sm leading-5 font-medium"><span className="text-violet">Accept</span> Terms and Conditions</label>
             </div>

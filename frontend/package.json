@@ -14,6 +14,7 @@
     "@fullcalendar/interaction": "^6.1.19",
     "@fullcalendar/react": "^6.1.19",
     "@fullcalendar/timegrid": "^6.1.19",
+    "@hookform/resolvers": "^5.2.2",
     "@reduxjs/toolkit": "^2.8.2",
     "@tanstack/react-query": "^5.84.1",
     "@testing-library/dom": "^10.4.1",
@@ -33,7 +34,8 @@
     "react-hook-form": "^7.62.0",
     "react-redux": "^9.2.0",
     "socket.io-client": "^4.8.1",
-    "ts-jest": "^29.4.1"
+    "ts-jest": "^29.4.1",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
