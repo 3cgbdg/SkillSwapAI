@@ -1,6 +1,7 @@
 "use client"
 import AuthService from "@/services/AuthService";
-import { formTypeLogIn } from "@/types/types";
+import { logInFormData, logInSchema } from "@/validation/logIn";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { ChromeIcon, GithubIcon, Lock, Mail } from "lucide-react";
 import Image from "next/image"
@@ -11,15 +12,17 @@ import { SubmitHandler, useForm } from "react-hook-form";
 
 
 const Page = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm<formTypeLogIn>();
+  const { register, handleSubmit, formState: { errors } } = useForm<logInFormData>({
+    resolver: zodResolver(logInSchema)
+  });
   const router = useRouter();
   const mutation = useMutation({
-    mutationFn: async (data: formTypeLogIn) => AuthService.logIn(data),
+    mutationFn: async (data: logInFormData) => AuthService.logIn(data),
     onSuccess: () => router.push("/dashboard"),
   })
 
 
-  const onSubmit: SubmitHandler<formTypeLogIn> = async (data) => {
+  const onSubmit: SubmitHandler<logInFormData> = async (data) => {
     mutation.mutate(data);
   }
   return (

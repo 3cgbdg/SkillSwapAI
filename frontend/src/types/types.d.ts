@@ -114,17 +114,7 @@ export interface IGeneratedModule {
     }[]
 }
 
-export type FormTypeLogIn = {
-    email: string,
-    password: string,
-}
-export type FormTypeSignUp = FormTypeLogIn & {
-    name: string;
-    confirmPassword: string;
-    knownSkills: string;
-    skillsToLearn: string;
-    checkBox?: boolean;
-};
+
 
 export type ApiResponse<T> = {
     success: boolean;
