@@ -13,7 +13,8 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
-  await app.listen(configService.get<string>('PORT') ?? 5200);
-   
+  const port = process.env.PORT || configService.get<string>('PORT') || 5200;
+  await app.listen(port, '0.0.0.0');
+
 }
 bootstrap();

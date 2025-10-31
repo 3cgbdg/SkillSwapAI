@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Dancing_Script, Inter } from "next/font/google";
+import { Dancing_Script, Inter, Oswald } from "next/font/google";
 import "@/styles/globals.css";
 import QueryProvider from "@/providers/QueryProvider";
 import ReduxProvider from "@/providers/ReduxProvider";
@@ -7,7 +7,10 @@ import { SocketProvider } from "@/context/SocketContext";
 import CheckEmptyPath from "@/components/CheckEmptyPath";
 
 
-
+const OswaldFont = Oswald({
+  variable: "--font-oswald",
+  subsets: ["latin"],
+});
 
 
 const InterFont = Inter({
@@ -36,7 +39,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${InterFont.variable} ${DancingScript.variable} relative  antialiased`}
+        className={`${InterFont.variable} ${DancingScript.variable} ${OswaldFont.variable} relative  antialiased`}
       >
         <QueryProvider>
           <ReduxProvider>

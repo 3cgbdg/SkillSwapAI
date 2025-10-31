@@ -7,6 +7,7 @@
 @theme inline {
   --color-background: #ffffff;
   --font-inter: var(--font-inter);
+  --font-oswald: var(--font-oswald);
   --font-dancing_script: var(--font-dancing_script);
   --color-gray: #565d6dff;
   --color-violet: #9077f3ff;

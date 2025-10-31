@@ -186,7 +186,7 @@ const Header = () => {
 
                     <Image className="stroke-darkBlue transition-transform group-hover:-rotate-45" width={32} height={32} src="/logo.png" alt="logo" />
 
-                    <span className={` transiiton-colors relative text-blue group-hover:text-violet  font-dancing_script text-2xl leading-none font-bold `}>SkillSwapAI</span>
+                    <span className={` transiiton-colors relative text-blue group-hover:text-violet  font-oswald text-2xl leading-none font-bold `}>SkillSwapAI</span>
                 </Link>
             </div>
 
