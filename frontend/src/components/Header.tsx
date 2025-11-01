@@ -345,8 +345,10 @@ const Header = () => {
                 </div>
 
 
-                <button onClick={() => setPanel(panel !== "menu" ? "menu" : null)} className={` cursor-pointer  hover:text-violet hover:border-violet ${panel === "menu" ? "text-violet border-violet" : ""} transition-colors rounded-full overflow-hidden _border flex items-center justify-center p-3`}>
-                    {panel !== "menu" ? <UserRound /> : <X />}
+                <button onClick={() => setPanel(panel !== "menu" ? "menu" : null)} className={` cursor-pointer  hover:text-violet hover:border-violet ${panel === "menu" ? "text-violet border-violet" : ""} transition-colors rounded-full overflow-hidden _border flex items-center justify-center size-12`}>
+                    {panel !== "menu" ? !user?.imageUrl ? <UserRound size={24} /> : <div className="w-[48px] relative h-[48px] rounded-full overflow-hidden">
+                        <Image  className="object-cover" src={user.imageUrl} fill alt="user image" />
+                    </div> : <X  />}
                 </button>
                 {panel == "menu" &&
                     <div className=" absolute min-w-[250px] right-0 top-[140%] panel z-10">

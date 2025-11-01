@@ -14,7 +14,7 @@ export class FriendsController {
   }
 
   @Get()
-  findAll(@Req() req: Request) {
+  async findAll(@Req() req: Request) {
     return this.friendsService.findAll((req as any).user.id);
   }
 

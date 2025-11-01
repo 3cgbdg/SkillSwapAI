@@ -13,6 +13,11 @@ class AuthService {
         return res.data;
     }
 
+    async uploadImage(form: FormData): Promise<string> {
+        const res = await api.post(`profiles/photo/upload`, form);
+        return res.data;
+    }
+
 }
 
 export default new AuthService();

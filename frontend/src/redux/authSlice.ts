@@ -12,8 +12,8 @@ const initialState: IinitialState = {
         email: "",
         knownSkills: [],
         skillsToLearn: [],
-        imageUrl:"",
-        bio:"",
+        imageUrl: "",
+        bio: "",
     }
 }
 
@@ -52,10 +52,14 @@ const authSlice = createSlice({
             if (state.user?.skillsToLearn)
                 state.user.skillsToLearn = state.user?.skillsToLearn?.filter(skill => skill.title !== action.payload)
         },
+        changeAvatar: (state, action: PayloadAction<string>) => {
+            if (state.user)
+                state.user.imageUrl = action.payload;
+        }
     },
 
 }
 )
 
-export const { getProfile, logOut, addKnownSkill, addWantToLearnSkill, deleteKnownSkill, deleteWantToLearnSkill } = authSlice.actions;
+export const { getProfile,changeAvatar, logOut, addKnownSkill, addWantToLearnSkill, deleteKnownSkill, deleteWantToLearnSkill } = authSlice.actions;
 export default authSlice.reducer;
