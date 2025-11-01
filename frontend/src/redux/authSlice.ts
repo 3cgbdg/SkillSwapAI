@@ -12,7 +12,7 @@ const initialState: IinitialState = {
         email: "",
         knownSkills: [],
         skillsToLearn: [],
-        imageUrl: "",
+        imageUrl: undefined,
         bio: "",
     }
 }
@@ -52,14 +52,21 @@ const authSlice = createSlice({
             if (state.user?.skillsToLearn)
                 state.user.skillsToLearn = state.user?.skillsToLearn?.filter(skill => skill.title !== action.payload)
         },
-        changeAvatar: (state, action: PayloadAction<string>) => {
+        changeAvatar: (state, action: PayloadAction<string | undefined>) => {
             if (state.user)
                 state.user.imageUrl = action.payload;
+        },
+        updateProfile: (state, action: PayloadAction<{ name?: string, bio?: string, email?: string }>) => {
+            if (state.user) {
+                state.user = { ...state.user, ...action.payload };
+            }
         }
+
+
     },
 
 }
 )
 
-export const { getProfile,changeAvatar, logOut, addKnownSkill, addWantToLearnSkill, deleteKnownSkill, deleteWantToLearnSkill } = authSlice.actions;
+export const { getProfile, updateProfile, changeAvatar, logOut, addKnownSkill, addWantToLearnSkill, deleteKnownSkill, deleteWantToLearnSkill } = authSlice.actions;
 export default authSlice.reducer;

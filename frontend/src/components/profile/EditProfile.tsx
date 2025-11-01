@@ -1,6 +1,6 @@
 "use client"
 import AddSkills from "@/components/profile/AddSkills";
-import { Dispatch, useState } from "react";
+import { Dispatch, useEffect, useState } from "react";
 import { SetStateAction } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
 import Image from "next/image";
@@ -10,44 +10,69 @@ import { useMutation } from "@tanstack/react-query";
 import { editProfileFormData, editProfileSchema } from "@/validation/editProfile";
 import { zodResolver } from "@hookform/resolvers/zod";
 import ProfilesService from "@/services/ProfilesService";
-import { changeAvatar } from "@/redux/authSlice";
-// import AvatarCropModal from "./AvatarCropModal";
+import { changeAvatar, updateProfile } from "@/redux/authSlice";
 
 
 
 const EditProfile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<boolean>> }) => {
     const { user } = useAppSelector(state => state.auth);
     const dispatch = useAppDispatch();
-    const { register, handleSubmit, formState: { errors }, reset } = useForm<editProfileFormData>({
+    const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<editProfileFormData>({
         resolver: zodResolver(editProfileSchema)
     });
     const [isCurrentlyEditing, setIsCurrentlyEditing] = useState<boolean>(false);
 
     const { mutate: saveChanges } = useMutation({
-        mutationFn: async () => {
-
+        mutationFn: async (data: Partial<editProfileFormData>) => {
+            if (user) {
+                await ProfilesService.updateProfile(user.id, data)
+                dispatch(updateProfile(data))
+            } else
+                return null;
         }
     })
 
+    //deleting avatar image
+    const { mutate: deleteAvatarImage } = useMutation({
+        mutationFn: async () => {
+            await ProfilesService.deleteAvatarImage();
+            dispatch(changeAvatar(undefined));
+        }
+    })
 
-    //submit func 
+    //submit changes func 
 
     const onSubmit: SubmitHandler<editProfileFormData> = async (data) => {
-
+        if (user) {
+            const dataToUpdate = (Object.keys(data) as (keyof editProfileFormData)[])
+                .reduce((acc, key) => {
+                    const value = data[key];
+                    if (value !== undefined && value !== user[key]) {
+                        acc[key] = value;
+                    }
+                    return acc;
+                }, {} as Partial<editProfileFormData>);
+            saveChanges(dataToUpdate);
+        }
     }
 
     // for getting image src-fit url 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-
         const form = new FormData();
         console.log(file)
         form.append('image', file);
         const url = await ProfilesService.uploadImage(form);
         dispatch(changeAvatar(url))
     };
-
+    //setting default values to data form
+    useEffect(() => {
+        if (!user) return;
+        setValue("name", user.name);
+        setValue("email", user.email);
+        setValue("bio", user.bio || "");
+    }, [user])
 
     return (
         <div className="flex flex-col gap-7.5">
@@ -76,7 +101,7 @@ const EditProfile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<b
                                 className="hidden"
                             />
                         </label>
-                        <button className="button-transparent rounded-md!">Remove Picture</button>
+                        <button onClick={() => deleteAvatarImage()} className="button-transparent rounded-md!">Remove Picture</button>
 
                     </div>
                     <form className="col-span-2 p-6 pt-[27px]! gap-4 flex flex-col _border rounded-[10px]">

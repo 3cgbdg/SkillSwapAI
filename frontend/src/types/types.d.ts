@@ -4,7 +4,7 @@ export interface IUser {
     email: string;
     knownSkills?: { id: string; title: string }[];
     skillsToLearn?: { id: string; title: string }[];
-    imageUrl: string,
+    imageUrl: string|undefined,
     bio: string,
 }
 

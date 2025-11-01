@@ -1,6 +1,6 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
 @Injectable()
 export class S3Service {
@@ -27,7 +27,7 @@ export class S3Service {
     }
 
 
-    async uploadFile(file: Express.Multer.File, key: string) {
+    async uploadFile(file: Express.Multer.File, key: string):Promise<string> {
         const command = new PutObjectCommand({
             Bucket: this.bucket,
             Key: key,
@@ -38,11 +38,23 @@ export class S3Service {
         try {
             await this.s3Client.send(command);
             const url = `https://${this.bucket}.s3.${this.region}.amazonaws.com/${key}`;
-
             return url;
         } catch (error) {
-            console.error('Error uploading file to S3:', error);
             throw new InternalServerErrorException('Error uploading file');
+        }
+    }
+
+
+    async deleteFile( key: string):Promise<void> {
+        const command = new DeleteObjectCommand({
+            Bucket: this.bucket,
+            Key: key,
+        });
+
+        try {
+            await this.s3Client.send(command);
+        } catch (error) {
+            throw new InternalServerErrorException('Error deleting file');
         }
     }
 
