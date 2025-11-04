@@ -76,7 +76,10 @@ const EditProfile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<b
 
     return (
         <div className="flex flex-col gap-7.5">
-            <h1 className="page-title">Edit Profile</h1>
+            <div className="flex items-center gap-4 justify-between ">
+                <h1 className="page-title">Edit Profile</h1>
+                <button onClick={() => setIsEditing(false)} className="button-blue">Finish editing</button>
+            </div>
             <div className="flex flex-col gap-6">
                 <div className="grid grid-cols-3 gap-6">
                     <div className="col-span-1 p-6 pt-[27px]! flex flex-col justify-between gap-4  _border rounded-[10px]">

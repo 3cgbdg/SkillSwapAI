@@ -27,53 +27,55 @@ class User(BaseModel):
     knownSkills:List[str]
     skillsToLearn:List[str]
     
-class PlanRequest(BaseModel):
-    users: List[User]
-    compatibility: int
+
+
 
     
-@app.post('/analyze/{userId}')
-async def analyzeMatches(usersForMatch:List[User],thisUser:User):
-    prompt =  """
-    You are an AI Matchmaking Assistant for a skill exchange app.
-    For each user in 'usersForMatch', analyze how compatible they are with 'thisUser'
-    based on their knownSkills and skillsToLearn.
+# @app.post('/analyze/{userId}')
+# async def analyzeMatches(usersForMatch:List[User],thisUser:User):
+#     prompt =  """
+#     You are an AI Matchmaking Assistant for a skill exchange app.
+#     For each user in 'usersForMatch', analyze how compatible they are with 'thisUser'
+#     based on their knownSkills and skillsToLearn.
     
-    Rules:
-    - compatibility is from 0% to 100%.
-    - If both users can teach each other something (mutual skill exchange), compatibility is higher (70–100%).
-    - If only one side can teach something, compatibility is medium (40–70%).
-    - If overlap is weak, compatibility is low (0–40%).
-    - Return clear JSON: [{{"compatibility": int, "aiExplanation": str,"id":str,"keyBenefits":['...','...','...','...'] }}]
-    - aiExplanation must be 2–3 sentences in human tone explaining why they match.
-    - keyBenefits must be 4 benefits which clearly indicate why we should teach each other.
+#     Rules:
+#     - compatibility is from 0% to 100%.
+#     - If both users can teach each other something (mutual skill exchange), compatibility is higher (70–100%).
+#     - If only one side can teach something, compatibility is medium (40–70%).
+#     - If overlap is weak, compatibility is low (0–40%).
+#     - Return clear JSON: [{{"compatibility": int, "aiExplanation": str,"id":str,"keyBenefits":['...','...','...','...'] }}]
+#     - aiExplanation must be 2–3 sentences in human tone explaining why they match.
+#     - keyBenefits must be 4 benefits which clearly indicate why we should teach each other.
      
-     """
-    # configuration for gpt requests   
-    try:
-        completion = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-                {"role": "system", "content": prompt},
-                {"role": "user",    "content": f"""
-                thisUser: {thisUser.model_dump()}
-                usersForMatch: {usersForMatch}
-                """ }
-            ],
-        temperature=0.7
-        )
-        return {"AIReport": completion.choices[0].message.content}
-    except Exception as error:
-        raise HTTPException(status_code=500,detail=str(error))
+#      """
+#     # configuration for gpt requests   
+#     try:
+#         completion = client.chat.completions.create(
+#         model="gpt-4o-mini",
+#         messages=[
+#                 {"role": "system", "content": prompt},
+#                 {"role": "user",    "content": f"""
+#                 thisUser: {thisUser.model_dump()}
+#                 usersForMatch: {usersForMatch}
+#                 """ }
+#             ],
+#         temperature=0.7
+#         )
+#         return {"AIReport": completion.choices[0].message.content}
+#     except Exception as error:
+#         raise HTTPException(status_code=500,detail=str(error))
 
 
 
-@app.post('/plan')
-async def createTrainingPlan(request:PlanRequest):
+@app.post('/match/active')
+async def createTrainingPlan(user1:User,user2:User):
     prompt =  """
    You are an AI Skill Exchange Plan Generator for a learning app.
+    Foruser analyze how compatible they both are 
+    based on their knownSkills and skillsToLearn.
 
-You are given a list of users. For each user, you know:
+     
+You are given two users. For each user, you know:
 - Their name
 - Skills they know
 - Skills they want to learn
@@ -106,10 +108,19 @@ Requirements:
 4. Output should be in **JSON format** exactly matching the schema above.
 5. Include at least one resource per module with a title (description optional).
 6. Must be at least 4 modules that are diffent + at least 2+ activities and objectives
-
+7. Compatibility is from 0% to 100%.
+8. If both users can teach each other something (mutual skill exchange), compatibility is higher (70–100%).
+8. If only one side can teach something, compatibility is medium (40–70%).
+8. If overlap is weak, compatibility is low (0–40%).
+9. AiExplanation must be 2–3 sentences in human tone explaining why they match.
+10.KeyBenefits must be 4 benefits which clearly indicate why we should teach each other.
 Example output (JSON):
 
 {
+  "compatibility": int,
+  "aiExplanation": str,
+  "id":str,
+  "keyBenefits":['...','...','...','...']
   "modules": [
     {
       "title":'Foundations of JavaScript - Variables & Data Types'
@@ -120,14 +131,15 @@ Example output (JSON):
       "resources": [
         {
           "title": "React Official Docs",
-          "description": "Follow tutorials and examples"
+          "description": "Follow tutorials and examples",
+          "link": "http.....",
         }
       ]
     }
   ]
-}
+}}
 
-Your output must be valid JSON that can be directly parsed into the Plan → Module → Resource structure.
+Your output must be valid JSON that can be directly parsed into the Match -> Plan -> Module -> Resource structure.
 
      """
     # configuration for gpt requests   
@@ -137,7 +149,7 @@ Your output must be valid JSON that can be directly parsed into the Plan → Mod
         messages=[
                 {"role": "system", "content": prompt},
                 {"role": "user",    "content": f"""
-                usersForMatch: {request.users}, compatibility: {request.compatibility}%
+                myProfile: {user1},otherProfile:{user2}
                 """ }
             ],
         temperature=0.7

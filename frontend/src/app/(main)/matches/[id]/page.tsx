@@ -20,6 +20,7 @@ const Page = () => {
     const queryClient = useQueryClient();
     const router = useRouter();
     const dispatch = useAppDispatch();
+
     useEffect(() => {
         if (!matches || matches.length == 0) return;
         const match = matches.find(item => item.id == id);
@@ -30,7 +31,7 @@ const Page = () => {
         }
     }, [matches])
 
-    // for getting 
+    // for getting to chat or creating it 
     const { mutate: createChat } = useMutation({
         mutationFn: async ({ payload }: { payload: { friendId: string, friendName: string } }) => ChatsService.createChat(payload),
         onSuccess: (data: IChat) => {
@@ -39,16 +40,7 @@ const Page = () => {
         }
     })
 
-    // mutation for generating plan
-    const { mutate: generatePlan, isPending } = useMutation({
-        mutationFn: async () => {
-            const plan = await PlansService.generatePlan()
-            queryClient.setQueryData(['matches', id], () => {
-                return plan;
-            })
 
-        }
-    })
 
     const { data: plan } = useQuery({
         queryKey: ['matches', id],
@@ -67,15 +59,17 @@ const Page = () => {
                         <div className="">
                             {currentMatch.aiExplanation}
                         </div>
-                        <div className="flex flex-col gap-2">
-                            <h3 className="text-xl leading-7 font-semibold">Benefits:</h3>
-                            <ol className="list-disc">
-                                <li>{currentMatch.keyBenefits[0]}</li>
-                                <li>{currentMatch.keyBenefits[1]}</li>
-                                <li>{currentMatch.keyBenefits[2]}</li>
-                                <li>{currentMatch.keyBenefits[3]}</li>
-                            </ol>
-                        </div>
+                        {currentMatch.keyBenefits &&
+                            <div className="flex flex-col gap-2">
+                                <h3 className="text-xl leading-7 font-semibold">Benefits:</h3>
+                                <ol className="list-disc">
+                                    <li>{currentMatch.keyBenefits[0]}</li>
+                                    <li>{currentMatch.keyBenefits[1]}</li>
+                                    <li>{currentMatch.keyBenefits[2]}</li>
+                                    <li>{currentMatch.keyBenefits[3]}</li>
+                                </ol>
+                            </div>
+                        }
                     </div>
                     <div className="_border rounded-[10px] col-span-1 p-6">
                         <div className="flex flex-col gap-4 items-center">
@@ -100,21 +94,12 @@ const Page = () => {
                     <div className="_border col-span-2 rounded-[10px] p-6 h-[254px] flex items-center justify-center text-center">
                         <div className="flex flex-col gap-4 items-center">
 
-                            {plan ?
+                            {plan &&
 
                                 <div className="flex flex-col  gap-1.5">
                                     <h2 className="section-title">Overall Progress</h2>
                                     <p className="tex-sm leading-5 text-gray">Your AI-generated training journey</p>
                                     <h3 className="page-title mt-4 text-blue!">{(plan.modules.reduce((acc, cur) => acc + (cur.status == 'INPROGRESS' ? 0 : 1), 0) / plan.modules.length) * 100}%</h3>
-                                </div>
-
-                                :
-
-                                <div className="flex flex-col  gap-3">
-                                    <h2 className="section-title">Start your journey with {currentMatch.other.name}!</h2>
-                                    <p className="tex-sm leading-5 text-gray">To start you need to create a plan</p>
-                                    <button onClick={() => generatePlan()} className="button-transparent">{!isPending ? "Generate plan" : <Spinner size={22} color="blue" />}</button>
-
                                 </div>
                             }
                         </div>

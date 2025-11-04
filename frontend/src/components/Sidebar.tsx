@@ -1,6 +1,6 @@
 "use client"
 
-import { Calendar,LayoutDashboard, Menu, MessageSquare, User, Users } from "lucide-react"
+import { ActivityIcon, ActivitySquare, Calendar,LayoutDashboard, LibraryBig, Menu, MessageSquare, User, Users } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
@@ -8,6 +8,7 @@ import { useState } from "react"
 const links = [
     { title: "Dashboard", link: "/dashboard", icon: <LayoutDashboard /> },
     { title: "Matches", link: "/matches", icon: <Users /> },
+    { title: "Active Matches", link: "/matches/active", icon: <LibraryBig /> },
     { title: "Chat", link: "/chats", icon: <MessageSquare /> },
     { title: "Calendar", link: "/calendar", icon: <Calendar/> },
     { title: "My Profile", link: "/profile", icon: <User /> },

@@ -6,7 +6,7 @@ interface IinitialState {
 }
 
 const initialState: IinitialState = {
-    matches:[]
+    matches: []
 }
 
 const matchesSlice = createSlice({
@@ -14,13 +14,16 @@ const matchesSlice = createSlice({
     initialState,
     reducers: {
         getMatches: (state, action: PayloadAction<IMatch[]>) => {
-            state.matches = [ ...action.payload ]
+            state.matches = [...action.payload]
         },
-      
+        addMatch: (state, action: PayloadAction<IMatch>) => {
+            state.matches.push(action.payload);
+        },
+
     },
 
 }
 )
 
-export const {getMatches} = matchesSlice.actions;
+export const { getMatches,addMatch } = matchesSlice.actions;
 export default matchesSlice.reducer;

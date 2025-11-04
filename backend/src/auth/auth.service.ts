@@ -11,7 +11,7 @@ import { ConfigService } from '@nestjs/config';
 export class AuthService {
 
   constructor(private readonly jwtService: JwtService, private readonly prisma: PrismaService, private readonly configService: ConfigService) { };
-  async signup(dto: CreateAuthDto) {
+  async signup(dto: CreateAuthDto): Promise<{ access_token: string, refresh_token: string }> {
     if (dto.password !== dto.confirmPassword) {
       throw new BadRequestException();
     }
@@ -47,7 +47,7 @@ export class AuthService {
     return { access_token, refresh_token };
   }
 
-  async login(dto: LoginAuthDto) {
+  async login(dto: LoginAuthDto): Promise<{ access_token: string, refresh_token: string }> {
     const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
     if (!user) {
       throw new NotFoundException();
@@ -64,7 +64,7 @@ export class AuthService {
     return { access_token, refresh_token };
   }
 
-  async createTokenForRefresh(user: User) {
+  async createTokenForRefresh(user: User): Promise<string> {
     return this.jwtService.sign({ userId: user.id })
   }
 }

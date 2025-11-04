@@ -5,7 +5,6 @@ export class CreateChatDto {
     @IsNotEmpty()
     @Transform(({ value }) => value.trim())
     friendId: string
-
     @IsNotEmpty()
     @MinLength(4)
     friendName: string

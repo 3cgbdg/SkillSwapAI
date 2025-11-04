@@ -1,34 +1,38 @@
 "use client"
 
-import GeneratedMatches from "@/components/matches/GeneratedMatches"
-import GeneratingMatchesPage from "@/components/matches/GeneratingMatchesPage"
-import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks"
-import { getMatches } from "@/redux/matchesSlice"
-import MatchesService from "@/services/MatchesService"
-import { useMutation } from "@tanstack/react-query"
+import Matches from "@/components/matches/Matches";
+import Spinner from "@/components/Spinner";
+import { useAppSelector } from "@/hooks/reduxHooks"
+import MatchesService from "@/services/MatchesService";
+import { useQuery } from "@tanstack/react-query";
 
-
-// Finish stuff with isSuccess
 const Page = () => {
-  const {matches} = useAppSelector(state=>state.matches);
-  const dispatch = useAppDispatch();
-  const { mutate: generateMatches, data: matchesCreated, isError, isPending } = useMutation({
-    mutationFn: async () => MatchesService.generateMatches(),
-    onSuccess:(data)=>{
-      dispatch(getMatches(data))
+
+
+  //get and maintain available matches
+  const { data: matches, isLoading } = useQuery({
+    queryKey: ['available', 'matches'],
+    queryFn: async () => {
+      const matches = await MatchesService.getAvailableMatches();
+      console.log(matches);
+      return matches;
     }
   })
 
-  if ( (matches && matches.length>0)|| matchesCreated ) {
-    return (
-      <GeneratedMatches matches={matches ?? matchesCreated    ?? []} />
-    )
-  } else {
-    return (
-      <GeneratingMatchesPage isPending={isPending} isError={isError} generateMatches={generateMatches} />
-    )
-  }
+  if (!isLoading) {
+    if (matches && matches.length > 0) {
+      return (
+        <>
 
+          <Matches matches={matches ?? []} option="available" />
+        </>
+      )
+    } else {
+      return <h1 className="section-title text-center">No available matches yet</h1>
+    }
+  } else {
+    return <Spinner color="blue" size={34} />
+  }
 }
 
 export default Page

@@ -7,6 +7,7 @@ import type { Request, Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
+import { User } from '@prisma/client';
 
 @Controller('auth')
 export class AuthController {
@@ -15,7 +16,7 @@ export class AuthController {
   ) { }
 
   @Post("signup")
-  async signup(@Body() createAuthDto: CreateAuthDto, @Res() res: Response) {
+  async signup(@Body() createAuthDto: CreateAuthDto, @Res() res: Response): Promise<Response<any, Record<string, any>>> {
     const response = await this.authService.signup(createAuthDto);
     console.log(response);
     res.cookie('access_token', response.access_token, {
@@ -36,7 +37,7 @@ export class AuthController {
   }
 
   @Post("login")
-  async login(@Body() LoginAuthDto: LoginAuthDto, @Res() res: Response) {
+  async login(@Body() LoginAuthDto: LoginAuthDto, @Res() res: Response): Promise<Response<any, Record<string, any>>> {
     const response = await this.authService.login(LoginAuthDto);
     res.cookie('access_token', response.access_token, {
       httpOnly: true,
@@ -57,13 +58,13 @@ export class AuthController {
 
   @Get("profile")
   @UseGuards(AuthGuard('jwt'))
-  async profile(@Req() request: Request) {
+  async profile(@Req() request: Request): Promise<User> {
     const { password, ...user } = request.user as any;
     return user;
   }
 
   @Post('refresh')
-  async refreshToken(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+  async refreshToken(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<Response<any, Record<string, any>>> {
     console.log("hello");
     const refreshToken = req.cookies['refresh_token'];
     if (!refreshToken) {
@@ -95,7 +96,7 @@ export class AuthController {
   }
 
   @Delete('logout')
-  async logout(@Res({ passthrough: true }) res: Response) {
+  async logout(@Res({ passthrough: true }) res: Response): Promise<{ message: string }> {
 
 
     res.clearCookie('access_token', {

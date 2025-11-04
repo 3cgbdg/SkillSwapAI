@@ -2,10 +2,7 @@ import { ApiResponse, IGeneratedPlan } from "@/types/types";
 import { api } from "./axiosInstance";
 
 class PlansService {
-    async generatePlan(): Promise<IGeneratedPlan> {
-        const res = await api.post('/plans');
-        return res.data
-    }
+
 
     async getPlan(currentMatchId: string | undefined): Promise<IGeneratedPlan | null> {
 

@@ -19,7 +19,7 @@ const AuthClientUpload = () => {
             try {
                 const user: IUser = await ProfilesService.getOwnProfile();
                 dispatch(getProfile(user));
-                const matches: IMatch[] = await MatchesService.getMatches();
+                const matches: IMatch[] = await MatchesService.getActiveMatches();
                 dispatch(getMatches(matches));
             } catch {
                 router.push("/auth/login");

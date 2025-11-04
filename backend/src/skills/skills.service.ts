@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { getSkillsDto } from './dto/get-skills.dto';
-import { addKnownSkillDto } from './dto/add-known_skills.dto';
-import { addWantToLearnSkillDto } from './dto/add-want-to-learn_skills.dto';
-import { deleteKnownSkillDto } from './dto/delete-known_skills.dto';
-import { deleteWantToLearnSkillDto } from './dto/delete-want-to-learn_skills.dto';
+import { SkillDto } from './dto/skills.dto';
+
 
 @Injectable()
 export class SkillsService {
@@ -15,7 +13,7 @@ export class SkillsService {
     return skills;
   }
 
-  async addKnownSkill(userId: string, dto: addKnownSkillDto) {
+  async addKnownSkill(userId: string, dto: SkillDto) {
     let skill = await this.prisma.skill.findUnique({ where: { title: dto.title } });
     if (!skill) {
       skill = await this.prisma.skill.create({ data: { title: dto.title } });
@@ -24,7 +22,7 @@ export class SkillsService {
     return { message: "Successfully added!" }
   }
 
-  async addWantToLearnSkill(userId: string, dto: addWantToLearnSkillDto) {
+  async addWantToLearnSkill(userId: string, dto: SkillDto) {
     let skill = await this.prisma.skill.findUnique({ where: { title: dto.title } });
     if (!skill) {
       skill = await this.prisma.skill.create({ data: { title: dto.title } });
@@ -34,13 +32,13 @@ export class SkillsService {
   }
 
 
-  async deleteKnownSkill(userId: string, dto: deleteKnownSkillDto) {
+  async deleteKnownSkill(userId: string, dto: SkillDto) {
     console.log(userId, dto)
     await this.prisma.user.update({ where: { id: userId }, data: { knownSkills: { disconnect: { title: dto.title } } } });
     return { message: "Successfully removed!" }
   }
 
-  async deleteWantToLearnSkill(userId: string, dto: deleteWantToLearnSkillDto) {
+  async deleteWantToLearnSkill(userId: string, dto: SkillDto) {
     await this.prisma.user.update({ where: { id: userId }, data: { skillsToLearn: { disconnect: { title: dto.title } } } });
     return { message: "Successfully removed!" }
   }

@@ -4,8 +4,9 @@ export interface IUser {
     email: string;
     knownSkills?: { id: string; title: string }[];
     skillsToLearn?: { id: string; title: string }[];
-    imageUrl: string|undefined,
+    imageUrl: string | undefined,
     bio: string,
+    completedSessionsCount: number,
 }
 
 export interface IFriend {
@@ -76,26 +77,21 @@ interface IRequest {
 
 export interface IMatch {
     compatibility: number,
-    aiExplanation: string,
+    aiExplanation?: string,
     keyBenefits: string[]
-
     id: string,
     initiatorId: string,
     otherId: string,
     other: {
         name: string
-        knownSkills: {
-            title: string
-        }[],
+        knownSkills: { title: string }[],
+        skillsToLearn: { title: string }[]
 
-        skillsToLearn: {
-            title: string
-        }[],
     }
 }
 
 export interface IGeneratedPlan {
-    id:string,
+    id: string,
     modules: IGeneratedModule[]
 }
 

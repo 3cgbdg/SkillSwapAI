@@ -59,6 +59,22 @@ body {
   background: linear-gradient(124.82deg, #f2f6fdff 0%, #fbe5daff 100%);
 }
 @layer utilities {
+  @keyframes blink {
+    0%,
+    20% {
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  .animate-blink {
+    animation: blink 1.4s infinite;
+  }
   .skeleton {
     background: linear-gradient(90deg, #eee 25%, #ddd 50%, #eee 75%);
     background-size: 200% 100%;

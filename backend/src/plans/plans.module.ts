@@ -14,5 +14,6 @@ import { HttpModule } from '@nestjs/axios';
   ],
   controllers: [PlansController],
   providers: [PlansService],
+  exports:[PlansService]
 })
 export class PlansModule { }

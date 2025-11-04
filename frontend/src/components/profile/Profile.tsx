@@ -1,15 +1,23 @@
 "use client"
 import AddSkills from "@/components/profile/AddSkills";
 import { useAppSelector } from "@/hooks/reduxHooks";
-import { GraduationCap, Pencil, } from "lucide-react"
+import { GraduationCap, Pencil, UserRound, } from "lucide-react"
+import Image from "next/image";
 import Link from "next/link";
 import { Dispatch, SetStateAction } from "react";
-const Profile = ({setIsEditing}:{setIsEditing:Dispatch<SetStateAction<boolean>>}) => {
-    const {user} = useAppSelector(state=>state.auth);
+const Profile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<boolean>> }) => {
+    const { user } = useAppSelector(state => state.auth);
     return (
-     <div className="flex flex-col gap-8">
+        <>
+            {user &&
+                <div className="flex flex-col gap-8">
                     <div className="_border p-8 flex items-start gap-6 rounded-2xl">
-                        <div className="rounded-full bg-black size-24">
+                        <div className="w-[96px] h-[96px] flex items-center justify-center _border rounded-full overflow-hidden relative">
+                            {
+                                user.imageUrl ?
+                                    <Image className=" object-cover" src={user.imageUrl} fill alt="user image" /> :
+                                    <UserRound size={48} />
+                            }
                         </div>
                         <div className="flex flex-col gap-[10px] basis-[520px] w-full">
                             <h1 className="text-3xl leading-9.5 font-bold ">{user?.name}</h1>
@@ -118,7 +126,10 @@ const Profile = ({setIsEditing}:{setIsEditing:Dispatch<SetStateAction<boolean>>}
 
                         </div>
                     </div>
-                </div>
+                </div >
+            }
+        </>
+
     )
 }
 

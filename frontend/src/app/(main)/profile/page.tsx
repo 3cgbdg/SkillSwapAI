@@ -9,7 +9,7 @@ const Page = () => {
     const [isEditing, setIsEditing] = useState<boolean>(false);
     return (
         <>
-            {!isEditing ? <EditProfile setIsEditing={setIsEditing} /> :
+            {isEditing ? <EditProfile setIsEditing={setIsEditing} /> :
                 <Profile setIsEditing={setIsEditing} />
             }
         </>

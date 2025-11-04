@@ -31,8 +31,8 @@ const Page = () => {
         <div className="mb-1 ">
           <Image className="object-contain" src={"/logo.png"} height={44} width={44} alt="logo icon" />
         </div>
-        <h1 className="font-dancing_script text-2xl leading-8 font-bold ">SkillSwap AI</h1>
-        <h2 className="font-dancing_script text-3xl leading-9 font-bold ">Welcome Back!</h2>
+        <h1 className="font-oswald text-2xl leading-8 font-bold "><span className="text-cyan-300">Skill</span><span className="text-yellow-300">Swap</span>AI</h1>
+        <h2 className="font-oswald text-3xl leading-9 font-bold ">Welcome Back!</h2>
         <p className="text-lg leading-7 text-gray">Log in to your SkillSwap AI account.</p>
         <form className="w-full flex flex-col gap-4" >
           <div className="flex flex-col gap-2">

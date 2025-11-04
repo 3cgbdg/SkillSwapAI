@@ -2,16 +2,12 @@ import { Module } from '@nestjs/common';
 import { MatchesService } from './matches.service';
 import { MatchesController } from './matches.controller';
 import { PrismModule } from 'prisma/prisma.module';
-import {HttpModule} from '@nestjs/axios'
+import { PlansModule } from 'src/plans/plans.module';
+import { AiModule } from 'src/ai/ai.module';
 
 @Module({
-  imports:[PrismModule,
-  HttpModule.register({
-    timeout:30000,
-    maxRedirects:5,
-  })
-  ],
-  controllers: [MatchesController,],
+  imports: [PrismModule, PlansModule, AiModule],
+  controllers: [MatchesController],
   providers: [MatchesService],
 })
-export class MatchesModule {}
+export class MatchesModule { }

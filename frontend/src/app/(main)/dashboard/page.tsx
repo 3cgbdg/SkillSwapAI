@@ -2,10 +2,12 @@
 
 import { useAppSelector } from "@/hooks/reduxHooks"
 import { Award, Calendar, MessageSquare, Star, User, Users } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 const Page = () => {
     const { user } = useAppSelector(state => state.auth);
+    const {matches} = useAppSelector(state=>state.matches)
     console.log(user);
     return (
         <div className="flex flex-col gap-[33px]">
@@ -20,7 +22,8 @@ const Page = () => {
                     </p>
                     <Link href={"/profile"} className="mt-1 button-blue w-fit">View My Profile</Link>
                 </div>
-                <div className="w-64 aspect-square bg-black">
+                <div className="w-64 aspect-square relative bg-black">
+                    <Image src={"/dashboardImage.png"} fill alt="dashboard preview image" />
                 </div>
             </div>
             <div className="flex flex-col gap-6">
@@ -33,13 +36,13 @@ const Page = () => {
                     </div>
                     <div className="h-42 _border rounded-[10px] bg-white py-6! flex items-center flex-col gap-[5px]">
                         <Star size={40} className="text-blue mb-[5px]" />
-                        <span className="text-4xl leading-10 font-bold text-blue">{user?.skillsToLearn ? user?.skillsToLearn.length : 0}</span>
+                        <span className="text-4xl leading-10 font-bold text-blue">{user?.completedSessionsCount ?? 0}</span>
                         <span className="text-gray leading-7 text-lg">Sessions Completed</span>
                     </div>
                     <div className="h-42 _border rounded-[10px] bg-white py-6! flex items-center flex-col gap-[5px]">
 
                         <Users size={40} className="text-blue mb-[5px]" />
-                        <span className="text-4xl leading-10 font-bold text-blue">{user?.skillsToLearn ? user?.skillsToLearn.length : 0}</span>
+                        <span className="text-4xl leading-10 font-bold text-blue">{matches.length}</span>
                         <span className="text-gray leading-7 text-lg">Active Matches</span>
                     </div>
                 </div>

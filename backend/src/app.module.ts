@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
@@ -15,6 +13,7 @@ import { MatchesModule } from './matches/matches.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { S3Module } from './s3/s3module';
 import { PlansModule } from './plans/plans.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -48,8 +47,10 @@ import { PlansModule } from './plans/plans.module';
 
     MatchesModule,
 
-    PlansModule],
-  controllers: [AppController],
-  providers: [AppService],
+    PlansModule,
+
+    AiModule],
+  controllers: [],
+  providers: [],
 })
 export class AppModule { }

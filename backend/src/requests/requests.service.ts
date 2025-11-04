@@ -1,6 +1,5 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateRequestDto } from './dto/create-request.dto';
-import { UpdateRequestDto } from './dto/update-request.dto';
 import { PrismaService } from 'prisma/prisma.service';
 import { RequestGateway } from 'src/webSockets/request.gateway';
 import { NotFound } from '@aws-sdk/client-s3';

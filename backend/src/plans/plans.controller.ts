@@ -7,10 +7,6 @@ import { AuthGuard } from '@nestjs/passport';
 export class PlansController {
   constructor(private readonly plansService: PlansService) { }
 
-  @Post()
-  async createPlan(@Req() req: Request) {
-    return this.plansService.createPlan((req as any).user.id);
-  }
 
   @Get(':id')
   async getPlan(@Param('id') matchId: string) {
