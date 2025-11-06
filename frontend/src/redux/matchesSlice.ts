@@ -1,13 +1,33 @@
+import MatchesService from "@/services/MatchesService";
 import { IMatch } from "@/types/types";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+
+// thunk
+export const fetchActiveMatches = createAsyncThunk("matches/fetchActiveMatches", async (_, { rejectWithValue }) => {
+    try {
+        const matches: IMatch[] = await MatchesService.getActiveMatches();
+        return matches;
+    } catch (err) {
+        return rejectWithValue('Unauthorized');
+    }
+})
 
 interface IinitialState {
     matches: IMatch[],
+    loading: boolean ,
+    error: string | null,
 }
 
 const initialState: IinitialState = {
-    matches: []
+    matches: [],
+    loading: false,
+    error: null
 }
+
+
+
+
+
 
 const matchesSlice = createSlice({
     name: "matches",
@@ -21,9 +41,24 @@ const matchesSlice = createSlice({
         },
 
     },
+    extraReducers: (builder) => {
+        builder
+            .addCase(fetchActiveMatches.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchActiveMatches.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
+            .addCase(fetchActiveMatches.fulfilled, (state, action: PayloadAction<IMatch[]>) => {
+                state.loading = false;
+                state.matches = action.payload;
+            })
+    },
 
 }
 )
 
-export const { getMatches,addMatch } = matchesSlice.actions;
+export const { getMatches, addMatch } = matchesSlice.actions;
 export default matchesSlice.reducer;

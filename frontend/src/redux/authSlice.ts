@@ -1,20 +1,30 @@
+import ProfilesService from "@/services/ProfilesService";
 import { IUser } from "@/types/types";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+
+// thunk
+export const fetchProfile = createAsyncThunk("user/fetchProfile",
+    async (_, { rejectWithValue }) => {
+        try {
+            const user: IUser = await ProfilesService.getOwnProfile();
+            return user;
+        } catch (err) {
+            return rejectWithValue('Unauthorized');
+        }
+    }
+)
+
 
 interface IinitialState {
     user: IUser | null,
+    loading: boolean ,
+    error: string | null,
 }
 
 const initialState: IinitialState = {
-    user: {
-        id: "",
-        name: "",
-        email: "",
-        knownSkills: [],
-        skillsToLearn: [],
-        imageUrl: undefined,
-        bio: "",
-    }
+    user: null,
+    loading: false,
+    error: null,
 }
 
 const authSlice = createSlice({
@@ -63,6 +73,21 @@ const authSlice = createSlice({
         }
 
 
+    },
+    extraReducers: (builder) => {
+        builder
+            .addCase(fetchProfile.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchProfile.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
+            .addCase(fetchProfile.fulfilled, (state, action: PayloadAction<IUser>) => {
+                state.loading = false;
+                state.user = action.payload;
+            })
     },
 
 }

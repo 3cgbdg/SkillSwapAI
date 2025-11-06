@@ -269,6 +269,7 @@ const Header = () => {
                     <motion.button onClick={() => setPanel(panel !== "notifs" ? "notifs" : null)} className="hover:text-blue relative transition-colors cursor-pointer"
                         whileHover={{ rotate: [0, 15, -10, 5, -5, 0] }}
                         transition={{ duration: 0.5 }}
+                        animate={{rotate:0}}
                     >
                         <Bell size={32} />
                         <span className="rounded-full p-1 px-2 text-white font-semibold text-xs bg-blue absolute -top-2 -right-2">{(reqs as IRequest[])?.length}</span>

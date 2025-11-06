@@ -1,34 +1,49 @@
 "use client"
-import AuthService from '@/services/AuthService';
-import MatchesService from '@/services/MatchesService';
-import { useAppDispatch } from '@/hooks/reduxHooks';
-import { getProfile } from '@/redux/authSlice';
-import { getMatches } from '@/redux/matchesSlice';
-import { IMatch, IUser } from '@/types/types';
+import { useAppDispatch, useAppSelector } from '@/hooks/reduxHooks';
+import { fetchProfile } from '@/redux/authSlice';
+import { fetchActiveMatches } from '@/redux/matchesSlice';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import ProfilesService from '@/services/ProfilesService';
+import Spinner from './Spinner';
 
 // fetching data component every reload
 const AuthClientUpload = () => {
     const dispatch = useAppDispatch();
-
+    const authState = useAppSelector(state => state.auth);
+    const activeMatchesState = useAppSelector(state => state.matches);
     const router = useRouter();
     useEffect(() => {
-        const getUser = async () => {
+        const getData = async () => {
             try {
-                const user: IUser = await ProfilesService.getOwnProfile();
-                dispatch(getProfile(user));
-                const matches: IMatch[] = await MatchesService.getActiveMatches();
-                dispatch(getMatches(matches));
+                await dispatch(fetchProfile()).unwrap();
+                await dispatch(fetchActiveMatches()).unwrap();
             } catch {
                 router.push("/auth/login");
             }
+        };
+        getData();
+    }, [dispatch, router]);
+
+    useEffect(() => {
+        if (authState.loading || activeMatchesState.loading) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = ""
         }
+    }, [authState.loading, activeMatchesState.loading]);
 
-        getUser();
+    if (authState.loading || activeMatchesState.loading) {
+        return <div className="fixed inset-0 flex items-center justify-center page-title bg-gray/80 z-100 overflow-hidden">
+            <Spinner size={40} color='blue' />
+        </div>
 
-    }, []);
+
+    }
+    if (authState.error || activeMatchesState.error) {
+        router.push("/auth/login");
+        return null;
+    }
+
     return null;
 }
 
