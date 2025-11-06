@@ -1,9 +1,10 @@
-import { ApiResponse, FormTypeLogIn } from "@/types/types";
+import { ApiResponse } from "@/types/types";
 import { api } from "./axiosInstance";
 import { signUpFormData } from "@/validation/signUp";
+import { logInFormData } from "@/validation/logIn";
 
 class AuthService {
-    async logIn(data: FormTypeLogIn): Promise<ApiResponse<null>> {
+    async logIn(data: logInFormData): Promise<ApiResponse<null>> {
         const res = await api.post('/auth/login', data);
         return res.data;
     }

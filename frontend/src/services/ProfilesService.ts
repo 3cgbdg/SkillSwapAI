@@ -6,6 +6,7 @@ class AuthService {
 
     async getOwnProfile(): Promise<IUser> {
         const res = await api.get(`/auth/profile`);
+        
         return res.data;
     }
     async getProfileById(id: string): Promise<IUser> {

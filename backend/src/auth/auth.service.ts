@@ -6,11 +6,12 @@ import { LoginAuthDto } from './dto/login-auth.dto';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
+import { AiService } from 'src/ai/ai.service';
 
 @Injectable()
 export class AuthService {
 
-  constructor(private readonly jwtService: JwtService, private readonly prisma: PrismaService, private readonly configService: ConfigService) { };
+  constructor(private readonly aiService: AiService, private readonly jwtService: JwtService, private readonly prisma: PrismaService, private readonly configService: ConfigService) { };
   async signup(dto: CreateAuthDto): Promise<{ access_token: string, refresh_token: string }> {
     if (dto.password !== dto.confirmPassword) {
       throw new BadRequestException();
@@ -38,6 +39,9 @@ export class AuthService {
     if (!user) {
       throw new InternalServerErrorException();
     }
+    // generate ai  generation
+    this.aiService.getAiSuggestionSkills(user.id);
+    //
     const access_token = this.jwtService.sign({ userId: user.id });
     const refresh_token = this.jwtService.sign({ userId: user.id }, {
       secret: this.configService.get<string>('JWT_REFRESH_SECRET'),

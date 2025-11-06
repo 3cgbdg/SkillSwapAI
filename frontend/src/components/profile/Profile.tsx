@@ -1,12 +1,31 @@
 "use client"
 import AddSkills from "@/components/profile/AddSkills";
-import { useAppSelector } from "@/hooks/reduxHooks";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
+import { addAiSuggestionSkills, addWantToLearnSkill } from "@/redux/authSlice";
+import AiService from "@/services/AiService";
+import SkillsService from "@/services/SkillsService";
+import { useMutation } from "@tanstack/react-query";
 import { GraduationCap, Pencil, UserRound, } from "lucide-react"
 import Image from "next/image";
-import Link from "next/link";
 import { Dispatch, SetStateAction } from "react";
+import Spinner from "../Spinner";
 const Profile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<boolean>> }) => {
     const { user } = useAppSelector(state => state.auth);
+    const dispatch = useAppDispatch();
+    const { mutate: addNewSkillToLearn } = useMutation({
+        mutationFn: async (title: string) => {
+            await SkillsService.addWantToLearnSkill(title);
+            dispatch(addWantToLearnSkill(title));
+        },
+    })
+
+    const { mutate: getNewAiSuggestionSkills, isPending } = useMutation({
+        mutationFn: async () => {
+            const skills = await AiService.getNewAiSuggestionSkills();
+            if (skills)
+                dispatch(addAiSuggestionSkills(skills));
+        },
+    })
     return (
         <>
             {user &&
@@ -31,99 +50,33 @@ const Profile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<boole
                     </div>
                     <AddSkills />
                     <div className="_border rounded-2xl px-6 py-5.5">
-                        <h2 className="text-2xl leading-6 font-bold mb-4">
-                            AI Skill Suggestions
-                        </h2>
-                        <div className="flex flex-col gap-4">
-                            <div className="not-last:border-b py-3 border-b-neutral-300">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex gap-4 items-center">
-                                        <div className="size-10 overflow-hidden rounded-full bg-[#3A7AE933] flex items-center justify-center">
-                                            <GraduationCap className="text-blue " size={20} />
-                                        </div>
-                                        <div className="">
-                                            <h3 className="leading-7 text-lg font-semibold">
-                                                a Skill
-                                            </h3>
-                                            <p className="text-sm leading-5 text-gray">Description about a skill</p>
-                                        </div>
-                                    </div>
-                                    <div className="link">Add to Learn</div>
-                                </div>
-                            </div>
-                            <div className="not-last:border-b py-3 border-b-neutral-300">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex gap-4 items-center">
-                                        <div className="size-10 overflow-hidden rounded-full bg-[#3A7AE933] flex items-center justify-center">
-                                            <GraduationCap className="text-blue " size={20} />
-                                        </div>
-                                        <div className="">
-                                            <h3 className="leading-7 text-lg font-semibold">
-                                                a Skill
-                                            </h3>
-                                            <p className="text-sm leading-5 text-gray">Description about a skill</p>
-                                        </div>
-                                    </div>
-                                    <div className="link">Add to Learn</div>
-                                </div>
-                            </div>
-                            <div className="not-last:border-b py-3 border-b-neutral-300">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex gap-4 items-center">
-                                        <div className="size-10 overflow-hidden rounded-full bg-[#3A7AE933] flex items-center justify-center">
-                                            <GraduationCap className="text-blue " size={20} />
-                                        </div>
-                                        <div className="">
-                                            <h3 className="leading-7 text-lg font-semibold">
-                                                a Skill
-                                            </h3>
-                                            <p className="text-sm leading-5 text-gray">Description about a skill</p>
-                                        </div>
-                                    </div>
-                                    <div className="link">Add to Learn</div>
-                                </div>
-                            </div>
-                            <div className="not-last:border-b py-3 border-b-neutral-300">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex gap-4 items-center">
-                                        <div className="size-10 overflow-hidden rounded-full bg-[#3A7AE933] flex items-center justify-center">
-                                            <GraduationCap className="text-blue " size={20} />
-                                        </div>
-                                        <div className="">
-                                            <h3 className="leading-7 text-lg font-semibold">
-                                                a Skill
-                                            </h3>
-                                            <p className="text-sm leading-5 text-gray">Description about a skill</p>
-                                        </div>
-                                    </div>
-                                    <div className="link">Add to Learn</div>
-                                </div>
-                            </div>
+                        <div className="flex items-center justify-between gap-4">
+                            <h2 className="text-2xl leading-6 font-bold mb-4">
+                                AI Skill Suggestions
+                            </h2>
+                            <button onClick={() => getNewAiSuggestionSkills()} className="button-blue">Regenerate AI Skills Suggestions</button>
                         </div>
-                    </div>
-                    <div className="_border rounded-2xl px-6 py-5.5">
-                        <h2 className="text-2xl leading-6 font-bold mb-4">
-                            AI User Suggestions
-                        </h2>
                         <div className="flex flex-col gap-4">
-                            <div className="not-last:border-b py-3 border-b-neutral-300">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex gap-4 items-center">
-                                        <div className="size-10 overflow-hidden rounded-full  bg-[#3A7AE933] flex items-center justify-center">
-
-                                        </div>
-                                        <div className="">
-                                            <h3 className="leading-7 text-lg font-semibold">
-                                                Emily Chen
-                                            </h3>
-                                            <p className="text-sm leading-5 text-gray">Expert in Machine Learning & Data Science</p>
+                            {!isPending ?
+                                user.aiSuggestionSkills.map((skill, idx) => (
+                                    <div key={idx} className="not-last:border-b py-3 border-b-neutral-300">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex gap-4 items-center">
+                                                <div className="size-10 overflow-hidden rounded-full bg-[#3A7AE933] flex items-center justify-center">
+                                                    <GraduationCap className="text-blue " size={20} />
+                                                </div>
+                                                <div className="">
+                                                    <h3 className="leading-7 text-lg font-semibold">
+                                                        {skill}
+                                                    </h3>
+                                                </div>
+                                            </div>
+                                            <button onClick={() => addNewSkillToLearn(skill)} className="link">Add to Learn</button>
                                         </div>
                                     </div>
-                                    <Link href={"/profile"} className="link">View Profile</Link>
-                                </div>
-                            </div>
-
-
+                                )) :
+                                <Spinner color="blue" size={32} />
+                            }
                         </div>
                     </div>
                 </div >

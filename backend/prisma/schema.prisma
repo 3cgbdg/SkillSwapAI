@@ -25,13 +25,14 @@ enum RequestType {
 }
 
 model User {
+  aiSuggestionSkills     String[]
   id                     String    @id @default(uuid())
   name                   String    @unique
   password               String
   imageUrl               String?
   email                  String    @unique
   bio                    String?
-  completedSessionsCount Int    @default(0)
+  completedSessionsCount Int       @default(0)
   knownSkills            Skill[]   @relation("knownSkills")
   skillsToLearn          Skill[]   @relation("skillsToLearn")
   chats                  Chat[]    @relation("userChats")

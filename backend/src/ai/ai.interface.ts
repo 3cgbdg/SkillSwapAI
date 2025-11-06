@@ -5,10 +5,10 @@ export interface IGeneratedActiveMatch {
     compatibility: number,
     aiExplanation: string,
     id: string,
-    keyBenefits: ['...', '...', '...', '...']
+    keyBenefits: string[]
     modules: 
         {
-            title: 'Foundations of JavaScript - Variables & Data Types'
+            title: string
             status: ModuleStatus,
             objectives: string[],
             activities: string[],

@@ -17,7 +17,7 @@ export const fetchProfile = createAsyncThunk("user/fetchProfile",
 
 interface IinitialState {
     user: IUser | null,
-    loading: boolean ,
+    loading: boolean,
     error: string | null,
 }
 
@@ -44,6 +44,11 @@ const authSlice = createSlice({
             }
             if (state.user?.knownSkills)
                 state.user?.knownSkills.push(newItem);
+
+        },
+        addAiSuggestionSkills: (state, action: PayloadAction<string[]>) => {
+            if (state.user)
+                state.user.aiSuggestionSkills = action.payload;
 
         },
         addWantToLearnSkill: (state, action: PayloadAction<string>) => {
@@ -93,5 +98,5 @@ const authSlice = createSlice({
 }
 )
 
-export const { getProfile, updateProfile, changeAvatar, logOut, addKnownSkill, addWantToLearnSkill, deleteKnownSkill, deleteWantToLearnSkill } = authSlice.actions;
+export const { getProfile, updateProfile,addAiSuggestionSkills, changeAvatar, logOut, addKnownSkill, addWantToLearnSkill, deleteKnownSkill, deleteWantToLearnSkill } = authSlice.actions;
 export default authSlice.reducer;

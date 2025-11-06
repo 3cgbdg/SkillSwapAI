@@ -58,9 +58,13 @@ export class AuthController {
 
   @Get("profile")
   @UseGuards(AuthGuard('jwt'))
-  async profile(@Req() request: Request): Promise<User> {
-    const { password, ...user } = request.user as any;
-    return user;
+  async profile(@Req() request: Request): Promise<any | null> {
+    const user = await this.prisma.user.findUnique({ where: { id: (request.user as any).id }, include: { skillsToLearn: true, knownSkills: true } })
+    if (user) {
+      const { password, ...returnData } = user;
+      return returnData;
+    }
+    return null;
   }
 
   @Post('refresh')

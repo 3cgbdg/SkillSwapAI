@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
@@ -45,16 +45,54 @@ export class AiService {
       );
 
       const rawAiArray = fastApiResponse?.data?.AIReport;
-      let readyAiArray: IGeneratedActiveMatch | null = null;
-      if (typeof rawAiArray == 'string') {
-        const str = rawAiArray.match(/```json\s([\s\S]+?)```/)
-        readyAiArray = str ? JSON.parse(str[1]) : JSON.parse(rawAiArray);
-      } else {
-        readyAiArray = rawAiArray;
-      }
+      let readyAiArray: IGeneratedActiveMatch | null = this._parseAiResponse<IGeneratedActiveMatch>(rawAiArray);
+
       return readyAiArray ? { generatedData: readyAiArray, other: users[0].id == myId ? users[1] : users[0] } : null
     } else {
       throw new BadRequestException();
     }
+  }
+
+
+  async getAiSuggestionSkills(myId: string): Promise<string[] | null> {
+    if (!myId || myId.length == 0) {
+      throw new BadRequestException();
+    }
+    const user = await this.prisma.user.findUnique({ where: { id: myId }, include: { skillsToLearn: true, knownSkills: true } });
+    if (!user)
+      throw new UnauthorizedException();
+    const stringArraySkillsToLearn = user?.skillsToLearn.map(item => item.title)
+    const stringArrayKnownSkills = user?.knownSkills.map(item => item.title)
+
+    const fastApiResponse = await firstValueFrom(
+      this.httpService.post(`${this.configService.get<string>('FASTAPI_URL')}/profile/skills`, { skillsToLearn: stringArraySkillsToLearn, knownSkills: stringArrayKnownSkills },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        })
+    );
+
+    const rawAiArray = fastApiResponse?.data?.AIReport;
+    let readyAiArray: string[] | null = this._parseAiResponse<string[]>(rawAiArray);
+    if (readyAiArray && readyAiArray.length > 0) {
+      Promise.all(readyAiArray.map(async (skill) => {
+        await this.prisma.skill.upsert({ where: { title: skill }, update: {}, create: { title: skill } });
+      }))
+      await this.prisma.user.update({ where: { id: myId }, data: { aiSuggestionSkills: readyAiArray } });
+    }
+    return readyAiArray;
+  }
+
+  // private generic func  for parsing income ai response object
+  private _parseAiResponse<T>(rawAiResponse: any): T | null {
+    if (!rawAiResponse) return null;
+    if (typeof rawAiResponse == 'string') {
+      const str = rawAiResponse.match(/```json\s([\s\S]+?)```/)
+      return str ? JSON.parse(str[1]) : JSON.parse(rawAiResponse);
+    } else {
+      return rawAiResponse;
+    }
+
   }
 }

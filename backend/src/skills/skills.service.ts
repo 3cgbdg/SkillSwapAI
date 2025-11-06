@@ -27,6 +27,9 @@ export class SkillsService {
     if (!skill) {
       skill = await this.prisma.skill.create({ data: { title: dto.title } });
     }
+    // const user = await this.prisma.
+    // if()
+    // to do later!!!!
     await this.prisma.user.update({ where: { id: userId }, data: { skillsToLearn: { connect: { id: skill.id } } } });
     return { message: "Successfully added!" }
   }
