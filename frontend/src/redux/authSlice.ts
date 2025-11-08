@@ -59,6 +59,13 @@ const authSlice = createSlice({
             if (state.user?.skillsToLearn)
                 state.user?.skillsToLearn.push(newItem);
         },
+        removeAiSuggestionSkill(state, action: PayloadAction<string>) {
+            if (state.user)
+                state.user.aiSuggestionSkills = state.user.aiSuggestionSkills.filter(
+                    skill => skill !== action.payload
+                );
+        }
+        ,
         deleteKnownSkill: (state, action: PayloadAction<string>) => {
             if (state.user?.knownSkills)
                 state.user.knownSkills = state.user?.knownSkills?.filter(skill => skill.title !== action.payload)
@@ -98,5 +105,5 @@ const authSlice = createSlice({
 }
 )
 
-export const { getProfile, updateProfile,addAiSuggestionSkills, changeAvatar, logOut, addKnownSkill, addWantToLearnSkill, deleteKnownSkill, deleteWantToLearnSkill } = authSlice.actions;
+export const { getProfile, updateProfile, removeAiSuggestionSkill, addAiSuggestionSkills, changeAvatar, logOut, addKnownSkill, addWantToLearnSkill, deleteKnownSkill, deleteWantToLearnSkill } = authSlice.actions;
 export default authSlice.reducer;

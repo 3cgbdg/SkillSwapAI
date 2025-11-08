@@ -11,8 +11,8 @@ class SkillsService {
         const res = await api.post("/skills/known", { title: str });
         return res.data;
     }
-    async addWantToLearnSkill(str: string): Promise<ApiResponse<null>> {
-        const res = await api.post("/skills/want-to-learn", { title: str });
+    async addWantToLearnSkill(str: string, aiGenerated: boolean = false): Promise<ApiResponse<null>> {
+        const res = await api.post(`/skills/want-to-learn${aiGenerated ? '?ai=true' : ''}`, { title: str });
         return res.data;
     }
 

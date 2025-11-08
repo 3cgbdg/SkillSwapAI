@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { getSkillsDto } from './dto/get-skills.dto';
 import { SkillDto } from './dto/skills.dto';
+import { User } from '@prisma/client';
 
 
 @Injectable()
@@ -22,15 +23,25 @@ export class SkillsService {
     return { message: "Successfully added!" }
   }
 
-  async addWantToLearnSkill(userId: string, dto: SkillDto) {
+  async addWantToLearnSkill(user: User, dto: SkillDto, aiGenerated: boolean) {
     let skill = await this.prisma.skill.findUnique({ where: { title: dto.title } });
     if (!skill) {
       skill = await this.prisma.skill.create({ data: { title: dto.title } });
     }
-    // const user = await this.prisma.
-    // if()
-    // to do later!!!!
-    await this.prisma.user.update({ where: { id: userId }, data: { skillsToLearn: { connect: { id: skill.id } } } });
+
+    if (aiGenerated) {
+      try {
+        const updatedAISuggestions = user.aiSuggestionSkills.filter(item => item !== dto.title);
+        if (!user) throw new Error("User not found");
+        await this.prisma.user.update({
+          where: { id: user.id },
+          data: { aiSuggestionSkills: updatedAISuggestions },
+        });
+      } catch {
+        throw new InternalServerErrorException();
+      }
+    }
+    await this.prisma.user.update({ where: { id: user.id }, data: { skillsToLearn: { connect: { id: skill.id } } } });
     return { message: "Successfully added!" }
   }
 

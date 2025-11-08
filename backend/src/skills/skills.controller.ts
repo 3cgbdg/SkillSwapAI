@@ -22,8 +22,8 @@ export class SkillsController {
   @UseGuards(AuthGuard('jwt'))
 
   @Post("want-to-learn")
-  async addWantToLearnSkill(@Req() req: Request, @Body() dto: SkillDto) {
-    return this.skillsService.addWantToLearnSkill((req as any).user.id, dto);
+  async addWantToLearnSkill(@Req() req: Request, @Body() dto: SkillDto, @Query('ai') aiGenerated:boolean) {
+    return this.skillsService.addWantToLearnSkill((req as any).user, dto,aiGenerated);
   }
 
   @UseGuards(AuthGuard('jwt'))

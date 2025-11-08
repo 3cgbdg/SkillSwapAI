@@ -1,22 +1,27 @@
 "use client"
 import AddSkills from "@/components/profile/AddSkills";
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
-import { addAiSuggestionSkills, addWantToLearnSkill } from "@/redux/authSlice";
+import { addAiSuggestionSkills, addWantToLearnSkill, removeAiSuggestionSkill } from "@/redux/authSlice";
 import AiService from "@/services/AiService";
 import SkillsService from "@/services/SkillsService";
 import { useMutation } from "@tanstack/react-query";
 import { GraduationCap, Pencil, UserRound, } from "lucide-react"
 import Image from "next/image";
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import Spinner from "../Spinner";
 const Profile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<boolean>> }) => {
     const { user } = useAppSelector(state => state.auth);
     const dispatch = useAppDispatch();
     const { mutate: addNewSkillToLearn } = useMutation({
         mutationFn: async (title: string) => {
-            await SkillsService.addWantToLearnSkill(title);
-            dispatch(addWantToLearnSkill(title));
+            await SkillsService.addWantToLearnSkill(title, true);
+            return title;
+
         },
+        onSuccess: (title: string) => {
+            dispatch(addWantToLearnSkill(title));
+            dispatch(removeAiSuggestionSkill(title));
+        }
     })
 
     const { mutate: getNewAiSuggestionSkills, isPending } = useMutation({
@@ -26,6 +31,10 @@ const Profile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<boole
                 dispatch(addAiSuggestionSkills(skills));
         },
     })
+
+    // setting filtered ai suggestions 
+
+
     return (
         <>
             {user &&
@@ -57,7 +66,7 @@ const Profile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<boole
                             <button onClick={() => getNewAiSuggestionSkills()} className="button-blue">Regenerate AI Skills Suggestions</button>
                         </div>
                         <div className="flex flex-col gap-4">
-                            {!isPending ?
+                            {!isPending ? user.aiSuggestionSkills.length>0 ?
                                 user.aiSuggestionSkills.map((skill, idx) => (
                                     <div key={idx} className="not-last:border-b py-3 border-b-neutral-300">
                                         <div className="flex items-center justify-between">
@@ -74,7 +83,7 @@ const Profile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<boole
                                             <button onClick={() => addNewSkillToLearn(skill)} className="link">Add to Learn</button>
                                         </div>
                                     </div>
-                                )) :
+                                )) : <span className="text-center">Regenerate to see new ones</span> :
                                 <Spinner color="blue" size={32} />
                             }
                         </div>

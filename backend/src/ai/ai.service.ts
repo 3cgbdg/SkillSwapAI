@@ -81,7 +81,9 @@ export class AiService {
       }))
       await this.prisma.user.update({ where: { id: myId }, data: { aiSuggestionSkills: readyAiArray } });
     }
-    return readyAiArray;
+    const returnAiArray = readyAiArray?.filter(item => !stringArraySkillsToLearn.includes(item))
+    console.log(readyAiArray);
+    return returnAiArray || null;
   }
 
   // private generic func  for parsing income ai response object
