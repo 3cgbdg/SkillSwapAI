@@ -5,6 +5,7 @@ import { fetchActiveMatches } from '@/redux/matchesSlice';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Spinner from './Spinner';
+import { fetchTodaysSessions } from '@/redux/sessionsSlice';
 
 // fetching data component every reload
 const AuthClientUpload = () => {
@@ -17,6 +18,7 @@ const AuthClientUpload = () => {
             try {
                 await dispatch(fetchProfile()).unwrap();
                 await dispatch(fetchActiveMatches()).unwrap();
+                await dispatch(fetchTodaysSessions()).unwrap();
             } catch {
                 router.push("/auth/login");
             }

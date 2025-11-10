@@ -76,7 +76,7 @@ const Page = () => {
                             <div className="size-24 rounded-full bg-black"></div>
                             <h2 className="section-title">{currentMatch.other.name}</h2>
                             <div className="flex flex-col gap-3 mt-4 w-full">
-                                <button onClick={() => createChat({ payload: { friendId: id, friendName: currentMatch.other.name } })} className="button-blue flex items-center gap-5">
+                                <button onClick={() => createChat({ payload: { friendId: currentMatch.otherId, friendName: currentMatch.other.name } })} className="button-blue flex items-center gap-5">
                                     <MessageSquareMore size={20} />
                                     <span>Message {currentMatch.other.name}</span>
                                 </button>

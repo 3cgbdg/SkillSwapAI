@@ -48,6 +48,7 @@ export interface ISession {
         name: string;
     };
     status: SessionStatusEnum;
+    meetingLink: string | null;
 }
 
 export const SessionStatusEnum = {
@@ -121,16 +122,7 @@ export type ApiResponse<T> = {
 };
 
 // type for form
-export type FormTypeSession = {
-    friendName: string,
-    friendId: string,
-    start: string,
-    end: string,
-    title: string,
-    description?: string,
-    color: string,
-    date: Date,
-}
+
 
 export interface FoundUsers {
     id: string,

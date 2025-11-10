@@ -10,7 +10,7 @@ import { useEffect, useState } from "react"
 import { Bell, Check, Handshake, Plus, Search, UserRound, X } from "lucide-react"
 import { motion } from "framer-motion";
 import { io, Socket } from 'socket.io-client';
-import { FoundSkills, FoundUsers, IRequest } from "@/types/types"
+import { Found, FoundSkills, FoundUsers, IRequest } from "@/types/types"
 import AuthService from "@/services/AuthService"
 import RequestsService from "@/services/RequestsService"
 import FriendsService from "@/services/FriendsService"
@@ -83,7 +83,10 @@ const Header = () => {
 
     // search with chars (dynamically)
     const mutationSearch = useMutation({
-        mutationFn: async (chars: string) => SearchService.searchUsersAndSkillsByChars(chars),
+        mutationFn: async (chars: string) => {
+            const res = await SearchService.searchUsersAndSkillsByChars(chars);
+            return res as Found[];
+        },
         onSuccess: (data) => {
             setFoundUsers(() => data.filter(item => item.name !== undefined));
             setFoundSkills(() => data.filter(item => item.title !== undefined));
@@ -269,7 +272,7 @@ const Header = () => {
                     <motion.button onClick={() => setPanel(panel !== "notifs" ? "notifs" : null)} className="hover:text-blue relative transition-colors cursor-pointer"
                         whileHover={{ rotate: [0, 15, -10, 5, -5, 0] }}
                         transition={{ duration: 0.5 }}
-                        animate={{rotate:0}}
+                        animate={{ rotate: 0 }}
                     >
                         <Bell size={32} />
                         <span className="rounded-full p-1 px-2 text-white font-semibold text-xs bg-blue absolute -top-2 -right-2">{(reqs as IRequest[])?.length}</span>
@@ -348,8 +351,8 @@ const Header = () => {
 
                 <button onClick={() => setPanel(panel !== "menu" ? "menu" : null)} className={` cursor-pointer  hover:text-violet hover:border-violet ${panel === "menu" ? "text-violet border-violet" : ""} transition-colors rounded-full overflow-hidden _border flex items-center justify-center size-12`}>
                     {panel !== "menu" ? !user?.imageUrl ? <UserRound size={24} /> : <div className="w-[48px] relative h-[48px] rounded-full overflow-hidden">
-                        <Image  className="object-cover" src={user.imageUrl} fill alt="user image" />
-                    </div> : <X  />}
+                        <Image className="object-cover" src={user.imageUrl} fill alt="user image" />
+                    </div> : <X />}
                 </button>
                 {panel == "menu" &&
                     <div className=" absolute min-w-[250px] right-0 top-[140%] panel z-10">

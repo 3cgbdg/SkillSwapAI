@@ -2,7 +2,7 @@
 import { formatDate } from "@/app/utils/calendar";
 import { useAppDispatch } from "@/hooks/reduxHooks";
 import { addSession } from "@/redux/sessionsSlice";
-import { FormTypeSession, IFriend } from "@/types/types";
+import { IFriend } from "@/types/types";
 import { useMutation } from "@tanstack/react-query";
 import { Plus, Users, X } from "lucide-react";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
@@ -12,9 +12,10 @@ import { useSocket } from "@/context/SocketContext";
 import FriendsService from "@/services/FriendsService";
 import SessionsService from "@/services/SessionsService";
 import RequestsService from "@/services/RequestsService";
+import { createSessionFormData } from "@/validation/createSession";
 
 const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup, otherName }: { otherName: string | null, year: number, month: number, setAddSessionPopup: Dispatch<SetStateAction<boolean>>, setTableCells: Dispatch<SetStateAction<TableCellType[]>> }) => {
-    const { register, watch, handleSubmit, setValue, formState: { errors } } = useForm<FormTypeSession>();
+    const { register, watch, handleSubmit, setValue, formState: { errors } } = useForm<createSessionFormData>();
     const dispatch = useAppDispatch();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
@@ -39,7 +40,7 @@ const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup, otherNa
     // mutation for creating session request
     const createSessionMutation = useMutation({
         mutationKey: ["session"],
-        mutationFn: async (data: Omit<FormTypeSession, 'friendName'>) => SessionsService.createSession(data),
+        mutationFn: async (data: Omit<createSessionFormData, 'friendName'>) => SessionsService.createSession(data),
         onSuccess: (data) => {
             setAddSessionPopup(false);
             // if its current day event adding to global state
@@ -60,7 +61,7 @@ const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup, otherNa
             setBadRequestErrorMessage(error.response?.data?.message || error.message);
         }
     })
-    const createSession: SubmitHandler<FormTypeSession> = async (data) => {
+    const createSession: SubmitHandler<createSessionFormData> = async (data) => {
         const { friendName, ...newData } = data;
         if (friends) {
             const realFriend = friends.find(item => item.name === friendName);
@@ -84,7 +85,6 @@ const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup, otherNa
         }
     }, [otherName])
 
-    const startHour = watch('start');
 
     return (
         <div className=" absolute   top-0 left-0 size-full bg-[#6B72808C] flex items-center justify-center">
@@ -101,11 +101,7 @@ const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup, otherNa
                     <div className="flex flex-col gap-2">
                         <label className="text-sm leading-[22px] font-medium" htmlFor="title">Title</label>
                         <div className="relative input flex items-center gap-2 text-gray text-sm leading-[22px] ">
-                            <input  {...register("title", {
-                                validate: {
-                                    isNotEmpty: value => value.trim() !== "" || "Field is required",
-                                }
-                            })} className="w-full outline-none" placeholder="Enter title" type="text" id="title" />
+                            <input  {...register("title")} className="w-full outline-none" placeholder="Enter title" type="text" id="title" />
                         </div>
                         {errors.title && (
                             <span data-testid='error' className="text-red-500 font-medium ">
@@ -114,22 +110,22 @@ const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup, otherNa
                         )}
                     </div>
                     <div className="flex flex-col gap-2">
-                        <label className="text-sm leading-[22px] font-medium" htmlFor="description">Description</label>
+                        <label className="text-sm leading-[22px] font-medium" htmlFor="description">Description <span className="text-gray">(Optional)</span></label>
                         <div className="relative input flex items-center gap-2 text-gray text-sm leading-[22px] ">
                             <textarea maxLength={50}  {...register("description")} className="w-full outline-none min-h-10" placeholder="Enter title" id="description" />
+                        </div>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                        <label className="text-sm leading-[22px] font-medium" htmlFor="description">Meeting Link <span className="text-gray">(Optional)</span></label>
+                        <div className="relative input flex items-center gap-2 text-gray text-sm leading-[22px] ">
+                            <input  {...register("meetingLink")} className="w-full outline-none" placeholder="Enter title" type="text" id="meetingLink" />
                         </div>
                     </div>
                     <div className="flex items-start gap-4 justify-between">
                         <div className="flex flex-col gap-2">
                             <label className="text-sm leading-[22px] font-medium" htmlFor="start">Start Hour</label>
                             <div className="relative input flex items-center gap-2 text-gray text-sm leading-[22px] ">
-                                <input  {...register("start", {
-                                    validate: {
-                                        isNotEmpty: value => value.trim() !== "" || "Field is required",
-                                        onlyNumbers: value => /^[0-9]+$/.test(value) || "Must be only numbers",
-                                        validNumRange: value => Number(value) >= 0 && Number(value) < 24 || "Must be valid hour",
-                                    }
-                                })} className="w-full outline-none" placeholder="Enter start hour" type="text" id="start" />
+                                <input  {...register("start")} className="w-full outline-none" placeholder="Enter start hour" type="text" id="start" />
                             </div>
                             {errors.start && (
                                 <span data-testid='error' className="text-red-500 font-medium ">
@@ -140,19 +136,7 @@ const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup, otherNa
                         <div className="flex flex-col gap-2">
                             <label className="text-sm leading-[22px] font-medium" htmlFor="end">End Hour</label>
                             <div className="relative input flex items-center gap-2 text-gray text-sm leading-[22px] ">
-                                <input  {...register("end", {
-                                    validate: {
-                                        isNotEmpty: value => value.trim() !== "" || "Field is required",
-                                        onlyNumbers: value => /^[0-9]+$/.test(value) || "Must be only numbers",
-                                        validNumRange: value => Number(value) >= 0 && Number(value) < 24 || "Must be valid hour",
-                                        validTimeRange: value => {
-
-
-                                            if (Number(value) === 0 && Number(startHour) <= 23) return true;
-                                            return Number(value) > Number(startHour) || "Must be valid time range";
-                                        }
-                                    }
-                                })} className="w-full outline-none" placeholder="Enter end hour" type="text" id="end" />
+                                <input  {...register("end")} className="w-full outline-none" placeholder="Enter end hour" type="text" id="end" />
                             </div>
                             {errors.end && (
                                 <span data-testid='error' className="text-red-500 font-medium ">
@@ -175,7 +159,7 @@ const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup, otherNa
                     <div className="flex flex-col gap-2 relative">
                         <label className="text-sm leading-[22px] font-medium" htmlFor="friendName">Choose partner:</label>
                         <div className=" input flex items-center gap-2 text-gray text-sm leading-[22px] ">
-                            <input type="text" placeholder="Find by name" id="friendName"   {...register("friendName", { required: "Field is required" })} className="w-full outline-none " onChange={async (e) => {
+                            <input type="text" placeholder="Find by name" id="friendName"   {...register("friendName")} className="w-full outline-none " onChange={async (e) => {
 
                                 setChars(e.target.value);
                                 if (e.target.value.length === 1 && !friends) {

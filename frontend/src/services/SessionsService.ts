@@ -1,5 +1,6 @@
-import { FormTypeSession, ISession } from "@/types/types";
+import { ISession } from "@/types/types";
 import { api } from "./axiosInstance";
+import { createSessionFormData } from "@/validation/createSession";
 
 class SessionsService {
     // colors for events bg
@@ -9,12 +10,14 @@ class SessionsService {
         const res = await api.get("/sessions", { params: { month } });
         return res.data;
     }
+    async getTodaysSessions(): Promise<ISession[]> {
+        const res = await api.get("/sessions/today");
+        return res.data;
+    }
 
-    async createSession(data: Omit<FormTypeSession, 'friendName'>): Promise<ISession> {
-        console.log("hello")
+    async createSession(data: Omit<createSessionFormData, 'friendName'>): Promise<ISession> {
         const res = await api.post("/sessions", { ...data, color: this.colors[Math.floor(Math.random() * 3)] });
         return res.data;
-
     }
 }
 

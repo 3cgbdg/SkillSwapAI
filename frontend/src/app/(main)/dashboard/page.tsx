@@ -4,11 +4,13 @@ import { useAppSelector } from "@/hooks/reduxHooks"
 import { Award, Calendar, MessageSquare, Star, User, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { start } from "node:repl";
 
 const Page = () => {
     const { user } = useAppSelector(state => state.auth);
-    const {matches} = useAppSelector(state=>state.matches)
-    console.log(user);
+    const { matches } = useAppSelector(state => state.matches);
+    const { sessions } = useAppSelector(state => state.sessions);
+    const now = new Date();
     return (
         <div className="flex flex-col gap-[33px]">
             <div className="p-8! flex items-center justify-between bg-[#F2F6FDFF] _border rounded-[10px] border-0! shadow-xs!">
@@ -70,15 +72,23 @@ const Page = () => {
             </div>
             <div className="flex flex-col gap-6">
                 <h2 className="section-title">Upcoming Sessions</h2>
-                <div className="_border rounded-xl overflow-hidden flex flex-col">
-                    <div className="not-last:border-b-[1px] border-neutral-300 flex justify-between items-center p-4 pt-5">
-                        <div className="">
-                            <h3 className="text-lg leading-7 font-semibold ">Mastering React Hooks with Alice Johnson</h3>
-                            <p className="text-sm leading-5 text-gray">{new Date().toLocaleString()}</p>
+                {sessions && sessions.filter(s => {
+                    const startDate = new Date();
+                    startDate.setHours(s.start, 0, 0, 0);
+                    return now <= startDate
+                }).map(item => (
+                    <div className="_border rounded-xl overflow-hidden flex flex-col">
+                        <div className="not-last:border-b-[1px] border-neutral-300 flex justify-between items-center p-4 pt-5">
+                            <div className="">
+                                <h3 className="text-lg leading-7 font-semibold ">{item.title}</h3>
+                                <p className="text-sm leading-5 text-gray">{new Date().toLocaleString()}</p>
+                            </div>
+                            <button className="mr-4 link">View Details</button>
                         </div>
-                        <button className="mr-4 link">View Details</button>
                     </div>
-                </div>
+                    // todo!!!
+                ))}
+
             </div>
         </div>
     )
