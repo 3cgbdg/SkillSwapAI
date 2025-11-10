@@ -4,6 +4,7 @@ import { PrismaService } from 'prisma/prisma.service';
 import { RequestsService } from 'src/requests/requests.service';
 import { RequestGateway } from 'src/webSockets/request.gateway';
 import { UpdateSessionStatusDto } from './dto/update-session-status.dto';
+import { Session } from 'inspector/promises';
 
 @Injectable()
 export class SessionsService {
@@ -36,7 +37,7 @@ export class SessionsService {
     }
     const session = await this.prisma.session.create({
       data: {
-        title: dto.title, description: dto.description, start: dto.start, end: dto.end, date: new Date(dto.date), color: dto.color, users: {
+        title: dto.title, description: dto.description, start: dto.start, end: dto.end, date: new Date(dto.date), meetingLink: dto.meetingLink, color: dto.color, users: {
           connect: [
             { id: myId },
             { id: dto.friendId },
@@ -83,6 +84,34 @@ export class SessionsService {
       return session;
     })
     return newSessions;
+  }
+
+
+  async findTodaysSessions(myId: string) {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+    const sessions = await this.prisma.session.findMany({
+      where: {
+        date: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+
+      },
+      include: {
+        users: { select: { id: true, name: true } }
+      }
+    })
+    const newSessions = sessions.map(item => {
+      const { users, ...session } = item;
+      const friend = users.find(user => user.id !== myId);
+      if (friend)
+        return { ...session, friend: { id: friend.id, name: friend.name } };
+      return session;
+    })
+    return newSessions
   }
 
   async acceptSessionRequest(dto: UpdateSessionStatusDto, myId: string, sessionId: string) {

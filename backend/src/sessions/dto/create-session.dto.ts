@@ -7,6 +7,9 @@ export class CreateSessionDto {
     @IsOptional()
     description?: string;
 
+    @IsOptional()
+    meetingLink?: string;
+
     @IsNotEmpty({ message: 'Date value  is empty' })
     @IsDateString({}, { message: 'Invalid time' })
     date: string;
@@ -17,7 +20,7 @@ export class CreateSessionDto {
     @Max(23, { message: 'Invalid time' })
     start: number;
 
-    @ValidateIf(o =>o.end!==0 && o.start < o.end , { message: 'Invalid time' })
+    @ValidateIf(o => o.end !== 0 && o.start < o.end, { message: 'Invalid time' })
 
     @Type(() => Number)
     @IsNotEmpty({ message: 'End hour is empty' })

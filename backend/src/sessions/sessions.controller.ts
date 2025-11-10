@@ -21,6 +21,11 @@ export class SessionsController {
   async findAll(@Query('month') month: string, @Req() req: Request) {
     return this.sessionService.findAll(Number(month), (req as any).user.id)
   }
+
+  @Get("today")
+  async findTodaysSessions(@Query('month') month: string, @Req() req: Request) {
+    return this.sessionService.findTodaysSessions( (req as any).user.id)
+  }
   @Post(':id/accepted')
   async acceptSessionRequest(@Param('id') sessionId: string, @Body() dto: UpdateSessionStatusDto, @Req() req: Request) {
     return this.sessionService.acceptSessionRequest(dto, (req as any).user.id, sessionId)

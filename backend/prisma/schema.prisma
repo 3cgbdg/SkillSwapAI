@@ -106,6 +106,7 @@ model Session {
   color       String
   users       User[]        @relation("userSessions")
   request     Request[]     @relation("sessionRequest")
+  meetingLink String?        
 }
 
 model Match {
