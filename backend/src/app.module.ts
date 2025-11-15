@@ -28,7 +28,6 @@ import { AiModule } from './ai/ai.module';
       signOptions: { expiresIn: '15m' },
     }),
   }),
-  ScheduleModule.forRoot(),
     AuthModule,
     S3Module,
     SkillsModule,

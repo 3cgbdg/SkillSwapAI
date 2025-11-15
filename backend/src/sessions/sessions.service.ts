@@ -19,7 +19,7 @@ export class SessionsService {
       throw new BadRequestException('The time must not have passed.')
 
     }
-    const friendship = await this.prisma.friend.findFirst({
+    const friendship = await this.prisma.friendship.findFirst({
       where: {
         OR: [
           { user1Id: myId, user2Id: dto.friendId },

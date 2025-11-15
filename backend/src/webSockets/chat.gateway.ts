@@ -58,8 +58,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     async getCurrentOnlineFriends(id: string) {
-        const friends1 = await this.prisma.friend.findMany({ where: { user1Id: id }, include: { user2: { select: { id: true, name: true, } } } });
-        const friends2 = await this.prisma.friend.findMany({ where: { user2Id: id }, include: { user1: { select: { id: true, name: true } } } });
+        const friends1 = await this.prisma.friendship.findMany({ where: { user1Id: id }, include: { user2: { select: { id: true, name: true, } } } });
+        const friends2 = await this.prisma.friendship.findMany({ where: { user2Id: id }, include: { user1: { select: { id: true, name: true } } } });
         const friends = [...friends1.map(item => item.user2), ...friends2.map(item => item.user1)];
 
         return friends

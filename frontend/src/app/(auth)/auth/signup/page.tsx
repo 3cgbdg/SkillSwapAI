@@ -10,7 +10,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { deleteWantToLearnSkill } from "@/redux/authSlice";
 
 
 
@@ -36,7 +35,11 @@ const Page = () => {
   })
 
   const { mutate: getSkills } = useMutation({
-    mutationFn: async ({ chars }: { chars: string }) => SkillsService.getSkills(chars),
+    mutationFn: async ({ chars }: { chars: string }) => {
+      const skills = await SkillsService.getSkills(chars);
+      console.log(skills)
+      return skills;
+    },
     onSuccess: (data: { id: string, title: string }[]) => setAvailableSkills(data),
   })
 
@@ -46,7 +49,6 @@ const Page = () => {
       console.error("Terms and conditions are not accepted!");
       return null;
     }
-    console.log("hello");
     const { checkBox, ...newData } = data;
     mutation.mutate(newData);
   }
@@ -136,7 +138,7 @@ const Page = () => {
             <div className="flex gap-2 relative">
               <input value={inputKnown} onChange={(e) => {
                 setInputKnown(e.target.value);
-                if (e.target.value.length > 2)
+                if (e.target.value.length >= 1)
                   getSkills({ chars: e.target.value });
               }} className="w-full input" placeholder="e.g., Web Development, UI/UX Design, Data Analysis" id="password" />
               <button onClick={() => {
@@ -145,13 +147,13 @@ const Page = () => {
                   setInputKnown("");
                 }
               }} type="button" className="button-violet text-sm! leading-5.5!">Add skill</button>
-              {inputKnown.length > 2 &&
+              {inputKnown.length >= 1 &&
                 <div className="absolute top-full left-0">
                   <div className="mt-1 input p-2  min-w-[150px] max-w-[350px] flex gap-1 flex-wrap bg-white">
                     {availableSkills.length > 0 ? <div className="flex flex-col gap-1">
                       {availableSkills.map((skill, idx) => (
                         <button type="button" onClick={() => {
-                          addKnownSkill(inputKnown);
+                          addKnownSkill(skill.title);
                           setInputKnown("")
                         }} key={idx} className="input text-sm! cursor-pointer leading-5! font-medium transition-colors hover:bg-violet">
                           {skill.title}
@@ -189,7 +191,7 @@ const Page = () => {
             <div className="flex gap-2 relative">
               <input value={inputToLearn} onChange={(e) => {
                 setInputToLearn(e.target.value);
-                if (e.target.value.length > 2)
+                if (e.target.value.length >= 2)
                   getSkills({ chars: e.target.value });
               }} className="w-full input" placeholder="e.g., Web Development, UI/UX Design, Data Analysis" id="password" />
               <button onClick={() => {
@@ -199,12 +201,12 @@ const Page = () => {
                 }
               }} type="button" className="button-violet text-sm! leading-5.5!">Add skill</button>
 
-              {inputToLearn.length > 2 &&
+              {inputToLearn.length >= 2 &&
                 <div className="absolute top-full  left-0">
                   <div className="mt-1 input p-2  min-w-[150px] max-w-[350px] flex gap-1 flex-wrap bg-white">
                     {availableSkills.length > 0 ? <div className="flex flex-col gap-1">
                       {availableSkills.map((skill, idx) => (
-                        <button type="button" onClick={() => { addWantToLearnSkill(inputToLearn); setInputToLearn("") }} key={idx} className="input text-sm! cursor-pointer leading-5! font-medium transition-colors hover:bg-violet">
+                        <button type="button" onClick={() => { addWantToLearnSkill(skill.title); setInputToLearn("") }} key={idx} className="input text-sm! cursor-pointer leading-5! font-medium transition-colors hover:bg-violet">
                           {skill.title}
                         </button>
                       ))}
@@ -218,7 +220,7 @@ const Page = () => {
             </div>
             <div className="flex gap-1 flex-wrap">
               {skillsToLearn?.map((skill, idx) => (
-                <button key={idx} type="button" onClick={() => { deleteWantToLearnSkill(skill) }} className="input cursor-pointer w-fit text-sm leading-5 py-1! transition-colors hover:bg-red-400 flex items-center gap-1">
+                <button key={idx} type="button" onClick={() => { removeWantToLearnSkill(skill) }} className="input cursor-pointer w-fit text-sm leading-5 py-1! transition-colors hover:bg-red-400 flex items-center gap-1">
                   <span>{skill}</span>
                   <X size={14} />
                 </button>

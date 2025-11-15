@@ -5,9 +5,9 @@ import { addWantToLearnSkill, logOut } from "@/redux/authSlice"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import Image from "next/image"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import { Bell, Check, Handshake, Plus, Search, UserRound, X } from "lucide-react"
+import { Bell, Check, Hamburger, Handshake, Plus, Search, UserRound, X } from "lucide-react"
 import { motion } from "framer-motion";
 import { io, Socket } from 'socket.io-client';
 import { Found, FoundSkills, FoundUsers, IRequest } from "@/types/types"
@@ -16,6 +16,7 @@ import RequestsService from "@/services/RequestsService"
 import FriendsService from "@/services/FriendsService"
 import SearchService from "@/services/SearchService"
 import SkillsService from "@/services/SkillsService"
+import { navLinks } from "@/constants/navLinks"
 
 
 
@@ -23,7 +24,8 @@ import SkillsService from "@/services/SkillsService"
 
 
 const Header = () => {
-    const [panel, setPanel] = useState<"menu" | "search" | "notifs" | null>(null);
+    const [panel, setPanel] = useState<"avatarMenu" | "search" | "notifs" | "navMenu" | null>(null);
+    const path = usePathname();
     const dispatch = useAppDispatch();
     const router = useRouter();
     const [word, setWord] = useState<string>("");
@@ -32,7 +34,7 @@ const Header = () => {
     const queryClient = useQueryClient();
     const [socket, setSocket] = useState<Socket | null>(null);
     const { user } = useAppSelector(state => state.auth);
-
+    const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
     // log out
     const mutation = useMutation({
         mutationFn: async () => await AuthService.logOut(),
@@ -169,8 +171,7 @@ const Header = () => {
                     return [...old, payload.request]
                 })
             })
-            console.log(reqs);
-            return () => {
+                return () => {
                 socket.off("friendRequest");
                 socket.off("sessionCreationRequest");
                 socket.off("sessionAcceptedRequest");
@@ -192,13 +193,70 @@ const Header = () => {
                     <span className={` transiiton-colors relative  group-hover:text-violet  font-oswald text-2xl leading-none font-bold `}><span className="text-cyan-300">Skill</span><span className="text-yellow-300">Swap</span>AI</span>
                 </Link>
             </div>
+            {/* search input for lg< */}
+            <div className={`absolute _border top-full bg-white ${isSearchOpen ? "" : "hidden"} md:hidden p-4 left-0 z-100  w-full`}>
+                <input value={word} onChange={async (e) => {
 
+                    setWord(e.target.value);
+
+                    if (e.target.value.length >= 2) {
+                        await mutationSearch.mutate(e.target.value);
+                        setPanel("search");
+                        console.log(foundUsers)
+                    } else {
+                        setPanel(null)
+                    }
+
+                }}
+                    type="text"
+                    className="outline-0 w-full" placeholder="Search for skills or users..."
+                />
+                     {panel === "search" ? <div className=" w-full flex flex-col h-fit max-h-[260px] overflow-auto panel top-full panel bg-white z-10  left-0 absolute _border   bg-primary  p-3  rounded-b-[6px]">
+                    <div className="flex flex-col gap-4 items-start text-sm font-semibold">
+                        {foundSkills.length > 0 &&
+                            <div className="flex flex-col gap-2 pb-4 not-last:border-b-[1px] border-neutral-300 w-full">
+                                <h3 className="text-xl md:text-lg leading-9 md:leading-7 font-semibold md:font-medium">Skills</h3>
+                                <div className="flex flex-col gap-1  border-neutral-300">
+                                    {foundSkills.map((skill, index) => {
+                                        return (
+                                            <div key={index} className="flex gap-2 items-center">
+                                                <div className="  w-fit _border p-1 rounded-xl transition-all text-lg md:text-sm" >{skill.title}</div>
+
+                                                <button onClick={() => { mutationAddLearn.mutate(skill.title); dispatch(addWantToLearnSkill(skill.title)); setFoundSkills(prev => prev.filter(item => item.id !== skill.id)) }} className="btn  w-fit _border p-1 rounded-xl cursor-pointer transition-all hover:bg-green-400 outline-0" ><Plus size={20} /></button>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                        }
+                        {foundUsers.length > 0 &&
+                            <div className="flex flex-col gap-2">
+                                <h3 className="text-xl md:text-lg leading-9 md:leading-7 font-semibold md:font-medium">Users</h3>
+                                <div className="flex flex-col  gap-1  border-neutral-300">
+                                    {foundUsers.map((user, index) => {
+                                        return (
+                                            <div key={index} className="flex gap-2 items-center">
+                                                <Link href={`/profiles/${user.id}`} className="btn  w-fit _border p-1 rounded-xl transition-all hover:bg-blue-200 outline-0 text-lg md:text-sm" >{user.name}</Link>
+                                               <button onClick={() => mutationCreateFriendRequest.mutate(user.id)} className="btn cursor-pointer  w-fit _border p-1 rounded-xl transition-all hover:bg-green-400 outline-0" ><Handshake size={20} /></button>
+                                               
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                        }
+
+                        {foundSkills.length == 0 && foundUsers.length == 0 && <span className="">Not found!</span>}
+                    </div>
+                </div>
+                    : ""}
+            </div>
             <div className="relative flex items-center gap-4">
                 {/* search*/}
 
 
-
-                <div className="flex items-center gap-2 input">
+                {/* search sm> */}
+                <div className=" items-center lg:flex hidden gap-2 input">
                     {panel === "search" ? (<button className={`cursor-pointer panel flex items-center ${panel === "search" ? "text-primary" : ""} `} onClick={() => { setPanel(null); setWord(""); }}> <X /></button>
                     ) : (<button className={`  cursor-pointer flex items-center    transition-all hover:text-primary  `} onClick={() => {
 
@@ -222,51 +280,64 @@ const Header = () => {
                         className="outline-0" placeholder="Search for skills or users..."
                     />
 
-                    {panel === "search" ? <div className="min-w-[250px] flex flex-col panel top-full panel bg-white z-10  left-0 absolute _border mt-1  bg-primary  p-3  rounded-[6px]">
-                        <div className="flex flex-col gap-4 items-start text-sm font-semibold">
-                            {foundSkills.length > 0 &&
-                                <div className="flex flex-col gap-2 pb-4 not-last:border-b-[1px] border-neutral-300 w-full">
-                                    <h3 className="text-lg leading-7 font-medium">Skills</h3>
-                                    <div className="flex flex-col gap-1  border-neutral-300">
-                                        {foundSkills.map((skill, index) => {
-                                            return (
-                                                <div key={index} className="flex gap-2 items-center">
-                                                    <div className="  w-fit _border p-1 rounded-xl transition-all" >{skill.title}</div>
+                {panel === "search" ? <div className="md:min-w-[250px] min-w-[300px] flex flex-col h-fit max-h-[260px] overflow-auto panel top-full panel bg-white z-10  left-0 absolute _border mt-1  bg-primary  p-3  rounded-[6px]">
+                    <div className="flex flex-col gap-4 items-start text-sm font-semibold">
+                        {foundSkills.length > 0 &&
+                            <div className="flex flex-col gap-2 pb-4 not-last:border-b-[1px] border-neutral-300 w-full">
+                                <h3 className="text-xl md:text-lg leading-9 md:leading-7 font-semibold md:font-medium">Skills</h3>
+                                <div className="flex flex-col gap-1  border-neutral-300">
+                                    {foundSkills.map((skill, index) => {
+                                        return (
+                                            <div key={index} className="flex gap-2 items-center">
+                                                <div className="  w-fit _border p-1 rounded-xl transition-all text-lg md:text-sm" >{skill.title}</div>
 
-                                                    <button onClick={() => { mutationAddLearn.mutate(skill.title); dispatch(addWantToLearnSkill(skill.title)); setFoundSkills(prev => prev.filter(item => item.id !== skill.id)) }} className="btn  w-fit _border p-1 rounded-xl cursor-pointer transition-all hover:bg-green-400 outline-0" ><Plus size={20} /></button>
-                                                </div>
-                                            )
-                                        })}
-                                    </div>
+                                                <button onClick={() => { mutationAddLearn.mutate(skill.title); dispatch(addWantToLearnSkill(skill.title)); setFoundSkills(prev => prev.filter(item => item.id !== skill.id)) }} className="btn  w-fit _border p-1 rounded-xl cursor-pointer transition-all hover:bg-green-400 outline-0" ><Plus size={20} /></button>
+                                            </div>
+                                        )
+                                    })}
                                 </div>
-                            }
-                            {foundUsers.length > 0 &&
-                                <div className="flex flex-col gap-2">
-                                    <h3 className="text-lg leading-7 font-semibold">Users</h3>
-                                    <div className="flex flex-col  gap-1  border-neutral-300">
-                                        {foundUsers.map((user, index) => {
-                                            return (
-                                                <div key={index} className="flex gap-2 items-center">
-                                                    <Link href={`/profiles/${user.id}`} className="btn  w-fit _border p-1 rounded-xl transition-all hover:bg-blue-200 outline-0" >{user.name}</Link>
-                                                    {!user.isFriend ? <button onClick={() => mutationCreateFriendRequest.mutate(user.id)} className="btn cursor-pointer  w-fit _border p-1 rounded-xl transition-all hover:bg-green-400 outline-0" ><Handshake size={20} /></button>
-                                                        :
-                                                        <span className="text-green-400">Friend</span>
-                                                    }
-                                                </div>
-                                            )
-                                        })}
-                                    </div>
+                            </div>
+                        }
+                        {foundUsers.length > 0 &&
+                            <div className="flex flex-col gap-2">
+                                <h3 className="text-xl md:text-lg leading-9 md:leading-7 font-semibold md:font-medium">Users</h3>
+                                <div className="flex flex-col  gap-1  border-neutral-300">
+                                    {foundUsers.map((user, index) => {
+                                        return (
+                                            <div key={index} className="flex gap-2 items-center">
+                                                <Link href={`/profiles/${user.id}`} className="btn  w-fit _border p-1 rounded-xl transition-all hover:bg-blue-200 outline-0 text-lg md:text-sm" >{user.name}</Link>
+                                               <button onClick={() => mutationCreateFriendRequest.mutate(user.id)} className="btn cursor-pointer  w-fit _border p-1 rounded-xl transition-all hover:bg-green-400 outline-0" ><Handshake size={20} /></button>
+                                               
+                                            </div>
+                                        )
+                                    })}
                                 </div>
-                            }
+                            </div>
+                        }
 
-                            {foundSkills.length == 0 && foundUsers.length == 0 && <span className="">Not found!</span>}
-                        </div>
+                        {foundSkills.length == 0 && foundUsers.length == 0 && <span className="">Not found!</span>}
                     </div>
-                        : ""}
+                </div>
+                    : ""}
 
 
 
                 </div>
+                {/* search sm< */}
+                <div className="lg:hidden   ">
+
+                    {panel === "search" || isSearchOpen ? (
+                        <button className={`cursor-pointer flex items-center  ${panel === "search" ? "text-primary" : ""}  `} onClick={() => { setPanel(null); setWord(""); setIsSearchOpen(false) }}>
+                            <X className="" />
+                        </button>
+                    )
+                        : (
+                            <button className="cursor-pointer flex items-center " onClick={() => {
+
+                            }}><Search className="" onClick={() => setIsSearchOpen(true)} /></button>
+                        )}
+                </div>
+
                 {/* notifs */}
                 <div className="relative">
                     <motion.button onClick={() => setPanel(panel !== "notifs" ? "notifs" : null)} className="hover:text-blue relative transition-colors cursor-pointer"
@@ -348,25 +419,42 @@ const Header = () => {
                         </div>}
                 </div>
 
+                <div className="hidden md:block">
+                    <button onClick={() => setPanel(panel !== "avatarMenu" ? "avatarMenu" : null)} className={` cursor-pointer  hover:text-violet hover:border-violet ${panel === "avatarMenu" ? "text-violet border-violet" : ""} transition-colors rounded-full overflow-hidden _border flex items-center justify-center size-12`}>
+                        {panel !== "avatarMenu" ? !user?.imageUrl ? <UserRound size={24} /> : <div className="w-[48px] relative h-[48px] rounded-full overflow-hidden">
+                            <Image className="object-cover" src={user.imageUrl} fill alt="user image" />
+                        </div> : <X />}
+                    </button>
+                    {panel == "avatarMenu" &&
+                        <div className=" absolute min-w-[250px] right-0 top-[140%] panel z-10">
+                            <div className="_border  rounded-lg p-5 bg-white">
+                                <h3 className="font-semibold pb-1 border-b mb-2">Profile</h3>
+                                <div className="flex flex-col gap-4 items-start">
+                                    <button className="link" onClick={() => mutation.mutate()}>Log out</button>
 
-                <button onClick={() => setPanel(panel !== "menu" ? "menu" : null)} className={` cursor-pointer  hover:text-violet hover:border-violet ${panel === "menu" ? "text-violet border-violet" : ""} transition-colors rounded-full overflow-hidden _border flex items-center justify-center size-12`}>
-                    {panel !== "menu" ? !user?.imageUrl ? <UserRound size={24} /> : <div className="w-[48px] relative h-[48px] rounded-full overflow-hidden">
-                        <Image className="object-cover" src={user.imageUrl} fill alt="user image" />
-                    </div> : <X />}
-                </button>
-                {panel == "menu" &&
-                    <div className=" absolute min-w-[250px] right-0 top-[140%] panel z-10">
-                        <div className="_border  rounded-lg p-5 bg-white">
-                            <h3 className="font-semibold pb-1 border-b mb-2">Profile</h3>
-                            <div className="flex flex-col gap-4 items-start">
-                                <button className="link" onClick={() => mutation.mutate()}>Log out</button>
-
+                                </div>
                             </div>
                         </div>
-                    </div>
-                }
+                    }
+                </div>
+                <div className="md:hidden">
+                    <button className={`cursor-pointer transition-all hover:text-primary ${panel === "navMenu" ? "text-primary" : ""}`} onClick={() => { setPanel(panel === "navMenu" ? null : "navMenu") }}><Hamburger className="" size={30} /></button>
+                </div>
             </div>
+            {panel === "navMenu" &&
+                <div className="w-full flex bg-white z-50  flex-col top-full panel  right-0 absolute  _border     p-3  ">
+                    <nav className="flex flex-col   ">
+                        {navLinks.map(item => (
+                            <Link key={item.link} href={item.link} className={`p-2   flex items-center gap-2 text-sm leading-5.5 font-medium text-neutral-600 rounded-lg  ${item.link === path ? "text-neutral-900 font-semibold bg-blue-300" : " "} `}>{item.icon} {item.title}</Link>
+                        ))}
+                        <div className="flex flex-col gap-4 items-start border-t-1 mt-1 pt-1">
+                            <button className="link" onClick={() => mutation.mutate()}>Log out</button>
 
+                        </div>
+                    </nav>
+                </div>
+
+            }
         </div>
     )
 }

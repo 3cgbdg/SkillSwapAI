@@ -74,20 +74,20 @@ const Matches = ({ matches, option }: { matches: IMatch[], option: 'available' |
             <div className="flex flex-col gap-7.5">
 
                 <div className="flex flex-col gap-6">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-6 flex-wrap justify-between">
                         <h1 className="page-title">{option == 'active' ? "Your" : 'Available'} Matches</h1>
-                        <div className="flex gap-3 relative">
+                        <div className="flex gap-3 relative ">
                             <div className="relative">
 
                                 {option == 'active' &&
-                                    <button onClick={() => setPanel(prev => prev == 'compatibility' ? null : 'compatibility')} className={`button-transparent bg-white ${panel == "compatibility" ? 'rounded-b-none! ' : ''} flex items-center gap-2 rounded-md!`}>
+                                    <button onClick={() => setPanel(prev => prev == 'compatibility' ? null : 'compatibility')} className={`button-transparent bg-white ${panel == "compatibility" ? 'rounded-b-none! ' : ''} flex h-full items-center gap-2 rounded-md!`}>
                                         <Users size={16} />
                                         Sort by Compatibility
                                     </button>
                                 }
 
                                 {panel == "compatibility" && option == 'active' &&
-                                    <div className="w-full panel absolute top-full flex _border flex-col gap-1 rounded-b-md p-1 bg-white">
+                                    <div className="w-full  panel absolute top-full flex _border flex-col gap-1 rounded-b-md p-1 bg-white">
                                         <button onClick={() => setFilteredMatch(prev => [...prev].sort((a, b) => a.compatibility - b.compatibility))} className="button-transparent p-2!">From lowest to highest</button>
                                         <button onClick={() => setFilteredMatch(prev => [...prev].sort((a, b) => b.compatibility - a.compatibility))} className="button-transparent p-2!">From highest to lowest</button>
                                     </div>
@@ -95,7 +95,7 @@ const Matches = ({ matches, option }: { matches: IMatch[], option: 'available' |
                                 }
                             </div>
                             <div className="relative">
-                                <button onClick={() => setPanel(prev => prev == 'skill' ? null : 'skill')} className={`button-transparent bg-white min-w-[200px]  flex items-center gap-2 rounded-md! ${panel == "skill" ? 'rounded-b-none! ' : ''}`}>
+                                <button onClick={() => setPanel(prev => prev == 'skill' ? null : 'skill')} className={`button-transparent h-full bg-white min-w-[200px]  flex items-center gap-2 rounded-md! ${panel == "skill" ? 'rounded-b-none! ' : ''}`}>
                                     <Search size={16} />
                                     Filter by Skill
                                 </button>
@@ -114,7 +114,7 @@ const Matches = ({ matches, option }: { matches: IMatch[], option: 'available' |
                     </div>
                     <p className="text-gray">Explore potential skill exchange partners based on your teaching and learning goals. Connect to swap knowledge!</p>
                 </div>
-                <div className="grid grid-cols-3 gap-6 ">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 ">
                     {filteredMatch.map((match, idx) => (
                         <MatchCard option={option} isInActiveMatches={activeMatches.findIndex(item => item.otherId == match.otherId) == -1 ? false : true} generateActiveMatch={generateActiveMatch} key={option == 'active' ? match.id : idx} match={match} getOrCreateChat={getOrCreateChat} />
                     ))}

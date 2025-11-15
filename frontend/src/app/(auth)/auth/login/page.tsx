@@ -7,6 +7,7 @@ import { ChromeIcon, GithubIcon, Lock, Mail } from "lucide-react";
 import Image from "next/image"
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 
 
@@ -16,6 +17,7 @@ const Page = () => {
     resolver: zodResolver(logInSchema)
   });
   const router = useRouter();
+  const [isPassSeen,setIsPassSeen] = useState<boolean>(false);
   const mutation = useMutation({
     mutationFn: async (data: logInFormData) => AuthService.logIn(data),
     onSuccess: () => router.push("/dashboard"),
@@ -68,13 +70,14 @@ const Page = () => {
                 validate: {
                   password: (value) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/.test(value) || "Password must have at least one lowercase, one uppercase, one digit and minimum 8 characters",
                 }
-              })} className="w-full outline-none" placeholder="Enter your password" type="password" id="password" />
+              })} className="w-full outline-none" placeholder="Enter your password" type={isPassSeen ? "text": "password"} id="password" />
             </div>
             {errors.password && (
               <span data-testid='error' className="text-red-500 font-medium ">
                 {errors.password.message}
               </span>
             )}
+            <button onClick={()=>setIsPassSeen(!isPassSeen)} type="button" className="text-gray hover:underline text-sm leading-5 text-left cursor-pointer">{ !isPassSeen ?"Show password" : "Hide password"}</button>
           </div>
         </form>
         <div className="w-full flex flex-col">

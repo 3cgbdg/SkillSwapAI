@@ -127,7 +127,6 @@ export type ApiResponse<T> = {
 export interface FoundUsers {
     id: string,
     name: string,
-    isFriend: boolean,
 }
 
 export interface FoundSkills {

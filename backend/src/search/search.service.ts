@@ -5,16 +5,30 @@ import { PrismaService } from 'prisma/prisma.service';
 @Injectable()
 export class SearchService {
   constructor(private readonly prisma: PrismaService) { };
-  async findAll(dto: getSearchDto, id: string) {
+  async findAll(dto: getSearchDto, myId: string) {
+
     const skills = await this.prisma.skill.findMany({ where: { title: { contains: dto.chars, mode: 'insensitive' } }, include: { knownBy: { select: { id: true } }, learnedBy: { select: { id: true } } } });
-    const users = await this.prisma.user.findMany({ where: { name: { contains: dto.chars, mode: 'insensitive' } }, include: { friendOf: true, friends: true } });
+    const users = await this.prisma.user.findMany({
+      where: {
+        name: { contains: dto.chars, mode: 'insensitive' },
+        NOT: {
+          OR: [
+            { friends: { some: { user2Id: myId } } },
+            { friendOf: { some: { user1Id: myId } } },
+            { id: myId }
+          ]
+        }
+      },
+      include: { friendOf: true, friends: true }
+    });
+
     const newUsers = users.map(user => ({
       id: user.id,
       name: user.name,
-      isFriend: user.friends.some(f => f.user2Id == id) ||
-        user.friendOf.some(f => f.user2Id == id)
-    }))
-    const newSkills = skills.filter(skill => !skill.knownBy.some(user => user.id === id) && !skill.learnedBy.some(user => user.id === id))
-    return [...newSkills, ...newUsers.filter(user => user.id !== id)];
+     
+    }));
+    console.log(newUsers);
+    const newSkills = skills.filter(skill => !skill.knownBy.some(user => user.id === myId) && !skill.learnedBy.some(user => user.id === myId))
+    return [...newSkills, ...newUsers];
   }
 }

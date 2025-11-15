@@ -28,17 +28,19 @@ const ComingSessionWarning = () => {
     }, [sessions])
 
     return (
-        <>{upComingSession &&
+        <>{upComingSession && upComingSession.status !== "PENDING" &&
             <div className="fixed z-50 top-4 left-1/2 -translate-x-1/2 max-w-[500px] w-full">
-                <div className="bg-lightBlue border border-blue rounded-2xl p-4 flex items-center gap-4 shadow-lg max-w-md">
+                <div className="bg-lightBlue border border-blue rounded-2xl p-3 flex items-center gap-4 shadow-lg max-w-md">
                     <div className="text-blue font-bold text-xl">
                         <TriangleAlert />
                     </div>
-                    <div className="flex flex-col ">
-                        <span className="font-semibold text-lg">{upComingSession.title}</span>
-                        <span className="text-sm text-gray">
-                            {new Date(upComingSession.date).toLocaleDateString()} | {upComingSession.start}:00 - {upComingSession.end}:00
-                        </span>
+                    <div className="flex flex-col w-full">
+                        <div className="flex items-center gap-2 justify-between">
+                            <span className="font-semibold text-lg">{upComingSession.title}</span>
+                            <span className="text-sm text-gray">
+                                {new Date(upComingSession.date).toLocaleDateString()} | {upComingSession.start}:00 - {upComingSession.end}:00
+                            </span>
+                        </div>
                         {upComingSession.friend && (
                             <span className="text-sm text-gray">With: {upComingSession.friend.name}</span>
                         )}
