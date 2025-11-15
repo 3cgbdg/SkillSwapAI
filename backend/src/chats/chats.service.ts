@@ -44,11 +44,11 @@ export class ChatsService {
           ],
 
         }, orderBy: { createdAt: 'desc' }, distinct: ['chatId'], include: {
-          from: { select: { id: true, name: true } },
-          to: { select: { id: true, name: true } },
+          from: { select: { id: true, name: true,imageUrl:true } },
+          to: { select: { id: true, name: true,imageUrl:true } },
         }
       })
-
+      
 
       const newChats = await Promise.all(
         chats.map(async chat => {
@@ -76,14 +76,13 @@ export class ChatsService {
         })
       );
 
-
       return newChats;
     } else {
       const chats = await this.prisma.chat.findMany({
         where: { users: { some: { id: myId } } }, include: {
           users: {
             where: { NOT: { id: myId } },
-            select: { id: true, name: true }
+            select: { id: true, name: true,imageUrl:true }
           },
         }
       })

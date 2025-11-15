@@ -9,7 +9,7 @@ const MatchCard = ({ match, isInActiveMatches, option, getOrCreateChat, generate
 
     const router = useRouter();
     return (
-        <div className="_border rounded-2xl p-6">
+        <div className="_border rounded-2xl p-6 overflow-hidden">
             <div className="flex flex-col gap-3 mb-3.5 items-center">
                 <div className="size-16 rounded-full bg-black"></div>
                 <h2 className="leading-7 text-lg font-semibold">{match.other.name}</h2>
@@ -48,29 +48,34 @@ const MatchCard = ({ match, isInActiveMatches, option, getOrCreateChat, generate
                         </div>
                     </div>
                 }
-                <div className="grid grid-cols-3 gap-3  mt-6 flew-wrap place-self-end basis-full">
+                <div className=" mx-auto mt-6 place-self-end basis-full">
+
+  <div className="flex gap-3   flex-wrap justify-center">
+                    
                     <button onClick={() => getOrCreateChat({ friendId: match.otherId, friendName: match.other.name })} className="button-blue flex gap-2 items-center  font-medium!">
                         <MessageSquare size={16} />
-                        Start Chat</button>
-                    <button onClick={() => router.push(`/calendar?schedule=true&name=${encodeURIComponent(match.other.name)}`)} className="button-transparent rounded-md! flex gap-2 items-center  font-medium!">
+                        Chat</button>
+                    <button onClick={() => router.push(`/calendar?schedule=true&name=${encodeURIComponent(match.other.name)}`)} className="button-transparent rounded-md! flex gap-1 items-center  font-medium!">
                         <Calendar size={16} />
-                        Schedule Session
+                        Schedule
                     </button>
                     {option == 'available' ?
-                        <button onClick={() => !isInActiveMatches ? generateActiveMatch(match.otherId) : router.push(`/matches/active`)} className={`button-transparent rounded-md!  flex gap-2 items-center  font-medium!`}>
+                        <button onClick={() => !isInActiveMatches ? generateActiveMatch(match.otherId) : router.push(`/matches/active`)} className={`button-transparent rounded-md!  flex gap-1 items-center  font-medium!`}>
                             <Book size={16} />
                             {isInActiveMatches ? 'Go to active matches' :
-                                'Generate active match plan'
+                                'Generate plan'
                             }
 
                         </button>
                         :
-                        <button onClick={() => router.push(`/matches/${match.id}`)} className={`button-transparent rounded-md!  flex gap-2 items-center  font-medium!`}>
+                        <button onClick={() => router.push(`/matches/${match.id}`)} className={`button-transparent rounded-md!  flex gap-1 items-center  font-medium!`}>
                             <Book size={16} />
                             Go to your plan
                         </button>
                     }
                 </div>
+                </div>
+              
 
             </div>
         </div>

@@ -8,7 +8,8 @@ import ChatsService from "@/services/ChatsService";
 import FriendsService from "@/services/FriendsService";
 import { IChat, IFriend } from "@/types/types";
 import { useMutation } from "@tanstack/react-query";
-import { Search, Users } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, Search, UserRound, Users } from "lucide-react";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation"
 import React, { useEffect, useState } from "react"
 
@@ -26,8 +27,7 @@ const ChatSidebar = () => {
     const { chats } = useAppSelector(state => state.chats);
     const { onlineUsers } = useAppSelector(state => state.onlineUsers)
     const { socket } = useSocket();
-
-
+    const [isFullyOpen, setIsFullyOpen] = useState<boolean>(true);
     useEffect(() => {
         if (!socket) return
         socket.on('connect', () => { });
@@ -54,6 +54,7 @@ const ChatSidebar = () => {
 
 
     const mutationSearch = useMutation({
+        
         mutationFn: async () => FriendsService.getFriends(),
         onSuccess: (data) => {
             setFriends(data);
@@ -68,65 +69,94 @@ const ChatSidebar = () => {
     })
 
     return (
-        <div className="_border rounded-[10px] py-6 px-4 basis-[368px] grow-0 shrink-0 ">
+        <div className={`_border rounded-[10px] py-6 px-4 ${isFullyOpen ? "md:w-[340px]" : "md:w-fit"} w-full overflow-hidden flex flex-col grow-0 shrink-0 h-full `}>
             <div className="flex flex-col gap-1.5 mb-4">
-                <h2 className="section-title">
-                    Messages
-                </h2>
-                <p className="text-sm leading-5 text-gray">Recent conversations</p>
-                <div className="_border p-2 rounded-2xl flex justify-between relative  leading-6">
-                    <input onChange={async (e) => {
+                <div className={`flex items-center  ${isFullyOpen ? "justify-between" : "justify-center"} gap-2`}>
+                    {isFullyOpen &&
+                        <h2 className="section-title">
+                            Messages
+                        </h2>}
+                    <button onClick={() => setIsFullyOpen(!isFullyOpen)} className={` cursor-pointer md:block hidden transition-all hover:text-blue `}>{isFullyOpen ? <PanelLeftClose /> : <PanelLeftOpen />}</button>
+                </div>
+                {isFullyOpen &&
+                    <div className="_border p-2 rounded-2xl flex justify-between relative  leading-6">
+                        <input onChange={async (e) => {
 
-                        setChars(e.target.value);
+                            setChars(e.target.value);
 
-                        if (e.target.value.length === 1) {
-                            await mutationSearch.mutate();
+                            if (e.target.value.length === 1) {
+                                await mutationSearch.mutate();
 
-                        }
+                            }
 
-                    }} placeholder="Create a new conversation with..." value={chars} className="basis-full text-sm px-2 outline-none" />
-                    <div className="flex items-center justify-center"><Search size={20} /></div>
-                    {friends && chars.length > 0 && friends.length > 0 &&
-                        <div className="left-0 top-full absolute z-10 min-w-[250px] ">
-                            <div className="flex flex-col gap-2 mt-2 p-2  _border bg-white rounded-md ">
-                                <div className="flex flex-col  gap-1 max-h-[500px]  border-neutral-300">
-                                    {friends.filter(friend => friend.name.toLowerCase().includes(chars.toLocaleLowerCase())).map((friend, index) => {
-                                        return (
-                                            <button onClick={() => {
-                                                setChars("");
-                                                mutationCreateChat.mutate({ payload: { friendId: friend.id, friendName: friend.name } });
-                                            }} key={index} className="flex gap-2 button-transparent items-center  rounded-xl  ">
-                                                <Users size={20} />
-                                                {friend.name}
-                                            </button>
-                                        )
-                                    })}
+                        }} placeholder="Create a new conversation with..." value={chars} className="basis-full text-sm px-2 outline-none" />
+                        <div className="flex items-center justify-center">
+                            <Search size={20} />
+                        </div>
+
+                        {friends && chars.length > 0 && friends.length > 0 &&
+                            <div className="left-0 top-full absolute z-10 min-w-[250px] ">
+                                <div className="flex flex-col gap-2 mt-2 p-2  _border bg-white rounded-md ">
+                                    <div className="flex flex-col  gap-1 max-h-[500px]  border-neutral-300">
+                                        {friends.filter(friend => friend.name.toLowerCase().includes(chars.toLocaleLowerCase())).map((friend, index) => {
+                                            return (
+                                                <button onClick={() => {
+                                                    setChars("");
+                                                    mutationCreateChat.mutate({ payload: { friendId: friend.id, friendName: friend.name } });
+                                                }} key={index} className="flex gap-2 button-transparent items-center  rounded-xl  ">
+                                                    <Users size={20} />
+                                                    {friend.name}
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    }
-                </div>
+                        }
+                    </div>
+
+                }
             </div>
-            <div className="flex flex-col gap-2">
+            {isFullyOpen &&
+                <p className="text-sm leading-5 text-gray my-2">Recent conversations</p>
+            }
+
+            <div className="flex flex-col overflow-y-auto flex-1  gap-2">
                 {chats?.map((chat, idx) => (
 
                     <button key={idx} onClick={() => router.push(`/chats/${chat.chatId}`)} className={`rounded-[6px] p-3.5 cursor-pointer ${path == `/chats/${chat.chatId}` ? "bg-lightBlue" : ""} transition-all  hover:bg-lightBlue flex gap-4 justify-between`}>
                         <div className="flex  gap-4 items-center">
-                            <div className=" size-10   relative">
-                                <div className="bg-black size-full rounded-full overflow-hidden"></div>
-                                <div className={`absolute bottom-0  right-0 border-2 border-white rounded-full size-3 ${onlineUsers.includes(chat.friend.id) ? "bg-green-500" : "bg-gray"}`}></div>
+                            <div className="size-12  flex items-center justify-center relative rounded-full _border ">
+                                {chat?.friend.imageUrl
+                                    ?
+                                    <div className="size-12   relative rounded-full _border ">
+                                        <Image className="object-cover rounded-full" src={chat.friend.imageUrl} fill alt="user image" />
+                                        <div className={`absolute bottom-0  right-0 border-2 border-white rounded-full size-3 ${onlineUsers.includes(chat.friend.id) ? "bg-green-500" : "bg-gray"}`}></div>
+                                    </div>
+                                    :
+                                    <UserRound size={24} />
+                                }
                             </div>
-                            <div className="text-left">
-                                <h3 className="">{chat.friend.name}</h3>
-                                <p className="text-gray leading-5 text-sm">{chat.lastMessageContent}</p>
-                            </div>
-                        </div>
-                        <div className="flex flex-col gap-1 items-end">
-                            <span className="text-xs leading-4 text-gray">{chat._max ? new Date(chat._max.createdAt).toLocaleTimeString() : null}</span>
-                            {(chat._count && chat._count.id > 0) &&
-                                < span className="rounded-full bg-blue text-white text-xs leading-5 font-semibold px-2 py-.5">{chat._count.id}</span >
+
+                            {isFullyOpen &&
+                                <div className="text-left">
+                                    <h3 className="">{chat.friend.name}</h3>
+                                    <p className="text-gray leading-5 text-sm">{chat.lastMessageContent?.slice(0, 20)}...</p>
+                                </div>
                             }
+
                         </div>
+                        {isFullyOpen &&
+                            <div className="flex flex-col gap-1 items-end">
+                                <span className="text-xs leading-4 text-gray">{chat._max ? new Date(chat._max.createdAt).toLocaleTimeString([], {
+                                    hour: "2-digit",
+                                    minute: "2-digit"
+                                }) : null}</span>
+                                {(chat._count && chat._count.id > 0) &&
+                                    < span className="rounded-full bg-blue text-white text-xs leading-5 font-semibold px-2 py-.5">{chat._count.id}</span >
+                                }
+                            </div>
+                        }
                     </button>
 
                 ))}

@@ -12,6 +12,7 @@ export interface IUser {
 
 export interface IFriend {
     name: string;
+    imageUrl: string;
     id: string;
     newMessagesQuantity?: number;
     lastMessage?: { content: string; createdAt: string }
@@ -23,7 +24,6 @@ export interface IChat {
     chatId: string;
     lastMessageContent?: string;
     friend: IFriend;
-
 }
 
 export interface IMessage {

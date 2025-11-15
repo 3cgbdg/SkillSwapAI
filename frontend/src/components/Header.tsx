@@ -193,8 +193,8 @@ const Header = () => {
                     <span className={` transiiton-colors relative  group-hover:text-violet  font-oswald text-2xl leading-none font-bold `}><span className="text-cyan-300">Skill</span><span className="text-yellow-300">Swap</span>AI</span>
                 </Link>
             </div>
-            {/* search input for lg< */}
-            <div className={`absolute _border top-full bg-white ${isSearchOpen ? "" : "hidden"} md:hidden p-4 left-0 z-100  w-full`}>
+            {/* search input for sm< */}
+            <div className={`absolute panel _border top-full bg-white ${isSearchOpen && panel=='search' ? "" : "hidden"} md:hidden p-4 left-0 z-100  w-full`}>
                 <input value={word} onChange={async (e) => {
 
                     setWord(e.target.value);
@@ -211,7 +211,7 @@ const Header = () => {
                     type="text"
                     className="outline-0 w-full" placeholder="Search for skills or users..."
                 />
-                     {panel === "search" ? <div className=" w-full flex flex-col h-fit max-h-[260px] overflow-auto panel top-full panel bg-white z-10  left-0 absolute _border   bg-primary  p-3  rounded-b-[6px]">
+                     {panel === "search" ? <div className=" w-full flex flex-col h-fit max-h-[265px] overflow-auto panel top-full panel bg-white z-10  left-0 absolute _border   bg-primary  p-3  rounded-b-[6px]">
                     <div className="flex flex-col gap-4 items-start text-sm font-semibold">
                         {foundSkills.length > 0 &&
                             <div className="flex flex-col gap-2 pb-4 not-last:border-b-[1px] border-neutral-300 w-full">
@@ -256,7 +256,7 @@ const Header = () => {
 
 
                 {/* search sm> */}
-                <div className=" items-center lg:flex hidden gap-2 input">
+                <div className=" items-center md:flex hidden gap-2 input">
                     {panel === "search" ? (<button className={`cursor-pointer panel flex items-center ${panel === "search" ? "text-primary" : ""} `} onClick={() => { setPanel(null); setWord(""); }}> <X /></button>
                     ) : (<button className={`  cursor-pointer flex items-center    transition-all hover:text-primary  `} onClick={() => {
 
@@ -324,9 +324,9 @@ const Header = () => {
 
                 </div>
                 {/* search sm< */}
-                <div className="lg:hidden   ">
+                <div className="md:hidden   ">
 
-                    {panel === "search" || isSearchOpen ? (
+                    {panel === "search" && isSearchOpen ? (
                         <button className={`cursor-pointer flex items-center  ${panel === "search" ? "text-primary" : ""}  `} onClick={() => { setPanel(null); setWord(""); setIsSearchOpen(false) }}>
                             <X className="" />
                         </button>
@@ -334,7 +334,7 @@ const Header = () => {
                         : (
                             <button className="cursor-pointer flex items-center " onClick={() => {
 
-                            }}><Search className="" onClick={() => setIsSearchOpen(true)} /></button>
+                            }}><Search className="" onClick={() =>{ setIsSearchOpen(true); setPanel("search")}} /></button>
                         )}
                 </div>
 
@@ -418,7 +418,7 @@ const Header = () => {
                             </div>
                         </div>}
                 </div>
-
+                    {/* avatar menu */}
                 <div className="hidden md:block">
                     <button onClick={() => setPanel(panel !== "avatarMenu" ? "avatarMenu" : null)} className={` cursor-pointer  hover:text-violet hover:border-violet ${panel === "avatarMenu" ? "text-violet border-violet" : ""} transition-colors rounded-full overflow-hidden _border flex items-center justify-center size-12`}>
                         {panel !== "avatarMenu" ? !user?.imageUrl ? <UserRound size={24} /> : <div className="w-[48px] relative h-[48px] rounded-full overflow-hidden">

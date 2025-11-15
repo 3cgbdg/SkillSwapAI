@@ -76,7 +76,7 @@ const Matches = ({ matches, option }: { matches: IMatch[], option: 'available' |
                 <div className="flex flex-col gap-6">
                     <div className="flex items-center gap-6 flex-wrap justify-between">
                         <h1 className="page-title">{option == 'active' ? "Your" : 'Available'} Matches</h1>
-                        <div className="flex gap-3 relative ">
+                        <div className="flex gap-3 relative flex-wrap">
                             <div className="relative">
 
                                 {option == 'active' &&
@@ -87,7 +87,7 @@ const Matches = ({ matches, option }: { matches: IMatch[], option: 'available' |
                                 }
 
                                 {panel == "compatibility" && option == 'active' &&
-                                    <div className="w-full  panel absolute top-full flex _border flex-col gap-1 rounded-b-md p-1 bg-white">
+                                    <div className="w-full  panel absolute top-full flex z-10 _border flex-col gap-1 rounded-b-md p-1 bg-white">
                                         <button onClick={() => setFilteredMatch(prev => [...prev].sort((a, b) => a.compatibility - b.compatibility))} className="button-transparent p-2!">From lowest to highest</button>
                                         <button onClick={() => setFilteredMatch(prev => [...prev].sort((a, b) => b.compatibility - a.compatibility))} className="button-transparent p-2!">From highest to lowest</button>
                                     </div>
@@ -114,7 +114,7 @@ const Matches = ({ matches, option }: { matches: IMatch[], option: 'available' |
                     </div>
                     <p className="text-gray">Explore potential skill exchange partners based on your teaching and learning goals. Connect to swap knowledge!</p>
                 </div>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 ">
+                <div className="grid max-w-[450px] md:max-w-full mx-auto md:mx-0 md:w-fit  md:grid-cols-2 xl:grid-cols-3 gap-6 ">
                     {filteredMatch.map((match, idx) => (
                         <MatchCard option={option} isInActiveMatches={activeMatches.findIndex(item => item.otherId == match.otherId) == -1 ? false : true} generateActiveMatch={generateActiveMatch} key={option == 'active' ? match.id : idx} match={match} getOrCreateChat={getOrCreateChat} />
                     ))}

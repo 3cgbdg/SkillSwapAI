@@ -5,10 +5,12 @@ import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks"
 import { updateChatNewMessagesForReceiver, updateChatNewMessagesForSender, updateChatSeen } from "@/redux/chatsSlice"
 import { IChat, IMessage } from "@/types/types"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { CheckCheck, EllipsisVertical, Send } from "lucide-react"
+import { CheckCheck, EllipsisVertical, Send, UserRound } from "lucide-react"
 import { useParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import ChatsService from "@/services/ChatsService"
+import Image from "next/image"
+import Link from "next/link"
 
 
 
@@ -150,15 +152,23 @@ const Page = () => {
     return (
 
 
-
+        <div className="flex flex-col gap-4">        
+        <Link href={"/chats"} className="md:hidden! button-blue ">Go to chats</Link>
         <div className="_border rounded-[10px] flex flex-col grow-1 ">
             {/* header */}
             <div className="border-b-[1px] border-neutral-300 ">
                 <div className="py-5.5 px-6 flex justify-between items-center gap-2">
                     <div className="items-center flex gap-3">
-                        <div className="rounded-full size-12 bg-black"></div>
+                        <div className="size-12  flex items-center justify-center relative rounded-full border-2 _border ">
+                            {currentChat?.friend.imageUrl
+                                ?
+                                <Image className="object-cover rounded-full" src={currentChat?.friend.imageUrl} fill alt="user image" />
+                                :
+                                <UserRound size={24} />
+                            }
+                        </div>
                         <div className="">
-                            <h3 className="text-xl leading-7 font-semibold">Alice User</h3>
+                            <h3 className="text-xl leading-7 font-semibold">{currentChat?.friend.name}</h3>
                             <span className={`text-sm leading-5  ${currentChat && onlineUsers.includes(currentChat.friend.id) ? "text-green-300" : "text-gray"}`}>{currentChat && onlineUsers.includes(currentChat.friend.id) ? "Online" : "Offline"}</span>
                         </div>
                     </div>
@@ -172,7 +182,7 @@ const Page = () => {
             <div className="flex gap-4 flex-col p-4 w-full h-[502px]   overflow-y-scroll">
                 {messages && messages.length > 0 ? messages.map((msg, idx) => (
                     <div ref={(el) => { refs.current[idx] = el! }} key={msg.id ?? idx} className={`w-fit rounded-[10px] text-gray  p-3  ${msg.fromId === user?.id ? 'bg-lightBlue self-end' : "bg-neutral-200"}`}>
-                        <p className={`text-wrap mb-1   leading-5 text-sm ${msg.fromId === user?.id ? "text-neutral-900" : ""}`}>{msg.content}</p>
+                        <p className={`wrap-anywhere mb-1   leading-5 text-sm ${msg.fromId === user?.id ? "text-neutral-900" : ""}`}>{msg.content}</p>
                         <div className="flex justify-between items-center flex-row-reverse gap-2">
                             {
                                 msg.fromId == user?.id &&
@@ -203,6 +213,7 @@ const Page = () => {
                     </button>
                 </div>
             </div>
+        </div>
         </div>
 
     )

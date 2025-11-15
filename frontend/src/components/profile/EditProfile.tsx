@@ -81,8 +81,8 @@ const EditProfile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<b
                 <button onClick={() => setIsEditing(false)} className="button-blue">Finish editing</button>
             </div>
             <div className="flex flex-col gap-6">
-                <div className="grid grid-cols-3 gap-6">
-                    <div className="col-span-1 p-6 pt-[27px]! flex flex-col justify-between gap-4  _border rounded-[10px]">
+                <div className="grid md:grid-cols-3 gap-6">
+                    <div className="md:col-span-1 p-6 pt-[27px]! flex flex-col justify-between gap-4  _border rounded-[10px]">
                         <div className="flex flex-col  gap-3.5">
                             <h2 className="text-lg leading-7 font-semibold ">Profile Picture</h2>
                             <div className="rounded-full size-30 flex justify-center mx-auto items-center _border">
@@ -107,7 +107,7 @@ const EditProfile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<b
                         <button onClick={() => deleteAvatarImage()} className="button-transparent rounded-md!">Remove Picture</button>
 
                     </div>
-                    <form className="col-span-2 p-6 pt-[27px]! gap-4 flex flex-col _border rounded-[10px]">
+                    <form className="md:col-span-2 p-6 pt-[27px]! gap-4 flex flex-col _border rounded-[10px]">
                         <div className="flex flex-col gap-1">
                             <h2 className="text-lg leading-7 font-semibold">Personal Information</h2>
                             <p className="text-sm leading-5 text-gray">
@@ -168,7 +168,7 @@ const EditProfile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<b
                         </div>
                     </form>
                 </div>
-                <AddSkills />
+                <AddSkills/>
                 {isCurrentlyEditing &&
                     <div className="_border rounded-[10px] w-full p-4 flex items-center justify-end">
                         <div className="flex items-center gap-4">
@@ -178,12 +178,7 @@ const EditProfile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<b
                         </div>
                     </div>
                 }
-                {/* {isModalOpen && image && (
-                    <AvatarCropModal
-                        image={image}
-                        onClose={() => setIsModalOpen(false)}
-                    />
-                )} */}
+                
 
             </div>
         </div>
