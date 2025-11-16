@@ -4,7 +4,6 @@ import FriendsService from "@/services/FriendsService";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { BookUser, MessageSquareMore, UserRound, Users, X } from "lucide-react";
 import { useState } from "react"
-import Spinner from "./Spinner";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { IChat } from "@/types/types";

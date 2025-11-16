@@ -1,9 +1,9 @@
-import Header from "@/components/Header";
 import AuthClientUpload from "@/components/AuthClientUpload";
-import Sidebar from "@/components/Sidebar";
-import Footer from "@/components/Footer";
 import ComingSessionWarning from "@/components/ComingSessionWarning";
-import FriendList from "@/components/FriendList";
+import FriendList from "@/components/friends/FriendList";
+import Footer from "@/components/layout/Footer";
+import Header from "@/components/layout/Header";
+import Sidebar from "@/components/layout/Sidebar";
 
 export default async function MainLayout({
   children,

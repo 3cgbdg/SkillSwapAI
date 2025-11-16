@@ -1,7 +1,6 @@
 "use client"
 
 import { IChat, IFriend } from "@/types/types";
-import Spinner from "./Spinner";
 import Image from "next/image";
 import { BookUser, MessageSquareMore, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -10,6 +9,7 @@ import { useMutation } from "@tanstack/react-query";
 import { updateChats } from "@/redux/chatsSlice";
 import { Dispatch, SetStateAction, useEffect } from "react";
 import ChatsService from "@/services/ChatsService";
+import Spinner from "../Spinner";
 
 const FriendsPopup = ({ friends, isLoading, setIsPopupOpen }: { friends: IFriend[] | undefined, isLoading: boolean, setIsPopupOpen: Dispatch<SetStateAction<boolean>> }) => {
     const router = useRouter()
