@@ -3,7 +3,7 @@ import { formatDate } from "@/app/utils/calendar";
 import { useAppDispatch } from "@/hooks/reduxHooks";
 import { addSession } from "@/redux/sessionsSlice";
 import { IFriend } from "@/types/types";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Users, X } from "lucide-react";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
@@ -14,11 +14,11 @@ import SessionsService from "@/services/SessionsService";
 import RequestsService from "@/services/RequestsService";
 import { createSessionFormData } from "@/validation/createSession";
 
-const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup, otherName }: { otherName: string | null, year: number, month: number, setAddSessionPopup: Dispatch<SetStateAction<boolean>>, setTableCells: Dispatch<SetStateAction<TableCellType[]>> }) => {
-    const { register, watch, handleSubmit, setValue, formState: { errors } } = useForm<createSessionFormData>();
+const CalendarPopup = ({ year, month, setAddSessionPopup, otherName }: { otherName: string | null, year: number, month: number, setAddSessionPopup: Dispatch<SetStateAction<boolean>> }) => {
+    const { register, handleSubmit, setValue, formState: { errors } } = useForm<createSessionFormData>();
     const dispatch = useAppDispatch();
+    const queryClient = useQueryClient()
     const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
     const { socket } = useSocket();
     const [chars, setChars] = useState<string>("");
     const [addFriendButton, setAddFriendButton] = useState<boolean>(false);
@@ -48,14 +48,7 @@ const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup, otherNa
                 dispatch(addSession(data));
             if (socket)
                 socket.emit('createSessionRequest', { id: data.id })
-            setTableCells(prev => prev.map(item => {
-                if (new Date(item.date).getDate() === new Date(data.date).getDate()) {
-                    const updatedSessions = [...item.sessions, data].sort((a, b) => a.start - b.start)
-                    return ({ date: item.date, sessions: updatedSessions })
-                } else {
-                    return item
-                }
-            }))
+            queryClient.invalidateQueries({ queryKey: ['sessions', month] });
         },
         onError: (error: any) => {
             setBadRequestErrorMessage(error.response?.data?.message || error.message);
@@ -148,7 +141,7 @@ const CalendarPopup = ({ year, month, setTableCells, setAddSessionPopup, otherNa
                     <div className="flex flex-col gap-2">
                         <label className="text-sm leading-[22px] font-medium" htmlFor="date">Date</label>
                         <div className="relative input flex items-center gap-2 text-gray text-sm leading-[22px] ">
-                            <input max={formatDate(lastDay)} min={formatDate(firstDay)}  {...register("date", { required: "Field is required" })} className="w-full outline-none " type="date" placeholder="Enter title" id="date" />
+                            <input min={formatDate(firstDay)}  {...register("date", { required: "Field is required" })} className="w-full outline-none " type="date" placeholder="Enter title" id="date" />
                         </div>
                         {errors.date && (
                             <span data-testid='error' className="text-red-500 font-medium ">

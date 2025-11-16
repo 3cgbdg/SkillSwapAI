@@ -23,7 +23,7 @@ const Page = () => {
             <div className="_border overflow-hidden rounded-[10px] col-span-3 xl:col-span-2">
                 <Calendar />
             </div>
-            <div className="_border overflow-hidden xl:block hidden rounded-[10px] col-span-1">
+            <div className="_border overflow-hidden  rounded-[10px] col-span-3 xl:col-span-1">
                 {/* header */}
                 <div className="border-b-1 border-neutral-300">
                     <div className=" gap-2 p-6 ">
