@@ -54,7 +54,7 @@ const ChatSidebar = () => {
 
 
     const mutationSearch = useMutation({
-        
+
         mutationFn: async () => FriendsService.getFriends(),
         onSuccess: (data) => {
             setFriends(data);
@@ -134,7 +134,11 @@ const ChatSidebar = () => {
                                         <div className={`absolute bottom-0  right-0 border-2 border-white rounded-full size-3 ${onlineUsers.includes(chat.friend.id) ? "bg-green-500" : "bg-gray"}`}></div>
                                     </div>
                                     :
-                                    <UserRound size={24} />
+                                    <div >
+                                        <UserRound size={24} />
+                                        <div className={`absolute bottom-0  right-0 border-2 border-white rounded-full size-3 ${onlineUsers.includes(chat.friend.id) ? "bg-green-500" : "bg-gray"}`}></div>
+                                    </div>
+
                                 }
                             </div>
 
