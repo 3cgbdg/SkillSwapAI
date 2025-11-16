@@ -10,7 +10,7 @@ export class ProfilesService {
   constructor(private readonly prisma: PrismaService, private readonly s3Service: S3Service) { };
 
   async findOne(id: string) {
-    const profile = await this.prisma.user.findFirst({ where: { id: id } });
+    const profile = await this.prisma.user.findFirst({ where: { id: id } ,include:{skillsToLearn:{select:{title:true}},knownSkills:{select:{title:true}}} });
     if (profile) {
       const { password, ...user } = profile;
       return user;

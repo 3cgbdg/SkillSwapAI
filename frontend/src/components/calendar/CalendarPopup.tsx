@@ -82,7 +82,7 @@ const CalendarPopup = ({ year, month, setAddSessionPopup, otherName }: { otherNa
         <div className=" absolute   top-0 left-0 size-full bg-[#6B72808C] flex items-center justify-center">
 
             <div className="_border rounded-md p-4  bg-white! max-w-[500px]  w-full">
-                <div className="flex w-full mb-6  items-center justify-between">
+                <div className="flex w-full mb-2  items-center justify-between">
                     <h2 className="text-lg leadiing-7 font-semibold">Create a new Session</h2>
 
                     <button onClick={() => setAddSessionPopup(false)} className=" button-transparent">
@@ -90,7 +90,7 @@ const CalendarPopup = ({ year, month, setAddSessionPopup, otherName }: { otherNa
                     </button>
                 </div>
                 <form onSubmit={handleSubmit(createSession)} className="flex px-4  flex-col gap-4 w-full">
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-1">
                         <label className="text-sm leading-[22px] font-medium" htmlFor="title">Title</label>
                         <div className="relative input flex items-center gap-2 text-gray text-sm leading-[22px] ">
                             <input  {...register("title")} className="w-full outline-none" placeholder="Enter title" type="text" id="title" />
@@ -101,20 +101,20 @@ const CalendarPopup = ({ year, month, setAddSessionPopup, otherName }: { otherNa
                             </span>
                         )}
                     </div>
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-1">
                         <label className="text-sm leading-[22px] font-medium" htmlFor="description">Description <span className="text-gray">(Optional)</span></label>
                         <div className="relative input flex items-center gap-2 text-gray text-sm leading-[22px] ">
                             <textarea maxLength={50}  {...register("description")} className="w-full outline-none min-h-10" placeholder="Enter title" id="description" />
                         </div>
                     </div>
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-1">
                         <label className="text-sm leading-[22px] font-medium" htmlFor="description">Meeting Link <span className="text-gray">(Optional)</span></label>
                         <div className="relative input flex items-center gap-2 text-gray text-sm leading-[22px] ">
                             <input  {...register("meetingLink")} className="w-full outline-none" placeholder="Enter title" type="text" id="meetingLink" />
                         </div>
                     </div>
-                    <div className="flex items-start gap-4 justify-between">
-                        <div className="flex flex-col gap-2">
+                    <div className="flex items-start gap-2 justify-between">
+                        <div className="flex flex-col gap-1">
                             <label className="text-sm leading-[22px] font-medium" htmlFor="start">Start Hour</label>
                             <div className="relative input flex items-center gap-2 text-gray text-sm leading-[22px] ">
                                 <input  {...register("start")} className="w-full outline-none" placeholder="Enter start hour" type="text" id="start" />
@@ -125,7 +125,7 @@ const CalendarPopup = ({ year, month, setAddSessionPopup, otherName }: { otherNa
                                 </span>
                             )}
                         </div>
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-1">
                             <label className="text-sm leading-[22px] font-medium" htmlFor="end">End Hour</label>
                             <div className="relative input flex items-center gap-2 text-gray text-sm leading-[22px] ">
                                 <input  {...register("end")} className="w-full outline-none" placeholder="Enter end hour" type="text" id="end" />
@@ -137,7 +137,7 @@ const CalendarPopup = ({ year, month, setAddSessionPopup, otherName }: { otherNa
                             )}
                         </div>
                     </div>
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-1">
                         <label className="text-sm leading-[22px] font-medium" htmlFor="date">Date</label>
                         <div className="relative input flex items-center gap-2 text-gray text-sm leading-[22px] ">
                             <input min={formatDate(firstDay)}  {...register("date", { required: "Field is required" })} className="w-full outline-none " type="date" placeholder="Enter title" id="date" />
@@ -148,7 +148,7 @@ const CalendarPopup = ({ year, month, setAddSessionPopup, otherName }: { otherNa
                             </span>
                         )}
                     </div>
-                    <div className="flex flex-col gap-2 relative">
+                    <div className="flex flex-col gap-1 relative">
                         <label className="text-sm leading-[22px] font-medium" htmlFor="friendName">Choose partner:</label>
                         <div className=" input flex items-center gap-2 text-gray text-sm leading-[22px] ">
                             <input type="text" placeholder="Find by name" id="friendName"   {...register("friendName")} className="w-full outline-none " onChange={async (e) => {

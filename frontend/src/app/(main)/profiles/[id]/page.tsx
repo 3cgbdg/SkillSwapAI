@@ -6,7 +6,8 @@ import ChatsService from "@/services/ChatsService";
 import ProfilesService from "@/services/ProfilesService";
 import { IChat } from "@/types/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Calendar, MessageSquareMore } from "lucide-react";
+import { Calendar, MessageSquareMore, UserRound } from "lucide-react";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 
 const page = () => {
@@ -26,42 +27,115 @@ const page = () => {
         }
     })
 
+    console.log(profile)
     return (<>
         {profile &&
-            <div className="grid gap-8 grid-cols-3">
-                <div className="_border rounded-[10px] col-span-2 banner_gradient flex flex-col gap-4  p-8">
-                    <div className="flex flex-col gap-2">
-                        <h1 className="page-title">Your AI-Powered Training Plan with Alex Rivera</h1>
-                        <p className="text-lg leading-7 ">Mastering Advanced JavaScript</p>
-                    </div>
-                    <div className="">
-                        Description
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <h3 className="text-xl leading-7 font-semibold">Benefits:</h3>
-                        <ol className="list-disc">
+            <div className="md:grid grid-cols-5 flex  justify-center items-start   gap-6">
 
-                            <li className="">dsd</li>
-                            <li className="">dsd</li>
-                            <li className="">dsd</li>
-                        </ol>
-                    </div>
-                </div>
-                <div className="_border rounded-[10px] col-span-1 p-6">
+                <div className="_border col-span-3 rounded-[10px] p-6">
                     <div className="flex flex-col gap-4 items-center">
-                        <div className="size-24 rounded-full bg-black"></div>
+                        {!profile?.imageUrl ?
+                            <UserRound size={24} />
+                            :
+                            <div className="size-24 relative  rounded-full overflow-hidden">
+                                <Image className="object-cover" src={profile.imageUrl} fill alt="profile image" />
+                            </div>
+
+                        }
                         <h2 className="section-title">{profile?.name}</h2>
-                        <div className="flex flex-col gap-3 mt-4 w-full">
+                        {profile.bio!== null &&  profile.bio.length>0 &&
+                            <div className="w-full ">
+                                <h3 className="text-lg leading-7 ">Bio:</h3>
+                                <p className="text-gray text-sm">{profile.bio}</p>
+                            </div>
+                        }
+                        <div className="flex flex-col gap-2 w-full">
+                            <h3 className="text-lg leading-7 ">Actions:</h3>
+                        <div className="flex items-center gap-3 mt-1">
                             <button onClick={() => createChat({ payload: { friendId: id, friendName: profile.name } })} className="button-blue flex items-center gap-5">
                                 <MessageSquareMore size={20} />
                                 <span>Message {profile?.name}</span>
                             </button>
-                            <button className="button-transparent rounded-md! flex items-center gap-5">
+                            <button onClick={() => router.push(`/calendar?schedule=true&name=${encodeURIComponent(profile.name)}`)} className="button-transparent rounded-md! flex items-center gap-5">
                                 <Calendar size={20} />
                                 <span>Schedule Session</span>
                             </button>
                         </div>
+                        </div>
+                        {/* for 768< */}
+                        <div className="flex md:hidden flex-col gap-2 gap-8">
+                            {/* for known skills */}
+                            <div className="_border p-6 pt-[21px] rounded-2xl flex flex-col">
+                                <h2 className="text-2xl leading-6 font-bold mb-4">Skills I Know</h2>
+                                <div className="basis-full">
+                                    <div className="flex gap-2 flex-wrap mb-6 overflow-y-auto   max-h-[170px] ">
+
+                                        {profile?.knownSkills && profile?.knownSkills?.length > 0 ? profile.knownSkills.map((skill, idx) => (
+                                            <div key={idx} className="bg-blue text-sm leading-5 font-medium h-fit flex w-fit gap-2 px-3.5 text-white py-2 items-center rounded-2xl">
+                                                {skill.title}
+                                            </div>
+                                        )) :
+                                            <span className="font-medium  leading-5 " >No skills yet</span>}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* for want-to-learn skills */}
+                            <div className="_border p-6 pt-[21px] rounded-2xl flex flex-col">
+                                <h2 className="text-2xl leading-6 font-bold mb-4">Skills I Want to Learn</h2>
+                                <div className="basis-full">
+                                    <div className="flex gap-2  flex-wrap mb-6 overflow-y-auto max-h-[170px] ">
+                                        {profile?.skillsToLearn && profile?.skillsToLearn?.length > 0 ? profile.skillsToLearn.map((skill, idx) => (
+                                            <div key={idx} className="bg-blue text-sm leading-5 font-medium h-fit flex w-fit gap-2 px-3.5 text-white py-2 items-center rounded-2xl">
+                                                {skill.title}
+                                            </div>
+                                        )) :
+                                            <span className="font-medium  leading-5 " >No skills yet</span>}
+                                    </div>
+                                </div>
+
+                            </div>
+
+
+                        </div>
                     </div>
+
+                </div>
+                {/* for 768> */}
+                <div className=" md:flex hidden col-span-2 flex-col gap-2 gap-8">
+                    {/* for known skills */}
+                    <div className="_border p-6 pt-[21px] rounded-2xl flex flex-col">
+                        <h2 className="text-2xl leading-6 font-bold mb-4">Skills I Know</h2>
+                        <div className="basis-full">
+                            <div className="flex gap-2 flex-wrap mb-6 overflow-y-auto   max-h-[170px] ">
+
+                                {profile?.knownSkills && profile?.knownSkills?.length > 0 ? profile.knownSkills.map((skill, idx) => (
+                                    <div key={idx} className="bg-blue text-sm leading-5 font-medium h-fit flex w-fit gap-2 px-3.5 text-white py-2 items-center rounded-2xl">
+                                        {skill.title}
+                                    </div>
+                                )) :
+                                    <span className="font-medium  leading-5 " >No skills yet</span>}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* for want-to-learn skills */}
+                    <div className="_border p-6 pt-[21px] rounded-2xl flex flex-col">
+                        <h2 className="text-2xl leading-6 font-bold mb-4">Skills I Want to Learn</h2>
+                        <div className="basis-full">
+                            <div className="flex gap-2  flex-wrap mb-6 overflow-y-auto max-h-[170px] ">
+                                {profile?.skillsToLearn && profile?.skillsToLearn?.length > 0 ? profile.skillsToLearn.map((skill, idx) => (
+                                    <div key={idx} className="bg-blue text-sm leading-5 font-medium h-fit flex w-fit gap-2 px-3.5 text-white py-2 items-center rounded-2xl">
+                                        {skill.title}
+                                    </div>
+                                )) :
+                                    <span className="font-medium  leading-5 " >No skills yet</span>}
+                            </div>
+                        </div>
+
+                    </div>
+
+
                 </div>
             </div>
         }

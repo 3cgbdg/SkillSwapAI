@@ -96,7 +96,9 @@ const Calendar = () => {
     }, [visibleDays, monthSessions]);
 
 
-
+    useEffect(() => {
+         document.body.style.overflowY = addSessionPopup ? "hidden" : "auto";
+    },[addSessionPopup])
 
     return (
         <div className="">
