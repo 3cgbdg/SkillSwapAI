@@ -55,6 +55,8 @@ model Friendship {
   user2Id String
 
   @@unique([user1Id, user2Id])
+  @@index([user1Id])
+  @@index([user2Id])
 }
 
 model Request {
@@ -67,6 +69,11 @@ model Request {
   session   Session?    @relation("sessionRequest", fields: [sessionId], references: [id])
   sessionId String?
   status    String      @default("pending")
+
+  @@index([fromId])
+  @@index([toId])
+  @@index([sessionId])
+  @@index([type])
 }
 
 model Skill {
@@ -93,6 +100,11 @@ model Message {
   content   String
   createdAt DateTime @default(now())
   isSeen    Boolean  @default(false)
+
+  @@index([chatId])
+  @@index([fromId])
+  @@index([toId])
+  @@index([createdAt])
 }
 
 model Session {
@@ -107,6 +119,9 @@ model Session {
   users       User[]        @relation("userSessions")
   request     Request[]     @relation("sessionRequest")
   meetingLink String?
+
+  @@index([date])
+  @@index([status])
 }
 
 model Match {
@@ -120,11 +135,11 @@ model Match {
   keyBenefits   String[]
   plan          Plan?
   createdAt     DateTime @default(now())
-  // check if indexes would be good here
-  // @@index([initiatorId])
-  // @@index([otherId])
 
   @@unique([initiatorId, otherId])
+  @@index([initiatorId])
+  @@index([otherId])
+  @@index([createdAt])
 }
 
 model Plan {
@@ -144,6 +159,9 @@ model Module {
   resources  Resource[]
   planId     String
   plan       Plan         @relation(fields: [planId], references: [id])
+
+  @@index([planId])
+  @@index([status])
 }
 
 model Resource {
@@ -153,4 +171,6 @@ model Resource {
   title       String
   link        String
   description String?
+
+  @@index([moduleId])
 }
