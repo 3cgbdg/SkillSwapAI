@@ -20,6 +20,7 @@ import SearchInputMobile from "./headerComponents/SearchInputMobile"
 import NotificationsBell from "./headerComponents/NotificationsBell"
 import AvatarMenu from "./headerComponents/AvatarMenu"
 import NavigationMenu from "./headerComponents/NavigationMenu"
+import { toast } from "react-toastify"
 
 
 
@@ -68,19 +69,29 @@ const Header = () => {
 
 
     // get requests
-    const { data: reqs } = useQuery({
+    const { data: reqs, isError, error } = useQuery({
         queryKey: ['reqs'],
         queryFn: async () => RequestsService.getRequests()
     })
+    // handling api error   
+    useEffect(() => {
+        if (isError) {
+            toast.error(error.message)
+        }
+    }, [isError, error])
 
     // add a new friend 
     const mutationAddFriend = useMutation({
         mutationFn: async ({ fromId, id }: { fromId: string, id: string }) => FriendsService.createFriend(fromId, id),
-        onSuccess: (id: string) => {
+        onSuccess: (data) => {
+            toast.success(data.message);
             queryClient.setQueryData(["reqs"], (old: any) => {
                 if (!old) return [];
-                return old.filter((req: any) => req.id !== id)
+                return old.filter((req: any) => req.id !== data.id)
             })
+        },
+        onError: (err) => {
+            toast.error(err.message);
         }
 
     })

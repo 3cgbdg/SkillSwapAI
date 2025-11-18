@@ -12,9 +12,9 @@ class MatchesService {
         return res.data;
     }
 
-    async generateActiveMatch(partnerId: string): Promise<IMatch> {
+    async generateActiveMatch(partnerId: string): Promise<{ match: IMatch, message: string }> {
         const res = await api.post(`/matches`, { otherId: partnerId });
-        return res.data ;
+        return res.data;
     }
 }
 

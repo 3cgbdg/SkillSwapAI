@@ -15,8 +15,8 @@ export class PlansController {
 
   @Patch(':planId/modules/:moduleId/status/completed')
   async updateStatusToCompeted(@Param('planId') planId: string,
-    @Param('moduleId') moduleId: string) {
-    return this.plansService.updateStatusToCompeted(planId,moduleId);
+    @Param('moduleId') moduleId: string): Promise<{ message: string }> {
+    return this.plansService.updateStatusToCompeted(planId, moduleId);
   }
 
 

@@ -33,7 +33,7 @@ export class AuthController {
 
       maxAge: 1000 * 3600 * 24 * 7,
     })
-    return res.json({ message: "Successfully logged in!" });
+    return res.json({ message: "Successfully signed up!" });
   }
 
   @Post("login")

@@ -1,4 +1,5 @@
 "use client"
+import { toast } from 'react-toastify';
 import AddSkills from "@/components/profile/AddSkills";
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
 import { addAiSuggestionSkills, addWantToLearnSkill, removeAiSuggestionSkill } from "@/redux/authSlice";
@@ -25,14 +26,18 @@ const Profile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<boole
     })
 
     const { mutate: getNewAiSuggestionSkills, isPending } = useMutation({
-        mutationFn: async () => {
-            const skills = await AiService.getNewAiSuggestionSkills();
-            if (skills)
-                dispatch(addAiSuggestionSkills(skills));
+        mutationFn: async () => AiService.getNewAiSuggestionSkills(),
+        retry: 1,
+        onSuccess: (data) => {
+            if (data) {
+                dispatch(addAiSuggestionSkills(data.skills));
+                toast.success(data.message)
+            }
         },
+        onError: (err) => {
+            toast.error(err.message)
+        }
     })
-
-    // setting filtered ai suggestions 
 
 
     return (

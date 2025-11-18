@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "react-toastify";
 
 
 
@@ -30,8 +31,13 @@ const Page = () => {
   const [availableSkills, setAvailableSkills] = useState<{ id: string, title: string }[]>([]);
   const mutation = useMutation({
     mutationFn: async (data: Omit<signUpFormData, 'checkBox'>) => AuthService.signUp(data, knownSkills, skillsToLearn),
-    onSuccess: () => router.push("/dashboard"),
-
+    onSuccess: (data) => {
+      toast.success(data.message)
+      setTimeout(() => router.push("/dashboard"), 500);
+    },
+    onError: (err) => {
+      toast.error(err.message)
+    }
   })
 
   const { mutate: getSkills } = useMutation({

@@ -7,9 +7,9 @@ class FriendsService {
         return res.data
     }
 
-    async createFriend(fromId: string, id: string): Promise<string> {
-        await api.post("/friends", { id: fromId });
-        return id;
+    async createFriend(fromId: string, id: string): Promise<{ id: string, message: string }> {
+        const data = await api.post("/friends", { id: fromId }) as { message: string };
+        return { id, message: data.message };
     }
 
 }

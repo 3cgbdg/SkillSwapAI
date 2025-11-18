@@ -7,6 +7,7 @@ import { ChevronDown, Clock, Link as LinkIcon } from "lucide-react"
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Dispatch, SetStateAction } from "react"
+import { toast } from "react-toastify";
 
 const ModuleAccordion = ({ module, setIsActive, isActive, idx, planId }: { planId: string, module: IGeneratedModule, isActive: null | number, idx: number, setIsActive: Dispatch<SetStateAction<null | number>> }) => {
     const { id } = useParams() as { id: string };
@@ -16,8 +17,12 @@ const ModuleAccordion = ({ module, setIsActive, isActive, idx, planId }: { planI
             const res = await PlansService.setModuleStatusToCompleted(planId, module.id);
             return res;
         },
-        onSuccess: () => {
+        onSuccess: (data) => {
+            toast.success(data.message);
             queryClient.invalidateQueries({ queryKey: ['matches', id] })
+        },
+        onError: (err) => {
+            toast.error(err.message);
         }
     })
     return (
@@ -70,7 +75,7 @@ const ModuleAccordion = ({ module, setIsActive, isActive, idx, planId }: { planI
                     </div>
                     {
                         module.status == 'INPROGRESS' &&
-                        <button  onClick={() => setModuleStatusToCompleted()} className="button-blue w-fit">Set to completed</button>
+                        <button onClick={() => setModuleStatusToCompleted()} className="button-blue w-fit">Set to completed</button>
 
                     }
                 </div>}

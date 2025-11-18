@@ -17,7 +17,7 @@ export class ProfilesController {
 
   @UseInterceptors(FileInterceptor('image'))
   @Post('/photo/upload')
-  async uploadImage(@UploadedFile() file: Express.Multer.File, @Req() req: Request): Promise<string> {
+  async uploadImage(@UploadedFile() file: Express.Multer.File, @Req() req: Request): Promise<{url:string,message:string}> {
     if (!file)
       throw new InternalServerErrorException("There`s no image data")
     const key = `avatars/${Date.now()}_${file.originalname}`;

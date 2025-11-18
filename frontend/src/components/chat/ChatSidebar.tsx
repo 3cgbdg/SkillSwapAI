@@ -12,6 +12,7 @@ import { PanelLeftClose, PanelLeftOpen, Search, UserRound, Users } from "lucide-
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation"
 import React, { useEffect, useState } from "react"
+import { toast } from "react-toastify";
 
 // friend interface
 
@@ -58,13 +59,21 @@ const ChatSidebar = () => {
         mutationFn: async () => FriendsService.getFriends(),
         onSuccess: (data) => {
             setFriends(data);
+        },
+          onError: (err) => {
+            toast.error(err.message)
         }
     })
 
-    const mutationCreateChat = useMutation({
+    // for getting to chat or creating it 
+    const { mutate: createChat } = useMutation({
         mutationFn: async ({ payload }: { payload: { friendId: string, friendName: string } }) => ChatsService.createChat(payload),
-        onSuccess: (data: IChat) => {
-            dispatch(updateChats(data));
+        onSuccess: (data) => {
+            toast.success(data.message);
+            dispatch(updateChats(data.chat));
+        },
+        onError: (err)=>{
+            toast.error(err.message);
         }
     })
 
@@ -102,7 +111,7 @@ const ChatSidebar = () => {
                                             return (
                                                 <button onClick={() => {
                                                     setChars("");
-                                                    mutationCreateChat.mutate({ payload: { friendId: friend.id, friendName: friend.name } });
+                                                    createChat({ payload: { friendId: friend.id, friendName: friend.name } });
                                                 }} key={index} className="flex gap-2 button-transparent items-center  rounded-xl  ">
                                                     <Users size={20} />
                                                     {friend.name}

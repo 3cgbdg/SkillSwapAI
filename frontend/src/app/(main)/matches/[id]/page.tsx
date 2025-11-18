@@ -11,6 +11,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, MessageSquareMore } from "lucide-react";
 import { useParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 const Page = () => {
     const { id } = useParams() as { id: string };
@@ -34,19 +35,31 @@ const Page = () => {
     // for getting to chat or creating it 
     const { mutate: createChat } = useMutation({
         mutationFn: async ({ payload }: { payload: { friendId: string, friendName: string } }) => ChatsService.createChat(payload),
-        onSuccess: (data: IChat) => {
-            router.push(`/chats/${data.chatId}`);
-            dispatch(updateChats(data));
+        onSuccess: (data) => {
+            toast.success(data.message);
+            router.push(`/chats/${data.chat.chatId}`);
+            dispatch(updateChats(data.chat));
+        },
+        onError: (err) => {
+            toast.error(err.message);
         }
     })
 
 
 
-    const { data: plan } = useQuery({
+    const { data: plan, isError, error } = useQuery({
         queryKey: ['matches', id],
         queryFn: async () => PlansService.getPlan(currentMatch?.id),
         enabled: !!currentMatch,
     })
+
+    // handling api error
+
+    useEffect(() => {
+        if (isError) {
+            toast.error(error.message);
+        }
+    }, [isError, error])
 
     return (<>
         {currentMatch ?

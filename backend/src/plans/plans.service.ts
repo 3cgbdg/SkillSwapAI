@@ -62,7 +62,7 @@ export class PlansService {
 
   }
 
-  async updateStatusToCompeted(planId, moduleId) {
+  async updateStatusToCompeted(planId, moduleId):Promise<{message:string}> {
     const yourPlan = await this.prisma.plan.findUnique({ where: { id: planId }, include: { modules: { select: { id: true } } } });
     const isYourModule = yourPlan?.modules.find(item => item.id == moduleId);
     if (isYourModule) {

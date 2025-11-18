@@ -12,6 +12,7 @@ import FriendsService from "@/services/FriendsService";
 import SessionsService from "@/services/SessionsService";
 import RequestsService from "@/services/RequestsService";
 import { createSessionFormData } from "@/validation/createSession";
+import { toast } from "react-toastify";
 
 const CalendarPopup = ({ year, month, setAddSessionPopup, otherName }: { otherName: string | null, year: number, month: number, setAddSessionPopup: Dispatch<SetStateAction<boolean>> }) => {
     const { register, handleSubmit, setValue, formState: { errors } } = useForm<createSessionFormData>();
@@ -28,6 +29,9 @@ const CalendarPopup = ({ year, month, setAddSessionPopup, otherName }: { otherNa
         mutationFn: async () => FriendsService.getFriends(),
         onSuccess: (data) => {
             setFriends(data);
+        },
+        onError: (err) => {
+            toast.error(err.message)
         }
     })
 

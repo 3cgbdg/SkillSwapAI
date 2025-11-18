@@ -10,6 +10,7 @@ import { useEffect, useState } from "react"
 import MatchCard from "./MatchCard"
 import MatchesService from "@/services/MatchesService"
 import { addMatch } from "@/redux/matchesSlice"
+import { toast } from "react-toastify"
 
 const Matches = ({ matches, option }: { matches: IMatch[], option: 'available' | 'active' }) => {
     //array for checking if the item is in the active matches so we wont be able to generate new plan again
@@ -25,8 +26,12 @@ const Matches = ({ matches, option }: { matches: IMatch[], option: 'available' |
             return data;
         },
         onSuccess: (data) => {
-            dispatch(addMatch(data));
-            router.push(`/matches/${data.id}`)
+            toast.success(data.message)
+            dispatch(addMatch(data.match));
+            router.push(`/matches/${data.match.id}`)
+        },
+        onError: (err) => {
+            toast.error(err.message)
         }
     })
 
@@ -48,11 +53,15 @@ const Matches = ({ matches, option }: { matches: IMatch[], option: 'available' |
         };
     }, [panel]);
 
-    const { mutate: getOrCreateChat } = useMutation({
-        mutationFn: async ({ friendId, friendName }: { friendId: string, friendName: string }): Promise<IChat> => ChatsService.createChat({ friendName, friendId }),
+    const { mutate: createChat } = useMutation({
+        mutationFn: async ({ payload }: { payload: { friendId: string, friendName: string } }) => ChatsService.createChat(payload),
         onSuccess: (data) => {
-            dispatch(updateChats(data));
-            router.push(`chats/${data.chatId}`);
+            toast.success(data.message);
+            router.push(`/chats/${data.chat.chatId}`);
+            dispatch(updateChats(data.chat));
+        },
+        onError: (err) => {
+            toast.error(err.message);
         }
     })
     console.log(matches)
@@ -116,7 +125,7 @@ const Matches = ({ matches, option }: { matches: IMatch[], option: 'available' |
                 </div>
                 <div className="grid max-w-[450px] md:max-w-full mx-auto md:mx-0 md:w-fit  md:grid-cols-2 xl:grid-cols-3 gap-6 ">
                     {filteredMatch.map((match, idx) => (
-                        <MatchCard option={option} isInActiveMatches={activeMatches.findIndex(item => item.otherId == match.otherId) == -1 ? false : true} generateActiveMatch={generateActiveMatch} key={option == 'active' ? match.id : idx} match={match} getOrCreateChat={getOrCreateChat} />
+                        <MatchCard option={option} isInActiveMatches={activeMatches.findIndex(item => item.otherId == match.otherId) == -1 ? false : true} generateActiveMatch={generateActiveMatch} key={option == 'active' ? match.id : idx} match={match} getOrCreateChat={createChat} />
                     ))}
 
                 </div>

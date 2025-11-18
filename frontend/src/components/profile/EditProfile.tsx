@@ -11,6 +11,7 @@ import { editProfileFormData, editProfileSchema } from "@/validation/editProfile
 import { zodResolver } from "@hookform/resolvers/zod";
 import ProfilesService from "@/services/ProfilesService";
 import { changeAvatar, updateProfile } from "@/redux/authSlice";
+import { toast } from "react-toastify";
 
 
 
@@ -25,22 +26,59 @@ const EditProfile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<b
     const { mutate: saveChanges } = useMutation({
         mutationFn: async (data: Partial<editProfileFormData>) => {
             if (user) {
-                await ProfilesService.updateProfile(user.id, data)
-                dispatch(updateProfile(data))
+                const resData = await ProfilesService.updateProfile(user.id, data)
+                dispatch(updateProfile(data));
+                return resData;
             } else
                 return null;
         },
-        onSuccess: () => setIsCurrentlyEditing(false)
+        onSuccess: (data) => {
+            toast.success(data?.message);
+            setIsCurrentlyEditing(false)
+        },
+        onError: (err) => {
+            toast.error(err.message);
+        }
     })
 
     //deleting avatar image
     const { mutate: deleteAvatarImage } = useMutation({
         mutationFn: async () => {
-            await ProfilesService.deleteAvatarImage();
+            const resData = await ProfilesService.deleteAvatarImage();
             dispatch(changeAvatar(undefined));
+            return resData;
+        },
+        onSuccess: (data) => {
+            toast.success(data?.message);
+        },
+        onError: (err) => {
+            toast.error(err.message);
         }
     })
 
+    const { mutate: uploadAvatarImage } = useMutation({
+        mutationFn: async (file: File) => {
+            const form = new FormData();
+            console.log(file)
+            form.append('image', file);
+            const data = await ProfilesService.uploadImage(form);
+            return data;
+        },
+        onSuccess: (data) => {
+            toast.success(data.message);
+            dispatch(changeAvatar(data.url))
+        },
+        onError: (err) => {
+            toast.error(err.message);
+        }
+    })
+
+    // for getting image src-fit url 
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        uploadAvatarImage(file);
+    };
     //submit changes func 
 
     const onSubmit: SubmitHandler<editProfileFormData> = async (data) => {
@@ -57,16 +95,7 @@ const EditProfile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<b
         }
     }
 
-    // for getting image src-fit url 
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        const form = new FormData();
-        console.log(file)
-        form.append('image', file);
-        const url = await ProfilesService.uploadImage(form);
-        dispatch(changeAvatar(url))
-    };
+
     //setting default values to data form
     useEffect(() => {
         if (!user) return;

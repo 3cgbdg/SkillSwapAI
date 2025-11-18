@@ -8,7 +8,7 @@ export class AiController {
     constructor(private readonly aiService: AiService) { }
 
     @Post('profile/skills')
-    async getPlan(@Req() req: Request): Promise<string[] | null> {
+    async getPlan(@Req() req: Request): Promise<{ skills: string[], message: string } | null> {
         return this.aiService.getAiSuggestionSkills((req as any).user.id);
     }
 }

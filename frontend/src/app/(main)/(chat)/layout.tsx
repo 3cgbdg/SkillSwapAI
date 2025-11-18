@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
 import ChatsService from "@/services/ChatsService";
 import { useParams } from "next/navigation";
+import { toast } from "react-toastify";
 
 export default function ChatLayout({
   children,
@@ -17,7 +18,7 @@ export default function ChatLayout({
   const dispatch = useAppDispatch();
 
 
-  const { data: chats, isSuccess } = useQuery({
+  const { data: chats, isSuccess, isError, error } = useQuery({
     queryKey: ['chats'],
     queryFn: async () => ChatsService.getChats(),
   })
@@ -29,6 +30,12 @@ export default function ChatLayout({
     }
   }, [isSuccess, chats])
 
+  // handling error
+  useEffect(() => {
+    if (isError)
+      toast.error(error.message);
+  }, [isError, error])
+
   const { id } = useParams() as { id: string };
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
@@ -36,7 +43,7 @@ export default function ChatLayout({
     const mq = window.matchMedia("(max-width: 767px)");
     const handler = () => setIsMobile(mq.matches);
 
-    handler(); 
+    handler();
     mq.addEventListener("change", handler);
 
     return () => mq.removeEventListener("change", handler);

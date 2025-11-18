@@ -8,7 +8,7 @@ import { PlansService } from 'src/plans/plans.service';
 @Injectable()
 export class MatchesService {
   constructor(private readonly plansService: PlansService, private readonly prisma: PrismaService, private readonly aiService: AiService) { };
-  async generateActiveMatch(myId: string, otherId: string): Promise<Match> {
+  async generateActiveMatch(myId: string, otherId: string): Promise<{ match: Match, message: string }> {
     const existedMatchesForThisUsers = await this.prisma.match.findMany({
       where: {
         OR: [
@@ -42,9 +42,9 @@ export class MatchesService {
       }
     });
     if (!activeMatch)
-      throw new InternalServerErrorException('Cannot createt active match!');
+      throw new InternalServerErrorException('Cannot createt active match');
     await this.plansService.createPlan(activeMatch.id, result.generatedData.modules);
-    return activeMatch;
+    return { match: activeMatch, message: "Active match has been successfully generated" };
   }
 
   async getActiveMatches(myId: string): Promise<Match[]> {
@@ -58,7 +58,7 @@ export class MatchesService {
 
   async getAvailableMatches(myId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: myId }, include: { skillsToLearn: true, knownSkills: true } });
-    if (!user) throw new NotFoundException('User was not found!');
+    if (!user) throw new NotFoundException('User was not found');
     const skillsToLearnTitles = user.skillsToLearn.map(skill => skill.title);
     const knownSkillsTitles = user.knownSkills.map(skill => skill.title);
     const users = await this.prisma.user.findMany({ where: { knownSkills: { some: { title: { in: skillsToLearnTitles } } } }, include: { knownSkills: true, skillsToLearn: true } });

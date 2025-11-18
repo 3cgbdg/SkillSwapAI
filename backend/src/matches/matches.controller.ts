@@ -8,7 +8,7 @@ export class MatchesController {
   constructor(private readonly matchesService: MatchesService) { }
 
   @Post()
-  async create(@Req() req: Request, @Body('otherId') otherId: string): Promise<Match> {
+  async create(@Req() req: Request, @Body('otherId') otherId: string): Promise<{match:Match,message:string}> {
     if (!otherId || otherId.length == 0)
       throw new BadRequestException("No user id!");
     return this.matchesService.generateActiveMatch((req as any).user.id, otherId);

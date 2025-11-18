@@ -1,16 +1,12 @@
 "use client"
 
 import FriendsService from "@/services/FriendsService";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { BookUser, MessageSquareMore, UserRound, Users, X } from "lucide-react";
-import { useState } from "react"
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { IChat } from "@/types/types";
-import { updateChats } from "@/redux/chatsSlice";
-import { useAppDispatch } from "@/hooks/reduxHooks";
-import ChatsService from "@/services/ChatsService";
+import { useQuery } from "@tanstack/react-query";
+import { Users, X } from "lucide-react";
+import { useEffect, useState } from "react"
+
 import FriendsPopup from "./FriendsPopup";
+import { toast } from "react-toastify";
 
 // button + fixed friend list
 const FriendList = () => {
@@ -18,7 +14,7 @@ const FriendList = () => {
     const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
 
     // getting list of friends
-    const { data: friends, isLoading } = useQuery({
+    const { data: friends, isLoading, isError, error } = useQuery({
         queryKey: ['friends'],
         queryFn: async () => {
             const friends = await FriendsService.getFriends();
@@ -29,6 +25,11 @@ const FriendList = () => {
 
     })
 
+    useEffect(() => {
+        if (isError) {
+            toast.error(error.message);
+        }
+    }, [isError, error])
 
     return (
         <>
@@ -38,7 +39,7 @@ const FriendList = () => {
 
             </button>
             {isPopupOpen &&
-                <FriendsPopup isLoading={isLoading} setIsPopupOpen={setIsPopupOpen} friends={friends}/>}
+                <FriendsPopup isLoading={isLoading} setIsPopupOpen={setIsPopupOpen} friends={friends} />}
             {/* list */}
         </>
     )

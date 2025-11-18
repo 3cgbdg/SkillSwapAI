@@ -9,25 +9,40 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Calendar, MessageSquareMore, UserRound } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { toast } from "react-toastify";
 
 const page = () => {
     const { id } = useParams() as { id: string };
     const dispatch = useAppDispatch();
     const router = useRouter();
-    const { data: profile } = useQuery({
+    const { data: profile, error, isError } = useQuery({
         queryKey: ['profile', id],
         queryFn: async () => ProfilesService.getProfileById(id)
     })
-    // for getting 
+
+    // handling api error
+
+    useEffect(() => {
+        if (isError) {
+            toast.error(error.message);
+        }
+    }, [error, isError])
+
+    // for getting to chat or creating it 
     const { mutate: createChat } = useMutation({
         mutationFn: async ({ payload }: { payload: { friendId: string, friendName: string } }) => ChatsService.createChat(payload),
-        onSuccess: (data: IChat) => {
-            router.push(`/chats/${data.chatId}`);
-            dispatch(updateChats(data));
+        onSuccess: (data) => {
+            toast.success(data.message);
+            router.push(`/chats/${data.chat.chatId}`);
+            dispatch(updateChats(data.chat));
+        },
+        onError: (err) => {
+            toast.error(err.message);
         }
     })
 
-    console.log(profile)
+
     return (<>
         {profile &&
             <div className="md:grid grid-cols-5 flex  justify-center items-start   gap-6">
@@ -43,7 +58,7 @@ const page = () => {
 
                         }
                         <h2 className="section-title">{profile?.name}</h2>
-                        {profile.bio!== null &&  profile.bio.length>0 &&
+                        {profile.bio !== null && profile.bio.length > 0 &&
                             <div className="w-full ">
                                 <h3 className="text-lg leading-7 ">Bio:</h3>
                                 <p className="text-gray text-sm">{profile.bio}</p>
@@ -51,19 +66,19 @@ const page = () => {
                         }
                         <div className="flex flex-col gap-2 w-full">
                             <h3 className="text-lg leading-7 ">Actions:</h3>
-                        <div className="flex items-center gap-3 mt-1">
-                            <button onClick={() => createChat({ payload: { friendId: id, friendName: profile.name } })} className="button-blue flex items-center gap-5">
-                                <MessageSquareMore size={20} />
-                                <span>Message {profile?.name}</span>
-                            </button>
-                            <button onClick={() => router.push(`/calendar?schedule=true&name=${encodeURIComponent(profile.name)}`)} className="button-transparent rounded-md! flex items-center gap-5">
-                                <Calendar size={20} />
-                                <span>Schedule Session</span>
-                            </button>
-                        </div>
+                            <div className="flex items-center gap-3 mt-1">
+                                <button onClick={() => createChat({ payload: { friendId: id, friendName: profile.name } })} className="button-blue flex items-center gap-5">
+                                    <MessageSquareMore size={20} />
+                                    <span>Message {profile?.name}</span>
+                                </button>
+                                <button onClick={() => router.push(`/calendar?schedule=true&name=${encodeURIComponent(profile.name)}`)} className="button-transparent rounded-md! flex items-center gap-5">
+                                    <Calendar size={20} />
+                                    <span>Schedule Session</span>
+                                </button>
+                            </div>
                         </div>
                         {/* for 768< */}
-                        <div className="flex md:hidden flex-col gap-2 gap-8">
+                        <div className="flex md:hidden flex-col gap-8">
                             {/* for known skills */}
                             <div className="_border p-6 pt-[21px] rounded-2xl flex flex-col">
                                 <h2 className="text-2xl leading-6 font-bold mb-4">Skills I Know</h2>
@@ -102,7 +117,7 @@ const page = () => {
 
                 </div>
                 {/* for 768> */}
-                <div className=" md:flex hidden col-span-2 flex-col gap-2 gap-8">
+                <div className=" md:flex hidden col-span-2 flex-col gap-8">
                     {/* for known skills */}
                     <div className="_border p-6 pt-[21px] rounded-2xl flex flex-col">
                         <h2 className="text-2xl leading-6 font-bold mb-4">Skills I Know</h2>

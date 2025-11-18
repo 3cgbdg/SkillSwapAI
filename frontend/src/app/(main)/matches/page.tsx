@@ -5,19 +5,28 @@ import Spinner from "@/components/Spinner";
 import { useAppSelector } from "@/hooks/reduxHooks"
 import MatchesService from "@/services/MatchesService";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { toast } from "react-toastify";
 
 const Page = () => {
 
 
   //get and maintain available matches
-  const { data: matches, isLoading } = useQuery({
+  const { data: matches, isLoading, isError, error } = useQuery({
     queryKey: ['available', 'matches'],
     queryFn: async () => {
       const matches = await MatchesService.getAvailableMatches();
-      console.log(matches);
       return matches;
     }
   })
+
+  // handling api error
+
+  useEffect(() => {
+    if (isError) {
+      toast.error(error.message);
+    }
+  }, [isError, error])
 
   if (!isLoading) {
     if (matches && matches.length > 0) {

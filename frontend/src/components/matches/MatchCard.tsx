@@ -4,7 +4,7 @@ import { Book, Calendar, MessageSquare } from 'lucide-react'
 import { useRouter } from 'next/navigation';
 import React from 'react'
 
-const MatchCard = ({ match, isInActiveMatches, option, getOrCreateChat, generateActiveMatch }: { isInActiveMatches: boolean, option: 'available' | 'active', generateActiveMatch: UseMutateFunction<IMatch, Error, string, unknown>, match: IMatch, getOrCreateChat: UseMutateFunction<IChat, Error, { friendId: string; friendName: string; }, unknown> }) => {
+const MatchCard = ({ match, isInActiveMatches, option, getOrCreateChat, generateActiveMatch }: { isInActiveMatches: boolean, option: 'available' | 'active', generateActiveMatch: UseMutateFunction<{ match: IMatch; message: string; }, Error, string, unknown>, match: IMatch, getOrCreateChat: UseMutateFunction<{ chat: IChat; message: string; }, Error, { payload: { friendId: string; friendName: string; }; }, unknown> }) => {
 
 
     const router = useRouter();
@@ -50,32 +50,32 @@ const MatchCard = ({ match, isInActiveMatches, option, getOrCreateChat, generate
                 }
                 <div className=" mx-auto mt-6 place-self-end basis-full">
 
-  <div className="flex gap-3   flex-wrap justify-center">
-                    
-                    <button onClick={() => getOrCreateChat({ friendId: match.otherId, friendName: match.other.name })} className="button-blue flex gap-2 items-center  font-medium!">
-                        <MessageSquare size={16} />
-                        Chat</button>
-                    <button onClick={() => router.push(`/calendar?schedule=true&name=${encodeURIComponent(match.other.name)}`)} className="button-transparent rounded-md! flex gap-1 items-center  font-medium!">
-                        <Calendar size={16} />
-                        Schedule
-                    </button>
-                    {option == 'available' ?
-                        <button onClick={() => !isInActiveMatches ? generateActiveMatch(match.otherId) : router.push(`/matches/active`)} className={`button-transparent rounded-md!  flex gap-1 items-center  font-medium!`}>
-                            <Book size={16} />
-                            {isInActiveMatches ? 'Go to active matches' :
-                                'Generate plan'
-                            }
+                    <div className="flex gap-3   flex-wrap justify-center">
 
+                        <button onClick={() => getOrCreateChat({ payload: { friendId: match.otherId, friendName: match.other.name } })} className="button-blue flex gap-2 items-center  font-medium!">
+                            <MessageSquare size={16} />
+                            Chat</button>
+                        <button onClick={() => router.push(`/calendar?schedule=true&name=${encodeURIComponent(match.other.name)}`)} className="button-transparent rounded-md! flex gap-1 items-center  font-medium!">
+                            <Calendar size={16} />
+                            Schedule
                         </button>
-                        :
-                        <button onClick={() => router.push(`/matches/${match.id}`)} className={`button-transparent rounded-md!  flex gap-1 items-center  font-medium!`}>
-                            <Book size={16} />
-                            Go to your plan
-                        </button>
-                    }
+                        {option == 'available' ?
+                            <button onClick={() => !isInActiveMatches ? generateActiveMatch(match.otherId) : router.push(`/matches/active`)} className={`button-transparent rounded-md!  flex gap-1 items-center  font-medium!`}>
+                                <Book size={16} />
+                                {isInActiveMatches ? 'Go to active matches' :
+                                    'Generate plan'
+                                }
+
+                            </button>
+                            :
+                            <button onClick={() => router.push(`/matches/${match.id}`)} className={`button-transparent rounded-md!  flex gap-1 items-center  font-medium!`}>
+                                <Book size={16} />
+                                Go to your plan
+                            </button>
+                        }
+                    </div>
                 </div>
-                </div>
-              
+
 
             </div>
         </div>

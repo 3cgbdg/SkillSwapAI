@@ -10,16 +10,24 @@ import { updateChats } from "@/redux/chatsSlice";
 import { Dispatch, SetStateAction, useEffect } from "react";
 import ChatsService from "@/services/ChatsService";
 import Spinner from "../Spinner";
+import { toast } from "react-toastify";
 
 const FriendsPopup = ({ friends, isLoading, setIsPopupOpen }: { friends: IFriend[] | undefined, isLoading: boolean, setIsPopupOpen: Dispatch<SetStateAction<boolean>> }) => {
     const router = useRouter()
     const dispatch = useAppDispatch();
+
+
+    // for getting to chat or creating it 
     const { mutate: createChat } = useMutation({
         mutationFn: async ({ payload }: { payload: { friendId: string, friendName: string } }) => ChatsService.createChat(payload),
-        onSuccess: (data: IChat) => {
+        onSuccess: (data) => {
+            toast.success(data.message);
             setIsPopupOpen(false)
-            router.push(`/chats/${data.chatId}`);
-            dispatch(updateChats(data));
+            router.push(`/chats/${data.chat.chatId}`);
+            dispatch(updateChats(data.chat));
+        },
+        onError: (err) => {
+            toast.error(err.message);
         }
     })
 

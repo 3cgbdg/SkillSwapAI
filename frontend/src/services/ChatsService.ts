@@ -11,8 +11,7 @@ class ChatsService {
         return res.data
     }
 
-    async createChat(payload: { friendId: string, friendName: string }): Promise<IChat> {
-        console.log(payload)
+    async createChat(payload: { friendId: string, friendName: string }): Promise<{ chat: IChat, message: string }> {
         const res = await api.post("/chats", payload); return res.data
     }
 

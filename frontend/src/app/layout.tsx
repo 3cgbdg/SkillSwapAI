@@ -5,6 +5,7 @@ import QueryProvider from "@/providers/QueryProvider";
 import ReduxProvider from "@/providers/ReduxProvider";
 import { SocketProvider } from "@/context/SocketContext";
 import CheckEmptyPath from "@/components/CheckEmptyPath";
+import { ToastContainer } from "react-toastify";
 
 
 const OswaldFont = Oswald({
@@ -48,6 +49,8 @@ export default function RootLayout({
               <div className="">
                 {children}
               </div>
+              {/* for toast position */}
+              <ToastContainer  position="top-right" />
             </SocketProvider>
           </ReduxProvider>
         </QueryProvider>

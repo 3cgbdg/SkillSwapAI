@@ -54,7 +54,8 @@ export class AiService {
   }
 
 
-  async getAiSuggestionSkills(myId: string): Promise<string[] | null> {
+  async getAiSuggestionSkills(myId: string): Promise<{ skills: string[], message: string } | null> {
+
     if (!myId || myId.length == 0) {
       throw new BadRequestException();
     }
@@ -82,8 +83,7 @@ export class AiService {
       await this.prisma.user.update({ where: { id: myId }, data: { aiSuggestionSkills: readyAiArray } });
     }
     const returnAiArray = readyAiArray?.filter(item => !stringArraySkillsToLearn.includes(item))
-    console.log(readyAiArray);
-    return returnAiArray || null;
+    return returnAiArray ? { skills: returnAiArray, message: 'Skills successfully generated!' } : null;
   }
 
   // private generic func  for parsing income ai response object

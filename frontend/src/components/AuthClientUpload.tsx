@@ -34,6 +34,12 @@ const AuthClientUpload = () => {
         }
     }, [authState.loading, activeMatchesState.loading]);
 
+    useEffect(() => {
+        if (authState.error || activeMatchesState.error) {
+            router.push("/auth/login");
+        }
+    }, [authState.error, activeMatchesState.error, router]);
+
     if (authState.loading || activeMatchesState.loading) {
         return <div className="fixed inset-0 flex items-center justify-center page-title bg-gray/80 z-100 overflow-hidden">
             <Spinner size={40} color='blue' />
@@ -41,10 +47,7 @@ const AuthClientUpload = () => {
 
 
     }
-    if (authState.error || activeMatchesState.error) {
-        router.push("/auth/login");
-        return null;
-    }
+
 
     return null;
 }
