@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
 import { updateChats } from "@/redux/chatsSlice";
 import { addOnlineUser, removeOnlineUser, setOnlineUsers } from "@/redux/onlineUsersSlice";
 import ChatsService from "@/services/ChatsService";
-import FriendsService from "@/services/FriendsService";
+import useFriends from '@/hooks/useFriends';
 import { IChat, IFriend } from "@/types/types";
 import { useMutation } from "@tanstack/react-query";
 import { PanelLeftClose, PanelLeftOpen, Search, UserRound, Users } from "lucide-react";
@@ -23,7 +23,7 @@ const ChatSidebar = () => {
     const router = useRouter();
     const path = usePathname();
     const [chars, setChars] = useState<string>("");
-    const [friends, setFriends] = useState<IFriend[] | null>(null);
+    const { friends, isFetching, refetch } = useFriends();
     const dispatch = useAppDispatch();
     const { chats } = useAppSelector(state => state.chats);
     const { onlineUsers } = useAppSelector(state => state.onlineUsers)
@@ -54,25 +54,15 @@ const ChatSidebar = () => {
     }, [socket])
 
 
-    const mutationSearch = useMutation({
-
-        mutationFn: async () => FriendsService.getFriends(),
-        onSuccess: (data) => {
-            setFriends(data);
-        },
-          onError: (err) => {
-            toast.error(err.message)
-        }
-    })
+    // friends are provided by useFriends(); call refetch() when we need to force load
 
     // for getting to chat or creating it 
     const { mutate: createChat } = useMutation({
         mutationFn: async ({ payload }: { payload: { friendId: string, friendName: string } }) => ChatsService.createChat(payload),
         onSuccess: (data) => {
-            toast.success(data.message);
             dispatch(updateChats(data.chat));
         },
-        onError: (err)=>{
+        onError: (err) => {
             toast.error(err.message);
         }
     })
@@ -94,7 +84,7 @@ const ChatSidebar = () => {
                             setChars(e.target.value);
 
                             if (e.target.value.length === 1) {
-                                await mutationSearch.mutate();
+                                await refetch();
 
                             }
 

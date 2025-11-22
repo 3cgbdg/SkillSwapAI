@@ -21,7 +21,6 @@ const FriendsPopup = ({ friends, isLoading, setIsPopupOpen }: { friends: IFriend
     const { mutate: createChat } = useMutation({
         mutationFn: async ({ payload }: { payload: { friendId: string, friendName: string } }) => ChatsService.createChat(payload),
         onSuccess: (data) => {
-            toast.success(data.message);
             setIsPopupOpen(false)
             router.push(`/chats/${data.chat.chatId}`);
             dispatch(updateChats(data.chat));

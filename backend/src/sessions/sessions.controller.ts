@@ -12,7 +12,7 @@ export class SessionsController {
   constructor(private readonly sessionService: SessionsService) { }
 
   @Post()
-  async create(@Body() createSessionDto: CreateSessionDto, @Req() req: Request) {
+  async create(@Body() createSessionDto: CreateSessionDto, @Req() req: Request):Promise<{ message: string, session: any }> {
     return this.sessionService.create(createSessionDto, (req as any).user.id);
 
   }

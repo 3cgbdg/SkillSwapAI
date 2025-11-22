@@ -6,6 +6,7 @@ import SkillsService from "@/services/SkillsService";
 import { useMutation } from "@tanstack/react-query";
 import { Plus, X } from "lucide-react";
 import { useRef, useState } from "react";
+import { toast } from "react-toastify";
 
 
 
@@ -20,27 +21,42 @@ const AddSkills = () => {
     const availableMutation = useMutation({
         mutationFn: async ({ data }: { data: string }) => SkillsService.getSkills(data),
         onSuccess: (data: { id: string, title: string }[]) => setAvailableSkills(data),
+        onError: (err) => {
+            toast.error(err.message);
+        }
     })
 
     // adding skill (known)
     const mutationAddKnown = useMutation({
         mutationFn: async (str: string) => SkillsService.addKnownSkill(str),
+        onError: (err) => {
+            toast.error(err.message)
+        }
     })
 
     // adding skill (want to learn)
 
     const mutationAddLearn = useMutation({
         mutationFn: async (str: string) => SkillsService.addWantToLearnSkill(str),
+        onError: (err) => {
+            toast.error(err.message)
+        }
     })
     // deleting skill (known)
 
     const mutationDeleteKnown = useMutation({
         mutationFn: async (str: string) => SkillsService.deleteKnownSkill(str),
+        onError: (err) => {
+            toast.error(err.message)
+        }
     })
     // deleting skill (want to learn)
 
     const mutationDeleteLearn = useMutation({
         mutationFn: async (str: string) => SkillsService.deleteWantToLearnSkill(str),
+        onError: (err) => {
+            toast.error(err.message)
+        }
     })
     // input ref
     const knownRef = useRef<HTMLInputElement>(null);
@@ -75,7 +91,7 @@ const AddSkills = () => {
                     }} className="button-blue flex-shrink-0">
                         <Plus />
                     </button>
-                    {knownInput.length > 2 && knownRef?.current?.value !== "" && wantToLearnInput=="" && 
+                    {knownInput.length > 2 && knownRef?.current?.value !== "" && wantToLearnInput == "" &&
                         <div className="absolute top-full  left-0 z-10">
                             <div className="mt-1 input p-2  w-full max-w-[90vw] sm:max-w-[350px] max-h-60  flex gap-1  bg-white">
                                 {availableSkills.length > 0 ? <div className="flex flex-wrap gap-1  overflow-y-auto   ">
@@ -127,7 +143,7 @@ const AddSkills = () => {
                     }} className="button-blue flex-shrink-0">
                         <Plus />
                     </button>
-                    {wantToLearnInput.length > 2 && learnRef?.current?.value !== "" && knownInput=="" && 
+                    {wantToLearnInput.length > 2 && learnRef?.current?.value !== "" && knownInput == "" &&
                         <div className="absolute top-full left-0 z-10">
 
                             <div className="mt-1 input p-2  w-full max-w-[90vw] sm:max-w-[350px] max-h-60  flex gap-1  bg-white">

@@ -44,11 +44,11 @@ export class ChatsService {
           ],
 
         }, orderBy: { createdAt: 'desc' }, distinct: ['chatId'], include: {
-          from: { select: { id: true, name: true,imageUrl:true } },
-          to: { select: { id: true, name: true,imageUrl:true } },
+          from: { select: { id: true, name: true, imageUrl: true } },
+          to: { select: { id: true, name: true, imageUrl: true } },
         }
       })
-      
+
 
       const newChats = await Promise.all(
         chats.map(async chat => {
@@ -82,7 +82,7 @@ export class ChatsService {
         where: { users: { some: { id: myId } } }, include: {
           users: {
             where: { NOT: { id: myId } },
-            select: { id: true, name: true,imageUrl:true }
+            select: { id: true, name: true, imageUrl: true }
           },
         }
       })
@@ -99,6 +99,9 @@ export class ChatsService {
   }
 
   async createChat(dto: CreateChatDto, myId: string) {
+
+    
+
     let chat = await this.prisma.chat.findFirst({
       where: {
         users: { some: { id: myId } },
@@ -118,8 +121,7 @@ export class ChatsService {
         },
       });
     }
-
-    return { chatId: chat.id, friend: { name: dto.friendName, id: dto.friendId }, lastMessageContent: null }
+    return { chat: { chatId: chat.id, friend: { name: dto.friendName, id: dto.friendId }, lastMessageContent: null } }
   };
 
 }

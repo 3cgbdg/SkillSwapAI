@@ -15,7 +15,7 @@ class SessionsService {
         return res.data;
     }
 
-    async createSession(data: Omit<createSessionFormData, 'friendName'>): Promise<ISession> {
+    async createSession(data: Omit<createSessionFormData, 'friendName'>): Promise<{ session: ISession, message: string }> {
         const res = await api.post("/sessions", { ...data, color: this.colors[Math.floor(Math.random() * 3)] });
         return res.data;
     }

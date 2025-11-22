@@ -21,6 +21,7 @@ import NotificationsBell from "./headerComponents/NotificationsBell"
 import AvatarMenu from "./headerComponents/AvatarMenu"
 import NavigationMenu from "./headerComponents/NavigationMenu"
 import { toast } from "react-toastify"
+import useFriends from "@/hooks/useFriends"
 
 
 
@@ -38,6 +39,7 @@ const Header = () => {
     const [socket, setSocket] = useState<Socket | null>(null);
     const { user } = useAppSelector(state => state.auth);
     const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+    const { addFriend ,createFriendRequest} = useFriends();
     // log out
     const mutation = useMutation({
         mutationFn: async () => await AuthService.logOut(),
@@ -81,20 +83,7 @@ const Header = () => {
     }, [isError, error])
 
     // add a new friend 
-    const mutationAddFriend = useMutation({
-        mutationFn: async ({ fromId, id }: { fromId: string, id: string }) => FriendsService.createFriend(fromId, id),
-        onSuccess: (data) => {
-            toast.success(data.message);
-            queryClient.setQueryData(["reqs"], (old: any) => {
-                if (!old) return [];
-                return old.filter((req: any) => req.id !== data.id)
-            })
-        },
-        onError: (err) => {
-            toast.error(err.message);
-        }
 
-    })
 
     // search with chars (dynamically)
     const mutationSearch = useMutation({
@@ -105,12 +94,18 @@ const Header = () => {
         onSuccess: (data) => {
             setFoundUsers(() => data.filter(item => item.name !== undefined));
             setFoundSkills(() => data.filter(item => item.title !== undefined));
+        },
+        onError: (err) => {
+            toast.error(err.message);
         }
     })
 
     // adding skill (want to learn)
     const mutationAddLearn = useMutation({
         mutationFn: async (str: string) => SkillsService.addWantToLearnSkill(str),
+        onError: (err) => {
+            toast.error(err.message);
+        }
     })
 
     // accept session-request
@@ -143,13 +138,13 @@ const Header = () => {
                 if (!old) return [];
                 return old.filter((req: any) => req.id !== id)
             })
+        },
+        onError: (err) => {
+            toast.error(err.message);
         }
     })
 
-    // create a friend request
-    const mutationCreateFriendRequest = useMutation({
-        mutationFn: async (str: string) => RequestsService.createFriendRequest({ id: str }),
-    })
+   
 
 
     useEffect(() => {
@@ -214,7 +209,7 @@ const Header = () => {
                     mutationAddLearn.mutate(skill)
                     dispatch(addWantToLearnSkill(skill))
                 }}
-                onCreateFriendRequest={(userId) => mutationCreateFriendRequest.mutate(userId)}
+                onCreateFriendRequest={(userId) => createFriendRequest({id:userId})}
                 onRemoveSkill={(skillId) => setFoundSkills(prev => prev.filter(item => item.id !== skillId))}
                 onPanelChange={setPanel as any}
                 onSearchOpenChange={setIsSearchOpen}
@@ -233,7 +228,7 @@ const Header = () => {
                         mutationAddLearn.mutate(skill)
                         dispatch(addWantToLearnSkill(skill))
                     }}
-                    onCreateFriendRequest={(userId) => mutationCreateFriendRequest.mutate(userId)}
+                    onCreateFriendRequest={(userId) => createFriendRequest({id:userId})}
                     onRemoveSkill={(skillId) => setFoundSkills(prev => prev.filter(item => item.id !== skillId))}
                     onPanelChange={setPanel as any}
                 />
@@ -245,7 +240,7 @@ const Header = () => {
                     onPanelChange={setPanel as any}
                     onAcceptSession={(data) => mutationAcceptSession.mutate(data)}
                     onRejectSession={(data) => mutationRejectSession.mutate(data)}
-                    onAddFriend={(data) => mutationAddFriend.mutate(data)}
+                    onAddFriend={(data) => addFriend(data)}
                     onDeleteRequest={(data) => mutationRequestDelete.mutate(data)}
                 />
 

@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
 import { updateChats } from "@/redux/chatsSlice";
 import ChatsService from "@/services/ChatsService";
 import PlansService from "@/services/PlansService";
-import { IChat, IMatch } from "@/types/types";
+import { IMatch } from "@/types/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, MessageSquareMore } from "lucide-react";
 import { useParams, useRouter } from "next/navigation"
@@ -36,7 +36,6 @@ const Page = () => {
     const { mutate: createChat } = useMutation({
         mutationFn: async ({ payload }: { payload: { friendId: string, friendName: string } }) => ChatsService.createChat(payload),
         onSuccess: (data) => {
-            toast.success(data.message);
             router.push(`/chats/${data.chat.chatId}`);
             dispatch(updateChats(data.chat));
         },
@@ -89,7 +88,7 @@ const Page = () => {
                             <div className="size-24 rounded-full bg-black"></div>
                             <h2 className="section-title">{currentMatch.other.name}</h2>
                             <div className="flex flex-col gap-3 mt-4 w-full">
-                                <button onClick={() => createChat({ payload: { friendId: currentMatch.otherId, friendName: currentMatch.other.name } })} className="button-blue flex items-center gap-5">
+                                <button onClick={() => createChat({ payload: { friendId: currentMatch.other.id, friendName: currentMatch.other.name } })} className="button-blue flex items-center gap-5">
                                     <MessageSquareMore size={20} />
                                     <span>Message {currentMatch.other.name}</span>
                                 </button>

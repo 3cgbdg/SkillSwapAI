@@ -4,7 +4,6 @@ import { useAppDispatch } from "@/hooks/reduxHooks";
 import { updateChats } from "@/redux/chatsSlice";
 import ChatsService from "@/services/ChatsService";
 import ProfilesService from "@/services/ProfilesService";
-import { IChat } from "@/types/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Calendar, MessageSquareMore, UserRound } from "lucide-react";
 import Image from "next/image";
@@ -33,7 +32,6 @@ const page = () => {
     const { mutate: createChat } = useMutation({
         mutationFn: async ({ payload }: { payload: { friendId: string, friendName: string } }) => ChatsService.createChat(payload),
         onSuccess: (data) => {
-            toast.success(data.message);
             router.push(`/chats/${data.chat.chatId}`);
             dispatch(updateChats(data.chat));
         },

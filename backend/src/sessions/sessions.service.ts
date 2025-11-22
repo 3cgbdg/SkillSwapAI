@@ -9,7 +9,7 @@ import { Session } from 'inspector/promises';
 @Injectable()
 export class SessionsService {
   constructor(private readonly prisma: PrismaService, private readonly requests: RequestsService, private readonly requestGateway: RequestGateway) { };
-  async create(dto: CreateSessionDto, myId: string) {
+  async create(dto: CreateSessionDto, myId: string): Promise<{ message: string, session: any }> {
     const now = new Date();
     const overlappingSessions = await this.prisma.session.findMany({ where: { date: new Date(dto.date), start: { lt: dto.end }, end: { gt: dto.start } } });
     if (overlappingSessions.length > 0) {
@@ -48,12 +48,16 @@ export class SessionsService {
     const request = await this.requests.createForSession(session.id, myId, dto.friendId);
     this.requestGateway.notifyUserSession(dto.friendId, { request });
     return friendship.user1.id == myId ? {
-      ...session, friend: {
-        id: friendship.user2.id, name: friendship.user2.name
+      message: "Session has been successfully created", session: {
+        ...session, friend: {
+          id: friendship.user2.id, name: friendship.user2.name
+        }
       }
     } : {
-      ...session, friend: {
-        id: friendship.user1.id, name: friendship.user1.name
+      message: "Session has been successfully created", session: {
+        ...session, friend: {
+          id: friendship.user1.id, name: friendship.user1.name
+        }
       }
     }
 

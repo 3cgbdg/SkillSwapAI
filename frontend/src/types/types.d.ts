@@ -82,10 +82,11 @@ export interface IMatch {
     aiExplanation?: string,
     keyBenefits: string[]
     id: string,
-    initiatorId: string,
-    otherId: string,
+    isFriend?: string,
     other: {
-        name: string
+        id: string;
+        name: string;
+        imageUrl: string;
         knownSkills: { title: string }[],
         skillsToLearn: { title: string }[]
 
