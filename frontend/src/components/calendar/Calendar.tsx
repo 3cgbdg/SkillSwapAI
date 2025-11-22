@@ -18,6 +18,7 @@ import {
 } from 'date-fns';
 import DesktopGridCalendar from "./DesktopGridCalendar";
 import TouchScreenCalendar from "./TouchScreenCalendar";
+import { toast } from "react-toastify";
 
 export type TableCellType = {
     sessions: ISession[],
@@ -47,11 +48,20 @@ const Calendar = () => {
     }, [searchParams]);
 
     // fetching sessions
-    const { data: monthSessions } = useQuery({
+    const { data: monthSessions, error, isError } = useQuery({
         queryKey: ['sessions', currentMonth],
         queryFn: () => fetchSessions(currentMonth),
         refetchInterval: 60 * 60 * 1000,
+
     });
+
+    // handling api error
+
+    useEffect(() => {
+        if (isError) {
+            toast.error(error.message)
+        }
+    }, [error, isError])
 
     // getting todays upcoming sessions
     useEffect(() => {
@@ -97,8 +107,8 @@ const Calendar = () => {
 
 
     useEffect(() => {
-         document.body.style.overflowY = addSessionPopup ? "hidden" : "auto";
-    },[addSessionPopup])
+        document.body.style.overflowY = addSessionPopup ? "hidden" : "auto";
+    }, [addSessionPopup])
 
     return (
         <div className="">

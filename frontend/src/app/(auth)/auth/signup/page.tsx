@@ -47,6 +47,9 @@ const Page = () => {
       return skills;
     },
     onSuccess: (data: { id: string, title: string }[]) => setAvailableSkills(data),
+    onError: (err) => {
+      toast.error(err.message);
+    }
   })
 
 

@@ -26,7 +26,6 @@ export default function ChatLayout({
   useEffect(() => {
     if (isSuccess && chats) {
       dispatch(getChats(chats))
-      console.log(chats);
     }
   }, [isSuccess, chats])
 
@@ -56,8 +55,9 @@ export default function ChatLayout({
     <div className="flex gap-8 max-h-[800px] md:max-h-[705px]">
       {(window.matchMedia("(max-width: 767px)").matches && !id || window.matchMedia("(min-width: 769px)").matches) &&
         <ChatSidebar />}
-
+  <div className="w-full">
       {children}
+      </div>
     </div>
 
 

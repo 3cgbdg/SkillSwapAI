@@ -56,7 +56,6 @@ const Matches = ({ matches, option }: { matches: IMatch[], option: 'available' |
     const { mutate: createChat } = useMutation({
         mutationFn: async ({ payload }: { payload: { friendId: string, friendName: string } }) => ChatsService.createChat(payload),
         onSuccess: (data) => {
-            toast.success(data.message);
             router.push(`/chats/${data.chat.chatId}`);
             dispatch(updateChats(data.chat));
         },
@@ -64,12 +63,11 @@ const Matches = ({ matches, option }: { matches: IMatch[], option: 'available' |
             toast.error(err.message);
         }
     })
-    console.log(matches)
     return (
         <>
             {/* loading screen while waiting for ai generating active match */}
             {isPending &&
-                <div className="  bg-gray/40  absolute z-100 top-0 left-0 size-full flex items-center justify-center">
+                <div className="  bg-gray/40  absolute z-200 top-0 left-0 size-full flex items-center justify-center">
                     <div className="flex flex-col gap-4">
                         <div className="flex gap-1 page-title">
                             Loading
@@ -125,7 +123,7 @@ const Matches = ({ matches, option }: { matches: IMatch[], option: 'available' |
                 </div>
                 <div className="grid max-w-[450px] md:max-w-full mx-auto md:mx-0 md:w-fit  md:grid-cols-2 xl:grid-cols-3 gap-6 ">
                     {filteredMatch.map((match, idx) => (
-                        <MatchCard option={option} isInActiveMatches={activeMatches.findIndex(item => item.otherId == match.otherId) == -1 ? false : true} generateActiveMatch={generateActiveMatch} key={option == 'active' ? match.id : idx} match={match} getOrCreateChat={createChat} />
+                        <MatchCard option={option} isInActiveMatches={activeMatches.findIndex(item => item.other.id == match.other.id) == -1 ? false : true} generateActiveMatch={generateActiveMatch} key={option == 'active' ? match.id : idx} match={match} getOrCreateChat={createChat} />
                     ))}
 
                 </div>

@@ -2,15 +2,13 @@
 import { formatDate } from "@/app/utils/calendar";
 import { useAppDispatch } from "@/hooks/reduxHooks";
 import { addSession } from "@/redux/sessionsSlice";
-import { IFriend } from "@/types/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Users, X } from "lucide-react";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useSocket } from "@/context/SocketContext";
-import FriendsService from "@/services/FriendsService";
+import useFriends from '@/hooks/useFriends';
 import SessionsService from "@/services/SessionsService";
-import RequestsService from "@/services/RequestsService";
 import { createSessionFormData } from "@/validation/createSession";
 import { toast } from "react-toastify";
 
@@ -22,35 +20,24 @@ const CalendarPopup = ({ year, month, setAddSessionPopup, otherName }: { otherNa
     const { socket } = useSocket();
     const [chars, setChars] = useState<string>("");
     const [addFriendButton, setAddFriendButton] = useState<boolean>(false);
-    const [friends, setFriends] = useState<IFriend[] | null>(null);
+    const { friends, isFetching, createFriendRequest, refetch } = useFriends();
     const [badRequestErrorMessage, setBadRequestErrorMessage] = useState<string | null>(null);
-    // searching friends by name
-    const mutationSearch = useMutation({
-        mutationFn: async () => FriendsService.getFriends(),
-        onSuccess: (data) => {
-            setFriends(data);
-        },
-        onError: (err) => {
-            toast.error(err.message)
-        }
-    })
+    // friends provided by useFriends(); call refetch() when needed
 
-    //create friend request 
-    const { mutate: createFriendRequest } = useMutation({
-        mutationFn: async (str: string) => RequestsService.createFriendRequest({ name: str }),
-    })
+
 
     // mutation for creating session request
     const createSessionMutation = useMutation({
         mutationKey: ["session"],
         mutationFn: async (data: Omit<createSessionFormData, 'friendName'>) => SessionsService.createSession(data),
         onSuccess: (data) => {
+            toast.success(data.message)
             setAddSessionPopup(false);
             // if its current day event adding to global state
-            if (new Date(data.date).getDate() == new Date().getDate())
-                dispatch(addSession(data));
+            if (new Date(data.session.date).getDate() == new Date().getDate())
+                dispatch(addSession(data.session));
             if (socket)
-                socket.emit('createSessionRequest', { id: data.id })
+                socket.emit('createSessionRequest', { id: data.session.id })
             queryClient.invalidateQueries({ queryKey: ['sessions', month] });
         },
         onError: (error: any) => {
@@ -77,7 +64,7 @@ const CalendarPopup = ({ year, month, setAddSessionPopup, otherName }: { otherNa
     useEffect(() => {
         if (otherName) {
             setValue("friendName", otherName);
-            mutationSearch.mutate();
+            refetch();
         }
     }, [otherName])
 
@@ -159,8 +146,8 @@ const CalendarPopup = ({ year, month, setAddSessionPopup, otherName }: { otherNa
 
                                 setChars(e.target.value);
                                 if (e.target.value.length === 1 && !friends) {
-                                    await mutationSearch.mutate();
-                                    console.log(chars)
+                                    await refetch();
+
 
                                 }
                             }}
@@ -195,7 +182,7 @@ const CalendarPopup = ({ year, month, setAddSessionPopup, otherName }: { otherNa
                         <button className="button-blue w-full">Create</button>
                         {
                             addFriendButton && otherName &&
-                            <button onClick={() => createFriendRequest(otherName)} className="button-transparent w-full rounded-md! flex items-center gap-2">Add friend <Users size={16} /></button>
+                            <button onClick={() => createFriendRequest({ name: otherName })} className="button-transparent w-full rounded-md! flex items-center gap-2">Add friend <Users size={16} /></button>
 
                         }
                     </div>

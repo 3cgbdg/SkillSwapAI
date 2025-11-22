@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { PrismaService } from 'prisma/prisma.service';
 import { RequestGateway } from 'src/webSockets/request.gateway';
@@ -7,7 +7,7 @@ import { NotFound } from '@aws-sdk/client-s3';
 @Injectable()
 export class RequestsService {
   constructor(private readonly prisma: PrismaService, private readonly requestGateway: RequestGateway) { };
-  async createForFriendship(dto: CreateRequestDto, userId: string) {
+  async createForFriendship(dto: CreateRequestDto, userId: string): Promise<{ message: string }> {
     if (dto.id) {
       const exist = await this.prisma.request.findFirst({
         where: {
@@ -17,16 +17,16 @@ export class RequestsService {
           ]
         }
       })
-      if (exist) return;
+      if (exist) throw new BadRequestException();
       const request = await this.prisma.request.create({ data: { toId: dto.id, fromId: userId, type: "FRIEND" }, include: { from: { select: { name: true } }, to: { select: { name: true } } } });
       this.requestGateway.notifyUser(dto.id, { request })
-      return { message: "Successfully created!" }
+      return { message: "Friend request is successfully created" }
     } else {
       const foundUser = await this.prisma.user.findUnique({ where: { name: dto.name }, select: { id: true } })
       if (foundUser) {
         const request = await this.prisma.request.create({ data: { toId: foundUser.id, fromId: userId, type: "FRIEND" }, include: { from: { select: { name: true } }, to: { select: { name: true } } } });
         this.requestGateway.notifyUser(foundUser.id, { request })
-        return { message: "Successfully created!" }
+        return { message: "Friend request is successfully created" }
       } else {
         throw new NotFoundException('User with such username wasn`t found')
       }

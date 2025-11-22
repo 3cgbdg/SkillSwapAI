@@ -7,30 +7,13 @@ import { useEffect, useState } from "react"
 
 import FriendsPopup from "./FriendsPopup";
 import { toast } from "react-toastify";
+import useFriends from "@/hooks/useFriends";
 
 // button + fixed friend list
 const FriendList = () => {
 
     const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
-
-    // getting list of friends
-    const { data: friends, isLoading, isError, error } = useQuery({
-        queryKey: ['friends'],
-        queryFn: async () => {
-            const friends = await FriendsService.getFriends();
-            return friends;
-        },
-        enabled: isPopupOpen,
-        staleTime: Infinity,
-
-    })
-
-    useEffect(() => {
-        if (isError) {
-            toast.error(error.message);
-        }
-    }, [isError, error])
-
+    const { isFetching, friends } = useFriends();
     return (
         <>
             {/* button */}
@@ -39,7 +22,7 @@ const FriendList = () => {
 
             </button>
             {isPopupOpen &&
-                <FriendsPopup isLoading={isLoading} setIsPopupOpen={setIsPopupOpen} friends={friends} />}
+                <FriendsPopup isLoading={isFetching} setIsPopupOpen={setIsPopupOpen} friends={friends} />}
             {/* list */}
         </>
     )

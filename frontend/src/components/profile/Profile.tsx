@@ -22,6 +22,9 @@ const Profile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<boole
         onSuccess: (title: string) => {
             dispatch(addWantToLearnSkill(title));
             dispatch(removeAiSuggestionSkill(title));
+        },
+        onError: (err) => {
+            toast.error(err.message);
         }
     })
 

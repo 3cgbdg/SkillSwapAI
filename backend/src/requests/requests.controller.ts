@@ -11,7 +11,7 @@ export class RequestsController {
   constructor(private readonly requestsService: RequestsService) { }
 
   @Post()
-  async create(@Body() createRequestDto: CreateRequestDto, @Req() req: Request) {
+  async create(@Body() createRequestDto: CreateRequestDto, @Req() req: Request): Promise<{ message: string }> {
     return this.requestsService.createForFriendship(createRequestDto, (req as any).user.id);
   }
   @Get()
@@ -19,7 +19,7 @@ export class RequestsController {
     return this.requestsService.findAll((req as any).user.id);
   }
   @Delete(':id')
-  async deleteOne(@Param('id') requestId:string) {
+  async deleteOne(@Param('id') requestId: string) {
     return this.requestsService.deleteOne(requestId);
   }
 

@@ -1,6 +1,9 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateFriendDto } from './dto/create-friend.dto';
 import { PrismaService } from 'prisma/prisma.service';
+import { Prisma, User } from '@prisma/client';
+
+
 
 @Injectable()
 export class FriendsService {
@@ -30,4 +33,6 @@ export class FriendsService {
     const friends2 = await this.prisma.friendship.findMany({ where: { user2Id: id }, include: { user1: { select: { id: true, name: true, imageUrl: true } } } });
     return [...friends1.map(item => item.user2), ...friends2.map(item => item.user1)]
   }
+
+
 }
