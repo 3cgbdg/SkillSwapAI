@@ -1,6 +1,7 @@
 import ProfilesService from "@/services/ProfilesService";
 import { IUser } from "@/types/types";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { toast } from "react-toastify";
 
 // thunk
 export const fetchProfile = createAsyncThunk("user/fetchProfile",
@@ -95,6 +96,7 @@ const authSlice = createSlice({
             .addCase(fetchProfile.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
+                toast.error(state.error);
             })
             .addCase(fetchProfile.fulfilled, (state, action: PayloadAction<IUser>) => {
                 state.loading = false;

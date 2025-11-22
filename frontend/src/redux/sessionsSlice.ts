@@ -1,6 +1,7 @@
 import SessionsService from "@/services/SessionsService";
 import { ISession, IUser } from "@/types/types";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { toast } from "react-toastify";
 
 interface IinitialState {
     sessions: ISession[] | null,
@@ -50,6 +51,7 @@ const sessionsSlice = createSlice({
             .addCase(fetchTodaysSessions.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
+                toast.error(state.error);
             })
             .addCase(fetchTodaysSessions.fulfilled, (state, action: PayloadAction<ISession[]>) => {
                 state.loading = false;

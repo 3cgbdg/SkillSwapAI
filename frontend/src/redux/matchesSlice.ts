@@ -1,6 +1,7 @@
 import MatchesService from "@/services/MatchesService";
 import { IMatch } from "@/types/types";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { toast } from "react-toastify";
 
 // thunk
 export const fetchActiveMatches = createAsyncThunk("matches/fetchActiveMatches", async (_, { rejectWithValue }) => {
@@ -14,7 +15,7 @@ export const fetchActiveMatches = createAsyncThunk("matches/fetchActiveMatches",
 
 interface IinitialState {
     matches: IMatch[],
-    loading: boolean ,
+    loading: boolean,
     error: string | null,
 }
 
@@ -50,6 +51,7 @@ const matchesSlice = createSlice({
             .addCase(fetchActiveMatches.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
+                toast.error(state.error);
             })
             .addCase(fetchActiveMatches.fulfilled, (state, action: PayloadAction<IMatch[]>) => {
                 state.loading = false;
