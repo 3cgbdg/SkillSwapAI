@@ -31,7 +31,7 @@ const SearchInput = ({
         const value = e.target.value
         onWordChange(value)
 
-        if (value.length > 2) {
+        if (value.length >= 2) {
             await onSearch(value)
             onPanelChange("search")
         } else {

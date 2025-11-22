@@ -192,7 +192,7 @@ const Header = () => {
 
     return (
         <div className="flex items-center justify-between bg-white py-[14px] px-2 md:px-6 relative ">
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-6 grow-1">
                 <HeaderLogo />
             </div>
 
