@@ -23,7 +23,7 @@ const NavigationMenu = ({ panel, onPanelChange, onLogOut }: NavigationMenuProps)
                 </button>
             </div>
             {panel === "navMenu" &&
-                <div className="w-full flex bg-white z-50  flex-col top-full panel  right-0 absolute  _border     p-3  ">
+                <div className="w-full flex bg-white z-50  flex-col top-full panel  right-0 absolute  _border min-w-[250px]    p-3  ">
                     <nav className="flex flex-col   ">
                         {navLinks.map(item => (
                             <Link key={item.link} href={item.link} className={`p-2   flex items-center gap-2 text-sm leading-5.5 font-medium text-neutral-600 rounded-lg  ${item.link === path ? "text-neutral-900 font-semibold bg-blue-300" : " "} `}>{item.icon} {item.title}</Link>

@@ -34,12 +34,9 @@ const SearchInputMobile = ({
     const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value
         onWordChange(value)
-
         if (value.length >= 2) {
             await onSearch(value)
             onPanelChange("search")
-        } else {
-            onPanelChange(null)
         }
     }
 
@@ -68,20 +65,20 @@ const SearchInputMobile = ({
             </div>
 
             {/* search button for sm< */}
-            <div className="md:hidden">
+            <div className="md:hidden mx-4">
                 {panel === "search" && isSearchOpen ? (
                     <button
                         className={`cursor-pointer flex items-center  ${panel === "search" ? "text-primary" : ""}  `}
                         onClick={() => { onPanelChange(null); onWordChange(""); onSearchOpenChange(false) }}
                     >
-                        <X className="" />
+                        <X size={26} className="" />
                     </button>
                 )
                     : (
                         <button className="cursor-pointer flex items-center " onClick={() => {
 
                         }}>
-                            <Search className="" onClick={() => { onSearchOpenChange(true); onPanelChange("search") }} />
+                            <Search size={28} className="" onClick={() => { onSearchOpenChange(true); onPanelChange("search") }} />
                         </button>
                     )}
             </div>
