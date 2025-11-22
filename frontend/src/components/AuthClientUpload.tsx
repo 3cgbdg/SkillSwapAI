@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Spinner from './Spinner';
 import { fetchTodaysSessions } from '@/redux/sessionsSlice';
+import FullSreenLoader from './FullSreenLoader';
 
 // fetching data component every reload
 const AuthClientUpload = () => {
@@ -41,11 +42,7 @@ const AuthClientUpload = () => {
     }, [authState.error, activeMatchesState.error, router]);
 
     if (authState.loading || activeMatchesState.loading) {
-        return <div className="fixed inset-0 flex items-center justify-center page-title bg-gray/80 z-100 overflow-hidden">
-            <Spinner size={40} color='blue' />
-        </div>
-
-
+        <FullSreenLoader />
     }
 
 

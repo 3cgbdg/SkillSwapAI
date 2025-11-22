@@ -2,6 +2,7 @@ import { Bell } from "lucide-react"
 import { motion } from "framer-motion"
 import { IRequest } from "@/types/types"
 import NotificationsList from "./NotificationsList"
+import Spinner from "@/components/Spinner"
 
 interface NotificationsBellProps {
     reqs: IRequest[] | undefined
@@ -11,6 +12,7 @@ interface NotificationsBellProps {
     onRejectSession: ({ sessionId, requestId, friendId }: { sessionId: string, requestId: string, friendId: string }) => void
     onAddFriend: ({ fromId, id }: { fromId: string, id: string }) => void
     onDeleteRequest: ({ requestId }: { requestId: string }) => void
+    isLoading: boolean
 }
 
 const NotificationsBell = ({
@@ -20,7 +22,8 @@ const NotificationsBell = ({
     onAcceptSession,
     onRejectSession,
     onAddFriend,
-    onDeleteRequest
+    onDeleteRequest,
+    isLoading
 }: NotificationsBellProps) => {
     return (
         <div className="relative">
@@ -41,9 +44,10 @@ const NotificationsBell = ({
             {panel == "notifs" && (
                 <div className="">
                     <div className="_border panel mt-2 rounded-md p-3 absolute z-10 top-full bg-white right-0 min-w-[250px] flex flex-col gap-2">
-                        {reqs && reqs.length > 0 ? (
+                        {!isLoading ? reqs && reqs.length > 0 ? (
                             <NotificationsList
                                 reqs={reqs}
+
                                 onAcceptSession={onAcceptSession}
                                 onRejectSession={onRejectSession}
                                 onAddFriend={onAddFriend}
@@ -51,7 +55,7 @@ const NotificationsBell = ({
                             />
                         ) : (
                             <span className="text-sm leading-5">No notifications</span>
-                        )}
+                        ) : <Spinner size={24} color="blue" />}
                     </div>
                 </div>
             )}

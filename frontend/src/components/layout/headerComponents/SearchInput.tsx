@@ -1,6 +1,7 @@
 import { Search, X } from "lucide-react"
 import SearchResults from "./SearchResults"
 import { FoundSkills, FoundUsers } from "@/types/types"
+import Spinner from "@/components/Spinner"
 
 interface SearchInputProps {
     word: string
@@ -13,10 +14,12 @@ interface SearchInputProps {
     onCreateFriendRequest: (userId: string) => void
     onRemoveSkill: (skillId: string) => void
     onPanelChange: (panel: string | null) => void
+    isPending: boolean
 }
 
 const SearchInput = ({
     word,
+    isPending,
     panel,
     foundUsers,
     foundSkills,
@@ -64,13 +67,15 @@ const SearchInput = ({
 
             {panel === "search" && (
                 <div className="md:min-w-[250px] min-w-[300px] flex flex-col h-fit max-h-[260px] overflow-auto panel top-full bg-white z-10  left-0 absolute _border mt-1 bg-primary p-3 rounded-[6px]">
-                    <SearchResults
-                        foundSkills={foundSkills}
-                        foundUsers={foundUsers}
-                        onAddLearn={onAddLearn}
-                        onCreateFriendRequest={onCreateFriendRequest}
-                        onRemoveSkill={onRemoveSkill}
-                    />
+                    {isPending ? <Spinner color="blue" size={24} /> :
+                        <SearchResults
+                            foundSkills={foundSkills}
+                            foundUsers={foundUsers}
+                            onAddLearn={onAddLearn}
+                            onCreateFriendRequest={onCreateFriendRequest}
+                            onRemoveSkill={onRemoveSkill}
+                        />}
+
                 </div>
             )}
         </div>

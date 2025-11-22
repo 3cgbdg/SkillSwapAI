@@ -1,5 +1,6 @@
 "use client"
 
+import FullSreenLoader from "@/components/FullSreenLoader";
 import ModuleAccordion from "@/components/matches/ModuleAccordion";
 import Spinner from "@/components/Spinner";
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
@@ -7,7 +8,7 @@ import { updateChats } from "@/redux/chatsSlice";
 import ChatsService from "@/services/ChatsService";
 import PlansService from "@/services/PlansService";
 import { IMatch } from "@/types/types";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Calendar, MessageSquareMore } from "lucide-react";
 import { useParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react";
@@ -18,7 +19,6 @@ const Page = () => {
     const { matches } = useAppSelector(state => state.matches);
     const [currentMatch, setCurrentMatch] = useState<IMatch | null>(null);
     const [isActive, setIsActive] = useState<null | number>(null);
-    const queryClient = useQueryClient();
     const router = useRouter();
     const dispatch = useAppDispatch();
 
@@ -46,7 +46,7 @@ const Page = () => {
 
 
 
-    const { data: plan, isError, error } = useQuery({
+    const { data: plan, isError, error, isLoading } = useQuery({
         queryKey: ['matches', id],
         queryFn: async () => PlansService.getPlan(currentMatch?.id),
         enabled: !!currentMatch,
@@ -63,8 +63,15 @@ const Page = () => {
     return (<>
         {currentMatch ?
             <div className="flex flex-col gap-8">
+                {/* loading screen */}
+
+                {isLoading &&
+                    <FullSreenLoader />
+                }
+
+                {/*  */}
                 <div className="grid gap-8 grid-cols-3">
-                    <div className="_border rounded-[10px] col-span-2 banner_gradient flex flex-col gap-4  p-8">
+                    <div className="_border rounded-[10px] col-span-3 xl:col-span-2 banner_gradient flex flex-col gap-4  p-8">
                         <div className="flex flex-col gap-2">
                             <h1 className="page-title">Your AI-Powered Training Plan with Alex Rivera</h1>
                         </div>
@@ -83,7 +90,7 @@ const Page = () => {
                             </div>
                         }
                     </div>
-                    <div className="_border rounded-[10px] col-span-1 p-6">
+                    <div className="_border rounded-[10px] col-span-2  xl:col-span-1 p-6">
                         <div className="flex flex-col gap-4 items-center">
                             <div className="size-24 rounded-full bg-black"></div>
                             <h2 className="section-title">{currentMatch.other.name}</h2>
@@ -101,9 +108,8 @@ const Page = () => {
                             </div>
                         </div>
                     </div>
-                </div>
-                <div className="grid gap-8 grid-cols-3 ">
-                    <div className="_border col-span-2 rounded-[10px] p-6 h-[254px] flex items-center justify-center text-center">
+                    {/* todo touch screen optimization */}
+                    <div className="_border col-span-1 xl:col-span-2 rounded-[10px] p-6 h-[254px] flex items-center justify-center text-center">
                         <div className="flex flex-col gap-4 items-center">
 
                             {plan &&
@@ -116,7 +122,9 @@ const Page = () => {
                             }
                         </div>
                     </div>
-                </div>{plan &&
+                </div>
+
+                {plan &&
                     <div className="w-full _border rounded-[10px] p-6">
                         <div className="flex flex-col gap-2 mb-6">
                             <h2 className="page-title">Training Modules</h2>

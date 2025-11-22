@@ -11,6 +11,8 @@ import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-toastify";
+import FullSreenLoader from "@/components/FullSreenLoader";
+import Spinner from "@/components/Spinner";
 
 
 
@@ -33,14 +35,14 @@ const Page = () => {
     mutationFn: async (data: Omit<signUpFormData, 'checkBox'>) => AuthService.signUp(data, knownSkills, skillsToLearn),
     onSuccess: (data) => {
       toast.success(data.message)
-      setTimeout(() => router.push("/dashboard"), 500);
+      setTimeout(() => router.push("/dashboard"), 700);
     },
     onError: (err) => {
       toast.error(err.message)
     }
   })
 
-  const { mutate: getSkills } = useMutation({
+  const { mutate: getSkills, isPending } = useMutation({
     mutationFn: async ({ chars }: { chars: string }) => {
       const skills = await SkillsService.getSkills(chars);
       console.log(skills)
@@ -87,6 +89,13 @@ const Page = () => {
   ///
   return (
     <div className="basis-[512px] w-full _border rounded-[32px] p-[57px] flex justify-center bg-white z-10">
+      {/* loading screen */}
+
+      {mutation.isPending &&
+        <FullSreenLoader />
+      }
+
+      {/*  */}
       <div className="flex flex-col gap-4 items-center mb-[46px] w-full">
         <div className="mb-1 ">
           <Image className="object-contain" src={"/logo.png"} height={44} width={44} alt="logo icon" />
@@ -159,7 +168,7 @@ const Page = () => {
               {inputKnown.length >= 1 &&
                 <div className="absolute top-full left-0">
                   <div className="mt-1 input p-2  min-w-[150px] max-w-[350px] flex gap-1 flex-wrap bg-white">
-                    {availableSkills.length > 0 ? <div className="flex flex-col gap-1">
+                    {!isPending ? (availableSkills.length > 0 ? <div className="flex flex-col gap-1">
                       {availableSkills.map((skill, idx) => (
                         <button type="button" onClick={() => {
                           addKnownSkill(skill.title);
@@ -169,7 +178,8 @@ const Page = () => {
                         </button>
                       ))}
                     </div> :
-                      <span className="text-sm leading-5 text-gray">Empty</span>
+                      <span className="text-sm leading-5 text-gray">Empty</span>) :
+                      <Spinner size={24} color="blue" />
                     }
                   </div>
                 </div>
@@ -213,14 +223,14 @@ const Page = () => {
               {inputToLearn.length >= 2 &&
                 <div className="absolute top-full  left-0">
                   <div className="mt-1 input p-2  min-w-[150px] max-w-[350px] flex gap-1 flex-wrap bg-white">
-                    {availableSkills.length > 0 ? <div className="flex flex-col gap-1">
+                    {!isPending ? (availableSkills.length > 0 ? <div className="flex flex-col gap-1">
                       {availableSkills.map((skill, idx) => (
                         <button type="button" onClick={() => { addWantToLearnSkill(skill.title); setInputToLearn("") }} key={idx} className="input text-sm! cursor-pointer leading-5! font-medium transition-colors hover:bg-violet">
                           {skill.title}
                         </button>
                       ))}
                     </div> :
-                      <span className="text-sm leading-5 text-gray">Empty</span>
+                      <span className="text-sm leading-5 text-gray">Empty</span>) : <Spinner size={24} color="blue" />
                     }
                   </div>
                 </div>

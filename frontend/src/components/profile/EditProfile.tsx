@@ -12,6 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import ProfilesService from "@/services/ProfilesService";
 import { changeAvatar, updateProfile } from "@/redux/authSlice";
 import { toast } from "react-toastify";
+import Spinner from "../Spinner";
 
 
 
@@ -56,7 +57,7 @@ const EditProfile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<b
         }
     })
 
-    const { mutate: uploadAvatarImage } = useMutation({
+    const { mutate: uploadAvatarImage, isPending } = useMutation({
         mutationFn: async (file: File) => {
             const form = new FormData();
             console.log(file)
@@ -116,12 +117,12 @@ const EditProfile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<b
                         <div className="flex flex-col  gap-3.5">
                             <h2 className="text-lg leading-7 font-semibold ">Profile Picture</h2>
                             <div className="rounded-full size-30 flex justify-center mx-auto items-center _border">
-                                {user?.imageUrl ?
+                                {!isPending ? (user?.imageUrl ?
                                     <div className="w-[120px] h-[120px] rounded-full overflow-hidden relative">
                                         <Image className=" object-cover" src={user.imageUrl} fill alt="user image" />
                                     </div>
                                     :
-                                    <UserRound size={52} />
+                                    <UserRound size={52} />) : <Spinner size={42} color="blue" />
                                 }
                             </div>
                         </div>

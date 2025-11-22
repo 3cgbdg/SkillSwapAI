@@ -12,6 +12,7 @@ import ChatsService from "@/services/ChatsService"
 import Image from "next/image"
 import Link from "next/link"
 import { toast } from "react-toastify"
+import Spinner from "@/components/Spinner"
 
 
 
@@ -30,7 +31,7 @@ const Page = () => {
     const refs = useRef<HTMLDivElement[]>([]);
     const lastMessageRef = useRef<string>("");
     // useQuery for getting all messages from db
-    const { data: messages, error, isError } = useQuery({
+    const { data: messages, error, isError, isLoading } = useQuery({
         queryKey: ['messages', currentChat?.chatId],
         queryFn: async () => ChatsService.getChat(currentChat?.friend.id),
 
@@ -192,7 +193,7 @@ const Page = () => {
 
                 {/* content */}
                 <div className="flex gap-4 flex-col p-4 w-full h-[502px]   overflow-y-scroll">
-                    {messages && messages.length > 0 ? messages.map((msg, idx) => (
+                    {!isLoading ? (messages && messages.length > 0 ? messages.map((msg, idx) => (
                         <div ref={(el) => { refs.current[idx] = el! }} key={msg.id ?? idx} className={`w-fit rounded-[10px] text-gray  p-3  ${msg.fromId === user?.id ? 'bg-lightBlue self-end' : "bg-neutral-200"}`}>
                             <p className={`wrap-anywhere mb-1   leading-5 text-sm ${msg.fromId === user?.id ? "text-neutral-900" : ""}`}>{msg.content}</p>
                             <div className="flex justify-between items-center flex-row-reverse gap-2">
@@ -209,7 +210,8 @@ const Page = () => {
 
 
                         </div>
-                    )) : <span className="flex mt-40 justify-center w-full">Start conversation</span>
+                    )) : <span className="flex mt-40 justify-center w-full">Start conversation</span>) :
+                        <div className="h-100 flex items-center justify-center"><Spinner color='blue' size={44} /></div>
                     }
 
 

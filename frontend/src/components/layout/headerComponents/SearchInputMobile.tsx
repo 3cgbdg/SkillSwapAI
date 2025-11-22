@@ -1,6 +1,7 @@
 import { Search, X } from "lucide-react"
 import SearchResults from "./SearchResults"
 import { FoundSkills, FoundUsers } from "@/types/types"
+import Spinner from "@/components/Spinner"
 
 interface SearchInputMobileProps {
     word: string
@@ -15,10 +16,12 @@ interface SearchInputMobileProps {
     onRemoveSkill: (skillId: string) => void
     onPanelChange: (panel: string | null) => void
     onSearchOpenChange: (isOpen: boolean) => void
+    isPending: boolean
 }
 
 const SearchInputMobile = ({
     word,
+    isPending,
     panel,
     isSearchOpen,
     foundUsers,
@@ -53,13 +56,15 @@ const SearchInputMobile = ({
                 />
                 {panel === "search" && (
                     <div className=" w-full flex flex-col h-fit max-h-[265px] overflow-auto top-full panel bg-white z-10  left-0 absolute _border bg-primary p-3 rounded-b-[6px]">
-                        <SearchResults
-                            foundSkills={foundSkills}
-                            foundUsers={foundUsers}
-                            onAddLearn={onAddLearn}
-                            onCreateFriendRequest={onCreateFriendRequest}
-                            onRemoveSkill={onRemoveSkill}
-                        />
+                        {isPending ? <Spinner color="blue" size={24} /> :
+                            <SearchResults
+                                foundSkills={foundSkills}
+                                foundUsers={foundUsers}
+                                onAddLearn={onAddLearn}
+                                onCreateFriendRequest={onCreateFriendRequest}
+                                onRemoveSkill={onRemoveSkill}
+                            />}
+
                     </div>
                 )}
             </div>

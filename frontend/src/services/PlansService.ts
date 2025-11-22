@@ -18,4 +18,4 @@ class PlansService {
     }
 }
 
-export default new PlansService(); 
+export default new PlansService();    
