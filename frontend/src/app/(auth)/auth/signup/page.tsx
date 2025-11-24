@@ -35,7 +35,7 @@ const Page = () => {
     mutationFn: async (data: Omit<signUpFormData, 'checkBox'>) => AuthService.signUp(data, knownSkills, skillsToLearn),
     onSuccess: (data) => {
       toast.success(data.message)
-      setTimeout(() => router.push("/dashboard"), 700);
+      setTimeout(() => router.push("/dashboard"), 1000);
     },
     onError: (err) => {
       toast.error(err.message)
@@ -156,7 +156,7 @@ const Page = () => {
             <div className="flex gap-2 relative">
               <input value={inputKnown} onChange={(e) => {
                 setInputKnown(e.target.value);
-                if (e.target.value.length >= 1)
+                if (e.target.value.length >= 2)
                   getSkills({ chars: e.target.value });
               }} className="w-full input" placeholder="e.g., Web Development, UI/UX Design, Data Analysis" id="password" />
               <button onClick={() => {

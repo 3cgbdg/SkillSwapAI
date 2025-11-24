@@ -23,7 +23,8 @@ const Page = () => {
     mutationFn: async (data: logInFormData) => AuthService.logIn(data),
     onSuccess: (data) => {
       toast.success(data.message)
-      setTimeout(() => router.push("/dashboard"), 700);
+      // Wait for cookies to be set by browser before redirecting
+      setTimeout(() => router.push("/dashboard"), 1000);
     },
     onError: (err) => {
       toast.error(err.message)

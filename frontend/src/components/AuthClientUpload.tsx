@@ -4,7 +4,7 @@ import { fetchProfile } from '@/redux/authSlice';
 import { fetchActiveMatches } from '@/redux/matchesSlice';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import Spinner from './Spinner';
+
 import { fetchTodaysSessions } from '@/redux/sessionsSlice';
 import FullSreenLoader from './FullSreenLoader';
 
@@ -17,10 +17,30 @@ const AuthClientUpload = () => {
     useEffect(() => {
         const getData = async () => {
             try {
-                await dispatch(fetchProfile()).unwrap();
+                // trying fetching profile with retry logic
+                let retries = 3;
+                let lastError;
+                while (retries > 0) {
+                    try {
+                        await dispatch(fetchProfile()).unwrap();
+                        break;
+                    } catch (err) {
+                        lastError = err;
+                        retries--;
+                        if (retries > 0) {
+                            // waiting before retrying
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                        }
+                    }
+                }
+                if (lastError && retries === 0) {
+                    throw lastError;
+                }
+
                 await dispatch(fetchActiveMatches()).unwrap();
                 await dispatch(fetchTodaysSessions()).unwrap();
-            } catch {
+            } catch (err) {
+                console.error("Auth setup failed:", err);
                 router.push("/auth/login");
             }
         };
