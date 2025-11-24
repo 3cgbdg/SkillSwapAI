@@ -7,6 +7,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Plus, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "react-toastify";
+import Spinner from "../Spinner";
 
 
 
@@ -94,7 +95,7 @@ const AddSkills = () => {
                     {knownInput.length > 2 && knownRef?.current?.value !== "" && wantToLearnInput == "" &&
                         <div className="absolute top-full  left-0 z-10">
                             <div className="mt-1 input p-2  w-full max-w-[90vw] sm:max-w-[350px] max-h-60  flex gap-1  bg-white">
-                                {availableSkills.length > 0 ? <div className="flex flex-wrap gap-1  overflow-y-auto   ">
+                                {!availableMutation.isPending ? (availableSkills.length > 0 ? <div className="flex flex-wrap gap-1  overflow-y-auto   ">
                                     {availableSkills.map((skill, idx) => (
                                         <button type="button" onClick={() => {
                                             dispatch(addKnownSkill(skill.title)); mutationAddKnown.mutate(skill.title);
@@ -106,7 +107,8 @@ const AddSkills = () => {
                                         </button>
                                     ))}
                                 </div> :
-                                    <span className="text-sm leading-5 text-gray">Empty</span>
+                                    <span className="text-sm leading-5 text-gray">Empty</span>)
+                                    : <Spinner size={24} color="blue" />
                                 }
                             </div>
                         </div>
@@ -147,7 +149,7 @@ const AddSkills = () => {
                         <div className="absolute top-full left-0 z-10">
 
                             <div className="mt-1 input p-2  w-full max-w-[90vw] sm:max-w-[350px] max-h-60  flex gap-1  bg-white">
-                                {availableSkills.length > 0 ? <div className="flex flex-wrap gap-1  overflow-y-auto">
+                                {!availableMutation.isPending ? (availableSkills.length > 0 ? <div className="flex flex-wrap gap-1  overflow-y-auto">
                                     {availableSkills.map((skill, idx) => (
                                         <button type="button" onClick={() => {
                                             dispatch(addWantToLearnSkill(skill.title)); mutationAddLearn.mutate(skill.title);
@@ -159,8 +161,8 @@ const AddSkills = () => {
                                         </button>
                                     ))}
                                 </div> :
-                                    <span className="text-sm leading-5 text-gray">Empty</span>
-                                }
+                                    <span className="text-sm leading-5 text-gray">Empty</span>)
+                                    : <Spinner size={24} color="blue" />}
                             </div>
                         </div>
                     }

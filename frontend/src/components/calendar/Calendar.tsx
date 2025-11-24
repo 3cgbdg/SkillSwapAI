@@ -19,6 +19,7 @@ import {
 import DesktopGridCalendar from "./DesktopGridCalendar";
 import TouchScreenCalendar from "./TouchScreenCalendar";
 import { toast } from "react-toastify";
+import Spinner from "../Spinner";
 
 export type TableCellType = {
     sessions: ISession[],
@@ -48,7 +49,7 @@ const Calendar = () => {
     }, [searchParams]);
 
     // fetching sessions
-    const { data: monthSessions, error, isError } = useQuery({
+    const { data: monthSessions, error, isError, isLoading } = useQuery({
         queryKey: ['sessions', currentMonth],
         queryFn: () => fetchSessions(currentMonth),
         refetchInterval: 60 * 60 * 1000,
@@ -135,14 +136,17 @@ const Calendar = () => {
                     </button>
                 </div>
             </div>
-            <div className="mt-6 w-full">
-                <div className="md:block hidden">
-                    <DesktopGridCalendar tableCells={tableCells} />
-                </div>
-                <div className="md:hidden block">
-                    <TouchScreenCalendar tableCells={tableCells} />
 
-                </div>
+            <div className="mt-6 w-full">
+                {isLoading ? <div className="my-6"><Spinner color="blue" size={30} /></div> : <>
+                    <div className="md:block hidden">
+                        <DesktopGridCalendar tableCells={tableCells} />
+                    </div>
+                    <div className="md:hidden block">
+                        <TouchScreenCalendar tableCells={tableCells} />
+
+                    </div>
+                </>}
             </div>
 
             {

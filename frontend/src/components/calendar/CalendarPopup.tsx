@@ -11,6 +11,7 @@ import useFriends from '@/hooks/useFriends';
 import SessionsService from "@/services/SessionsService";
 import { createSessionFormData } from "@/validation/createSession";
 import { toast } from "react-toastify";
+import Spinner from "../Spinner";
 
 const CalendarPopup = ({ year, month, setAddSessionPopup, otherName }: { otherName: string | null, year: number, month: number, setAddSessionPopup: Dispatch<SetStateAction<boolean>> }) => {
     const { register, handleSubmit, setValue, formState: { errors } } = useForm<createSessionFormData>();
@@ -152,7 +153,7 @@ const CalendarPopup = ({ year, month, setAddSessionPopup, otherName }: { otherNa
                                 }
                             }}
                             />
-                            {friends && chars.length > 0 &&
+                            {!isFetching ? (friends && chars.length > 0 &&
                                 <div className="left-0 top-full absolute z-10 min-w-[250px] max-h-[300px] overflow-y-auto">
                                     <div className="flex flex-col gap-2 mt-2 p-2  _border bg-white rounded-md ">
                                         <div className="flex flex-col  gap-1 max-h-[500px]  border-neutral-300">
@@ -165,7 +166,7 @@ const CalendarPopup = ({ year, month, setAddSessionPopup, otherName }: { otherNa
                                             })}
                                         </div>
                                     </div>
-                                </div>}
+                                </div>) : <Spinner color="blue" size={24} />}
                         </div>
                         {errors.friendName && (
                             <span data-testid='error' className="text-red-500 font-medium ">

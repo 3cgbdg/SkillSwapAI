@@ -71,7 +71,7 @@ const Header = () => {
 
 
     // get requests
-    const { data: reqs, isError, error } = useQuery({
+    const { data: reqs, isError, error,isLoading } = useQuery({
         queryKey: ['reqs'],
         queryFn: async () => RequestsService.getRequests()
     })
@@ -204,6 +204,7 @@ const Header = () => {
                 foundUsers={foundUsers}
                 foundSkills={foundSkills}
                 onWordChange={setWord}
+                isPending = {mutationSearch.isPending}
                 onSearch={async (chars) => { await mutationSearch.mutateAsync(chars) }}
                 onAddLearn={(skill, skillId) => {
                     mutationAddLearn.mutate(skill)
@@ -221,6 +222,7 @@ const Header = () => {
                     word={word}
                     panel={panel}
                     foundUsers={foundUsers}
+                    isPending = {mutationSearch.isPending}
                     foundSkills={foundSkills}
                     onWordChange={setWord}
                     onSearch={async (chars) => { await mutationSearch.mutateAsync(chars) }}
@@ -236,6 +238,7 @@ const Header = () => {
                 {/* Notifications Bell */}
                 <NotificationsBell
                     reqs={reqs}
+                    isLoading={isLoading}
                     panel={panel}
                     onPanelChange={setPanel as any}
                     onAcceptSession={(data) => mutationAcceptSession.mutate(data)}
