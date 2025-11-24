@@ -54,7 +54,7 @@ const page = () => {
                 {/*  */}
                 <div className="_border col-span-3 rounded-[10px] p-6">
                     <div className="flex flex-col gap-4 items-center">
-                        <div className=" _border size-24 flex items-center justify-center rounded-full overflow-hidden">
+                        <div className=" _border size-24 relative flex items-center justify-center rounded-full overflow-hidden">
                             {!profile?.imageUrl ?
 
                                 <UserRound size={48} />

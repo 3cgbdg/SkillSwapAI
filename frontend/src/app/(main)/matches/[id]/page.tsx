@@ -9,7 +9,8 @@ import ChatsService from "@/services/ChatsService";
 import PlansService from "@/services/PlansService";
 import { IMatch } from "@/types/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Calendar, MessageSquareMore } from "lucide-react";
+import { Calendar, MessageSquareMore, UserRound } from "lucide-react";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -73,7 +74,7 @@ const Page = () => {
                 <div className="grid gap-8 grid-cols-3">
                     <div className="_border rounded-[10px] col-span-3 xl:col-span-2 banner_gradient flex flex-col gap-4  p-8">
                         <div className="flex flex-col gap-2">
-                            <h1 className="page-title">Your AI-Powered Training Plan with Alex Rivera</h1>
+                            <h1 className="page-title">Your AI-Powered Training Plan with {currentMatch.other.name}</h1>
                         </div>
                         <div className="">
                             {currentMatch.aiExplanation}
@@ -90,10 +91,16 @@ const Page = () => {
                             </div>
                         }
                     </div>
-                    <div className="_border rounded-[10px] col-span-2  xl:col-span-1 p-6">
-                        <div className="flex flex-col gap-4 items-center">
-                            <div className="size-24 rounded-full bg-black"></div>
-                            <h2 className="section-title">{currentMatch.other.name}</h2>
+                    <div className="_border rounded-[10px] col-span-3 sm:col-span-2  h-fit  xl:col-span-1 p-6">
+                        <div className="flex md:flex-col gap-7 md:gap-4 md:items-center">
+                            <div className="flex flex-col gap-4 items-center basis-full">
+                                <div className=" _border size-24 relative  flex items-center justify-center rounded-full overflow-hidden">
+                                    {!currentMatch.other.imageUrl ? <UserRound size={24} /> :
+                                        <Image className="object-cover" src={currentMatch.other.imageUrl} fill alt="user image" />
+                                    }
+                                </div>
+                                <h2 className="section-title">{currentMatch.other.name}</h2>
+                            </div>
                             <div className="flex flex-col gap-3 mt-4 w-full">
                                 <button onClick={() => createChat({ payload: { friendId: currentMatch.other.id, friendName: currentMatch.other.name } })} className="button-blue flex items-center gap-5">
                                     <MessageSquareMore size={20} />
@@ -109,7 +116,7 @@ const Page = () => {
                         </div>
                     </div>
                     {/* todo touch screen optimization */}
-                    <div className="_border col-span-1 xl:col-span-2 rounded-[10px] p-6 h-[254px] flex items-center justify-center text-center">
+                    <div className="_border col-span-3 sm:col-span-1   xl:col-span-2 rounded-[10px]  p-6 h-[254px] flex items-center justify-center text-center">
                         <div className="flex flex-col gap-4 items-center">
 
                             {plan &&
