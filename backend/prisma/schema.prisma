@@ -146,7 +146,7 @@ model Plan {
   id      String   @id @default(uuid())
   modules Module[]
   matchId String   @unique
-  match   Match    @relation(fields: [matchId], references: [id])
+  match   Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
 }
 
 model Module {
@@ -158,7 +158,7 @@ model Module {
   timeline   Int
   resources  Resource[]
   planId     String
-  plan       Plan         @relation(fields: [planId], references: [id])
+  plan       Plan         @relation(fields: [planId], references: [id], onDelete: Cascade)
 
   @@index([planId])
   @@index([status])
@@ -167,7 +167,7 @@ model Module {
 model Resource {
   id          String  @id @default(uuid())
   moduleId    String
-  module      Module  @relation(fields: [moduleId], references: [id])
+  module      Module  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   title       String
   link        String
   description String?

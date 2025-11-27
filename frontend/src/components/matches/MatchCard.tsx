@@ -8,7 +8,7 @@ import React from 'react'
 
 const MatchCard = ({ match, isInActiveMatches, option, getOrCreateChat, generateActiveMatch }: { isInActiveMatches: boolean, option: 'available' | 'active', generateActiveMatch: UseMutateFunction<{ match: IMatch; message: string; }, Error, string, unknown>, match: IMatch, getOrCreateChat: UseMutateFunction<{ chat: IChat; }, Error, { payload: { friendId: string; friendName: string; } }, unknown> }) => {
     const router = useRouter();
-    const { createFriendRequest } = useFriends()
+    const { createFriendRequest } = useFriends();
     return (
         <div className="_border rounded-2xl p-6 overflow-hidden flex flex-col">
             <div className="flex flex-col gap-3 mb-3.5 items-center">

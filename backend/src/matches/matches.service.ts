@@ -85,7 +85,7 @@ export class MatchesService {
         );
         const score = (knowsMySkills ? 1 : 0) + (wantsMySkills ? 1 : 0);
         const isFriend = checker.isFriend(user);
-        return { score, otherId: user.id, isFriend, other: { name: user.name, imageUrl: user.imageUrl, skillsToLearn: user.skillsToLearn, knownSkills: user.knownSkills } };
+        return { score, isFriend, other: { name: user.name, id: user.id, imageUrl: user.imageUrl, skillsToLearn: user.skillsToLearn, knownSkills: user.knownSkills } };
       })
       .sort((a, b) => b.score - a.score);
     const usersForMatch = sortedUsers.slice(0, 9);
