@@ -27,7 +27,7 @@ const ComingSessionWarning = () => {
         (now >= sessionStart && now <= sessionEnd)
       );
     });
-    console.log(upcoming);
+
     setUpComingSession(upcoming || null);
   }, [sessions]);
 

@@ -70,7 +70,6 @@ const EditProfile = ({
   const { mutate: uploadAvatarImage, isPending } = useMutation({
     mutationFn: async (file: File) => {
       const form = new FormData();
-      console.log(file);
       form.append("image", file);
       const data = await ProfilesService.uploadImage(form);
       return data;
@@ -113,7 +112,7 @@ const EditProfile = ({
     setValue("name", user.name);
     setValue("email", user.email);
     setValue("bio", user.bio || "");
-  }, [user]);
+  }, [user, setValue]);
 
   return (
     <div className="flex flex-col gap-7.5">
@@ -185,7 +184,7 @@ const EditProfile = ({
                 <input
                   defaultValue={user?.name}
                   {...register("name", {
-                    onChange: (e) => {
+                    onChange: () => {
                       setIsCurrentlyEditing(true);
                     },
                   })}
@@ -214,7 +213,7 @@ const EditProfile = ({
                 <input
                   defaultValue={user?.email}
                   {...register("email", {
-                    onChange: (e) => {
+                    onChange: () => {
                       setIsCurrentlyEditing(true);
                     },
                   })}
@@ -244,7 +243,7 @@ const EditProfile = ({
                 <textarea
                   defaultValue={user?.bio}
                   {...register("bio", {
-                    onChange: (e) => {
+                    onChange: () => {
                       setIsCurrentlyEditing(true);
                     },
                   })}
@@ -286,7 +285,7 @@ const EditProfile = ({
               <input
                 defaultValue={user?.name}
                 {...register("name", {
-                  onChange: (e) => {
+                  onChange: () => {
                     setIsCurrentlyEditing(true);
                   },
                 })}
@@ -312,7 +311,7 @@ const EditProfile = ({
               <input
                 defaultValue={user?.email}
                 {...register("email", {
-                  onChange: (e) => {
+                  onChange: () => {
                     setIsCurrentlyEditing(true);
                   },
                 })}
@@ -339,7 +338,7 @@ const EditProfile = ({
               <textarea
                 defaultValue={user?.bio}
                 {...register("bio", {
-                  onChange: (e) => {
+                  onChange: () => {
                     setIsCurrentlyEditing(true);
                   },
                 })}

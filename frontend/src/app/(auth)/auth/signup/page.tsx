@@ -52,7 +52,6 @@ const Page = () => {
   const { mutate: getSkills, isPending } = useMutation({
     mutationFn: async ({ chars }: { chars: string }) => {
       const skills = await SkillsService.getSkills(chars);
-      console.log(skills);
       return skills;
     },
     onSuccess: (data: { id: string; title: string }[]) =>
@@ -64,7 +63,7 @@ const Page = () => {
 
   const onSubmit: SubmitHandler<signUpFormData> = async (data) => {
     if (!data.checkBox) {
-      console.error("Terms and conditions are not accepted!");
+      toast.error("Terms and conditions are not accepted!");
       return null;
     }
     const { checkBox, ...newData } = data;

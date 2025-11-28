@@ -1,9 +1,9 @@
 import { ApiResponse, IUser } from "@/types/types";
 import { api } from "./axiosInstance";
 
-class AuthService {
+class ProfilesService {
   async getOwnProfile(): Promise<IUser> {
-    const res = await api.get(`/auth/profile`);
+    const res = await api.get("/auth/profile");
 
     return res.data;
   }
@@ -13,7 +13,7 @@ class AuthService {
   }
 
   async uploadImage(form: FormData): Promise<{ url: string; message: string }> {
-    const res = await api.post(`profiles/photo/upload`, form);
+    const res = await api.post("profiles/photo/upload", form);
     return res.data;
   }
 
@@ -26,9 +26,10 @@ class AuthService {
   }
 
   async deleteAvatarImage(): Promise<ApiResponse<null>> {
-    const res = await api.delete(`profiles/photo/delete`);
+    const res = await api.delete("profiles/photo/delete");
     return res.data;
   }
 }
 
-export default new AuthService();
+const profilesService = new ProfilesService()
+export default profilesService;

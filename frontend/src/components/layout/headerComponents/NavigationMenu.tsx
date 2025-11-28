@@ -2,10 +2,11 @@ import { Hamburger } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navLinks } from "@/constants/navLinks";
+import { Dispatch, SetStateAction } from "react";
 
 interface NavigationMenuProps {
   panel: string | null;
-  onPanelChange: (panel: string | null) => void;
+  onPanelChange: Dispatch<SetStateAction<"avatarMenu" | "search" | "notifs" | "navMenu" | null>>;
   onLogOut: () => void;
 }
 

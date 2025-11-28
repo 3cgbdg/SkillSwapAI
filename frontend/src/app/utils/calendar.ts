@@ -1,5 +1,5 @@
 export const getDates = (): { day: number; weekDay: string }[] => {
-  let result = [];
+  const result = [];
   const currentDate = new Date();
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();

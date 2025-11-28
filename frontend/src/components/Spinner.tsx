@@ -21,7 +21,7 @@ const Spinner = ({
                 ? "#3a7ae9ff"
                 : "#fff",
       }}
-      className={`animate-spin rounded-full border-t-4  border-solid mx-auto`}
+      className="animate-spin rounded-full border-t-4  border-solid mx-auto"
     ></div>
   );
 };

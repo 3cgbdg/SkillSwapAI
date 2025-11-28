@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import FriendsService from "@/services/FriendsService";
 import RequestsService from "@/services/RequestsService";
-import { ApiResponse, IFriend } from "@/types/types";
+import { ApiResponse, IFriend, IRequest } from "@/types/types";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
 // hook for maintaining friends and friends requests in cache and in case refething it
@@ -31,9 +31,9 @@ export const useFriends = () => {
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["friends"] });
       // if its in friend request
-      qc.setQueryData(["reqs"], (old: any) => {
+      qc.setQueryData(["reqs"], (old: IRequest[]) => {
         if (!old) return [];
-        return old.filter((req: any) => req.id !== data.id);
+        return old.filter((req: IRequest) => req.id !== data.id);
       });
       toast.success(data.message);
     },

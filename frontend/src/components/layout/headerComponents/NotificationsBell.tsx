@@ -3,11 +3,12 @@ import { motion } from "framer-motion";
 import { IRequest } from "@/types/types";
 import NotificationsList from "./NotificationsList";
 import Spinner from "@/components/Spinner";
+import { Dispatch, SetStateAction } from "react";
 
 interface NotificationsBellProps {
   reqs: IRequest[] | undefined;
   panel: string | null;
-  onPanelChange: (panel: string | null) => void;
+  onPanelChange: Dispatch<SetStateAction<"avatarMenu" | "search" | "notifs" | "navMenu" | null>>;
   onAcceptSession: ({
     sessionId,
     requestId,

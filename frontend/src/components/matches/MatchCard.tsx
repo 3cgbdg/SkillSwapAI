@@ -135,9 +135,9 @@ const MatchCard = ({
                   onClick={() =>
                     !isInActiveMatches
                       ? generateActiveMatch(match.other.id)
-                      : router.push(`/matches/active`)
+                      : router.push("/matches/active")
                   }
-                  className={`button-transparent rounded-md!  flex gap-1 items-center  font-medium!`}
+                  className="button-transparent rounded-md!  flex gap-1 items-center  font-medium!"
                 >
                   <Book size={16} />
                   {isInActiveMatches ? "Go to active matches" : "Generate plan"}
@@ -145,7 +145,7 @@ const MatchCard = ({
               ) : (
                 <button
                   onClick={() => router.push(`/matches/${match.id}`)}
-                  className={`button-transparent rounded-md!  flex gap-1 items-center  font-medium!`}
+                  className="button-transparent rounded-md!  flex gap-1 items-center  font-medium!"
                 >
                   <Book size={16} />
                   Go to your plan

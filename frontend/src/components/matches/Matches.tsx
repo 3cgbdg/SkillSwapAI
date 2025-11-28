@@ -2,7 +2,7 @@
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
 import { updateChats } from "@/redux/chatsSlice";
 import ChatsService from "@/services/ChatsService";
-import { IChat, IMatch } from "@/types/types";
+import { IMatch } from "@/types/types";
 import { useMutation } from "@tanstack/react-query";
 import { Search, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -161,7 +161,6 @@ const Matches = ({
                     <input
                       onChange={(e) => {
                         const value = e.target.value.toLowerCase().trim();
-                        console.log(value);
                         setFilteredMatch(
                           matches.filter(
                             (match) =>

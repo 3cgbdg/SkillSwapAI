@@ -59,4 +59,5 @@ class RequestsService {
   }
 }
 
-export default new RequestsService();
+const requestsService = new RequestsService();
+export default requestsService;

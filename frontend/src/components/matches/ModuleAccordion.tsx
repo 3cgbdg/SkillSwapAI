@@ -81,7 +81,7 @@ const ModuleAccordion = ({
         </div>
       </div>
       {isActive == idx && (
-        <div className={`h-fit flex  flex-col gap-4 p-4`}>
+        <div className="h-fit flex  flex-col gap-4 p-4">
           <div className=" flex flex-col gap-2">
             <h4 className="font-semibold">Objectives:</h4>
             <div className="">

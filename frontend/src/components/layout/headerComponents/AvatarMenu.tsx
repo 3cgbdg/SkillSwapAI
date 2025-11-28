@@ -1,10 +1,11 @@
 import { UserRound, X } from "lucide-react";
 import Image from "next/image";
 import { useAppSelector } from "@/hooks/reduxHooks";
+import { Dispatch, SetStateAction } from "react";
 
 interface AvatarMenuProps {
   panel: string | null;
-  onPanelChange: (panel: string | null) => void;
+  onPanelChange: Dispatch<SetStateAction<"avatarMenu" | "search" | "notifs" | "navMenu" | null>>;
   onLogOut: () => void;
 }
 

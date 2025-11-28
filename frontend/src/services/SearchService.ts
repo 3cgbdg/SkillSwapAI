@@ -8,4 +8,5 @@ class SearchService {
   }
 }
 
-export default new SearchService();
+const searchService = new SearchService();
+export default searchService;

@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { start } from "node:repl";
 
 const Page = () => {
   const { user } = useAppSelector((state) => state.auth);
@@ -119,7 +118,7 @@ const Page = () => {
                 return now <= startDate;
               })
               .map((item) => (
-                <div className="_border rounded-xl overflow-hidden flex flex-col">
+                <div key={item.id} className="_border rounded-xl overflow-hidden flex flex-col">
                   <div className="not-last:border-b-[1px] border-neutral-300 flex justify-between items-center p-4 pt-5">
                     <div className="">
                       <h3 className="text-lg leading-7 font-semibold ">

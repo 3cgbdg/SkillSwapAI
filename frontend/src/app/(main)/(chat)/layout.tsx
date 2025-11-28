@@ -31,7 +31,7 @@ export default function ChatLayout({
     if (isSuccess && chats) {
       dispatch(getChats(chats));
     }
-  }, [isSuccess, chats]);
+  }, [isSuccess, chats, dispatch]);
 
   // handling error
   useEffect(() => {

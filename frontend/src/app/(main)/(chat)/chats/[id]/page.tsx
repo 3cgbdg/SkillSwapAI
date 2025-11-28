@@ -82,7 +82,7 @@ const Page = () => {
     return () => {
       observer.disconnect();
     };
-  }, [messages, socket, user, currentChat]);
+  }, [messages, socket, user, currentChat,dispatch,id]);
 
   // getting current chat
   useEffect(() => {
@@ -91,9 +91,7 @@ const Page = () => {
     }
   }, [chats, id]);
 
-  useEffect(() => {
-    console.log(messages);
-  }, [messages]);
+
 
   // listening to socket events
   useEffect(() => {
@@ -109,12 +107,6 @@ const Page = () => {
       id: string;
       messageContent: string;
     }) => {
-      console.log(
-        "Received message from:",
-        from,
-        "for chat:",
-        currentChat.chatId
-      );
       queryClient.setQueryData(
         ["messages", currentChat.friend.id],
         (old: IMessage[] = []) => {
@@ -146,7 +138,6 @@ const Page = () => {
       id: string;
       createdAt: string | Date;
     }) => {
-      console.log("Message sent confirmation for chat:", currentChat.chatId);
       queryClient.setQueryData(
         ["messages", currentChat.friend.id],
         (old: IMessage[] = []) => {
@@ -172,7 +163,6 @@ const Page = () => {
 
     // Handler for message seen update
     const handleUpdateSeen = ({ messageId }: { messageId: string }) => {
-      console.log("Message seen update:", messageId);
       queryClient.setQueryData(
         ["messages", currentChat.friend.id],
         (old: IMessage[] = []) => {

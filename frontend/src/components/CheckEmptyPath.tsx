@@ -12,7 +12,7 @@ const CheckEmptyPath = () => {
       }
     };
     getUser();
-  }, [router]);
+  }, [router,pathname]);
   return null;
 };
 

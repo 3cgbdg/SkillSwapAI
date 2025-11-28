@@ -2,15 +2,7 @@
 
 import { navLinks } from "@/constants/navLinks";
 import {
-  ActivityIcon,
-  ActivitySquare,
-  Calendar,
-  LayoutDashboard,
-  LibraryBig,
   Menu,
-  MessageSquare,
-  User,
-  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";

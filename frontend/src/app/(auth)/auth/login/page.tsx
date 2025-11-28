@@ -4,11 +4,11 @@ import AuthService from "@/services/AuthService";
 import { logInFormData, logInSchema } from "@/validation/logIn";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { ChromeIcon, GithubIcon, Lock, Mail } from "lucide-react";
+import {Lock, Mail } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 
@@ -170,7 +170,7 @@ const Page = () => {
           </button>
         </div> */}
         <div className="flex items-center gap-1 text-sm leading-5 ">
-          <span className="text-gray">Don't have an account? </span>
+          <span className="text-gray">Don&apos;t have an account? </span>
           <Link href={"/auth/signup"} className="text-violet link">
             Sign Up
           </Link>

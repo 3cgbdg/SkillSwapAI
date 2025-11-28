@@ -13,7 +13,7 @@ import SkillsService from "@/services/SkillsService";
 import { useMutation } from "@tanstack/react-query";
 import { GraduationCap, Pencil, UserRound } from "lucide-react";
 import Image from "next/image";
-import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
+import { Dispatch, SetStateAction, useMemo } from "react";
 import Spinner from "../Spinner";
 import { differenceInHours } from "date-fns";
 const Profile = ({

@@ -2,6 +2,7 @@ import { Search, X } from "lucide-react";
 import SearchResults from "./SearchResults";
 import { FoundSkills, FoundUsers } from "@/types/types";
 import Spinner from "@/components/Spinner";
+import { Dispatch, SetStateAction } from "react";
 
 interface SearchInputMobileProps {
   word: string;
@@ -14,7 +15,7 @@ interface SearchInputMobileProps {
   onAddLearn: (skill: string, skillId: string) => void;
   onCreateFriendRequest: (userId: string) => void;
   onRemoveSkill: (skillId: string) => void;
-  onPanelChange: (panel: string | null) => void;
+  onPanelChange: Dispatch<SetStateAction<"avatarMenu" | "search" | "notifs" | "navMenu" | null>>
   onSearchOpenChange: (isOpen: boolean) => void;
   isPending: boolean;
 }

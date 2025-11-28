@@ -10,7 +10,7 @@ export const fetchActiveMatches = createAsyncThunk(
     try {
       const matches: IMatch[] = await MatchesService.getActiveMatches();
       return matches;
-    } catch (err) {
+    } catch  {
       return rejectWithValue("Unauthorized");
     }
   }

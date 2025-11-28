@@ -1,12 +1,10 @@
 "use client";
 
-import FriendsService from "@/services/FriendsService";
-import { useQuery } from "@tanstack/react-query";
 import { Users, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import FriendsPopup from "./FriendsPopup";
-import { toast } from "react-toastify";
+
 import useFriends from "@/hooks/useFriends";
 
 // button + fixed friend list

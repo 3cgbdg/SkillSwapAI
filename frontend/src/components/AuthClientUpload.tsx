@@ -40,7 +40,6 @@ const AuthClientUpload = () => {
         await dispatch(fetchActiveMatches()).unwrap();
         await dispatch(fetchTodaysSessions()).unwrap();
       } catch (err) {
-        console.error("Auth setup failed:", err);
         router.push("/auth/login");
       }
     };

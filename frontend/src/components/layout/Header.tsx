@@ -6,10 +6,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
-import { Found, FoundSkills, FoundUsers } from "@/types/types";
+import { Found, FoundSkills, FoundUsers, IRequest } from "@/types/types";
 import AuthService from "@/services/AuthService";
 import RequestsService from "@/services/RequestsService";
-import FriendsService from "@/services/FriendsService";
 import SearchService from "@/services/SearchService";
 import SkillsService from "@/services/SkillsService";
 
@@ -120,9 +119,9 @@ const Header = () => {
     }) =>
       RequestsService.acceptSessionRequest({ sessionId, requestId, friendId }),
     onSuccess: (id: string) => {
-      queryClient.setQueryData(["reqs"], (old: any) => {
+      queryClient.setQueryData(["reqs"], (old: IRequest[]) => {
         if (!old) return [];
-        return old.filter((req: any) => req.id !== id);
+        return old.filter((req: IRequest) => req.id !== id);
       });
     },
   });
@@ -140,9 +139,9 @@ const Header = () => {
     }) =>
       RequestsService.rejectSessionRequest({ sessionId, requestId, friendId }),
     onSuccess: (id: string) => {
-      queryClient.setQueryData(["reqs"], (old: any) => {
+      queryClient.setQueryData(["reqs"], (old: IRequest[]) => {
         if (!old) return [];
-        return old.filter((req: any) => req.id !== id);
+        return old.filter((req: IRequest) => req.id !== id);
       });
     },
   });
@@ -152,9 +151,9 @@ const Header = () => {
     mutationFn: async ({ requestId }: { requestId: string }) =>
       RequestsService.deleteRequest(requestId),
     onSuccess: (id: string) => {
-      queryClient.setQueryData(["reqs"], (old: any) => {
+      queryClient.setQueryData(["reqs"], (old: IRequest[]) => {
         if (!old) return [];
-        return old.filter((req: any) => req.id !== id);
+        return old.filter((req: IRequest) => req.id !== id);
       });
     },
     onError: (err) => {
@@ -178,23 +177,22 @@ const Header = () => {
     if (socket) {
       socket.on("connect", () => {});
       socket.on("friendRequest", (payload) => {
-        queryClient.setQueryData(["reqs"], (old: any) => {
+        queryClient.setQueryData(["reqs"], (old: IRequest[]) => {
           return [...old, payload.request];
         });
       });
       socket.on("sessionCreationRequest", (payload) => {
-        console.log("socket working1", payload);
-        queryClient.setQueryData(["reqs"], (old: any) => {
+        queryClient.setQueryData(["reqs"], (old: IRequest[]) => {
           return [...old, payload.request];
         });
       });
       socket.on("sessionAcceptedRequest", (payload) => {
-        queryClient.setQueryData(["reqs"], (old: any) => {
+        queryClient.setQueryData(["reqs"], (old: IRequest[]) => {
           return [...old, payload.request];
         });
       });
       socket.on("sessionRejectedRequest", (payload) => {
-        queryClient.setQueryData(["reqs"], (old: any) => {
+        queryClient.setQueryData(["reqs"], (old: IRequest[]) => {
           return [...old, payload.request];
         });
       });
@@ -205,7 +203,7 @@ const Header = () => {
         socket.off("sessionRejectedRequest");
       };
     }
-  }, [socket]);
+  }, [socket,queryClient]);
 
   return (
     <div className="flex items-center justify-between bg-white py-[14px] px-2 md:px-6 relative ">
@@ -225,7 +223,7 @@ const Header = () => {
         onSearch={async (chars) => {
           await mutationSearch.mutateAsync(chars);
         }}
-        onAddLearn={(skill, skillId) => {
+        onAddLearn={(skill) => {
           mutationAddLearn.mutate(skill);
           dispatch(addWantToLearnSkill(skill));
         }}
@@ -233,7 +231,7 @@ const Header = () => {
         onRemoveSkill={(skillId) =>
           setFoundSkills((prev) => prev.filter((item) => item.id !== skillId))
         }
-        onPanelChange={setPanel as any}
+        onPanelChange={setPanel}
         onSearchOpenChange={setIsSearchOpen}
       />
 
@@ -249,7 +247,7 @@ const Header = () => {
           onSearch={async (chars) => {
             await mutationSearch.mutateAsync(chars);
           }}
-          onAddLearn={(skill, skillId) => {
+          onAddLearn={(skill) => {
             mutationAddLearn.mutate(skill);
             dispatch(addWantToLearnSkill(skill));
           }}
@@ -259,7 +257,7 @@ const Header = () => {
           onRemoveSkill={(skillId) =>
             setFoundSkills((prev) => prev.filter((item) => item.id !== skillId))
           }
-          onPanelChange={setPanel as any}
+          onPanelChange={setPanel}
         />
 
         {/* Notifications Bell */}
@@ -267,7 +265,7 @@ const Header = () => {
           reqs={reqs}
           isLoading={isLoading}
           panel={panel}
-          onPanelChange={setPanel as any}
+          onPanelChange={setPanel}
           onAcceptSession={(data) => mutationAcceptSession.mutate(data)}
           onRejectSession={(data) => mutationRejectSession.mutate(data)}
           onAddFriend={(data) => addFriend(data)}
@@ -277,14 +275,14 @@ const Header = () => {
         {/* Avatar Menu */}
         <AvatarMenu
           panel={panel}
-          onPanelChange={setPanel as any}
+          onPanelChange={setPanel}
           onLogOut={() => mutation.mutate()}
         />
 
         {/* Navigation Menu */}
         <NavigationMenu
           panel={panel}
-          onPanelChange={setPanel as any}
+          onPanelChange={setPanel}
           onLogOut={() => mutation.mutate()}
         />
       </div>

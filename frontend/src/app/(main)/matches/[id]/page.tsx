@@ -26,12 +26,11 @@ const Page = () => {
   useEffect(() => {
     if (!matches || matches.length == 0) return;
     const match = matches.find((item) => item.id == id);
-    console.log(match);
     setCurrentMatch(match ?? null);
     if (!match) {
       router.push("/404");
     }
-  }, [matches]);
+  }, [matches,id,router]);
 
   // for getting to chat or creating it
   const { mutate: createChat } = useMutation({

@@ -6,7 +6,7 @@ export default async function AuthLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className={`py-2 flex items-center justify-center min-h-screen`}>
+    <div className="py-2 flex items-center justify-center min-h-screen">
       <div className="fixed size-full inset-0 opacity-20 pointer-events-none">
         <Image
           className="object-contain"

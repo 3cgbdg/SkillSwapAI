@@ -81,10 +81,10 @@ const DesktopGridCalendar = ({
           {tableCells.map((cell) => (
             <div
               key={cell.date.toISOString()}
-              className="_border p-1 grid  "
+              className="_border p-1 grid "
               style={{ gridTemplateRows: "repeat(24, 100px)" }}
             >
-              {cell.sessions.map((session, i) => (
+              {cell.sessions.map((session) => (
                 <div
                   key={session.id}
                   style={{
