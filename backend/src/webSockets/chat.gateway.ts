@@ -7,7 +7,7 @@ import { JwtService } from "@nestjs/jwt";
 
 @WebSocketGateway({
     cors: {
-        origin: "http://localhost:3000",
+        origin: process.env.CORS_ORIGIN || "http://localhost:3000",
         credentials: true
     }
 })
@@ -120,7 +120,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                 id: chat.messages[0].id,
                 createdAt: chat.messages[0].createdAt,
             });
-         
+
         } else {
 
             const message = await this.prisma.message.create({ data: { fromId: fromId, toId: payload.to, content: payload.message, chatId: chat.id } })
@@ -129,7 +129,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                 id: message.id,
                 createdAt: message.createdAt,
             });
-       
+
             messageId = message.id;
 
         }
