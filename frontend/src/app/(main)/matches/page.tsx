@@ -2,7 +2,6 @@
 
 import Matches from "@/components/matches/Matches";
 import Spinner from "@/components/Spinner";
-import { useAppSelector } from "@/hooks/reduxHooks";
 import MatchesService from "@/services/MatchesService";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
