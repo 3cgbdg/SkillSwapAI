@@ -83,6 +83,11 @@ const authSlice = createSlice({
             if (state.user) {
                 state.user = { ...state.user, ...action.payload };
             }
+        },
+        generatedAiSuggestions: (state) => {
+            if (state.user) {
+                state.user = { ...state.user, lastSkillsGenerationDate: new Date().toISOString() };
+            }
         }
 
 
@@ -107,5 +112,5 @@ const authSlice = createSlice({
 }
 )
 
-export const { getProfile, updateProfile, removeAiSuggestionSkill, addAiSuggestionSkills, changeAvatar, logOut, addKnownSkill, addWantToLearnSkill, deleteKnownSkill, deleteWantToLearnSkill } = authSlice.actions;
+export const { getProfile, updateProfile, removeAiSuggestionSkill, generatedAiSuggestions, addAiSuggestionSkills, changeAvatar, logOut, addKnownSkill, addWantToLearnSkill, deleteKnownSkill, deleteWantToLearnSkill } = authSlice.actions;
 export default authSlice.reducer;

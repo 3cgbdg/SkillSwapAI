@@ -12,6 +12,7 @@ import ChatsService from "@/services/ChatsService"
 import Image from "next/image"
 import Link from "next/link"
 import { toast } from "react-toastify"
+import Spinner from "@/components/Spinner"
 
 
 
@@ -30,8 +31,8 @@ const Page = () => {
     const refs = useRef<HTMLDivElement[]>([]);
     const lastMessageRef = useRef<string>("");
     // useQuery for getting all messages from db
-    const { data: messages, error, isError } = useQuery({
-        queryKey: ['messages', currentChat?.chatId],
+    const { data: messages, error, isError, isLoading } = useQuery({
+        queryKey: ['messages', currentChat?.friend.id],
         queryFn: async () => ChatsService.getChat(currentChat?.friend.id),
 
         enabled: !!currentChat
@@ -94,31 +95,32 @@ const Page = () => {
     useEffect(() => {
         if (!socket || !user || !currentChat) return;
 
-
-        socket.on('receiveMessage', ({ from, id, messageContent }: { from: string, id: string, messageContent: string }) => {
-            console.log(from, id, messageContent);
-            queryClient.setQueryData(['messages', currentChat.chatId], (old: IMessage[]) => {
-                if (currentChat) {
-                    dispatch(updateChatNewMessagesForReceiver({ chatId: currentChat.chatId, message: lastMessageRef.current }));
+        // Handler for receiving messages
+        const handleReceiveMessage = ({ from, id, messageContent }: { from: string, id: string, messageContent: string }) => {
+            console.log('Received message from:', from, 'for chat:', currentChat.chatId);
+            queryClient.setQueryData(['messages', currentChat.friend.id], (old: IMessage[] = []) => {
+                // Only add message if it's from the other person in this chat
+                if (from === currentChat.friend.id) {
+                    dispatch(updateChatNewMessagesForReceiver({ chatId: currentChat.chatId, message: messageContent }));
+                    return [...old, { fromId: from, content: messageContent, createdAt: new Date(), id: id }]
                 }
-
-                return [...old, { fromId: from, content: messageContent, createdAt: new Date(), id: id }]
+                return old;
             })
-        })
+        }
 
-
-        socket.on('messageSent', (data: { id: string, createdAt: string | Date }) => {
-            queryClient.setQueryData(['messages', currentChat.chatId], (old: IMessage[] = []) => {
-                if (currentChat) {
-                    dispatch(updateChatNewMessagesForSender({ chatId: currentChat.chatId, message: lastMessageRef.current }));
-                }
+        // Handler for message sent confirmation
+        const handleMessageSent = (data: { id: string, createdAt: string | Date }) => {
+            console.log('Message sent confirmation for chat:', currentChat.chatId);
+            queryClient.setQueryData(['messages', currentChat.friend.id], (old: IMessage[] = []) => {
+                dispatch(updateChatNewMessagesForSender({ chatId: currentChat.chatId, message: lastMessageRef.current }));
                 return [...old, { fromId: user.id, content: lastMessageRef.current, createdAt: new Date(data.createdAt), isSeen: false, id: data.id }];
             });
-        })
+        }
 
-        // updating status of seen message (from unseen to seen)
-        socket.on('updateSeen', ({ messageId }: { messageId: string }) => {
-            queryClient.setQueryData(['messages', currentChat?.chatId], (old: IMessage[]) => {
+        // Handler for message seen update
+        const handleUpdateSeen = ({ messageId }: { messageId: string }) => {
+            console.log('Message seen update:', messageId);
+            queryClient.setQueryData(['messages', currentChat.friend.id], (old: IMessage[] = []) => {
                 if (!old) return old;
                 return old.map((item) => {
                     if (item.id == messageId) {
@@ -128,16 +130,21 @@ const Page = () => {
                     }
                 })
             })
-        })
-        return () => {
-            socket.off("receiveMessage");
-            socket.off("updateSeen");
-            socket.off("messageSent");
+        }
 
+        // Register handlers
+        socket.on('receiveMessage', handleReceiveMessage);
+        socket.on('messageSent', handleMessageSent);
+        socket.on('updateSeen', handleUpdateSeen);
+
+        // Cleanup: remove handlers only for this specific chat
+        return () => {
+            socket.off('receiveMessage', handleReceiveMessage);
+            socket.off('messageSent', handleMessageSent);
+            socket.off('updateSeen', handleUpdateSeen);
         };
 
-
-    }, [socket, user, currentChat])
+    }, [socket, user, currentChat, queryClient, dispatch])
 
 
 
@@ -192,7 +199,7 @@ const Page = () => {
 
                 {/* content */}
                 <div className="flex gap-4 flex-col p-4 w-full h-[502px]   overflow-y-scroll">
-                    {messages && messages.length > 0 ? messages.map((msg, idx) => (
+                    {!isLoading ? (messages && messages.length > 0 ? messages.map((msg, idx) => (
                         <div ref={(el) => { refs.current[idx] = el! }} key={msg.id ?? idx} className={`w-fit rounded-[10px] text-gray  p-3  ${msg.fromId === user?.id ? 'bg-lightBlue self-end' : "bg-neutral-200"}`}>
                             <p className={`wrap-anywhere mb-1   leading-5 text-sm ${msg.fromId === user?.id ? "text-neutral-900" : ""}`}>{msg.content}</p>
                             <div className="flex justify-between items-center flex-row-reverse gap-2">
@@ -209,7 +216,8 @@ const Page = () => {
 
 
                         </div>
-                    )) : <span className="flex mt-40 justify-center w-full">Start conversation</span>
+                    )) : <span className="flex mt-40 justify-center w-full">Start conversation</span>) :
+                        <div className="h-100 flex items-center justify-center"><Spinner color='blue' size={44} /></div>
                     }
 
 

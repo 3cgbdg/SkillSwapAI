@@ -62,13 +62,18 @@ export class PlansService {
 
   }
 
-  async updateStatusToCompeted(planId, moduleId):Promise<{message:string}> {
-    const yourPlan = await this.prisma.plan.findUnique({ where: { id: planId }, include: { modules: { select: { id: true } } } });
-    const isYourModule = yourPlan?.modules.find(item => item.id == moduleId);
+  async updateStatusToCompeted(planId, moduleId): Promise<{ message: string, status: null | string }> {
+    const yourPlan = await this.prisma.plan.findUnique({ where: { id: planId }, include: { modules: { select: { id: true, status: true } } } });
+    const isAllCompleted = yourPlan?.modules.filter(item => item.status !== "COMPLETED");
+    if (isAllCompleted?.length == 1) {
+      await this.prisma.match.deleteMany({ where: { plan: { id: planId } } });
+      return { message: "Active match is completed", status: "Finished" }
+    }
+    const isYourModule = isAllCompleted?.find(item => item.id == moduleId);
     if (isYourModule) {
       try {
         await this.prisma.module.update({ where: { id: moduleId }, data: { status: 'COMPLETED' } });
-        return { message: 'Module is successfully completed' }
+        return { message: 'Module is successfully completed', status: null }
       } catch {
         throw new InternalServerErrorException('Something went wrong!');
       }

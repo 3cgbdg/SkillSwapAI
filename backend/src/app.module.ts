@@ -14,6 +14,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { S3Module } from './s3/s3module';
 import { PlansModule } from './plans/plans.module';
 import { AiModule } from './ai/ai.module';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -49,7 +50,7 @@ import { AiModule } from './ai/ai.module';
     PlansModule,
 
     AiModule],
-  controllers: [],
+  controllers: [AppController],
   providers: [],
 })
 export class AppModule { }

@@ -1,5 +1,5 @@
 import SessionsService from "@/services/SessionsService";
-import { ISession, IUser } from "@/types/types";
+import { ISession } from "@/types/types";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 

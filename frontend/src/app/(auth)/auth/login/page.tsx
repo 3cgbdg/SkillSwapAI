@@ -1,4 +1,5 @@
 "use client"
+import FullSreenLoader from "@/components/FullSreenLoader";
 import AuthService from "@/services/AuthService";
 import { logInFormData, logInSchema } from "@/validation/logIn";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,7 +8,7 @@ import { ChromeIcon, GithubIcon, Lock, Mail } from "lucide-react";
 import Image from "next/image"
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 
@@ -22,7 +23,8 @@ const Page = () => {
     mutationFn: async (data: logInFormData) => AuthService.logIn(data),
     onSuccess: (data) => {
       toast.success(data.message)
-      setTimeout(() => router.push("/dashboard"), 500);
+      // Wait for cookies to be set by browser before redirecting
+      setTimeout(() => router.push("/dashboard"), 1000);
     },
     onError: (err) => {
       toast.error(err.message)
@@ -35,6 +37,13 @@ const Page = () => {
   }
   return (
     <div className="basis-[448px] _border rounded-[32px] p-[57px] flex justify-center bg-white z-10">
+      {/* loading screen */}
+
+      {mutation.isPending &&
+        <FullSreenLoader />
+      }
+
+      {/*  */}
       <div className="flex flex-col gap-4 items-center mb-[46px] w-full">
         <div className="mb-1 ">
           <Image className="object-contain" src={"/logo.png"} height={44} width={44} alt="logo icon" />
@@ -94,7 +103,8 @@ const Page = () => {
           <span className="text-gray text-xs leading-4  w-5">OR</span>
           <div className="my-9 border-[1px] border-neutral-200 w-full"></div>
         </div>
-        <div className="flex items-center gap-[3px] mb-10">
+        {/* TODO OAUTH LATER */}
+        {/* <div className="flex items-center gap-[3px] mb-10">
           <button className="button-transparent gap-2 text-sm! leading-5.5! font-medium!">
             <ChromeIcon size={14} />
             Login with Google
@@ -103,7 +113,7 @@ const Page = () => {
             <GithubIcon size={14} />
             Login with GitHub
           </button>
-        </div>
+        </div> */}
         <div className="flex items-center gap-1 text-sm leading-5 ">
           <span className="text-gray">Don't have an account? </span>
           <Link href={"/auth/signup"} className="text-violet link">Sign Up</Link>

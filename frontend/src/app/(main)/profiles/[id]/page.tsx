@@ -1,5 +1,6 @@
 "use client"
 
+import FullSreenLoader from "@/components/FullSreenLoader";
 import { useAppDispatch } from "@/hooks/reduxHooks";
 import { updateChats } from "@/redux/chatsSlice";
 import ChatsService from "@/services/ChatsService";
@@ -15,7 +16,7 @@ const page = () => {
     const { id } = useParams() as { id: string };
     const dispatch = useAppDispatch();
     const router = useRouter();
-    const { data: profile, error, isError } = useQuery({
+    const { data: profile, error, isError, isLoading } = useQuery({
         queryKey: ['profile', id],
         queryFn: async () => ProfilesService.getProfileById(id)
     })
@@ -44,17 +45,26 @@ const page = () => {
     return (<>
         {profile &&
             <div className="md:grid grid-cols-5 flex  justify-center items-start   gap-6">
+                {/* loading screen */}
 
+                {isLoading &&
+                    <FullSreenLoader />
+                }
+
+                {/*  */}
                 <div className="_border col-span-3 rounded-[10px] p-6">
                     <div className="flex flex-col gap-4 items-center">
-                        {!profile?.imageUrl ?
-                            <UserRound size={24} />
-                            :
-                            <div className="size-24 relative  rounded-full overflow-hidden">
-                                <Image className="object-cover" src={profile.imageUrl} fill alt="profile image" />
-                            </div>
+                        <div className=" _border size-24 relative flex items-center justify-center rounded-full overflow-hidden">
+                            {!profile?.imageUrl ?
 
-                        }
+                                <UserRound size={48} />
+                                :
+                               
+                                    <Image className="object-cover" src={profile.imageUrl} fill alt="profile image" />
+                              
+
+                            }
+                        </div>
                         <h2 className="section-title">{profile?.name}</h2>
                         {profile.bio !== null && profile.bio.length > 0 &&
                             <div className="w-full ">
@@ -150,7 +160,7 @@ const page = () => {
 
 
                 </div>
-            </div>
+            </div >
         }
     </>
     )
