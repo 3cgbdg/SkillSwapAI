@@ -103,7 +103,8 @@ const Page = () => {
           <span className="text-gray text-xs leading-4  w-5">OR</span>
           <div className="my-9 border-[1px] border-neutral-200 w-full"></div>
         </div>
-        <div className="flex items-center gap-[3px] mb-10">
+        {/* TODO OAUTH LATER */}
+        {/* <div className="flex items-center gap-[3px] mb-10">
           <button className="button-transparent gap-2 text-sm! leading-5.5! font-medium!">
             <ChromeIcon size={14} />
             Login with Google
@@ -112,7 +113,7 @@ const Page = () => {
             <GithubIcon size={14} />
             Login with GitHub
           </button>
-        </div>
+        </div> */}
         <div className="flex items-center gap-1 text-sm leading-5 ">
           <span className="text-gray">Don't have an account? </span>
           <Link href={"/auth/signup"} className="text-violet link">Sign Up</Link>

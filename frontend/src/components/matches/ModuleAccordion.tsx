@@ -5,13 +5,14 @@ import { IGeneratedModule } from "@/types/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, Clock, Link as LinkIcon } from "lucide-react"
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Dispatch, SetStateAction } from "react"
 import { toast } from "react-toastify";
 
 const ModuleAccordion = ({ module, setIsActive, isActive, idx, planId }: { planId: string, module: IGeneratedModule, isActive: null | number, idx: number, setIsActive: Dispatch<SetStateAction<null | number>> }) => {
     const { id } = useParams() as { id: string };
     const queryClient = useQueryClient();
+    const router = useRouter();
     const { mutate: setModuleStatusToCompleted } = useMutation({
         mutationFn: async () => {
             const res = await PlansService.setModuleStatusToCompleted(planId, module.id);
@@ -19,6 +20,9 @@ const ModuleAccordion = ({ module, setIsActive, isActive, idx, planId }: { planI
         },
         onSuccess: (data) => {
             toast.success(data.message);
+            if (data.status !== null) {
+                router.push("/dashboard");
+            }
             queryClient.invalidateQueries({ queryKey: ['matches', id] })
         },
         onError: (err) => {

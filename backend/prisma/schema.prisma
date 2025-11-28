@@ -25,26 +25,27 @@ enum RequestType {
 }
 
 model User {
-  aiSuggestionSkills     String[]
-  id                     String       @id @default(uuid())
-  name                   String       @unique
-  password               String
-  imageUrl               String?
-  email                  String       @unique
-  bio                    String?
-  completedSessionsCount Int          @default(0)
-  knownSkills            Skill[]      @relation("knownSkills")
-  skillsToLearn          Skill[]      @relation("skillsToLearn")
-  chats                  Chat[]       @relation("userChats")
-  sessions               Session[]    @relation("userSessions")
-  messagesSent           Message[]    @relation("sender")
-  messagesReceived       Message[]    @relation("receiver")
-  sentRequests           Request[]    @relation("sentRequests")
-  receivedRequests       Request[]    @relation("receivedRequests")
-  matchesInitiated       Match[]      @relation("MatchInitiator")
-  matchesReceived        Match[]      @relation("otherUser")
-  friends                Friendship[] @relation("UserFriends")
-  friendOf               Friendship[] @relation("UserFriendsInverse")
+  aiSuggestionSkills       String[]
+  id                       String       @id @default(uuid())
+  name                     String       @unique
+  password                 String
+  imageUrl                 String?
+  email                    String       @unique
+  bio                      String?
+  completedSessionsCount   Int          @default(0)
+  knownSkills              Skill[]      @relation("knownSkills")
+  skillsToLearn            Skill[]      @relation("skillsToLearn")
+  chats                    Chat[]       @relation("userChats")
+  sessions                 Session[]    @relation("userSessions")
+  messagesSent             Message[]    @relation("sender")
+  messagesReceived         Message[]    @relation("receiver")
+  sentRequests             Request[]    @relation("sentRequests")
+  receivedRequests         Request[]    @relation("receivedRequests")
+  matchesInitiated         Match[]      @relation("MatchInitiator")
+  matchesReceived          Match[]      @relation("otherUser")
+  friends                  Friendship[] @relation("UserFriends")
+  friendOf                 Friendship[] @relation("UserFriendsInverse")
+  lastSkillsGenerationDate DateTime?     
 }
 
 model Friendship {
@@ -146,7 +147,7 @@ model Plan {
   id      String   @id @default(uuid())
   modules Module[]
   matchId String   @unique
-  match   Match    @relation(fields: [matchId], references: [id])
+  match   Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
 }
 
 model Module {
@@ -158,7 +159,7 @@ model Module {
   timeline   Int
   resources  Resource[]
   planId     String
-  plan       Plan         @relation(fields: [planId], references: [id])
+  plan       Plan         @relation(fields: [planId], references: [id], onDelete: Cascade)
 
   @@index([planId])
   @@index([status])
@@ -167,7 +168,7 @@ model Module {
 model Resource {
   id          String  @id @default(uuid())
   moduleId    String
-  module      Module  @relation(fields: [moduleId], references: [id])
+  module      Module  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   title       String
   link        String
   description String?

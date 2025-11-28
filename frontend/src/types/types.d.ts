@@ -8,6 +8,7 @@ export interface IUser {
     imageUrl: string | undefined,
     bio: string,
     completedSessionsCount: number,
+    lastSkillsGenerationDate: string,
 }
 
 export interface IFriend {
@@ -117,6 +118,7 @@ export interface IGeneratedModule {
 
 export type ApiResponse<T> = {
     success: boolean;
+    status?: string | null,
     data?: T;
     message?: string;
     errors?: string[];

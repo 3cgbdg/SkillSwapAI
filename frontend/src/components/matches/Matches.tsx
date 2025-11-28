@@ -19,7 +19,6 @@ const Matches = ({ matches, option }: { matches: IMatch[], option: 'available' |
     const [panel, setPanel] = useState<'skill' | 'compatibility' | null>(null);
     const dispatch = useAppDispatch();
     const router = useRouter();
-
     const { isPending, mutate: generateActiveMatch } = useMutation({
         mutationFn: async (partnerId: string) => {
             const data = await MatchesService.generateActiveMatch(partnerId);
@@ -34,6 +33,15 @@ const Matches = ({ matches, option }: { matches: IMatch[], option: 'available' |
             toast.error(err.message)
         }
     })
+
+    useEffect(() => {
+        if (isPending) {
+            document.body.style.overflow = "hidden"
+        } else {
+            document.body.style.overflow = "auto"
+
+        }
+    }, [isPending])
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
