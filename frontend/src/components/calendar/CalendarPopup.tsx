@@ -58,7 +58,7 @@ const CalendarPopup = ({
       queryClient.invalidateQueries({ queryKey: ["sessions", month] });
     },
     onError: (error: unknown) => {
-      const err = error as AxiosError<any>;
+      const err = error as AxiosError<{ message: string }>;
       setBadRequestErrorMessage(err.response?.data?.message || err.message);
     },
   });
