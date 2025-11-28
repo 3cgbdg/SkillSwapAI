@@ -8,7 +8,7 @@ export interface IUser {
     imageUrl: string | undefined,
     bio: string,
     completedSessionsCount: number,
-    lastSkillsGenerationDate: Date,
+    lastSkillsGenerationDate: string,
 }
 
 export interface IFriend {

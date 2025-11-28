@@ -2,7 +2,7 @@
 import { toast } from 'react-toastify';
 import AddSkills from "@/components/profile/AddSkills";
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
-import { addAiSuggestionSkills, addWantToLearnSkill, removeAiSuggestionSkill } from "@/redux/authSlice";
+import { addAiSuggestionSkills, addWantToLearnSkill, generatedAiSuggestions, removeAiSuggestionSkill } from "@/redux/authSlice";
 import AiService from "@/services/AiService";
 import SkillsService from "@/services/SkillsService";
 import { useMutation } from "@tanstack/react-query";
@@ -34,6 +34,7 @@ const Profile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<boole
         retry: 1,
         onSuccess: (data) => {
             if (data) {
+                dispatch(generatedAiSuggestions());
                 dispatch(addAiSuggestionSkills(data.skills));
                 toast.success(data.message)
             }
@@ -43,10 +44,15 @@ const Profile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<boole
         }
     })
 
-    const cantGenerateSkills = useMemo(() =>
-        user?.lastSkillsGenerationDate &&
-        differenceInHours(new Date(), new Date(user.lastSkillsGenerationDate)) <= 24
-        , [user]);
+
+    const cantGenerateSkills = useMemo(() => {
+        if (!user?.lastSkillsGenerationDate) return false;
+
+        return differenceInHours(
+            new Date(),
+            new Date(user.lastSkillsGenerationDate)
+        ) <= 24;
+    }, [user?.lastSkillsGenerationDate]);
     return (
         <>
             {user &&
@@ -76,7 +82,7 @@ const Profile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<boole
                             <h2 className="text-2xl leading-6 font-bold mb-4">
                                 AI Skill Suggestions
                             </h2>
-                            <button disabled={cantGenerateSkills} onClick={() => getNewAiSuggestionSkills()} className={`button-blue ${cantGenerateSkills ? "bg-gray! cursor-auto!" :"" }`}>{cantGenerateSkills ? "Wait for 24 hours since last  generation" : "Regenerate"}</button>
+                            <button disabled={cantGenerateSkills} onClick={() => getNewAiSuggestionSkills()} className={`button-blue ${cantGenerateSkills ? "bg-gray! cursor-auto!" : ""}`}>{cantGenerateSkills ? "Wait for 24 hours since last  generation" : "Regenerate"}</button>
                         </div>
                         <div className="flex flex-col gap-4">
                             {!isPending ? user.aiSuggestionSkills.length > 0 ?
@@ -96,7 +102,7 @@ const Profile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<boole
                                             <button onClick={() => addNewSkillToLearn(skill)} className="link hover:underline rounded-2xl!">Add to Learn</button>
                                         </div>
                                     </div>
-                                )) : <span className="text-center">{cantGenerateSkills ? "💤💤💤"  :"Regenerate"}</span> :
+                                )) : <span className="text-center">{cantGenerateSkills ? "💤💤💤" : "Regenerate"}</span> :
                                 <Spinner color="blue" size={32} />
                             }
                         </div>
