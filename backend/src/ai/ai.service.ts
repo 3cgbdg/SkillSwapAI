@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
@@ -60,6 +60,15 @@ export class AiService {
       throw new BadRequestException();
     }
     const user = await this.prisma.user.findUnique({ where: { id: myId }, include: { skillsToLearn: true, knownSkills: true } });
+    if (user?.lastSkillsGenerationDate) {
+      const lastDate = new Date(user.lastSkillsGenerationDate);
+      const now = new Date();
+
+      const hoursDiff = (now.getTime() - lastDate.getTime()) / (3600 * 24);
+      if (hoursDiff < 24) {
+        throw new ForbiddenException("You have already regenerated skills. Wait till the next day.")
+      }
+    }
     if (!user)
       throw new UnauthorizedException();
     const stringArraySkillsToLearn = user?.skillsToLearn.map(item => item.title)
@@ -82,7 +91,9 @@ export class AiService {
       }))
       await this.prisma.user.update({ where: { id: myId }, data: { aiSuggestionSkills: readyAiArray } });
     }
-    const returnAiArray = readyAiArray?.filter(item => !stringArraySkillsToLearn.includes(item))
+    const returnAiArray = readyAiArray?.filter(item => !stringArraySkillsToLearn.includes(item));
+    // updating our flag for tracking last date for using this api by user (limit 1 per day (except automized regeneration after signing up))
+    await this.prisma.user.update({ where: { id: myId }, data: { lastSkillsGenerationDate: new Date() } });
     return returnAiArray ? { skills: returnAiArray, message: 'Skills successfully generated!' } : null;
   }
 

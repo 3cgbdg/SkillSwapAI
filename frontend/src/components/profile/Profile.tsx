@@ -8,8 +8,9 @@ import SkillsService from "@/services/SkillsService";
 import { useMutation } from "@tanstack/react-query";
 import { GraduationCap, Pencil, UserRound, } from "lucide-react"
 import Image from "next/image";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
 import Spinner from "../Spinner";
+import { differenceInHours } from 'date-fns';
 const Profile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<boolean>> }) => {
     const { user } = useAppSelector(state => state.auth);
     const dispatch = useAppDispatch();
@@ -42,7 +43,10 @@ const Profile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<boole
         }
     })
 
-
+    const cantGenerateSkills = useMemo(() =>
+        user?.lastSkillsGenerationDate &&
+        differenceInHours(new Date(), new Date(user.lastSkillsGenerationDate)) <= 24
+        , [user]);
     return (
         <>
             {user &&
@@ -72,7 +76,7 @@ const Profile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<boole
                             <h2 className="text-2xl leading-6 font-bold mb-4">
                                 AI Skill Suggestions
                             </h2>
-                            <button onClick={() => getNewAiSuggestionSkills()} className="button-blue">Regenerate</button>
+                            <button disabled={cantGenerateSkills} onClick={() => getNewAiSuggestionSkills()} className={`button-blue ${cantGenerateSkills ? "bg-gray! cursor-auto!" :"" }`}>{cantGenerateSkills ? "Wait for 24 hours since last  generation" : "Regenerate"}</button>
                         </div>
                         <div className="flex flex-col gap-4">
                             {!isPending ? user.aiSuggestionSkills.length > 0 ?
@@ -92,7 +96,7 @@ const Profile = ({ setIsEditing }: { setIsEditing: Dispatch<SetStateAction<boole
                                             <button onClick={() => addNewSkillToLearn(skill)} className="link hover:underline rounded-2xl!">Add to Learn</button>
                                         </div>
                                     </div>
-                                )) : <span className="text-center">Regenerate</span> :
+                                )) : <span className="text-center">{cantGenerateSkills ? "💤💤💤"  :"Regenerate"}</span> :
                                 <Spinner color="blue" size={32} />
                             }
                         </div>
