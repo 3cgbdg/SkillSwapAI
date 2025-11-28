@@ -25,8 +25,7 @@ const Page = () => {
       <div className="_border overflow-hidden rounded-[10px] col-span-3 xl:col-span-2">
         <Suspense fallback={<Spinner size={30} color="blue" />}>
           <Calendar />
-        </Suspense>{" "}
-        --а для чого вон оя й так трекаю запити
+        </Suspense>
       </div>
       <div className="_border overflow-hidden  rounded-[10px] col-span-3 xl:col-span-1">
         {/* header */}
