@@ -15,7 +15,9 @@ interface SearchInputMobileProps {
   onAddLearn: (skill: string, skillId: string) => void;
   onCreateFriendRequest: (userId: string) => void;
   onRemoveSkill: (skillId: string) => void;
-  onPanelChange: Dispatch<SetStateAction<"avatarMenu" | "search" | "notifs" | "navMenu" | null>>
+  onPanelChange: Dispatch<
+    SetStateAction<"avatarMenu" | "search" | "notifs" | "navMenu" | null>
+  >;
   onSearchOpenChange: (isOpen: boolean) => void;
   isPending: boolean;
 }

@@ -31,5 +31,5 @@ class ProfilesService {
   }
 }
 
-const profilesService = new ProfilesService()
+const profilesService = new ProfilesService();
 export default profilesService;

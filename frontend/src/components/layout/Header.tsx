@@ -203,7 +203,7 @@ const Header = () => {
         socket.off("sessionRejectedRequest");
       };
     }
-  }, [socket,queryClient]);
+  }, [socket, queryClient]);
 
   return (
     <div className="flex items-center justify-between bg-white py-[14px] px-2 md:px-6 relative ">

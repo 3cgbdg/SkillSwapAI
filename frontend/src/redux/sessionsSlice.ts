@@ -21,7 +21,7 @@ export const fetchTodaysSessions = createAsyncThunk(
     try {
       const sessions: ISession[] = await SessionsService.getTodaysSessions();
       return sessions;
-    } catch  {
+    } catch {
       return rejectWithValue("Unauthorized");
     }
   }

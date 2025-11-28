@@ -5,7 +5,9 @@ import { Dispatch, SetStateAction } from "react";
 
 interface AvatarMenuProps {
   panel: string | null;
-  onPanelChange: Dispatch<SetStateAction<"avatarMenu" | "search" | "notifs" | "navMenu" | null>>;
+  onPanelChange: Dispatch<
+    SetStateAction<"avatarMenu" | "search" | "notifs" | "navMenu" | null>
+  >;
   onLogOut: () => void;
 }
 

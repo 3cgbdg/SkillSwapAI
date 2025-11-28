@@ -4,7 +4,7 @@ import AuthService from "@/services/AuthService";
 import { logInFormData, logInSchema } from "@/validation/logIn";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import {Lock, Mail } from "lucide-react";
+import { Lock, Mail } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

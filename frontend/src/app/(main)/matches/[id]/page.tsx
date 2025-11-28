@@ -30,7 +30,7 @@ const Page = () => {
     if (!match) {
       router.push("/404");
     }
-  }, [matches,id,router]);
+  }, [matches, id, router]);
 
   // for getting to chat or creating it
   const { mutate: createChat } = useMutation({

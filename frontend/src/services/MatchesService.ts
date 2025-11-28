@@ -20,6 +20,5 @@ class MatchesService {
   }
 }
 
-const matchesService = new MatchesService()
+const matchesService = new MatchesService();
 export default matchesService;
-

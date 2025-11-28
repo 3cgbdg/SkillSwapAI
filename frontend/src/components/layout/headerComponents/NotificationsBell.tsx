@@ -8,7 +8,9 @@ import { Dispatch, SetStateAction } from "react";
 interface NotificationsBellProps {
   reqs: IRequest[] | undefined;
   panel: string | null;
-  onPanelChange: Dispatch<SetStateAction<"avatarMenu" | "search" | "notifs" | "navMenu" | null>>;
+  onPanelChange: Dispatch<
+    SetStateAction<"avatarMenu" | "search" | "notifs" | "navMenu" | null>
+  >;
   onAcceptSession: ({
     sessionId,
     requestId,

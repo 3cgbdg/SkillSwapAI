@@ -134,7 +134,8 @@ const NotificationsList = ({
                   <div className="flex  flex-col  mb-4">
                     <div className="rounded-xl transition-all  font-medium">
                       {" "}
-                      <span className="font-semibold">Accepted</span> session: &quot;
+                      <span className="font-semibold">Accepted</span> session:
+                      &quot;
                       {req.session.title}&quot;
                     </div>
                   </div>
@@ -161,7 +162,8 @@ const NotificationsList = ({
                   <div className="flex  flex-col  mb-4">
                     <div className="rounded-xl transition-all  font-medium">
                       {" "}
-                      <span className="font-semibold">Rejected</span> session: &quot;
+                      <span className="font-semibold">Rejected</span> session:
+                      &quot;
                       {req.session.title}&quot;
                     </div>
                   </div>

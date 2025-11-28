@@ -18,6 +18,5 @@ class FriendsService {
   }
 }
 
-const friendsService = new FriendsService()
+const friendsService = new FriendsService();
 export default friendsService;
-

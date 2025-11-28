@@ -1,6 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-
 interface IonlineUsersState {
   onlineUsers: string[];
 }

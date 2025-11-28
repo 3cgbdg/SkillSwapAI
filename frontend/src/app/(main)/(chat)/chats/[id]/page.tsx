@@ -82,7 +82,7 @@ const Page = () => {
     return () => {
       observer.disconnect();
     };
-  }, [messages, socket, user, currentChat,dispatch,id]);
+  }, [messages, socket, user, currentChat, dispatch, id]);
 
   // getting current chat
   useEffect(() => {
@@ -90,8 +90,6 @@ const Page = () => {
       setCurrentChat(chats.find((chat) => chat.chatId === id) ?? null);
     }
   }, [chats, id]);
-
-
 
   // listening to socket events
   useEffect(() => {

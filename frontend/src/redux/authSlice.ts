@@ -10,7 +10,7 @@ export const fetchProfile = createAsyncThunk(
     try {
       const user: IUser = await ProfilesService.getOwnProfile();
       return user;
-    } catch  {
+    } catch {
       return rejectWithValue("Unauthorized");
     }
   }

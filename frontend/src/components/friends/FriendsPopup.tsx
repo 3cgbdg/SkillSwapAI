@@ -1,6 +1,6 @@
 "use client";
 
-import {  IFriend } from "@/types/types";
+import { IFriend } from "@/types/types";
 import Image from "next/image";
 import { BookUser, MessageSquareMore, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
