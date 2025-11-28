@@ -1,146 +1,137 @@
 export interface IUser {
-    id: string;
-    aiSuggestionSkills: string[]
-    name: string;
-    email: string;
-    knownSkills?: { id: string; title: string }[];
-    skillsToLearn?: { id: string; title: string }[];
-    imageUrl: string | undefined,
-    bio: string,
-    completedSessionsCount: number,
-    lastSkillsGenerationDate: string,
+  id: string;
+  aiSuggestionSkills: string[];
+  name: string;
+  email: string;
+  knownSkills?: { id: string; title: string }[];
+  skillsToLearn?: { id: string; title: string }[];
+  imageUrl: string | undefined;
+  bio: string;
+  completedSessionsCount: number;
+  lastSkillsGenerationDate: string;
 }
 
 export interface IFriend {
-    name: string;
-    imageUrl: string;
-    id: string;
-    newMessagesQuantity?: number;
-    lastMessage?: { content: string; createdAt: string }
+  name: string;
+  imageUrl: string;
+  id: string;
+  newMessagesQuantity?: number;
+  lastMessage?: { content: string; createdAt: string };
 }
 
 export interface IChat {
-    _max: { createdAt: string };
-    _count: { id: number };
-    chatId: string;
-    lastMessageContent?: string;
-    friend: IFriend;
+  _max: { createdAt: string };
+  _count: { id: number };
+  chatId: string;
+  lastMessageContent?: string;
+  friend: IFriend;
 }
 
 export interface IMessage {
-    id: string
-    content: string;
-    fromId: string;
-    createdAt: Date;
-    isSeen: boolean;
+  id: string;
+  content: string;
+  fromId: string;
+  createdAt: Date;
+  isSeen: boolean;
 }
 
-
 export interface ISession {
+  id: string;
+  title: string;
+  start: number;
+  end: number;
+  description?: string;
+  color: string;
+  date: Date;
+  friend: {
     id: string;
-    title: string;
-    start: number;
-    end: number;
-    description?: string;
-    color: string;
-    date: Date;
-    friend: {
-        id: string;
-        name: string;
-    };
-    status: SessionStatusEnum;
-    meetingLink: string | null;
+    name: string;
+  };
+  status: SessionStatusEnum;
+  meetingLink: string | null;
 }
 
 export const SessionStatusEnum = {
-    PENDING = "PENDING",
-    AGREED = "AGREED"
+  PENDING = "PENDING",
+  AGREED = "AGREED",
 } as const;
 
-
 interface IRequest {
-    id: string;
-    fromId: string;
-    toId: string;
-    from: { name: string };
-    to: { name: string };
-    type: "FRIEND" |
-    "SESSIONCREATED" |
-    "SESSIONACCEPTED" |
-    "SESSIONREJECTED";
-    sessionId: string;
-    session: {
-        date?: string;
-        start?: number;
-        end?: number;
-        title?: string;
-    }//if request type is session 
-
+  id: string;
+  fromId: string;
+  toId: string;
+  from: { name: string };
+  to: { name: string };
+  type: "FRIEND" | "SESSIONCREATED" | "SESSIONACCEPTED" | "SESSIONREJECTED";
+  sessionId: string;
+  session: {
+    date?: string;
+    start?: number;
+    end?: number;
+    title?: string;
+  }; //if request type is session
 }
 
 export interface IMatch {
-    compatibility: number,
-    aiExplanation?: string,
-    keyBenefits: string[]
-    id: string,
-    isFriend?: string,
-    other: {
-        id: string;
-        name: string;
-        imageUrl: string;
-        knownSkills: { title: string }[],
-        skillsToLearn: { title: string }[]
-
-    }
+  compatibility: number;
+  aiExplanation?: string;
+  keyBenefits: string[];
+  id: string;
+  isFriend?: string;
+  other: {
+    id: string;
+    name: string;
+    imageUrl: string;
+    knownSkills: { title: string }[];
+    skillsToLearn: { title: string }[];
+  };
 }
 
 export interface IGeneratedPlan {
-    id: string,
-    modules: IGeneratedModule[]
+  id: string;
+  modules: IGeneratedModule[];
 }
 
 export interface IGeneratedModule {
+  id: string;
+  title: string;
+  status: ModuleStatus;
+  objectives: string[];
+  activities: string[];
+  timeline: number;
+  resources: {
     id: string;
-    title: string,
-    status: ModuleStatus,
-    objectives: string[],
-    activities: string[],
-    timeline: number,
-    resources: {
-        id: string
-        title: string,
-        description?: string,
-        link: string
-    }[]
+    title: string;
+    description?: string;
+    link: string;
+  }[];
 }
 
-
-
 export type ApiResponse<T> = {
-    success: boolean;
-    status?: string | null,
-    data?: T;
-    message?: string;
-    errors?: string[];
+  success: boolean;
+  status?: string | null;
+  data?: T;
+  message?: string;
+  errors?: string[];
 };
 
 // type for form
 
-
 export interface FoundUsers {
-    id: string,
-    name: string,
+  id: string;
+  name: string;
 }
 
 export interface FoundSkills {
-    id: string,
-    title: string,
+  id: string;
+  title: string;
 }
-export type Found = FoundUsers & FoundSkills & {
+export type Found = FoundUsers &
+  FoundSkills & {
     name?: string;
     title?: string;
-};
+  };
 
 export interface SocketContextType {
-    socket: Socket | null;
+  socket: Socket | null;
 }

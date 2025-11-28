@@ -10,7 +10,6 @@ export default async function MainLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-
   return (
     <div className="flex flex-col h-screen relative  ">
       <AuthClientUpload />
@@ -18,21 +17,10 @@ export default async function MainLayout({
       <ComingSessionWarning />
       <div className="flex items-start grow-1 border-t-[1px]  border-neutral-300">
         <Sidebar />
-        <div className="  sm:py-6 py-2 px-3 md:p-8 w-full">
-          {children}
-        </div>
+        <div className="  sm:py-6 py-2 px-3 md:p-8 w-full">{children}</div>
         <FriendList />
       </div>
       <Footer />
-    </div >
-
-
+    </div>
   );
 }
-
-
-
-
-
-
-

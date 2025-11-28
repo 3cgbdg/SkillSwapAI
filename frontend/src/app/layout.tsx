@@ -7,12 +7,10 @@ import { SocketProvider } from "@/context/SocketContext";
 import CheckEmptyPath from "@/components/CheckEmptyPath";
 import { ToastContainer } from "react-toastify";
 
-
 const OswaldFont = Oswald({
   variable: "--font-oswald",
   subsets: ["latin"],
 });
-
 
 const InterFont = Inter({
   variable: "--font-inter",
@@ -28,15 +26,14 @@ export const metadata: Metadata = {
   title: "SkillSwapAI",
   description: "SkillSwap AI is a skills exchange platform",
   icons: {
-    icon: "/logo.png"
-  }
+    icon: "/logo.png",
+  },
 };
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-
   return (
     <html lang="en">
       <body
@@ -46,11 +43,9 @@ export default function RootLayout({
           <ReduxProvider>
             <SocketProvider>
               <CheckEmptyPath />
-              <div className="">
-                {children}
-              </div>
+              <div className="">{children}</div>
               {/* for toast position */}
-              <ToastContainer  position="top-right" />
+              <ToastContainer position="top-right" />
             </SocketProvider>
           </ReduxProvider>
         </QueryProvider>

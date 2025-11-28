@@ -10,7 +10,11 @@ const compat = new FlatCompat({
 });
 
 export default [
-  ...compat.extends("next/core-web-vitals", "next/typescript", "plugin:prettier/recommended"),
+  ...compat.extends(
+    "next/core-web-vitals",
+    "next/typescript",
+    "plugin:prettier/recommended"
+  ),
 
   {
     ignores: [
@@ -21,8 +25,8 @@ export default [
       "next-env.d.ts",
     ],
     rules: {
-      "semi": ["error", "always"],
-      "quotes": ["error", "double"],
+      semi: ["error", "always"],
+      quotes: ["error", "double"],
       "no-console": "warn",
       "react-hooks/exhaustive-deps": "warn",
     },

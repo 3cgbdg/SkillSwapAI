@@ -2,20 +2,22 @@ import { IChat, IMessage } from "@/types/types";
 import { api } from "./axiosInstance";
 
 class ChatsService {
-    async getChat(currentChatId: string | undefined): Promise<IMessage[]> {
-        const res = await api.get(`/chats/messages?with=${currentChatId}`);
-        return res.data;
-    }
-    async getChats(): Promise<IChat[]> {
-        const res = await api.get("/chats");
-        return res.data
-    }
+  async getChat(currentChatId: string | undefined): Promise<IMessage[]> {
+    const res = await api.get(`/chats/messages?with=${currentChatId}`);
+    return res.data;
+  }
+  async getChats(): Promise<IChat[]> {
+    const res = await api.get("/chats");
+    return res.data;
+  }
 
-    async createChat(payload: { friendId: string, friendName: string }): Promise<{ chat: IChat}> {
-        const res = await api.post("/chats", payload); 
-        return res.data
-    }
-
+  async createChat(payload: {
+    friendId: string;
+    friendName: string;
+  }): Promise<{ chat: IChat }> {
+    const res = await api.post("/chats", payload);
+    return res.data;
+  }
 }
 
-export default new ChatsService()
+export default new ChatsService();
