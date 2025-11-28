@@ -27,7 +27,6 @@ RUN apk add --no-cache dumb-init
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/.env ./.env
 
 # creating non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
