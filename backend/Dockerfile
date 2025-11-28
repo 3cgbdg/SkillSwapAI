@@ -14,13 +14,12 @@ RUN npx prisma generate
 
 RUN npm run build
 
-# stage 1 - production runtime
-
+# stage 2 - production runtime
 FROM node:20-alpine
 
 WORKDIR /app
 
-#dumb-init for proper signal handling
+# dumb-init for proper signal handling
 RUN apk add --no-cache dumb-init
 
 # copying built application and node_modules from builder
@@ -40,8 +39,8 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD node -e "require('http').get('http://localhost:3000/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
 
-# using dumb-init to run the application
-ENTRYPOINT ["/usr/sbin/dumb-init", "--"]
+# using dumb-init to run the application - ВИПРАВЛЕНО ТУТ!
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
 # Run the application
 CMD ["node", "dist/main"]
