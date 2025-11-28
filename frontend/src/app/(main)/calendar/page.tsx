@@ -1,7 +1,8 @@
 "use client";
 import Calendar from "@/components/calendar/Calendar";
+import Spinner from "@/components/Spinner";
 import { useAppSelector } from "@/hooks/reduxHooks";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 const Page = () => {
   const [now, setNow] = useState(new Date());
@@ -22,7 +23,10 @@ const Page = () => {
   return (
     <div className="grid grid-cols-3 gap-8 items-start">
       <div className="_border overflow-hidden rounded-[10px] col-span-3 xl:col-span-2">
-        <Calendar />
+        <Suspense fallback={<Spinner size={30} color="blue" />}>
+          <Calendar />
+        </Suspense>{" "}
+        --а для чого вон оя й так трекаю запити
       </div>
       <div className="_border overflow-hidden  rounded-[10px] col-span-3 xl:col-span-1">
         {/* header */}
