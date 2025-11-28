@@ -9,6 +9,12 @@ from typing import List
 dotenv.load_dotenv()
 
 app = FastAPI()
+
+# health check endpoint
+@app.get('/health')
+async def health_check():
+    return {"status": "ok"}
+
 # cors
 
 app.add_middleware(
