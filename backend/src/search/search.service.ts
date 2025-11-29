@@ -27,7 +27,6 @@ export class SearchService {
       name: user.name,
      
     }));
-    console.log(newUsers);
     const newSkills = skills.filter(skill => !skill.knownBy.some(user => user.id === myId) && !skill.learnedBy.some(user => user.id === myId))
     return [...newSkills, ...newUsers];
   }

@@ -29,7 +29,7 @@ const AuthClientUpload = () => {
             retries--;
             if (retries > 0) {
               // waiting before retrying
-              await new Promise((resolve) => setTimeout(resolve, 500));
+              await new Promise((resolve) => setTimeout(resolve, 1000));
             }
           }
         }
