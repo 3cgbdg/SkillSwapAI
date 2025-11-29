@@ -10,7 +10,6 @@ export class SkillsController {
 
   @Get()
   async findAll(@Query() dto: getSkillsDto) {
-    console.log(dto)
     return this.skillsService.findAll(dto);
   }
   @UseGuards(AuthGuard('jwt'))

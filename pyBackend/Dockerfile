@@ -38,7 +38,6 @@ ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1 \
     PORT=8000
 
-EXPOSE 8000
 
 # health check
 

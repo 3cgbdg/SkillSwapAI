@@ -47,7 +47,6 @@ export class SkillsService {
 
 
   async deleteKnownSkill(userId: string, dto: SkillDto) {
-    console.log(userId, dto)
     await this.prisma.user.update({ where: { id: userId }, data: { knownSkills: { disconnect: { title: dto.title } } } });
     return { message: "Successfully removed!" }
   }

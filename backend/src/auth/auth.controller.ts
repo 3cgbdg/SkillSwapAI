@@ -18,7 +18,6 @@ export class AuthController {
   @Post("signup")
   async signup(@Body() createAuthDto: CreateAuthDto, @Res() res: Response): Promise<Response<any, Record<string, any>>> {
     const response = await this.authService.signup(createAuthDto);
-    console.log(response);
     res.cookie('access_token', response.access_token, {
       httpOnly: true,
       secure: this.configService.get<string>('NODE_ENV') === 'production',
@@ -68,8 +67,7 @@ export class AuthController {
   }
 
   @Post('refresh')
-  async refreshToken(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<Response<any, Record<string, any>>> {
-    console.log("hello");
+  async refreshToken(@Req() req: Request, @Res() res: Response): Promise<Response<any, Record<string, any>>> {
     const refreshToken = req.cookies['refresh_token'];
     if (!refreshToken) {
       throw new HttpException("No refresh token", HttpStatus.UNAUTHORIZED);
