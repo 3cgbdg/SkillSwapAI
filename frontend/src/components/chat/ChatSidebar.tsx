@@ -160,7 +160,7 @@ const ChatSidebar = () => {
           <button
             key={idx}
             onClick={() => router.push(`/chats/${chat.chatId}`)}
-            className={`rounded-[6px] p-3.5 cursor-pointer ${path == `/chats/${chat.chatId}` ? "bg-lightBlue" : ""} transition-all  hover:bg-lightBlue flex gap-4 justify-between`}
+            className={`rounded-[6px] p-3.5 cursor-pointer group ${path == `/chats/${chat.chatId}` ? "bg-lightBlue" : ""} transition-all  hover:bg-lightBlue flex gap-4 justify-between`}
           >
             <div className="flex  gap-4 items-center">
               <div className="size-12  flex items-center justify-center relative rounded-full _border ">
@@ -187,11 +187,19 @@ const ChatSidebar = () => {
               </div>
 
               {isFullyOpen && (
-                <div className="text-left">
-                  <h3 className="">{chat.friend.name}</h3>
-                  <p className="text-gray leading-5 text-sm">
-                    {chat.lastMessageContent?.slice(0, 20)}...
-                  </p>
+                <div className="text-left ">
+                  <h3 className="max-w-[160px] truncate font-medium">
+                    {chat.friend.name}
+                  </h3>
+                  <div className="relative max-w-[150px]">
+                    <p className="text-gray leading-5 text-sm truncate">
+                      {chat.lastMessageContent}
+                    </p>
+                    {/* right fade so long text looks nicer */}
+                    <div
+                      className={`pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l ${path == `/chats/${chat.chatId}` ? "from-lightBlue" : "from-white"} group-hover:from-lightBlue to-transparent`}
+                    ></div>
+                  </div>
                 </div>
               )}
             </div>

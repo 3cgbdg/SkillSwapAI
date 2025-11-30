@@ -29,6 +29,7 @@ const Page = () => {
   const [currentChat, setCurrentChat] = useState<IChat | null>(null);
   const dispatch = useAppDispatch();
   const endRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const refs = useRef<HTMLDivElement[]>([]);
   const lastMessageRef = useRef<string>("");
   // useQuery for getting all messages from db
@@ -76,7 +77,7 @@ const Page = () => {
           }
         });
       },
-      { threshold: 0.5 }
+      { threshold: 0.5, root: containerRef.current }
     );
 
     elements.forEach((el) => el && observer.observe(el));
@@ -256,7 +257,10 @@ const Page = () => {
         </div>
 
         {/* content */}
-        <div className="flex gap-4 flex-col p-4 w-full h-[502px]   overflow-y-scroll">
+        <div
+          ref={containerRef}
+          className="flex gap-4 flex-col p-4 w-full h-[502px]   overflow-y-scroll"
+        >
           {!isLoading ? (
             messages && messages.length > 0 ? (
               messages.map((msg, idx) => (

@@ -15,6 +15,7 @@ import {
   addOnlineUser,
   removeOnlineUser,
 } from "@/redux/onlineUsersSlice";
+import { updateChatNewMessagesForReceiver } from "@/redux/chatsSlice";
 
 const SocketContext = createContext<SocketContextType>({ socket: null });
 
@@ -23,6 +24,7 @@ export const useSocket = () => useContext(SocketContext);
 export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const { user } = useAppSelector((state) => state.auth);
+  const { chats } = useAppSelector((state) => state.chats);
   const dispatch = useAppDispatch();
   useEffect(() => {
     if (!user) return;
@@ -47,10 +49,29 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     sock.on("setToOnline", handleSetToOnline);
     sock.on("setToOffline", handleSetToOffline);
 
+    const handleReceiveMessage = (payload: {
+      from: string;
+      id: string;
+      messageContent: string;
+    }) => {
+      const chat = (chats || []).find((c) => c.friend.id === payload.from);
+      if (chat) {
+        dispatch(
+          updateChatNewMessagesForReceiver({
+            chatId: chat.chatId,
+            message: payload.messageContent,
+          })
+        );
+      }
+    };
+
+    sock.on("receiveMessage", handleReceiveMessage);
+
     return () => {
       sock.off("friendsOnline", handleFriendsOnline);
       sock.off("setToOnline", handleSetToOnline);
       sock.off("setToOffline", handleSetToOffline);
+      sock.off("receiveMessage", handleReceiveMessage);
       sock.disconnect();
     };
   }, [user]);
