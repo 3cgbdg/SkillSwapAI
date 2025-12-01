@@ -7,12 +7,15 @@ import { X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAppDispatch } from "@/hooks/reduxHooks";
+import { fetchProfile } from "@/redux/authSlice";
 import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-toastify";
 import FullSreenLoader from "@/components/FullSreenLoader";
 import Spinner from "@/components/Spinner";
+import { useDispatch } from "react-redux";
 
 // request->available -----
 
@@ -32,6 +35,7 @@ const Page = () => {
     },
   });
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const [inputKnown, setInputKnown] = useState<string>("");
   const [inputToLearn, setInputToLearn] = useState<string>("");
   const [availableSkills, setAvailableSkills] = useState<
@@ -40,9 +44,14 @@ const Page = () => {
   const mutation = useMutation({
     mutationFn: async (data: Omit<signUpFormData, "checkBox">) =>
       AuthService.signUp(data, knownSkills, skillsToLearn),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       toast.success(data.message);
-      setTimeout(() => router.push("/dashboard"), 1000);
+      try {
+        await dispatch(fetchProfile()).unwrap();
+        router.push("/dashboard");
+      } catch (err) {
+        toast.error("Unable to sign in after signup. Please try to login.");
+      }
     },
     onError: (err) => {
       toast.error(err.message);
