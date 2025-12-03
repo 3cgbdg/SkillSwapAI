@@ -74,7 +74,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       sock.off("receiveMessage", handleReceiveMessage);
       sock.disconnect();
     };
-  }, [user]);
+  }, [user, chats, dispatch]);
   return (
     <SocketContext.Provider value={{ socket }}>
       {children}

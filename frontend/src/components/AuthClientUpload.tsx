@@ -39,7 +39,7 @@ const AuthClientUpload = () => {
 
         await dispatch(fetchActiveMatches()).unwrap();
         await dispatch(fetchTodaysSessions()).unwrap();
-      } catch (err) {
+      } catch {
         router.push("/auth/login");
       }
     };

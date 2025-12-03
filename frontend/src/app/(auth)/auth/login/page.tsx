@@ -39,7 +39,6 @@ const Page = () => {
     onError: (err) => {
       toast.error(err.message);
     },
-
   });
 
   const onSubmit: SubmitHandler<logInFormData> = async (data) => {

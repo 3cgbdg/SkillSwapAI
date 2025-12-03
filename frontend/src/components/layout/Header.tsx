@@ -33,7 +33,6 @@ const Header = () => {
   const [foundSkills, setFoundSkills] = useState<FoundSkills[]>([]);
   const queryClient = useQueryClient();
   const { socket } = useSocket();
-  const { user } = useAppSelector((state) => state.auth);
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
   const { addFriend, createFriendRequest } = useFriends();
   // log out
