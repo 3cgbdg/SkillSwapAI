@@ -98,6 +98,7 @@ export class SessionsService {
     endOfDay.setHours(23, 59, 59, 999);
     const sessions = await this.prisma.session.findMany({
       where: {
+        users: { some: { id: myId } },
         date: {
           gte: startOfDay,
           lte: endOfDay,

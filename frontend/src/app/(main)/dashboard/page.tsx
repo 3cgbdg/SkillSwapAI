@@ -23,7 +23,7 @@ const Page = () => {
         <div className="flex flex-col gap-5 basis-[450px] w-full">
           <div className="flex flex-col gap-1">
             <h2 className="text-xl leading-7 font-medium">
-              Hello, {user?.name}!
+              Hello, {user?.name}! 
             </h2>
             <h1 className="text-4xl leading-10 font-extrabold ">
               Welcome to SkillSwap AI
@@ -131,7 +131,6 @@ const Page = () => {
                         {item.start}:00 - {item.end}:00
                       </p>
                     </div>
-                    <button className="mr-4 link">View Details</button>
                   </div>
                 </div>
               ))

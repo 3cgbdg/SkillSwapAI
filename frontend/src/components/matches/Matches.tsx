@@ -84,7 +84,7 @@ const Matches = ({
     <>
       {/* loading screen while waiting for ai generating active match */}
       {isPending && (
-        <div className="  bg-gray/40  absolute z-200 top-0 left-0 size-full flex items-center justify-center">
+        <div className="  bg-gray/40  fixed z-200 top-0 left-0 size-full flex items-center justify-center">
           <div className="flex flex-col gap-4">
             <div className="flex gap-1 page-title">
               Loading

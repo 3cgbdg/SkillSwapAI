@@ -1,5 +1,7 @@
 "use client";
 import FullSreenLoader from "@/components/FullSreenLoader";
+import { useAppDispatch } from "@/hooks/reduxHooks";
+import { fetchProfile } from "@/redux/authSlice";
 import AuthService from "@/services/AuthService";
 import { logInFormData, logInSchema } from "@/validation/logIn";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,6 +15,7 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 
 const Page = () => {
+  const dispatch = useAppDispatch();
   const {
     register,
     handleSubmit,
@@ -24,14 +27,19 @@ const Page = () => {
   const [isPassSeen, setIsPassSeen] = useState<boolean>(false);
   const mutation = useMutation({
     mutationFn: async (data: logInFormData) => AuthService.logIn(data),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       toast.success(data.message);
-      // Wait for cookies to be set by browser before redirecting
-      setTimeout(() => router.push("/dashboard"), 1000);
+      try {
+        await dispatch(fetchProfile()).unwrap();
+        router.push("/dashboard");
+      } catch (err) {
+        toast.error("Unable to sign in after signup. Please try to login.");
+      }
     },
     onError: (err) => {
       toast.error(err.message);
     },
+
   });
 
   const onSubmit: SubmitHandler<logInFormData> = async (data) => {
@@ -143,9 +151,6 @@ const Page = () => {
           </div>
         </form>
         <div className="w-full flex flex-col">
-          <Link href={"#"} className="ml-auto  link">
-            Forgot Password?
-          </Link>
           <button
             onClick={handleSubmit(onSubmit)}
             id="log-in-btn"
