@@ -1,8 +1,0 @@
-{
-  "dependencies": {
-    "@nestjs/mapped-types": "*",
-    "@tanstack/react-table": "^8.21.3",
-    "knip": "^5.66.2",
-    "react-hook-form": "^7.63.0"
-  }
-}

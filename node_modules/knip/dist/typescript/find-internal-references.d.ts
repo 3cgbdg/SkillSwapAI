@@ -1,4 +1,0 @@
-import ts from 'typescript';
-import type { Export, ExportMember } from '../types/module-graph.js';
-export declare const isType: (item: Export | ExportMember) => boolean;
-export declare const findInternalReferences: (item: Export | ExportMember, sourceFile: ts.SourceFile, typeChecker: ts.TypeChecker, referencedSymbolsInExport: Set<ts.Symbol>, isBindingElement?: boolean) => [number, boolean];

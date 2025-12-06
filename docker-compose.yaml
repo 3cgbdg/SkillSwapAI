@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   db:
@@ -16,14 +16,14 @@ services:
     networks:
       - skillswap-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}" ]
       interval: 5s
       timeout: 5s
       retries: 5
 
   server:
     build:
-      context: ./backend 
+      context: ./backend
       dockerfile: Dockerfile
     container_name: skillswap_server
     restart: on-failure
@@ -50,7 +50,7 @@ services:
 
   ai-service:
     build:
-      context: ./pyBackend 
+      context: ./pyBackend
       dockerfile: Dockerfile
     container_name: skillswap_ai
     restart: on-failure
@@ -65,8 +65,10 @@ services:
 
   client:
     build:
-      context: ./frontend 
+      context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:4000
     container_name: skillswap_client
     restart: on-failure
     depends_on:
@@ -80,6 +82,7 @@ services:
 
 volumes:
   pgdata:
+
 
 networks:
   skillswap-network:

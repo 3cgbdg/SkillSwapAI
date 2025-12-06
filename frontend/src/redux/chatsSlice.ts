@@ -35,7 +35,7 @@ const chatsSlice = createSlice({
           if (chat.chatId == action.payload.chatId) {
             return {
               ...chat,
-              _count: { id: chat._count.id + 1 },
+              _count: { id: (chat._count?.id || 0) + 1 },
               lastMessageContent: action.payload.message,
               _max: { createdAt: String(new Date()) },
             };
@@ -70,7 +70,7 @@ const chatsSlice = createSlice({
           (chat) => chat.chatId === action.payload.chatId
         );
         if (chatIdx !== -1) {
-          state.chats[chatIdx]._count.id -= 1;
+          state.chats[chatIdx]._count = { id: Math.max((state.chats[chatIdx]._count?.id || 0) - 1, 0) };
         }
       }
     },

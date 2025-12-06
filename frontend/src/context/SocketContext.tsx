@@ -7,9 +7,10 @@ import {
   useContext,
   useEffect,
   useState,
+  useRef,
 } from "react";
 import { useAppSelector, useAppDispatch } from "@/hooks/reduxHooks";
-import { SocketContextType } from "@/types/types";
+import { SocketContextType, IChat } from "@/types/types";
 import {
   setOnlineUsers,
   addOnlineUser,
@@ -26,6 +27,12 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAppSelector((state) => state.auth);
   const { chats } = useAppSelector((state) => state.chats);
   const dispatch = useAppDispatch();
+  const chatsRef = useRef<IChat[] | null>(chats);
+
+  useEffect(() => {
+    chatsRef.current = chats;
+  }, [chats]);
+
   useEffect(() => {
     if (!user) return;
     const sock = io(`${process.env.NEXT_PUBLIC_API_URL}`, {
@@ -54,7 +61,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       id: string;
       messageContent: string;
     }) => {
-      const chat = (chats || []).find((c) => c.friend.id === payload.from);
+      const chat = (chatsRef.current || []).find((c) => c.friend.id === payload.from);
       if (chat) {
         dispatch(
           updateChatNewMessagesForReceiver({
@@ -74,7 +81,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       sock.off("receiveMessage", handleReceiveMessage);
       sock.disconnect();
     };
-  }, [user, chats, dispatch]);
+  }, [user, dispatch]);
   return (
     <SocketContext.Provider value={{ socket }}>
       {children}
