@@ -21,7 +21,7 @@ export const useFriends = () => {
   }, [query.error, query.isError]);
 
   // adding friend
-  const { mutate: addFriend } = useMutation<
+  const { mutate: addFriend, isPending } = useMutation<
     { id: string; message: string },
     Error,
     { fromId: string; id: string }
@@ -62,6 +62,7 @@ export const useFriends = () => {
     friends: query.data ?? [],
     isFetching: query.isFetching,
     refetch: query.refetch,
+    isPendingAddFriend: isPending,
     addFriend,
     createFriendRequest,
   };

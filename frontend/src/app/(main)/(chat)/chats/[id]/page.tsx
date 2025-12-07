@@ -309,12 +309,12 @@ const Page = () => {
         <div className="border-t-[1px] border-neutral-300 w-full">
           <div className="p-4 flex gap-4 items-center px-10 ">
             <textarea
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
               className="input resize-none text-sm leading-5.5  w-full"

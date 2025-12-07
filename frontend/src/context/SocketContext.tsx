@@ -61,7 +61,9 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       id: string;
       messageContent: string;
     }) => {
-      const chat = (chatsRef.current || []).find((c) => c.friend.id === payload.from);
+      const chat = (chatsRef.current || []).find(
+        (c) => c.friend.id === payload.from
+      );
       if (chat) {
         dispatch(
           updateChatNewMessagesForReceiver({

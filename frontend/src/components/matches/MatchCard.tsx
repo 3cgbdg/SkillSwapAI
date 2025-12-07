@@ -36,7 +36,7 @@ const MatchCard = ({
   >;
 }) => {
   const router = useRouter();
-  const { createFriendRequest } = useFriends();
+  const { createFriendRequest, isPendingAddFriend } = useFriends();
   return (
     <div className="_border rounded-2xl p-6 overflow-hidden flex flex-col">
       <div className="flex flex-col gap-3 mb-3.5 items-center">
@@ -156,6 +156,7 @@ const MatchCard = ({
             <div className="flex items-center gap-4">
               <span>To continue:</span>
               <button
+                disabled={isPendingAddFriend}
                 onClick={() => createFriendRequest({ id: match.other.id })}
                 className="button-transparent rounded-md! flex gap-1 items-center  font-medium!"
               >

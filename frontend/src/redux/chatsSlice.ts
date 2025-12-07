@@ -70,7 +70,9 @@ const chatsSlice = createSlice({
           (chat) => chat.chatId === action.payload.chatId
         );
         if (chatIdx !== -1) {
-          state.chats[chatIdx]._count = { id: Math.max((state.chats[chatIdx]._count?.id || 0) - 1, 0) };
+          state.chats[chatIdx]._count = {
+            id: Math.max((state.chats[chatIdx]._count?.id || 0) - 1, 0),
+          };
         }
       }
     },

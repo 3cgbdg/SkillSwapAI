@@ -53,22 +53,20 @@ const NotificationsList = ({
                     {req.from?.name}
                   </div>
                   <div className="grid grid-cols-2 items-center gap-2 ">
-                  <button
-                    onClick={() =>
-                      onAddFriend({ fromId: req.fromId, id: req.id })
-                    }
-                    className="button-transparent"
-                  >
-                    <Check size={16} />
-                  </button>
-                  <button
-                    onClick={() =>
-                      onDeleteRequest({ requestId: req.id })
-                    }
-                    className="button-transparent"
-                  >
-                    <X size={16} />
-                  </button>
+                    <button
+                      onClick={() =>
+                        onAddFriend({ fromId: req.fromId, id: req.id })
+                      }
+                      className="button-transparent"
+                    >
+                      <Check size={16} />
+                    </button>
+                    <button
+                      onClick={() => onDeleteRequest({ requestId: req.id })}
+                      className="button-transparent"
+                    >
+                      <X size={16} />
+                    </button>
                   </div>
                 </div>
               </div>
