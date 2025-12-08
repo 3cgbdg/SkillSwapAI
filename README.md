@@ -52,6 +52,7 @@ The project follows a **microservices-based architecture**, ensuring separation 
 ## ✨ Key Features
 
 * **🔐 Secure Authentication:** JWT-based registration and login system.
+* **🆕 Custom Skill Input:** Users can manually input unique skills during registration if they are not yet in the database. The system automatically indexes these new skills for future AI matching.
 * **🤖 AI Matching:** Intelligent prompt algorithm that pairs users based on "Skills to Learn" vs. "Known Skills".
 * **🤖 AI Skill Suggestions:** Prompt algorithm that generates 5-4 recommended skills for person to learn.
 * **💬 Real-time Chat:** Instant messaging between users powered by WebSockets (Socket.io).
