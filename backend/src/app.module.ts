@@ -10,12 +10,14 @@ import { FriendsModule } from './friends/friends.module';
 import { ProfilesModule } from './profiles/profiles.module';
 import { SessionsModule } from './sessions/sessions.module';
 import { MatchesModule } from './matches/matches.module';
-import { ScheduleModule } from '@nestjs/schedule';
 import { S3Module } from './s3/s3module';
 import { PlansModule } from './plans/plans.module';
 import { AiModule } from './ai/ai.module';
 import { AppController } from './app.controller';
-
+import { CacheModule } from '@nestjs/cache-manager';
+import * as  RedisStore from 'cache-manager-redis-store';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
+import { APP_GUARD } from '@nestjs/core';
 @Module({
   imports: [ConfigModule.forRoot({
     isGlobal: true,
@@ -29,6 +31,22 @@ import { AppController } from './app.controller';
       signOptions: { expiresIn: '15m' },
     }),
   }),
+  CacheModule.registerAsync({
+    imports: [ConfigModule],
+    inject: [ConfigService],
+    isGlobal: true,
+    useFactory: (configService: ConfigService) => ({
+      store: RedisStore,
+      ttl: 0,
+      host: configService.get<string>('REDIS_HOST'),
+      port: configService.get<number>('REDIS_PORT'),
+    }),
+
+  }),
+  ThrottlerModule.forRoot([{
+    ttl: 60000,
+    limit: 10,
+  }]),
     AuthModule,
     S3Module,
     SkillsModule,
@@ -51,6 +69,11 @@ import { AppController } from './app.controller';
 
     AiModule],
   controllers: [AppController],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    }
+  ],
 })
 export class AppModule { }

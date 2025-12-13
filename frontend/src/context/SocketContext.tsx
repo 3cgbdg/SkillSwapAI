@@ -33,6 +33,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     chatsRef.current = chats;
   }, [chats]);
 
+
   useEffect(() => {
     if (!user) return;
     const sock = io(`${process.env.NEXT_PUBLIC_API_URL}`, {
@@ -56,6 +57,10 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     sock.on("setToOnline", handleSetToOnline);
     sock.on("setToOffline", handleSetToOffline);
 
+    const interval = setInterval(() => {
+      sock.emit('heartbeat');
+    }, 30000);
+
     const handleReceiveMessage = (payload: {
       from: string;
       id: string;
@@ -77,6 +82,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     sock.on("receiveMessage", handleReceiveMessage);
 
     return () => {
+      clearInterval(interval);
       sock.off("friendsOnline", handleFriendsOnline);
       sock.off("setToOnline", handleSetToOnline);
       sock.off("setToOffline", handleSetToOffline);

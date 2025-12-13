@@ -3,6 +3,9 @@ import { PrismaService } from "prisma/prisma.service";
 import { Socket, Server } from "socket.io";
 import * as cookie from "cookie"
 import { JwtService } from "@nestjs/jwt";
+import { Inject } from "@nestjs/common";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import type { Cache } from "cache-manager";
 
 
 @WebSocketGateway({
@@ -14,10 +17,9 @@ import { JwtService } from "@nestjs/jwt";
 
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
-    constructor(private readonly prisma: PrismaService, private readonly jwtService: JwtService) { };
+    constructor(private readonly prisma: PrismaService, private readonly jwtService: JwtService, @Inject(CACHE_MANAGER) private readonly cacheManager: Cache) { };
     @WebSocketServer()
     server: Server
-    private users = new Map<string, string>() // userid--Socketid
     async handleConnection(client: Socket) {
         const cookies = client.handshake.headers.cookie;
         if (cookies) {
@@ -25,12 +27,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             const token = parsed['access_token'];
             try {
                 const payload = this.jwtService.verify(token as string) as { userId: string };
-                this.users.set(payload.userId, client.id);
                 client.data.userId = payload.userId;
                 const currentOnlineFriends = await this.getCurrentOnlineFriends(payload.userId);
+                await this.cacheManager.set(`user:online:${payload.userId}`, client.id, 60);
+                client.on('heartbeat', async () => {
+                    await this.cacheManager.set(`user:online:${payload.userId}`, client.id, 60);
+                });
                 client.emit("friendsOnline", { users: currentOnlineFriends });
                 for (let friendId of currentOnlineFriends) {
-                    const friendSocket = this.users.get(friendId);
+                    const friendSocket = await this.cacheManager.get<string>(`user:online:${friendId}`);
                     if (friendSocket)
                         this.server.to(friendSocket).emit("setToOnline", { id: payload.userId });
                 }
@@ -46,10 +51,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     async handleDisconnect(client: Socket) {
         const userId = client.data.userId;
         if (userId) {
-            this.users.delete(userId);
+            await this.cacheManager.del(`user:online:${userId}`);
             const currentOnlineFriends = await this.getCurrentOnlineFriends(userId);
             for (let friendId of currentOnlineFriends) {
-                const friendSocket = this.users.get(friendId);
+                const friendSocket = await this.cacheManager.get<string>(`user:online:${friendId}`);
                 if (friendSocket)
                     this.server.to(friendSocket).emit("setToOffline", { id: userId });
 
@@ -60,11 +65,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     async getCurrentOnlineFriends(id: string) {
         const friends1 = await this.prisma.friendship.findMany({ where: { user1Id: id }, include: { user2: { select: { id: true, name: true, } } } });
         const friends2 = await this.prisma.friendship.findMany({ where: { user2Id: id }, include: { user1: { select: { id: true, name: true } } } });
-        const friends = [...friends1.map(item => item.user2), ...friends2.map(item => item.user1)];
+        const friendIds = [...friends1.map(item => item.user2.id), ...friends2.map(item => item.user1.id)];
 
-        return friends
-            .map(f => f.id)
-            .filter(fid => this.users.has(fid));
+        const online: string[] = [];
+
+        for (const fid of friendIds) {
+            if (await this.cacheManager.get(`user:online:${fid}`)) {
+                online.push(fid);
+            }
+        }
+
+        return online;
 
     }
 
@@ -72,7 +83,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     async updateSeenMessage(client: Socket, payload: { messageId: string }) {
         try {
             const updatedMessage = await this.prisma.message.update({ where: { id: payload.messageId }, data: { isSeen: true } });
-            const senderSocketId = this.users.get(updatedMessage.fromId);
+            const senderSocketId = await this.cacheManager.get<string>(`user:online:${updatedMessage.fromId}`);
             if (senderSocketId) {
                 this.server.to(senderSocketId).emit('updateSeen', {
                     messageId: payload.messageId
@@ -136,7 +147,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         //otherwise simply creating new message 
 
 
-        const socketId = this.users.get(payload.to);
+        const socketId = await this.cacheManager.get<string>(`user:online:${payload.to}`);
 
 
         if (socketId) {
