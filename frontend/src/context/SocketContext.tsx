@@ -17,6 +17,7 @@ import {
   removeOnlineUser,
 } from "@/redux/onlineUsersSlice";
 import { updateChatNewMessagesForReceiver } from "@/redux/chatsSlice";
+import friendsService from "@/services/FriendsService";
 
 const SocketContext = createContext<SocketContextType>({ socket: null });
 
@@ -33,6 +34,10 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     chatsRef.current = chats;
   }, [chats]);
 
+  const getOnlineFriends = async () => {
+    const data = await friendsService.getFriendsOnlineStatus();
+    dispatch(setOnlineUsers(data.usersIds));
+  }
 
   useEffect(() => {
     if (!user) return;
@@ -41,25 +46,22 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     });
     setSocket(sock);
 
-    const handleFriendsOnline = ({ users }: { users: string[] }) => {
-      dispatch(setOnlineUsers(users));
-    };
 
     const handleSetToOnline = ({ id }: { id: string }) => {
       dispatch(addOnlineUser(id));
     };
-
-    const handleSetToOffline = ({ id }: { id: string }) => {
-      dispatch(removeOnlineUser(id));
-    };
-
-    sock.on("friendsOnline", handleFriendsOnline);
+    getOnlineFriends();
+    const intervalGetOnlineStatus = setInterval(async () => {
+      getOnlineFriends();
+    }, 45000)
     sock.on("setToOnline", handleSetToOnline);
-    sock.on("setToOffline", handleSetToOffline);
 
-    const interval = setInterval(() => {
+    const intervalHeartbeat = setInterval(() => {
       sock.emit('heartbeat');
     }, 30000);
+
+
+
 
     const handleReceiveMessage = (payload: {
       from: string;
@@ -82,10 +84,9 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     sock.on("receiveMessage", handleReceiveMessage);
 
     return () => {
-      clearInterval(interval);
-      sock.off("friendsOnline", handleFriendsOnline);
+      clearInterval(intervalHeartbeat);
+      clearInterval(intervalGetOnlineStatus);
       sock.off("setToOnline", handleSetToOnline);
-      sock.off("setToOffline", handleSetToOffline);
       sock.off("receiveMessage", handleReceiveMessage);
       sock.disconnect();
     };

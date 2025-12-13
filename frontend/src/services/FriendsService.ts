@@ -16,6 +16,13 @@ class FriendsService {
     };
     return { id, message: data.message };
   }
+
+  async getFriendsOnlineStatus(): Promise<{ usersIds: string[] }> {
+    const res = await api.get("/friends/online-status");
+    return res.data;
+  }
+
+
 }
 
 const friendsService = new FriendsService();

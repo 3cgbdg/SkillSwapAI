@@ -2,12 +2,13 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { CreateFriendDto } from './dto/create-friend.dto';
 import { PrismaService } from 'prisma/prisma.service';
 import { Prisma, User } from '@prisma/client';
+import { ChatGateway } from 'src/webSockets/chat.gateway';
 
 
 
 @Injectable()
 export class FriendsService {
-  constructor(private readonly prisma: PrismaService) { };
+  constructor(private readonly prisma: PrismaService, private readonly chatGateway: ChatGateway) { };
   async create(dto: CreateFriendDto, id: string) {
     const user = await this.prisma.user.findUnique({ where: { id: dto.id } });
     if (!user)
@@ -32,6 +33,12 @@ export class FriendsService {
     const friends1 = await this.prisma.friendship.findMany({ where: { user1Id: id }, include: { user2: { select: { id: true, name: true, imageUrl: true } } } });
     const friends2 = await this.prisma.friendship.findMany({ where: { user2Id: id }, include: { user1: { select: { id: true, name: true, imageUrl: true } } } });
     return [...friends1.map(item => item.user2), ...friends2.map(item => item.user1)]
+  }
+
+
+  async getOnlineFriends(myId: string): Promise<string[]> {
+    const friends = await this.chatGateway.getCurrentOnlineFriends(myId);
+    return friends;
   }
 
 
