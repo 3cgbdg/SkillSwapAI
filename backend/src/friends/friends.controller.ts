@@ -18,10 +18,14 @@ export class FriendsController {
     return this.friendsService.findAll((req as any).user.id);
   }
 
+  @Get("online-status")
+  async getOnlineFriends(@Req() req: Request): Promise<string[]> {
+    return this.friendsService.getOnlineFriends((req as any).user.id);
+  }
 
-  
 
-  
+
+
 
 
 }

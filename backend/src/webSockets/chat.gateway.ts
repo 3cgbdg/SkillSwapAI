@@ -21,6 +21,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @WebSocketServer()
     server: Server
     async handleConnection(client: Socket) {
+
         const cookies = client.handshake.headers.cookie;
         if (cookies) {
             const parsed = cookie.parse(cookies);
@@ -28,20 +29,29 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             try {
                 const payload = this.jwtService.verify(token as string) as { userId: string };
                 client.data.userId = payload.userId;
+                client.join(`user:${payload.userId}`);
+                await this.cacheManager.set(
+                    `user:online:${payload.userId}`,
+                    1,
+                    180000 
+                );
                 const currentOnlineFriends = await this.getCurrentOnlineFriends(payload.userId);
-                await this.cacheManager.set(`user:online:${payload.userId}`, client.id, 60);
+
+
+
+
                 client.on('heartbeat', async () => {
-                    await this.cacheManager.set(`user:online:${payload.userId}`, client.id, 60);
+                    
+                    await this.cacheManager.set(`user:online:${payload.userId}`, 1, 180000 );
                 });
-                client.emit("friendsOnline", { users: currentOnlineFriends });
                 for (let friendId of currentOnlineFriends) {
-                    const friendSocket = await this.cacheManager.get<string>(`user:online:${friendId}`);
-                    if (friendSocket)
-                        this.server.to(friendSocket).emit("setToOnline", { id: payload.userId });
+                    const isOnline = await this.cacheManager.get<string>(`user:online:${friendId}`);
+                    if (isOnline)
+                        this.server.to(`user:${friendId}`).emit("setToOnline", { id: payload.userId });
                 }
             }
             catch (err) {
-                console.error("Error");
+                console.error("Error"); 
                 client.disconnect();
             }
 
@@ -49,30 +59,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     async handleDisconnect(client: Socket) {
-        const userId = client.data.userId;
-        if (userId) {
-            await this.cacheManager.del(`user:online:${userId}`);
-            const currentOnlineFriends = await this.getCurrentOnlineFriends(userId);
-            for (let friendId of currentOnlineFriends) {
-                const friendSocket = await this.cacheManager.get<string>(`user:online:${friendId}`);
-                if (friendSocket)
-                    this.server.to(friendSocket).emit("setToOffline", { id: userId });
 
-            }
-        }
     }
 
-    async getCurrentOnlineFriends(id: string) {
+    async getCurrentOnlineFriends(id: string): Promise<string[]> {
         const friends1 = await this.prisma.friendship.findMany({ where: { user1Id: id }, include: { user2: { select: { id: true, name: true, } } } });
         const friends2 = await this.prisma.friendship.findMany({ where: { user2Id: id }, include: { user1: { select: { id: true, name: true } } } });
-        const friendIds = [...friends1.map(item => item.user2.id), ...friends2.map(item => item.user1.id)];
-
+        const friendsIds = [...friends1.map(item => item.user2.id), ...friends2.map(item => item.user1.id)];
         const online: string[] = [];
 
-        for (const fid of friendIds) {
-            if (await this.cacheManager.get(`user:online:${fid}`)) {
-                online.push(fid);
-            }
+        for (const fid of friendsIds) {
+            const value = await this.cacheManager.get(`user:online:${fid}`);
+            if (value) online.push(fid);
         }
 
         return online;
@@ -83,9 +81,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     async updateSeenMessage(client: Socket, payload: { messageId: string }) {
         try {
             const updatedMessage = await this.prisma.message.update({ where: { id: payload.messageId }, data: { isSeen: true } });
-            const senderSocketId = await this.cacheManager.get<string>(`user:online:${updatedMessage.fromId}`);
-            if (senderSocketId) {
-                this.server.to(senderSocketId).emit('updateSeen', {
+            const isOnline = await this.cacheManager.get<string>(`user:online:${updatedMessage.fromId}`);
+            if (isOnline) {
+                this.server.to(`user:${updatedMessage.fromId}`).emit('updateSeen', {
                     messageId: payload.messageId
                 });
             }
@@ -147,11 +145,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         //otherwise simply creating new message 
 
 
-        const socketId = await this.cacheManager.get<string>(`user:online:${payload.to}`);
+        const isOnline = await this.cacheManager.get<string>(`user:online:${payload.to}`);
 
 
-        if (socketId) {
-            this.server.to(socketId).emit('receiveMessage', {
+        if (isOnline) {
+            this.server.to(`user:${payload.to}`).emit('receiveMessage', {
                 from: fromId,
                 messageContent: payload.message,
                 id: messageId

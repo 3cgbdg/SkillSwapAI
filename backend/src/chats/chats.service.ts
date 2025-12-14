@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { CreateChatDto } from './dto/create-chat.dto';
+import { ChatGateway } from 'src/webSockets/chat.gateway';
 
 @Injectable()
 export class ChatsService {
@@ -100,7 +101,7 @@ export class ChatsService {
 
   async createChat(dto: CreateChatDto, myId: string) {
 
-    
+
 
     let chat = await this.prisma.chat.findFirst({
       where: {
@@ -123,6 +124,7 @@ export class ChatsService {
     }
     return { chat: { chatId: chat.id, friend: { name: dto.friendName, id: dto.friendId }, lastMessageContent: null } }
   };
+
 
 }
 
