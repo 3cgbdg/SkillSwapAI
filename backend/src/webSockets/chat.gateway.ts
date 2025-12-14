@@ -33,7 +33,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                 await this.cacheManager.set(
                     `user:online:${payload.userId}`,
                     1,
-                    180000 
+                    80000 
                 );
                 const currentOnlineFriends = await this.getCurrentOnlineFriends(payload.userId);
 
@@ -42,7 +42,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
                 client.on('heartbeat', async () => {
                     
-                    await this.cacheManager.set(`user:online:${payload.userId}`, 1, 180000 );
+                    await this.cacheManager.set(`user:online:${payload.userId}`, 1, 80000 );
                 });
                 for (let friendId of currentOnlineFriends) {
                     const isOnline = await this.cacheManager.get<string>(`user:online:${friendId}`);

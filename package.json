@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "cache-manager-ioredis": "^2.1.0"
+  }
+}
