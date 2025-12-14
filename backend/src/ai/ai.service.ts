@@ -55,7 +55,6 @@ export class AiService {
 
 
   async getAiSuggestionSkills(myId: string): Promise<{ skills: string[], message: string } | null> {
-
     if (!myId || myId.length == 0) {
       throw new BadRequestException();
     }

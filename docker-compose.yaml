@@ -1,6 +1,17 @@
 
 
 services:
+
+  redis:
+    image: redis:alpine
+    container_name: skillswap_redis
+    restart: always
+    ports:
+      - '6379:6379'
+    networks:
+      - skillswap-network
+    volumes:
+      - redis_data:/data
   db:
     image: postgres:15-alpine
     container_name: skillswap_db
@@ -45,6 +56,9 @@ services:
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME}
       - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
+      - REDIS_URL=redis://redis:6379
+      - REDIS_PORT=6379
+      - REDIS_HOST=redis
     networks:
       - skillswap-network
 
@@ -82,7 +96,7 @@ services:
 
 volumes:
   pgdata:
-
+  redis_data:
 
 networks:
   skillswap-network:
