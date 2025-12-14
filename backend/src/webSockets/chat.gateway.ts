@@ -33,17 +33,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                 await this.cacheManager.set(
                     `user:online:${payload.userId}`,
                     1,
-                    180
+                    180000 
                 );
-                console.log('Setting online:', payload.userId);
                 const currentOnlineFriends = await this.getCurrentOnlineFriends(payload.userId);
 
 
 
 
                 client.on('heartbeat', async () => {
-                    await this.cacheManager.set(`user:online:${payload.userId}`, 1, 180);
-                    console.log('heartbeat',payload.userId);
+                    
+                    await this.cacheManager.set(`user:online:${payload.userId}`, 1, 180000 );
                 });
                 for (let friendId of currentOnlineFriends) {
                     const isOnline = await this.cacheManager.get<string>(`user:online:${friendId}`);
@@ -52,7 +51,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                 }
             }
             catch (err) {
-                console.error("Error");
+                console.error("Error"); 
                 client.disconnect();
             }
 
@@ -71,10 +70,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
         for (const fid of friendsIds) {
             const value = await this.cacheManager.get(`user:online:${fid}`);
-            console.log(`fid: ${fid}, value:`, value);
             if (value) online.push(fid);
         }
-
 
         return online;
 

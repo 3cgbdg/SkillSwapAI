@@ -36,7 +36,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
 
   const getOnlineFriends = async () => {
     const data = await friendsService.getFriendsOnlineStatus();
-    dispatch(setOnlineUsers(data.usersIds));
+    dispatch(setOnlineUsers(data));
   }
 
   useEffect(() => {
@@ -53,7 +53,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     getOnlineFriends();
     const intervalGetOnlineStatus = setInterval(async () => {
       getOnlineFriends();
-    }, 45000)
+    }, 35000)
     sock.on("setToOnline", handleSetToOnline);
 
     const intervalHeartbeat = setInterval(() => {
