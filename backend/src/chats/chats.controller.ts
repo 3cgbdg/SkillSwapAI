@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Query, Req } from '@nestjs/common';
 import { ChatsService } from './chats.service';
 import { AuthGuard } from '@nestjs/passport';
 import { GetChatDto } from './dto/get-chat.dto';

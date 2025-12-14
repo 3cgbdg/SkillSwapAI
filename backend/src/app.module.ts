@@ -15,8 +15,8 @@ import { PlansModule } from './plans/plans.module';
 import { AiModule } from './ai/ai.module';
 import { AppController } from './app.controller';
 import { CacheModule } from '@nestjs/cache-manager';
-import * as  RedisStore from 'cache-manager-redis-store';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
+import * as redisStore from 'cache-manager-ioredis';
 import { APP_GUARD } from '@nestjs/core';
 @Module({
   imports: [ConfigModule.forRoot({
@@ -36,10 +36,12 @@ import { APP_GUARD } from '@nestjs/core';
     inject: [ConfigService],
     isGlobal: true,
     useFactory: (configService: ConfigService) => ({
-      store: RedisStore,
+      store: redisStore,
       ttl: 0,
+      tls:true,
       host: configService.get<string>('REDIS_HOST'),
       port: configService.get<number>('REDIS_PORT'),
+      password:configService.get<string>('REDIS_PASSWORD')|| null,
     }),
 
   }),
