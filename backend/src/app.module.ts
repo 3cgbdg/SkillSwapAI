@@ -28,8 +28,8 @@ import { APP_GUARD } from '@nestjs/core';
     global: true,
     useFactory: (configService: ConfigService) => ({
       secret: configService.get<string>('JWT_SECRET'),
-      signOptions: { expiresIn: '15m' },
-    }),
+      signOptions: { expiresIn: '15m' }
+     }),
   }),
   CacheModule.registerAsync({
     imports: [ConfigModule],
