@@ -1,12 +1,14 @@
 from fastapi import HTTPException,APIRouter
-from ..main import client
-
+from ..core.openai import ai_client
+from logger import logger 
+from time import perf_counter
 router = APIRouter(prefix="/profile", tags=["profile"])
 
 @router.post('/skills')
 async def createAiSkillsSuggestions(skillsToLearn:list[str],knownSkills:list[str]):
+    logger.info("API profile/skills")
     prompt =  """
-  You are an AI Skill Recommender for a learning app.
+You are an AI Skill Recommender for a learning app.
 
 Your task:
 Based on the user's known skills and desired skills, suggest new related skills
@@ -32,7 +34,9 @@ Output:
      """
     # configuration for gpt requests   
     try:
-        completion = client.chat.completions.create(
+        start =perf_counter()
+        logger.info("Starting ai request")
+        completion = ai_client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
                 {"role": "system", "content": prompt},
@@ -43,8 +47,12 @@ Output:
             ],
         temperature=0.7
         )
+        end =perf_counter()
+        logger.info(f"Starting ai request | DURATION - {end-start}ms")
+        
         return {"AIReport": completion.choices[0].message.content}
     except Exception as error:
+        logger.error("Failed to make ai request", exc_info=True)
         raise HTTPException(status_code=500,detail=str(error))
 
 

@@ -1,11 +1,14 @@
 from fastapi import HTTPException,APIRouter
-from ..main import client
+from ..core.openai import ai_client
 from schemas.user import User 
+from logger import logger 
+from time import perf_counter
 
 router = APIRouter(prefix="/match", tags=["match"])
 
 @router.post('/active')
 async def createTrainingPlan(user1:User,user2:User):
+    logger.info("API match/active")
     prompt =  """
    You are an AI Skill Exchange Plan Generator for a learning app.
     Foruser analyze how compatible they both are 
@@ -81,7 +84,9 @@ Your output must be valid JSON that can be directly parsed into the Match -> Pla
      """
     # configuration for gpt requests   
     try:
-        completion = client.chat.completions.create(
+        start =perf_counter()
+        logger.info("Starting ai request")
+        completion = ai_client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
                 {"role": "system", "content": prompt},
@@ -91,8 +96,11 @@ Your output must be valid JSON that can be directly parsed into the Match -> Pla
             ],
         temperature=0.7
         )
+        end =perf_counter()
+        logger.info(f"Finished ai request | DURATION - {end-start}ms")
         return {"AIReport": completion.choices[0].message.content}
     except Exception as error:
+        
         raise HTTPException(status_code=500,detail=str(error))
 
     
