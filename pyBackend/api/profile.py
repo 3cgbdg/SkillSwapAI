@@ -1,5 +1,5 @@
 from fastapi import HTTPException,APIRouter
-from ..core.openai import ai_client
+from core.openai import ai_client
 from logger import logger 
 from time import perf_counter
 router = APIRouter(prefix="/profile", tags=["profile"])
@@ -48,7 +48,7 @@ Output:
         temperature=0.7
         )
         end =perf_counter()
-        logger.info(f"Starting ai request | DURATION - {end-start}ms")
+        logger.info(f"Finished ai request | DURATION - {end-start}s")
         
         return {"AIReport": completion.choices[0].message.content}
     except Exception as error:
