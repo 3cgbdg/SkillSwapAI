@@ -53,7 +53,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     getOnlineFriends();
     const intervalGetOnlineStatus = setInterval(async () => {
       getOnlineFriends();
-    }, 35000)
+    }, 30000)
     sock.on("setToOnline", handleSetToOnline);
 
     const intervalHeartbeat = setInterval(() => {

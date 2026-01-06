@@ -123,6 +123,7 @@ const CalendarPopup = ({
               />
             </div>
             {errors.title && (
+              
               <span data-testid="error" className="text-red-500 font-medium ">
                 {errors.title.message}
               </span>
