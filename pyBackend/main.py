@@ -12,7 +12,7 @@ app = FastAPI(description="Python AI microservice")
 # health check endpoint
 @app.get('/health')
 async def health_check():
-    logger.info(f"Server started on {getenv("PORT",8000)}")
+    logger.info(f"Server started on {getenv('PORT',8000)}")
     return {"status": "ok"}
 
 # cors
