@@ -6,7 +6,7 @@ import type { RequestWithUser } from 'types/auth';
 @Controller('ai')
 @UseGuards(AuthGuard('jwt'))
 export class AiController {
-  constructor(private readonly aiService: AiService) {}
+  constructor(private readonly aiService: AiService) { }
 
   @Post('profile/skills')
   async getPlan(
