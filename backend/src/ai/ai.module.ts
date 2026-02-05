@@ -5,12 +5,15 @@ import { PrismModule } from 'prisma/prisma.module';
 import { AiController } from './ai.controller';
 
 @Module({
-  imports: [HttpModule.register({
-    timeout: 30000,
-    maxRedirects: 5,
-  }), PrismModule],
+  imports: [
+    HttpModule.register({
+      timeout: 30000,
+      maxRedirects: 5,
+    }),
+    PrismModule,
+  ],
   providers: [AiService],
   controllers: [AiController],
-  exports: [AiService]
+  exports: [AiService],
 })
-export class AiModule { }
+export class AiModule {}

@@ -1,35 +1,35 @@
-import { Controller, Get, Post, Body, UseGuards, Query, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+  Query,
+  Req,
+} from '@nestjs/common';
 import { ChatsService } from './chats.service';
 import { AuthGuard } from '@nestjs/passport';
 import { GetChatDto } from './dto/get-chat.dto';
-import type { Request } from 'express';
 import { CreateChatDto } from './dto/create-chat.dto';
+import type { RequestWithUser } from 'types/auth';
 
 @Controller('chats')
 @UseGuards(AuthGuard('jwt'))
 export class ChatsController {
-  constructor(private readonly chatsService: ChatsService) { }
+  constructor(private readonly chatsService: ChatsService) {}
 
   @Get()
-  async findAll(@Req() req: Request) {
-    return this.chatsService.findAll((req as any).user.id);
+  async findAll(@Req() req: RequestWithUser) {
+    return this.chatsService.findAll(req.user.id);
   }
 
-
-  @Get("messages")
-  async findOne(@Query() dto: GetChatDto, @Req() req: Request) {
-    return this.chatsService.findOne((req as any).user.id, dto.with);
+  @Get('messages')
+  async findOne(@Query() dto: GetChatDto, @Req() req: RequestWithUser) {
+    return this.chatsService.findOne(req.user.id, dto.with);
   }
 
   @Post()
-  async createChat(@Body() dto: CreateChatDto, @Req() req: Request) {
-
-    return this.chatsService.createChat(dto, (req as any).user.id);
-
+  async createChat(@Body() dto: CreateChatDto, @Req() req: RequestWithUser) {
+    return this.chatsService.createChat(dto, req.user.id);
   }
-
-  
-
-
-
 }

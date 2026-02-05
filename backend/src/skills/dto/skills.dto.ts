@@ -1,7 +1,7 @@
-import { IsString, MinLength } from "class-validator";
+import { IsString, MinLength } from 'class-validator';
 
 export class SkillDto {
-    @IsString()
-    @MinLength(2)
-    title: string;
+  @IsString()
+  @MinLength(2)
+  title: string;
 }

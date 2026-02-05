@@ -11,4 +11,4 @@ import { FriendsModule } from 'src/friends/friends.module';
   controllers: [MatchesController],
   providers: [MatchesService],
 })
-export class MatchesModule { }
+export class MatchesModule {}

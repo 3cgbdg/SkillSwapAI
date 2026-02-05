@@ -18,7 +18,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-root}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-skillswap}
     ports:
       - '5432:5432'
@@ -31,68 +31,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-
-  server:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: skillswap_server
-    restart: on-failure
-    depends_on:
-      db:
-        condition: service_healthy
-      ai-service:
-        condition: service_started
-    ports:
-      - '4000:4000'
-    environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root}@db:5432/${POSTGRES_DB:-skillswap}
-      - FASTAPI_URL=http://ai-service:8000
-      - PORT=4000
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
-      - AWS_REGION=${AWS_REGION}
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME}
-      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
-      - REDIS_URL=redis://redis:6379
-      - REDIS_PORT=6379
-      - REDIS_HOST=redis
-    networks:
-      - skillswap-network
-
-  ai-service:
-    build:
-      context: ./pyBackend
-      dockerfile: Dockerfile
-    container_name: skillswap_ai
-    restart: on-failure
-    ports:
-      - '8000:8000'
-    environment:
-      - PORT=8000
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - CORS_ORIGIN=http://server:4000
-    networks:
-      - skillswap-network
-
-  client:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: http://localhost:4000
-    container_name: skillswap_client
-    restart: on-failure
-    depends_on:
-      - server
-    ports:
-      - '3000:3000'
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:4000
-    networks:
-      - skillswap-network
 
 volumes:
   pgdata:

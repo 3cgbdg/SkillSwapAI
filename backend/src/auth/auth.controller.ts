@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards, Res, HttpException, HttpStatus, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Delete,
+  Req,
+  UseGuards,
+  Res,
+  HttpException,
+  HttpStatus,
+  NotFoundException,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { LoginAuthDto } from './dto/login-auth.dto';
@@ -8,58 +20,86 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
+import type { RequestWithUser, JwtPayload } from 'types/auth';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly configService: ConfigService, private readonly authService: AuthService, private readonly jwtService: JwtService,
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly authService: AuthService,
+    private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
-  ) { }
+  ) {}
 
-  @Post("signup")
-  async signup(@Body() createAuthDto: CreateAuthDto, @Res() res: Response): Promise<Response<any, Record<string, any>>> {
+  @Post('signup')
+  async signup(
+    @Body() createAuthDto: CreateAuthDto,
+    @Res() res: Response,
+  ): Promise<Response<any, Record<string, any>>> {
     const response = await this.authService.signup(createAuthDto);
     res.cookie('access_token', response.access_token, {
       httpOnly: true,
       secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite: this.configService.get<string>('NODE_ENV') === 'production' ? 'none' : 'lax',
+      sameSite:
+        this.configService.get<string>('NODE_ENV') === 'production'
+          ? 'none'
+          : 'lax',
 
       maxAge: 1000 * 60 * 15,
-    })
+    });
     res.cookie('refresh_token', response.refresh_token, {
       httpOnly: true,
       secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite: this.configService.get<string>('NODE_ENV') === 'production' ? 'none' : 'lax',
+      sameSite:
+        this.configService.get<string>('NODE_ENV') === 'production'
+          ? 'none'
+          : 'lax',
 
       maxAge: 1000 * 3600 * 24 * 7,
-    })
-    return res.json({ message: "Successfully signed up!" });
+    });
+    return res.json({ message: 'Successfully signed up!' });
   }
 
-  @Post("login")
-  async login(@Body() LoginAuthDto: LoginAuthDto, @Res() res: Response): Promise<Response<any, Record<string, any>>> {
+  @Post('login')
+  async login(
+    @Body() LoginAuthDto: LoginAuthDto,
+    @Res() res: Response,
+  ): Promise<Response<any, Record<string, any>>> {
     const response = await this.authService.login(LoginAuthDto);
     res.cookie('access_token', response.access_token, {
       httpOnly: true,
       secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite: this.configService.get<string>('NODE_ENV') === 'production' ? 'none' : 'lax',
+      sameSite:
+        this.configService.get<string>('NODE_ENV') === 'production'
+          ? 'none'
+          : 'lax',
 
       maxAge: 1000 * 60 * 15,
-    })
+    });
     res.cookie('refresh_token', response.refresh_token, {
       httpOnly: true,
       secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite: this.configService.get<string>('NODE_ENV') === 'production' ? 'none' : 'lax',
+      sameSite:
+        this.configService.get<string>('NODE_ENV') === 'production'
+          ? 'none'
+          : 'lax',
 
       maxAge: 1000 * 3600 * 24 * 7,
-    })
-    return res.json({ message: "Successfully logged in!" });
+    });
+    return res.json({ message: 'Successfully logged in!' });
   }
 
-  @Get("profile")
+  @Get('profile')
   @UseGuards(AuthGuard('jwt'))
-  async profile(@Req() request: Request): Promise<any | null> {
-    const user = await this.prisma.user.findUnique({ where: { id: (request.user as any).id }, include: { skillsToLearn: true, knownSkills: true } })
+  async profile(
+    @Req() request: RequestWithUser,
+  ): Promise<Omit<User, 'password'> | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: request.user.id },
+      include: { skillsToLearn: true, knownSkills: true },
+    });
     if (user) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...returnData } = user;
       return returnData;
     }
@@ -67,52 +107,65 @@ export class AuthController {
   }
 
   @Post('refresh')
-  async refreshToken(@Req() req: Request, @Res() res: Response): Promise<Response<any, Record<string, any>>> {
-    const refreshToken = req.cookies['refresh_token'];
+  async refreshToken(
+    @Req() req: Request,
+    @Res() res: Response,
+  ): Promise<Response<any, Record<string, any>>> {
+    const refreshToken = (req.cookies as Record<string, string | undefined>)[
+      'refresh_token'
+    ];
     if (!refreshToken) {
-      throw new HttpException("No refresh token", HttpStatus.UNAUTHORIZED);
+      throw new HttpException('No refresh token', HttpStatus.UNAUTHORIZED);
     }
-    let payload: any;
+    let payload: JwtPayload;
     try {
-      payload = this.jwtService.verify(refreshToken, { secret: this.configService.get<string>('JWT_REFRESH_SECRET')! });
-    } catch (err) {
+      if (!refreshToken) throw new Error();
+      payload = this.jwtService.verify(refreshToken, {
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET')!,
+      });
+    } catch {
       throw new HttpException('Invalid refresh token', HttpStatus.UNAUTHORIZED);
     }
 
-    const user = await this.prisma.user.findUnique({ where: { id: payload.userId } });
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.userId },
+    });
     if (!user) {
       throw new NotFoundException();
     }
-    const newAccessToken = await this.authService.createTokenForRefresh(user)
+    const newAccessToken = this.authService.createTokenForRefresh(user);
     res.cookie('access_token', newAccessToken, {
       httpOnly: true,
       secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite: this.configService.get<string>('NODE_ENV') === 'production' ? 'none' : 'lax',
+      sameSite:
+        this.configService.get<string>('NODE_ENV') === 'production'
+          ? 'none'
+          : 'lax',
       maxAge: 1000 * 60 * 15,
     });
 
-
-
     return res.json({ message: 'Access token refreshed' });
-
   }
 
   @Delete('logout')
-  async logout(@Res({ passthrough: true }) res: Response): Promise<{ message: string }> {
-
-
+  logout(@Res({ passthrough: true }) res: Response): { message: string } {
     res.clearCookie('access_token', {
       httpOnly: true,
       secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite: this.configService.get<string>('NODE_ENV') === 'production' ? 'none' : 'lax',
+      sameSite:
+        this.configService.get<string>('NODE_ENV') === 'production'
+          ? 'none'
+          : 'lax',
     });
     res.clearCookie('refresh_token', {
       httpOnly: true,
       secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite: this.configService.get<string>('NODE_ENV') === 'production' ? 'none' : 'lax',
+      sameSite:
+        this.configService.get<string>('NODE_ENV') === 'production'
+          ? 'none'
+          : 'lax',
     });
 
     return { message: 'Successfully logged out!' };
-
   }
 }

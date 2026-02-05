@@ -10,10 +10,10 @@ import { HttpModule } from '@nestjs/axios';
     HttpModule.register({
       timeout: 30000,
       maxRedirects: 5,
-    })
+    }),
   ],
   controllers: [PlansController],
   providers: [PlansService],
-  exports:[PlansService]
+  exports: [PlansService],
 })
-export class PlansModule { }
+export class PlansModule {}

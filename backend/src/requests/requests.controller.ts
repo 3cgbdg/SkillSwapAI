@@ -1,26 +1,39 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Delete,
+  Req,
+  UseGuards,
+  Param,
+} from '@nestjs/common';
 import { RequestsService } from './requests.service';
 import { CreateRequestDto } from './dto/create-request.dto';
-
-import type { Request } from 'express';
 import { AuthGuard } from '@nestjs/passport';
+import type { RequestWithUser } from 'types/auth';
 
 @Controller('requests')
-@UseGuards(AuthGuard("jwt"))
+@UseGuards(AuthGuard('jwt'))
 export class RequestsController {
-  constructor(private readonly requestsService: RequestsService) { }
+  constructor(private readonly requestsService: RequestsService) {}
 
   @Post()
-  async create(@Body() createRequestDto: CreateRequestDto, @Req() req: Request): Promise<{ message: string }> {
-    return this.requestsService.createForFriendship(createRequestDto, (req as any).user.id);
+  async create(
+    @Body() createRequestDto: CreateRequestDto,
+    @Req() req: RequestWithUser,
+  ): Promise<{ message: string }> {
+    return this.requestsService.createForFriendship(
+      createRequestDto,
+      req.user.id,
+    );
   }
   @Get()
-  async findAll(@Req() req: Request) {
-    return this.requestsService.findAll((req as any).user.id);
+  async findAll(@Req() req: RequestWithUser) {
+    return this.requestsService.findAll(req.user.id);
   }
   @Delete(':id')
   async deleteOne(@Param('id') requestId: string) {
     return this.requestsService.deleteOne(requestId);
   }
-
 }

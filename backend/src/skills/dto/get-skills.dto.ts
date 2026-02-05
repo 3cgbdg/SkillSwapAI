@@ -1,9 +1,11 @@
-import { Transform } from "class-transformer";
-import { IsString, MinLength } from "class-validator";
+import { Transform, TransformFnParams } from 'class-transformer';
+import { IsString, MinLength } from 'class-validator';
 
 export class getSkillsDto {
-    @IsString()
-    @MinLength(2)
-    @Transform(({ value }) => typeof value === "string" ? value.toLowerCase() : value)
-    chars: string;
+  @IsString()
+  @MinLength(2)
+  @Transform(({ value }: TransformFnParams): string =>
+    typeof value === 'string' ? value.trim() : (value as string),
+  )
+  chars: string;
 }

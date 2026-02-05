@@ -12,9 +12,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
   // global filter
-  app.useGlobalFilters(
-    new HttpExceptionFilter()
-  );
+  app.useGlobalFilters(new HttpExceptionFilter());
 
   app.enableCors({
     origin: configService.get<string>('CORS_ORIGIN') || 'http://localhost:3000',
@@ -22,8 +20,6 @@ async function bootstrap() {
     credentials: true,
   });
 
-
-  await app.listen(configService.get<string>('PORT') ?? 5200, "0.0.0.0");
-
+  await app.listen(configService.get<string>('PORT') ?? 5200, '0.0.0.0');
 }
-bootstrap();
+void bootstrap();

@@ -1,12 +1,11 @@
-import { Controller, Get, Post, Param, Req, UseGuards, Patch } from '@nestjs/common';
+import { Controller, Get, Param, UseGuards, Patch } from '@nestjs/common';
 import { PlansService } from './plans.service';
 import { AuthGuard } from '@nestjs/passport';
 
 @Controller('plans')
-@UseGuards(AuthGuard("jwt"))
+@UseGuards(AuthGuard('jwt'))
 export class PlansController {
-  constructor(private readonly plansService: PlansService) { }
-
+  constructor(private readonly plansService: PlansService) {}
 
   @Get(':id')
   async getPlan(@Param('id') matchId: string) {
@@ -14,14 +13,10 @@ export class PlansController {
   }
 
   @Patch(':planId/modules/:moduleId/status/completed')
-  async updateStatusToCompeted(@Param('planId') planId: string,
-    @Param('moduleId') moduleId: string): Promise<{ message: string, status: null | string }> {
+  async updateStatusToCompeted(
+    @Param('planId') planId: string,
+    @Param('moduleId') moduleId: string,
+  ): Promise<{ message: string; status: null | string }> {
     return this.plansService.updateStatusToCompeted(planId, moduleId);
   }
-
-
-
-
-
-
 }

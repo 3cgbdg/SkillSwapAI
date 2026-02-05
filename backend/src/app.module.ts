@@ -15,40 +15,42 @@ import { PlansModule } from './plans/plans.module';
 import { AiModule } from './ai/ai.module';
 import { AppController } from './app.controller';
 import { CacheModule } from '@nestjs/cache-manager';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import * as redisStore from 'cache-manager-ioredis';
 import { APP_GUARD } from '@nestjs/core';
 @Module({
-  imports: [ConfigModule.forRoot({
-    isGlobal: true,
-  }),
-  JwtModule.registerAsync({
-    imports: [ConfigModule],
-    inject: [ConfigService],
-    global: true,
-    useFactory: (configService: ConfigService) => ({
-      secret: configService.get<string>('JWT_SECRET'),
-      signOptions: { expiresIn: '15m' }
-     }),
-  }),
-  CacheModule.registerAsync({
-    imports: [ConfigModule],
-    inject: [ConfigService],
-    isGlobal: true,
-    useFactory: (configService: ConfigService) => ({
-      store: redisStore,
-      ttl: 0,
-      tls:true,
-      host: configService.get<string>('REDIS_HOST'),
-      port: configService.get<number>('REDIS_PORT'),
-      password:configService.get<string>('REDIS_PASSWORD')|| null,
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
     }),
-
-  }),
-  ThrottlerModule.forRoot([{
-    ttl: 60000,
-    limit: 25,
-  }]),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      global: true,
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: { expiresIn: '15m' },
+      }),
+    }),
+    CacheModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      isGlobal: true,
+      useFactory: (configService: ConfigService) => ({
+        store: redisStore,
+        ttl: 0,
+        tls: true,
+        host: configService.get<string>('REDIS_HOST'),
+        port: configService.get<number>('REDIS_PORT'),
+        password: configService.get<string>('REDIS_PASSWORD') || null,
+      }),
+    }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 25,
+      },
+    ]),
     AuthModule,
     S3Module,
     SkillsModule,
@@ -69,13 +71,14 @@ import { APP_GUARD } from '@nestjs/core';
 
     PlansModule,
 
-    AiModule],
+    AiModule,
+  ],
   controllers: [AppController],
   providers: [
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
-    }
+    },
   ],
 })
-export class AppModule { }
+export class AppModule {}
