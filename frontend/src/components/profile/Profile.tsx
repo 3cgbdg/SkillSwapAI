@@ -10,12 +10,14 @@ import {
 } from "@/redux/authSlice";
 import AiService from "@/services/AiService";
 import SkillsService from "@/services/SkillsService";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { GraduationCap, Pencil, UserRound } from "lucide-react";
 import Image from "next/image";
 import { Dispatch, SetStateAction, useMemo } from "react";
 import Spinner from "../Spinner";
 import { differenceInHours } from "date-fns";
+import ProfilesService from "@/services/ProfilesService";
+
 const Profile = ({
   setIsEditing,
 }: {
@@ -52,14 +54,40 @@ const Profile = ({
     },
   });
 
+  const { data: pollingData } = useQuery({
+    queryKey: ["ai-suggestions", user?.id],
+    queryFn: async () => {
+      const res = await ProfilesService.getPollingDataAiSuggestions();
+      if (res.data && res.data.length > 0) {
+        dispatch(addAiSuggestionSkills(res.data));
+        dispatch(generatedAiSuggestions());
+      }
+      return res.data;
+    },
+    refetchInterval: (query) => {
+      // Data is the 'data' from the latest query result
+      if (!query.state.data || query.state.data.length === 0) return 5000;
+      return false;
+    },
+    enabled: !!user && (!user.aiSuggestionSkills || user.aiSuggestionSkills.length === 0),
+    refetchOnWindowFocus: false,
+  });
+
+  const isGeneratingInitial = !!user && (!user.aiSuggestionSkills || user.aiSuggestionSkills.length === 0);
+
   const cantGenerateSkills = useMemo(() => {
     if (!user?.lastSkillsGenerationDate) return false;
-
     return (
-      differenceInHours(new Date(), new Date(user.lastSkillsGenerationDate)) <=
-      24
+      differenceInHours(new Date(), new Date(user.lastSkillsGenerationDate)) <= 24
     );
   }, [user?.lastSkillsGenerationDate]);
+
+  const buttonText = useMemo(() => {
+    if (isPending || isGeneratingInitial) return "Generating suggestions...";
+    if (cantGenerateSkills) return "Wait 24h for next generation";
+    return "Regenerate";
+  }, [isPending, isGeneratingInitial, cantGenerateSkills]);
+
   return (
     <>
       {user && (
@@ -96,50 +124,49 @@ const Profile = ({
                 AI Skill Suggestions
               </h2>
               <button
-                disabled={cantGenerateSkills}
+                disabled={cantGenerateSkills || isPending || isGeneratingInitial}
                 onClick={() => getNewAiSuggestionSkills()}
-                className={`button-blue ${cantGenerateSkills ? "bg-gray! cursor-auto!" : ""}`}
+                className={`button-blue ${(cantGenerateSkills || isPending || isGeneratingInitial) ? "bg-gray! cursor-auto!" : ""
+                  }`}
               >
-                {cantGenerateSkills
-                  ? "Wait for 24 hours since last  generation"
-                  : "Regenerate"}
+                {buttonText}
               </button>
             </div>
             <div className="flex flex-col gap-4">
-              {!isPending ? (
-                user.aiSuggestionSkills.length > 0 ? (
-                  user.aiSuggestionSkills.map((skill, idx) => (
-                    <div
-                      key={idx}
-                      className="not-last:border-b py-3 border-b-neutral-300"
-                    >
-                      <div className="flex items-start md:items-center flex-col md:flex-row  justify-between gap-4">
-                        <div className="flex gap-4 items-center">
-                          <div className="size-10 overflow-hidden rounded-full bg-[#3A7AE933] flex items-center justify-center">
-                            <GraduationCap className="text-blue " size={20} />
-                          </div>
-                          <div className="">
-                            <h3 className="leading-7 text-lg font-semibold">
-                              {skill}
-                            </h3>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => addNewSkillToLearn(skill)}
-                          className="link hover:underline rounded-2xl!"
-                        >
-                          Add to Learn
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <span className="text-center">
-                    {cantGenerateSkills ? "💤💤💤" : "Regenerate"}
-                  </span>
-                )
-              ) : (
+              {isPending ? (
                 <Spinner color="blue" size={32} />
+              ) : (user.aiSuggestionSkills && user.aiSuggestionSkills.length > 0) || (pollingData && pollingData.length > 0) ? (
+                (user.aiSuggestionSkills && user.aiSuggestionSkills.length > 0 ? user.aiSuggestionSkills : pollingData!).map((skill, idx) => (
+                  <div
+                    key={idx}
+                    className="not-last:border-b py-3 border-b-neutral-300"
+                  >
+                    <div className="flex items-start md:items-center flex-col md:flex-row  justify-between gap-4">
+                      <div className="flex gap-4 items-center">
+                        <div className="size-10 overflow-hidden rounded-full bg-[#3A7AE933] flex items-center justify-center">
+                          <GraduationCap className="text-blue " size={20} />
+                        </div>
+                        <div className="">
+                          <h3 className="leading-7 text-lg font-semibold">
+                            {skill}
+                          </h3>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => addNewSkillToLearn(skill)}
+                        className="link hover:underline rounded-2xl!"
+                      >
+                        Add to Learn
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : !user.aiSuggestionSkills || user.aiSuggestionSkills.length === 0 ? (
+                <Spinner color="blue" size={32} />
+              ) : (
+                <span className="text-center">
+                  {cantGenerateSkills ? "💤💤💤" : "Regenerate"}
+                </span>
               )}
             </div>
           </div>

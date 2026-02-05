@@ -25,7 +25,7 @@ enum RequestType {
 }
 
 model User {
-  aiSuggestionSkills       String[]
+  aiSuggestionSkills       String[]?
   id                       String       @id @default(uuid())
   name                     String       @unique
   password                 String

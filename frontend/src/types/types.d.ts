@@ -1,6 +1,6 @@
 export interface IUser {
   id: string;
-  aiSuggestionSkills: string[];
+  aiSuggestionSkills: string[] | null;
   name: string;
   email: string;
   knownSkills?: { id: string; title: string }[];
