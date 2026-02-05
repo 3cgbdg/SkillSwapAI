@@ -56,7 +56,7 @@ const authSlice = createSlice({
       if (state.user?.skillsToLearn) state.user?.skillsToLearn.push(newItem);
     },
     removeAiSuggestionSkill(state, action: PayloadAction<string>) {
-      if (state.user)
+      if (state.user?.aiSuggestionSkills)
         state.user.aiSuggestionSkills = state.user.aiSuggestionSkills.filter(
           (skill) => skill !== action.payload
         );

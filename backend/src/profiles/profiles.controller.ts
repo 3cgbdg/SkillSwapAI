@@ -21,7 +21,7 @@ import type { RequestWithUser } from 'types/auth';
 @Controller('profiles')
 @UseGuards(AuthGuard('jwt'))
 export class ProfilesController {
-  constructor(private readonly profilesService: ProfilesService) {}
+  constructor(private readonly profilesService: ProfilesService) { }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
@@ -50,5 +50,11 @@ export class ProfilesController {
     @Req() req: RequestWithUser,
   ): Promise<{ message: string }> {
     return this.profilesService.updateProfile(dto, req.user);
+  }
+
+  @Get('ai-suggestions/polling')
+  @UseGuards(AuthGuard('jwt'))
+  async getPollingDataAiSuggestions(@Req() req: RequestWithUser) {
+    return this.profilesService.getPollingDataAiSuggestions(req.user.id);
   }
 }

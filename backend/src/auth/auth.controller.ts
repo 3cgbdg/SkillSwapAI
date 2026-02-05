@@ -29,7 +29,7 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
-  ) {}
+  ) { }
 
   @Post('signup')
   async signup(
@@ -37,6 +37,8 @@ export class AuthController {
     @Res() res: Response,
   ): Promise<Response<any, Record<string, any>>> {
     const response = await this.authService.signup(createAuthDto);
+
+
     res.cookie('access_token', response.access_token, {
       httpOnly: true,
       secure: this.configService.get<string>('NODE_ENV') === 'production',
@@ -101,6 +103,7 @@ export class AuthController {
     if (user) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...returnData } = user;
+      console.log(returnData);
       return returnData;
     }
     return null;
