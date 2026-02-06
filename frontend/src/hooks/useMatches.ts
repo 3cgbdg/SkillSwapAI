@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import MatchesService from "@/services/MatchesService";
-import { IMatch } from "@/types/types";
+import { IMatch } from "@/types/match";
 
 export const useMatches = () => {
     return useQuery<IMatch[]>({

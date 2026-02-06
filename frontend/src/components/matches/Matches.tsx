@@ -1,5 +1,5 @@
 "use client";
-import { IMatch } from "@/types/types";
+import { IMatch } from "@/types/match";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Search, Users } from "lucide-react";
 import { useRouter } from "next/navigation";

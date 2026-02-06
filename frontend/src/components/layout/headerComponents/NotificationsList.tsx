@@ -1,5 +1,5 @@
 import { Check, X } from "lucide-react";
-import { IRequest } from "@/types/types";
+import { IRequest } from "@/types/session";
 
 interface NotificationsListProps {
   reqs: IRequest[];

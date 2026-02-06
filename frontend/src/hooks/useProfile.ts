@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import ProfilesService from "@/services/ProfilesService";
-import { IUser } from "@/types/types";
+import { IUser } from "@/types/auth";
 
 export const useProfile = () => {
     return useQuery<IUser>({

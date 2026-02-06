@@ -1,15 +1,14 @@
 "use client";
 import Calendar from "@/components/calendar/Calendar";
 import Spinner from "@/components/Spinner";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import useSessions from "@/hooks/useSessions";
-import { useQuery } from "@tanstack/react-query";
-import { ISession } from "@/types/types";
 
 const Page = () => {
   const [now, setNow] = useState(new Date());
 
   const { data: sessions = [] } = useSessions();
+
   useEffect(() => {
     const interval = setInterval(() => {
       setNow(new Date());
@@ -17,11 +16,12 @@ const Page = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const upcoming =
-    sessions &&
-    sessions
+  const upcoming = useMemo(() => {
+    if (!sessions) return [];
+    return sessions
       .filter((s) => s.start > now.getHours())
       .sort((a, b) => a.start - b.start);
+  }, [sessions, now]);
   return (
     <div className="grid grid-cols-3 gap-8 items-start">
       <div className="_border overflow-hidden rounded-[10px] col-span-3 xl:col-span-2">

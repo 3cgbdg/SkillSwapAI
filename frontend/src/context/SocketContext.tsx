@@ -12,7 +12,8 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import useProfile from "@/hooks/useProfile";
 import useChats from "@/hooks/useChats";
-import { SocketContextType, IChat } from "@/types/types";
+import { SocketContextType } from "@/types/socket";
+import { IChat } from "@/types/chat";
 
 const SocketContext = createContext<SocketContextType>({ socket: null });
 

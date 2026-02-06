@@ -1,5 +1,5 @@
 "use client";
-import { ISession } from "@/types/types";
+import { ISession } from "@/types/session";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";

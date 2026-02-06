@@ -1,4 +1,5 @@
-import { ApiResponse, IGeneratedPlan } from "@/types/types";
+import { ApiResponse } from "@/types/common";
+import { IGeneratedPlan } from "@/types/plan";
 import { api } from "./axiosInstance";
 
 class PlansService {

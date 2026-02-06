@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import SessionsService from "@/services/SessionsService";
-import { ISession } from "@/types/types";
+import { ISession } from "@/types/session";
 
 export const useSessions = () => {
     return useQuery<ISession[]>({

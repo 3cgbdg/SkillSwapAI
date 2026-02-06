@@ -1,7 +1,7 @@
 "use client";
 
 import PlansService from "@/services/PlansService";
-import { IGeneratedModule } from "@/types/types";
+import { IGeneratedModule } from "@/types/plan";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, Clock, Link as LinkIcon } from "lucide-react";
 import Link from "next/link";

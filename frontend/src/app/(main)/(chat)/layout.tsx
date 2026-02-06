@@ -13,8 +13,6 @@ export default function ChatLayout({
   children: React.ReactNode;
 }>) {
   const {
-    data: chats,
-    isSuccess,
     isError,
     error,
   } = useQuery({

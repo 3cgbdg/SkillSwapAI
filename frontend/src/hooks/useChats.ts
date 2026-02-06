@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import ChatsService from "@/services/ChatsService";
-import { IChat } from "@/types/types";
+import { IChat } from "@/types/chat";
 
 export const useChats = () => {
     return useQuery<IChat[]>({

@@ -1,6 +1,6 @@
 import { Bell } from "lucide-react";
 import { motion } from "framer-motion";
-import { IRequest } from "@/types/types";
+import { IRequest } from "@/types/session";
 import NotificationsList from "./NotificationsList";
 import Spinner from "@/components/Spinner";
 import { Dispatch, SetStateAction } from "react";

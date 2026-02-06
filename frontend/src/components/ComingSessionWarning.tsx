@@ -1,7 +1,7 @@
 "use client";
 
 import useSessions from "@/hooks/useSessions";
-import { ISession } from "@/types/types";
+import { ISession } from "@/types/session";
 import { TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";

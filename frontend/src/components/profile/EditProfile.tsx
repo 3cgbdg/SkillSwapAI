@@ -15,7 +15,7 @@ import ProfilesService from "@/services/ProfilesService";
 import { toast } from "react-toastify";
 import Spinner from "../Spinner";
 import useProfile from "@/hooks/useProfile";
-import { IUser } from "@/types/types";
+import { IUser } from "@/types/auth";
 
 const EditProfile = ({
   setIsEditing,
