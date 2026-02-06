@@ -1,13 +1,18 @@
 "use client";
 import Calendar from "@/components/calendar/Calendar";
 import Spinner from "@/components/Spinner";
-import { useAppSelector } from "@/hooks/reduxHooks";
 import { Suspense, useEffect, useState } from "react";
+import useSessions from "@/hooks/useSessions";
+import { useQuery } from "@tanstack/react-query";
+import { ISession } from "@/types/types";
 
 const Page = () => {
   const [now, setNow] = useState(new Date());
 
-  const { sessions } = useAppSelector((state) => state.sessions);
+  const { data: sessions = [] } = useQuery<ISession[]>({
+    queryKey: ["sessions-today"],
+    initialData: [],
+  });
   useEffect(() => {
     const interval = setInterval(() => {
       setNow(new Date());

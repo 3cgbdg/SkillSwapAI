@@ -1,11 +1,9 @@
 "use client";
 import FullSreenLoader from "@/components/FullSreenLoader";
-import { useAppDispatch } from "@/hooks/reduxHooks";
-import { fetchProfile } from "@/redux/authSlice";
 import AuthService from "@/services/AuthService";
 import { logInFormData, logInSchema } from "@/validation/logIn";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Lock, Mail } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -13,9 +11,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
+import ProfilesService from "@/services/ProfilesService";
 
 const Page = () => {
-  const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
   const {
     register,
     handleSubmit,
@@ -30,10 +29,13 @@ const Page = () => {
     onSuccess: async (data) => {
       toast.success(data.message);
       try {
-        await dispatch(fetchProfile()).unwrap();
+        await queryClient.prefetchQuery({
+          queryKey: ["profile"],
+          queryFn: ProfilesService.getOwnProfile,
+        });
         router.push("/dashboard");
       } catch (err) {
-        toast.error("Unable to sign in after signup. Please try to login.");
+        toast.error("Unable to fetch profile after login.");
       }
     },
     onError: (err) => {

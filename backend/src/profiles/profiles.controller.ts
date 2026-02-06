@@ -21,7 +21,7 @@ import type { RequestWithUser } from 'types/auth';
 @Controller('profiles')
 @UseGuards(AuthGuard('jwt'))
 export class ProfilesController {
-  constructor(private readonly profilesService: ProfilesService) { }
+  constructor(private readonly profilesService: ProfilesService) {}
 
   @Get(':id')
   async findOne(@Param('id') id: string) {

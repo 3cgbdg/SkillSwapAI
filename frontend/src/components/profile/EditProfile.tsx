@@ -2,28 +2,28 @@
 import AddSkills from "@/components/profile/AddSkills";
 import { Dispatch, useEffect, useState } from "react";
 import { SetStateAction } from "react";
-import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
 import Image from "next/image";
 import { UserRound } from "lucide-react";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   editProfileFormData,
   editProfileSchema,
 } from "@/validation/editProfile";
 import { zodResolver } from "@hookform/resolvers/zod";
 import ProfilesService from "@/services/ProfilesService";
-import { changeAvatar, updateProfile } from "@/redux/authSlice";
 import { toast } from "react-toastify";
 import Spinner from "../Spinner";
+import useProfile from "@/hooks/useProfile";
+import { IUser } from "@/types/types";
 
 const EditProfile = ({
   setIsEditing,
 }: {
   setIsEditing: Dispatch<SetStateAction<boolean>>;
 }) => {
-  const { user } = useAppSelector((state) => state.auth);
-  const dispatch = useAppDispatch();
+  const { data: user } = useProfile();
+  const queryClient = useQueryClient();
   const {
     register,
     handleSubmit,
@@ -39,7 +39,13 @@ const EditProfile = ({
     mutationFn: async (data: Partial<editProfileFormData>) => {
       if (user) {
         const resData = await ProfilesService.updateProfile(user.id, data);
-        dispatch(updateProfile(data));
+        queryClient.setQueryData(["profile"], (old: any) => {
+          if (!old) return old;
+          return {
+            ...old,
+            ...data,
+          };
+        });
         return resData;
       } else return null;
     },
@@ -56,7 +62,13 @@ const EditProfile = ({
   const { mutate: deleteAvatarImage } = useMutation({
     mutationFn: async () => {
       const resData = await ProfilesService.deleteAvatarImage();
-      dispatch(changeAvatar(undefined));
+      queryClient.setQueryData(["profile"], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          imageUrl: undefined,
+        };
+      });
       return resData;
     },
     onSuccess: (data) => {
@@ -72,11 +84,17 @@ const EditProfile = ({
       const form = new FormData();
       form.append("image", file);
       const data = await ProfilesService.uploadImage(form);
+      queryClient.setQueryData(["profile"], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          imageUrl: data.url,
+        };
+      });
       return data;
     },
     onSuccess: (data) => {
       toast.success(data.message);
-      dispatch(changeAvatar(data.url));
     },
     onError: (err) => {
       toast.error(err.message);
@@ -97,7 +115,7 @@ const EditProfile = ({
         Object.keys(data) as (keyof editProfileFormData)[]
       ).reduce((acc, key) => {
         const value = data[key];
-        if (value !== undefined && value !== user[key]) {
+        if (value !== undefined && value !== (user as any)[key]) {
           acc[key] = value;
         }
         return acc;

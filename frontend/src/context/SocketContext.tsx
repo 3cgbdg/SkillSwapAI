@@ -9,15 +9,10 @@ import {
   useState,
   useRef,
 } from "react";
-import { useAppSelector, useAppDispatch } from "@/hooks/reduxHooks";
+import { useQueryClient } from "@tanstack/react-query";
+import useProfile from "@/hooks/useProfile";
+import useChats from "@/hooks/useChats";
 import { SocketContextType, IChat } from "@/types/types";
-import {
-  setOnlineUsers,
-  addOnlineUser,
-  removeOnlineUser,
-} from "@/redux/onlineUsersSlice";
-import { updateChatNewMessagesForReceiver } from "@/redux/chatsSlice";
-import friendsService from "@/services/FriendsService";
 
 const SocketContext = createContext<SocketContextType>({ socket: null });
 
@@ -25,19 +20,14 @@ export const useSocket = () => useContext(SocketContext);
 
 export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
-  const { user } = useAppSelector((state) => state.auth);
-  const { chats } = useAppSelector((state) => state.chats);
-  const dispatch = useAppDispatch();
-  const chatsRef = useRef<IChat[] | null>(chats);
+  const queryClient = useQueryClient();
+  const { data: user } = useProfile();
+  const { data: chats = [] } = useChats();
+  const chatsRef = useRef<IChat[]>(chats);
 
   useEffect(() => {
     chatsRef.current = chats;
   }, [chats]);
-
-  const getOnlineFriends = async () => {
-    const data = await friendsService.getFriendsOnlineStatus();
-    dispatch(setOnlineUsers(data));
-  }
 
   useEffect(() => {
     if (!user) return;
@@ -46,22 +36,9 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     });
     setSocket(sock);
 
-
-    const handleSetToOnline = ({ id }: { id: string }) => {
-      dispatch(addOnlineUser(id));
-    };
-    getOnlineFriends();
-    const intervalGetOnlineStatus = setInterval(async () => {
-      getOnlineFriends();
-    }, 30000)
-    sock.on("setToOnline", handleSetToOnline);
-
     const intervalHeartbeat = setInterval(() => {
-      sock.emit('heartbeat');
+      sock.emit("heartbeat");
     }, 30000);
-
-
-
 
     const handleReceiveMessage = (payload: {
       from: string;
@@ -72,12 +49,13 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
         (c) => c.friend.id === payload.from
       );
       if (chat) {
-        dispatch(
-          updateChatNewMessagesForReceiver({
-            chatId: chat.chatId,
-            message: payload.messageContent,
-          })
-        );
+        queryClient.setQueryData(["chats"], (oldChats: IChat[] = []) => {
+          return oldChats.map((c) =>
+            c.chatId === chat.chatId
+              ? { ...c, lastMessageContent: payload.messageContent }
+              : c
+          );
+        });
       }
     };
 
@@ -85,12 +63,10 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
 
     return () => {
       clearInterval(intervalHeartbeat);
-      clearInterval(intervalGetOnlineStatus);
-      sock.off("setToOnline", handleSetToOnline);
       sock.off("receiveMessage", handleReceiveMessage);
       sock.disconnect();
     };
-  }, [user, dispatch]);
+  }, [user, queryClient]);
   return (
     <SocketContext.Provider value={{ socket }}>
       {children}

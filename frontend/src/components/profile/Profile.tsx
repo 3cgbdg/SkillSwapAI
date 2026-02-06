@@ -1,38 +1,39 @@
 "use client";
 import { toast } from "react-toastify";
 import AddSkills from "@/components/profile/AddSkills";
-import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
-import {
-  addAiSuggestionSkills,
-  addWantToLearnSkill,
-  generatedAiSuggestions,
-  removeAiSuggestionSkill,
-} from "@/redux/authSlice";
 import AiService from "@/services/AiService";
 import SkillsService from "@/services/SkillsService";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { GraduationCap, Pencil, UserRound } from "lucide-react";
 import Image from "next/image";
 import { Dispatch, SetStateAction, useMemo } from "react";
 import Spinner from "../Spinner";
 import { differenceInHours } from "date-fns";
 import ProfilesService from "@/services/ProfilesService";
+import useProfile from "@/hooks/useProfile";
 
 const Profile = ({
   setIsEditing,
 }: {
   setIsEditing: Dispatch<SetStateAction<boolean>>;
 }) => {
-  const { user } = useAppSelector((state) => state.auth);
-  const dispatch = useAppDispatch();
+  const { data: user } = useProfile();
+  const queryClient = useQueryClient();
+
   const { mutate: addNewSkillToLearn } = useMutation({
     mutationFn: async (title: string) => {
       await SkillsService.addWantToLearnSkill(title, true);
       return title;
     },
     onSuccess: (title: string) => {
-      dispatch(addWantToLearnSkill(title));
-      dispatch(removeAiSuggestionSkill(title));
+      queryClient.setQueryData(["profile"], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          skillsToLearn: [...(old.skillsToLearn || []), { id: "temporary-id", title }],
+          aiSuggestionSkills: old.aiSuggestionSkills?.filter((s: string) => s !== title),
+        };
+      });
     },
     onError: (err) => {
       toast.error(err.message);
@@ -44,8 +45,14 @@ const Profile = ({
     retry: 1,
     onSuccess: (data) => {
       if (data) {
-        dispatch(generatedAiSuggestions());
-        dispatch(addAiSuggestionSkills(data.skills));
+        queryClient.setQueryData(["profile"], (old: any) => {
+          if (!old) return old;
+          return {
+            ...old,
+            lastSkillsGenerationDate: new Date().toISOString(),
+            aiSuggestionSkills: data.skills,
+          };
+        });
         toast.success(data.message);
       }
     },
@@ -59,13 +66,18 @@ const Profile = ({
     queryFn: async () => {
       const res = await ProfilesService.getPollingDataAiSuggestions();
       if (res.data && res.data.length > 0) {
-        dispatch(addAiSuggestionSkills(res.data));
-        dispatch(generatedAiSuggestions());
+        queryClient.setQueryData(["profile"], (old: any) => {
+          if (!old) return old;
+          return {
+            ...old,
+            aiSuggestionSkills: res.data,
+            lastSkillsGenerationDate: new Date().toISOString(),
+          };
+        });
       }
       return res.data;
     },
     refetchInterval: (query) => {
-      // Data is the 'data' from the latest query result
       if (!query.state.data || query.state.data.length === 0) return 5000;
       return false;
     },

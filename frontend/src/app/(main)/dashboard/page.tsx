@@ -1,6 +1,8 @@
 "use client";
 
-import { useAppSelector } from "@/hooks/reduxHooks";
+import useProfile from "@/hooks/useProfile";
+import useMatches from "@/hooks/useMatches";
+import useSessions from "@/hooks/useSessions";
 import {
   Award,
   Calendar,
@@ -13,9 +15,9 @@ import Image from "next/image";
 import Link from "next/link";
 
 const Page = () => {
-  const { user } = useAppSelector((state) => state.auth);
-  const { matches } = useAppSelector((state) => state.matches);
-  const { sessions } = useAppSelector((state) => state.sessions);
+  const { data: user } = useProfile();
+  const { data: matches = [] } = useMatches();
+  const { data: sessions = [] } = useSessions();
   const now = new Date();
   return (
     <div className="flex flex-col gap-[33px]">

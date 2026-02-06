@@ -1,24 +1,18 @@
 "use client";
 
-import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
-import {
-  addKnownSkill,
-  addWantToLearnSkill,
-  deleteKnownSkill,
-  deleteWantToLearnSkill,
-} from "@/redux/authSlice";
 import SkillsService from "@/services/SkillsService";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "react-toastify";
 import Spinner from "../Spinner";
+import useProfile from "@/hooks/useProfile";
 
 const AddSkills = () => {
   const [wantToLearnInput, setWantToLearnInput] = useState<string>("");
   const [knownInput, setKnownInput] = useState<string>("");
-  const { user } = useAppSelector((state) => state.auth);
-  const dispatch = useAppDispatch();
+  const { data: user } = useProfile();
+  const queryClient = useQueryClient();
   const [availableSkills, setAvailableSkills] = useState<
     { id: string; title: string }[]
   >([]);
@@ -37,6 +31,19 @@ const AddSkills = () => {
   // adding skill (known)
   const mutationAddKnown = useMutation({
     mutationFn: async (str: string) => SkillsService.addKnownSkill(str),
+    onSuccess: (_, title) => {
+      queryClient.setQueryData(["profile"], (old: any) => {
+        if (!old) return old;
+        const newItem = {
+          id: "temporary-id",
+          title: title,
+        };
+        return {
+          ...old,
+          knownSkills: [...(old.knownSkills || []), newItem],
+        };
+      });
+    },
     onError: (err) => {
       toast.error(err.message);
     },
@@ -46,6 +53,19 @@ const AddSkills = () => {
 
   const mutationAddLearn = useMutation({
     mutationFn: async (str: string) => SkillsService.addWantToLearnSkill(str),
+    onSuccess: (_, title) => {
+      queryClient.setQueryData(["profile"], (old: any) => {
+        if (!old) return old;
+        const newItem = {
+          id: "temporary-id",
+          title: title,
+        };
+        return {
+          ...old,
+          skillsToLearn: [...(old.skillsToLearn || []), newItem],
+        };
+      });
+    },
     onError: (err) => {
       toast.error(err.message);
     },
@@ -54,6 +74,15 @@ const AddSkills = () => {
 
   const mutationDeleteKnown = useMutation({
     mutationFn: async (str: string) => SkillsService.deleteKnownSkill(str),
+    onSuccess: (_, title) => {
+      queryClient.setQueryData(["profile"], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          knownSkills: old.knownSkills?.filter((s: any) => s.title !== title),
+        };
+      });
+    },
     onError: (err) => {
       toast.error(err.message);
     },
@@ -63,6 +92,15 @@ const AddSkills = () => {
   const mutationDeleteLearn = useMutation({
     mutationFn: async (str: string) =>
       SkillsService.deleteWantToLearnSkill(str),
+    onSuccess: (_, title) => {
+      queryClient.setQueryData(["profile"], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          skillsToLearn: old.skillsToLearn?.filter((s: any) => s.title !== title),
+        };
+      });
+    },
     onError: (err) => {
       toast.error(err.message);
     },
@@ -86,7 +124,6 @@ const AddSkills = () => {
                   {skill.title}
                   <button
                     onClick={() => {
-                      dispatch(deleteKnownSkill(skill.title));
                       mutationDeleteKnown.mutate(skill.title);
                     }}
                     className="outline-0hover:text-darkBlue cursor-pointer transition-all"
@@ -114,11 +151,11 @@ const AddSkills = () => {
           />
           <button
             onClick={() => {
-              dispatch(addKnownSkill(knownInput));
               mutationAddKnown.mutate(knownInput);
               if (knownRef.current) knownRef.current.value = "";
+              setKnownInput("");
             }}
-            className="button-blue flex-shrink-0"
+            className="button-blue shrink-0"
           >
             <Plus />
           </button>
@@ -134,7 +171,6 @@ const AddSkills = () => {
                           <button
                             type="button"
                             onClick={() => {
-                              dispatch(addKnownSkill(skill.title));
                               mutationAddKnown.mutate(skill.title);
                               if (knownRef.current) knownRef.current.value = "";
                               setKnownInput("");
@@ -174,7 +210,6 @@ const AddSkills = () => {
                   {skill.title}
                   <button
                     onClick={() => {
-                      dispatch(deleteWantToLearnSkill(skill.title));
                       mutationDeleteLearn.mutate(skill.title);
                     }}
                     className="outline-0hover:text-darkBlue cursor-pointer transition-all"
@@ -202,7 +237,6 @@ const AddSkills = () => {
           />
           <button
             onClick={() => {
-              dispatch(addWantToLearnSkill(wantToLearnInput));
               mutationAddLearn.mutate(wantToLearnInput);
               if (learnRef.current) learnRef.current.value = "";
               setWantToLearnInput("");
@@ -223,7 +257,6 @@ const AddSkills = () => {
                           <button
                             type="button"
                             onClick={() => {
-                              dispatch(addWantToLearnSkill(skill.title));
                               mutationAddLearn.mutate(skill.title);
                               if (learnRef.current) learnRef.current.value = "";
                               setWantToLearnInput("");

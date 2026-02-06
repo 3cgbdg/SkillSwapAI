@@ -1,11 +1,9 @@
 "use client";
-import { useAppDispatch } from "@/hooks/reduxHooks";
 import { ISession } from "@/types/types";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import CalendarPopup from "./CalendarPopup";
-import { setSessions } from "@/redux/sessionsSlice";
 import SessionsService from "@/services/SessionsService";
 import { useSearchParams } from "next/navigation";
 import {
@@ -32,7 +30,7 @@ const fetchSessions = async (month: number) => {
 
 const Calendar = () => {
   const searchParams = useSearchParams();
-  const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
   const [addSessionPopup, setAddSessionPopup] = useState<boolean>(false);
   const [otherName, setOtherName] = useState<string | null>(null);
   const [weekStartDate, setWeekStartDate] = useState(
@@ -75,9 +73,9 @@ const Calendar = () => {
       const currentSessions = monthSessions.filter((session) =>
         isSameDay(new Date(session.date), today)
       );
-      dispatch(setSessions(currentSessions));
+      queryClient.setQueryData(["sessions-today"], currentSessions);
     }
-  }, [monthSessions, dispatch]);
+  }, [monthSessions, queryClient]);
 
   // nav buttons
   const handlePrevWeek = () => {
