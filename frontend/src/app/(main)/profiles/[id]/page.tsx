@@ -1,11 +1,9 @@
 "use client";
 
 import FullSreenLoader from "@/components/FullSreenLoader";
-import { useAppDispatch } from "@/hooks/reduxHooks";
-import { updateChats } from "@/redux/chatsSlice";
 import ChatsService from "@/services/ChatsService";
 import ProfilesService from "@/services/ProfilesService";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, MessageSquareMore, UserRound } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
@@ -14,7 +12,7 @@ import { toast } from "react-toastify";
 
 const Page = () => {
   const { id } = useParams() as { id: string };
-  const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
   const router = useRouter();
   const {
     data: profile,
@@ -43,7 +41,7 @@ const Page = () => {
     }) => ChatsService.createChat(payload),
     onSuccess: (data) => {
       router.push(`/chats/${data.chat.chatId}`);
-      dispatch(updateChats(data.chat));
+      queryClient.invalidateQueries({ queryKey: ["chats"] });
     },
     onError: (err) => {
       toast.error(err.message);
@@ -117,7 +115,7 @@ const Page = () => {
                   <div className="basis-full">
                     <div className="flex gap-2 flex-wrap mb-6 overflow-y-auto   max-h-[170px] ">
                       {profile?.knownSkills &&
-                      profile?.knownSkills?.length > 0 ? (
+                        profile?.knownSkills?.length > 0 ? (
                         profile.knownSkills.map((skill, idx) => (
                           <div
                             key={idx}
@@ -143,7 +141,7 @@ const Page = () => {
                   <div className="basis-full">
                     <div className="flex gap-2  flex-wrap mb-6 overflow-y-auto max-h-[170px] ">
                       {profile?.skillsToLearn &&
-                      profile?.skillsToLearn?.length > 0 ? (
+                        profile?.skillsToLearn?.length > 0 ? (
                         profile.skillsToLearn.map((skill, idx) => (
                           <div
                             key={idx}
@@ -198,7 +196,7 @@ const Page = () => {
               <div className="basis-full">
                 <div className="flex gap-2  flex-wrap mb-6 overflow-y-auto max-h-[170px] ">
                   {profile?.skillsToLearn &&
-                  profile?.skillsToLearn?.length > 0 ? (
+                    profile?.skillsToLearn?.length > 0 ? (
                     profile.skillsToLearn.map((skill, idx) => (
                       <div
                         key={idx}

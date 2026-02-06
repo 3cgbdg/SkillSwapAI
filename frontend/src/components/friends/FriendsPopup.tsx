@@ -1,12 +1,10 @@
 "use client";
 
-import { IFriend } from "@/types/types";
+import { IFriend, IChat } from "@/types/types";
 import Image from "next/image";
 import { BookUser, MessageSquareMore, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useAppDispatch } from "@/hooks/reduxHooks";
-import { useMutation } from "@tanstack/react-query";
-import { updateChats } from "@/redux/chatsSlice";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dispatch, SetStateAction, useEffect } from "react";
 import ChatsService from "@/services/ChatsService";
 import Spinner from "../Spinner";
@@ -22,7 +20,7 @@ const FriendsPopup = ({
   setIsPopupOpen: Dispatch<SetStateAction<boolean>>;
 }) => {
   const router = useRouter();
-  const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
 
   // for getting to chat or creating it
   const { mutate: createChat } = useMutation({
@@ -34,7 +32,7 @@ const FriendsPopup = ({
     onSuccess: (data) => {
       setIsPopupOpen(false);
       router.push(`/chats/${data.chat.chatId}`);
-      dispatch(updateChats(data.chat));
+      queryClient.invalidateQueries({ queryKey: ["chats"] });
     },
     onError: (err) => {
       toast.error(err.message);

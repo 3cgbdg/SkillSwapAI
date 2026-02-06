@@ -9,10 +9,7 @@ import { ISession } from "@/types/types";
 const Page = () => {
   const [now, setNow] = useState(new Date());
 
-  const { data: sessions = [] } = useQuery<ISession[]>({
-    queryKey: ["sessions-today"],
-    initialData: [],
-  });
+  const { data: sessions = [] } = useSessions();
   useEffect(() => {
     const interval = setInterval(() => {
       setNow(new Date());
@@ -34,7 +31,7 @@ const Page = () => {
       </div>
       <div className="_border overflow-hidden  rounded-[10px] col-span-3 xl:col-span-1">
         {/* header */}
-        <div className="border-b-1 border-neutral-300">
+        <div className="border-b border-neutral-300">
           <div className=" gap-2 p-6 ">
             <h2 className="text-xl leading-7 font-bold">Upcoming Sessions</h2>
           </div>

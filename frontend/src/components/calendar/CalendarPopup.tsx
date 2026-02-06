@@ -1,7 +1,5 @@
 "use client";
 import { formatDate } from "@/app/utils/calendar";
-import { useAppDispatch } from "@/hooks/reduxHooks";
-import { addSession } from "@/redux/sessionsSlice";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Users, X } from "lucide-react";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
@@ -31,7 +29,6 @@ const CalendarPopup = ({
     setValue,
     formState: { errors },
   } = useForm<createSessionFormData>();
-  const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
   const firstDay = new Date(year, month, 1);
   const { socket } = useSocket();
@@ -51,12 +48,11 @@ const CalendarPopup = ({
     onSuccess: (data) => {
       toast.success(data.message);
       setAddSessionPopup(false);
-      // if its current day event adding to global state
-      if (new Date(data.session.date).getDate() == new Date().getDate())
-        dispatch(addSession(data.session));
+
       if (socket?.connected)
         socket.emit("createSessionRequest", { id: data.session.id });
       queryClient.invalidateQueries({ queryKey: ["sessions", month] });
+      queryClient.invalidateQueries({ queryKey: ["sessions"] });
     },
     onError: (error: unknown) => {
       const err = error as AxiosError<{ message: string }>;
@@ -123,7 +119,7 @@ const CalendarPopup = ({
               />
             </div>
             {errors.title && (
-              
+
               <span data-testid="error" className="text-red-500 font-medium ">
                 {errors.title.message}
               </span>

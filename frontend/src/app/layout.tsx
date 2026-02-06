@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Dancing_Script, Inter, Oswald } from "next/font/google";
 import "@/styles/globals.css";
 import QueryProvider from "@/providers/QueryProvider";
-import ReduxProvider from "@/providers/ReduxProvider";
 import { SocketProvider } from "@/context/SocketContext";
 import CheckEmptyPath from "@/components/CheckEmptyPath";
 import { ToastContainer } from "react-toastify";
@@ -40,15 +39,13 @@ export default function RootLayout({
         className={`${InterFont.variable} ${DancingScript.variable} ${OswaldFont.variable} relative  antialiased`}
       >
         <QueryProvider>
-          <ReduxProvider>
-            <SocketProvider>
-              <CheckEmptyPath />
-              <div className="">{children}</div>
-              {/* for toast position */}
-              <ToastContainer position="top-right" />
+          <SocketProvider>
+            <CheckEmptyPath />
+            <div className="">{children}</div>
+            {/* for toast position */}
+            <ToastContainer position="top-right" />
 
-            </SocketProvider>
-          </ReduxProvider>
+          </SocketProvider>
         </QueryProvider>
       </body>
     </html>
