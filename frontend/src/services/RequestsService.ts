@@ -1,4 +1,5 @@
-import { ApiResponse, IRequest } from "@/types/types";
+import { IRequest } from "@/types/session";
+import { ApiResponse } from "@/types/common";
 import { api } from "./axiosInstance";
 
 class RequestsService {

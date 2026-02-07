@@ -1,37 +1,40 @@
 "use client";
 
 import { useSocket } from "@/context/SocketContext";
-import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
-import {
-  updateChatNewMessagesForReceiver,
-  updateChatNewMessagesForSender,
-  updateChatSeen,
-} from "@/redux/chatsSlice";
 import { IChat, IMessage } from "@/types/types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCheck, EllipsisVertical, Send, UserRound } from "lucide-react";
+import {
+  CheckCheck,
+  EllipsisVertical,
+  Send,
+  UserRound,
+} from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import ChatsService from "@/services/ChatsService";
+import useProfile from "@/hooks/useProfile";
+import useChats from "@/hooks/useChats";
+import useOnlineUsers from "@/hooks/useOnlineUsers";
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "react-toastify";
 import Spinner from "@/components/Spinner";
 
 const Page = () => {
-  const { onlineUsers } = useAppSelector((state) => state.onlineUsers);
+  const onlineUsers = useOnlineUsers();
   const { socket } = useSocket();
   const queryClient = useQueryClient();
-  const { user } = useAppSelector((state) => state.auth);
+  const { data: user } = useProfile();
   const [messageInput, setMessageInput] = useState<string>("");
   const { id } = useParams() as { id: string };
-  const { chats } = useAppSelector((state) => state.chats);
-  const [currentChat, setCurrentChat] = useState<IChat | null>(null);
-  const dispatch = useAppDispatch();
+  const { data: chats = [] } = useChats();
+
+  const currentChat = chats.find((chat) => chat.chatId === id) ?? null;
   const endRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const refs = useRef<HTMLDivElement[]>([]);
   const lastMessageRef = useRef<string>("");
+
   // useQuery for getting all messages from db
   const {
     data: messages,
@@ -41,12 +44,10 @@ const Page = () => {
   } = useQuery({
     queryKey: ["messages", currentChat?.friend.id],
     queryFn: async () => ChatsService.getChat(currentChat?.friend.id),
-
     enabled: !!currentChat,
   });
 
   // handling messages error
-
   useEffect(() => {
     if (isError) {
       toast.error(error.message);
@@ -70,7 +71,19 @@ const Page = () => {
                 if (socket?.connected) {
                   socket.emit("updateSeen", { messageId: msg.id });
                 }
-                dispatch(updateChatSeen({ chatId: id }));
+                queryClient.setQueryData(["chats"], (oldChats: IChat[] = []) => {
+                  return oldChats.map((c) =>
+                    c.chatId === id
+                      ? {
+                        ...c,
+                        _count: {
+                          ...c._count,
+                          id: Math.max(0, c._count.id - 1),
+                        },
+                      }
+                      : c
+                  );
+                });
               }
               observer.unobserve(entry.target);
             }
@@ -85,14 +98,7 @@ const Page = () => {
     return () => {
       observer.disconnect();
     };
-  }, [messages, socket, user, currentChat, dispatch, id]);
-
-  // getting current chat
-  useEffect(() => {
-    if (chats && id) {
-      setCurrentChat(chats.find((chat) => chat.chatId === id) ?? null);
-    }
-  }, [chats, id]);
+  }, [messages, socket, user, id, queryClient]);
 
   // listening to socket events
   useEffect(() => {
@@ -101,7 +107,7 @@ const Page = () => {
     // Handler for receiving messages
     const handleReceiveMessage = ({
       from,
-      id,
+      id: msgId,
       messageContent,
     }: {
       from: string;
@@ -113,19 +119,20 @@ const Page = () => {
         (old: IMessage[] = []) => {
           // Only add message if it's from the other person in this chat
           if (from === currentChat.friend.id) {
-            dispatch(
-              updateChatNewMessagesForReceiver({
-                chatId: currentChat.chatId,
-                message: messageContent,
-              })
-            );
+            queryClient.setQueryData(["chats"], (oldChats: IChat[] = []) => {
+              return oldChats.map((c) =>
+                c.chatId === currentChat.chatId
+                  ? { ...c, lastMessageContent: messageContent }
+                  : c
+              );
+            });
             return [
               ...old,
               {
                 fromId: from,
                 content: messageContent,
                 createdAt: new Date(),
-                id: id,
+                id: msgId,
               },
             ];
           }
@@ -142,16 +149,17 @@ const Page = () => {
       queryClient.setQueryData(
         ["messages", currentChat.friend.id],
         (old: IMessage[] = []) => {
-          dispatch(
-            updateChatNewMessagesForSender({
-              chatId: currentChat.chatId,
-              message: lastMessageRef.current,
-            })
-          );
+          queryClient.setQueryData(["chats"], (oldChats: IChat[] = []) => {
+            return oldChats.map((c) =>
+              c.chatId === currentChat.chatId
+                ? { ...c, lastMessageContent: lastMessageRef.current }
+                : c
+            );
+          });
           return [
             ...old,
             {
-              fromId: user.id,
+              fromId: user?.id ?? "",
               content: lastMessageRef.current,
               createdAt: new Date(data.createdAt),
               isSeen: false,
@@ -190,7 +198,7 @@ const Page = () => {
       socket.off("messageSent", handleMessageSent);
       socket.off("updateSeen", handleUpdateSeen);
     };
-  }, [socket, user, currentChat, queryClient, dispatch]);
+  }, [socket, user, currentChat, queryClient]);
 
   // func for  sending new message
   const handleSend = () => {
@@ -209,7 +217,7 @@ const Page = () => {
 
   // getting down to the latest messages with scroll
   useEffect(() => {
-    if (refs && messages) {
+    if (refs.current && messages) {
       endRef.current?.scrollIntoView({ behavior: "smooth" });
       refs.current = Array((messages as IMessage[]).length).fill(null);
     }
@@ -220,9 +228,9 @@ const Page = () => {
       <Link href={"/chats"} className="md:hidden! button-blue ">
         Go to chats
       </Link>
-      <div className="_border rounded-[10px] flex flex-col grow-1 ">
+      <div className="_border rounded-[10px] flex flex-col grow ">
         {/* header */}
-        <div className="border-b-[1px] border-neutral-300 ">
+        <div className="border-b border-neutral-300 ">
           <div className="py-5.5 px-6 flex justify-between items-center gap-2">
             <div className="items-center flex gap-3">
               <div className="size-12  flex items-center justify-center relative rounded-full border-2 _border ">
@@ -306,7 +314,7 @@ const Page = () => {
         </div>
 
         {/* input */}
-        <div className="border-t-[1px] border-neutral-300 w-full">
+        <div className="border-t border-neutral-300 w-full">
           <div className="p-4 flex gap-4 items-center px-10 ">
             <textarea
               onKeyDown={(e) => {

@@ -1,4 +1,4 @@
-import { IFriend } from "@/types/types";
+import { IFriend } from "@/types/chat";
 import { api } from "./axiosInstance";
 
 class FriendsService {
@@ -17,7 +17,7 @@ class FriendsService {
     return { id, message: data.message };
   }
 
-  async getFriendsOnlineStatus(): Promise<string[] > {
+  async getFriendsOnlineStatus(): Promise<string[]> {
     const res = await api.get("/friends/online-status");
     return res.data;
   }

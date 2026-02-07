@@ -1,67 +1,49 @@
 "use client";
-import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
-import { fetchProfile } from "@/redux/authSlice";
-import { fetchActiveMatches } from "@/redux/matchesSlice";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-
-import { fetchTodaysSessions } from "@/redux/sessionsSlice";
 import FullSreenLoader from "./FullSreenLoader";
+import useProfile from "@/hooks/useProfile";
+import useMatches from "@/hooks/useMatches";
+import useSessions from "@/hooks/useSessions";
 
 // fetching data component every reload
 const AuthClientUpload = () => {
-  const dispatch = useAppDispatch();
-  const authState = useAppSelector((state) => state.auth);
-  const activeMatchesState = useAppSelector((state) => state.matches);
   const router = useRouter();
-  useEffect(() => {
-    const getData = async () => {
-      try {
-        // trying fetching profile with retry logic
-        let retries = 3;
-        let lastError;
-        while (retries > 0) {
-          try {
-            await dispatch(fetchProfile()).unwrap();
-            break;
-          } catch (err) {
-            lastError = err;
-            retries--;
-            if (retries > 0) {
-              // waiting before retrying
-              await new Promise((resolve) => setTimeout(resolve, 1000));
-            }
-          }
-        }
-        if (lastError && retries === 0) {
-          throw lastError;
-        }
 
-        await dispatch(fetchActiveMatches()).unwrap();
-        await dispatch(fetchTodaysSessions()).unwrap();
-      } catch {
-        router.push("/auth/login");
-      }
-    };
-    getData();
-  }, [dispatch, router]);
+  const {
+    isLoading: isProfileLoading,
+    isError: isProfileError
+  } = useProfile();
+
+  const {
+    isLoading: isMatchesLoading,
+    isError: isMatchesError
+  } = useMatches();
+
+  const {
+    isLoading: isSessionsLoading,
+    isError: isSessionsError
+  } = useSessions();
+
+  const isLoading = isProfileLoading || isMatchesLoading || isSessionsLoading;
+  const isError = isProfileError || isMatchesError || isSessionsError;
 
   useEffect(() => {
-    if (authState.loading || activeMatchesState.loading) {
+    if (isError) {
+      router.push("/auth/login");
+    }
+  }, [isError, router]);
+
+  useEffect(() => {
+    if (isLoading) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
     }
-  }, [authState.loading, activeMatchesState.loading]);
+  }, [isLoading]);
 
-  useEffect(() => {
-    if (authState.error || activeMatchesState.error) {
-      router.push("/auth/login");
-    }
-  }, [authState.error, activeMatchesState.error, router]);
-
-  if (authState.loading || activeMatchesState.loading) {
-    <FullSreenLoader />;
+  if (isLoading) {
+    return <FullSreenLoader />;
   }
 
   return null;

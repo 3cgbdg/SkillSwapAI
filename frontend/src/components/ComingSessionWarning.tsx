@@ -1,14 +1,14 @@
 "use client";
 
-import { useAppSelector } from "@/hooks/reduxHooks";
-import { ISession } from "@/types/types";
+import useSessions from "@/hooks/useSessions";
+import { ISession } from "@/types/session";
 import { TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const ComingSessionWarning = () => {
   const [upComingSession, setUpComingSession] = useState<ISession | null>(null);
-  const { sessions } = useAppSelector((state) => state.sessions);
+  const { data: sessions = [] } = useSessions();
   useEffect(() => {
     if (!sessions || sessions.length === 0) return;
     const now = new Date();

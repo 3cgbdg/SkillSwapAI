@@ -1,6 +1,6 @@
 import { Search, X } from "lucide-react";
 import SearchResults from "./SearchResults";
-import { FoundSkills, FoundUsers } from "@/types/types";
+import { FoundSkills, FoundUsers } from "@/types/common";
 import Spinner from "@/components/Spinner";
 import { Dispatch, SetStateAction } from "react";
 

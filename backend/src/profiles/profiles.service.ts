@@ -13,7 +13,7 @@ export class ProfilesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly s3Service: S3Service,
-  ) { }
+  ) {}
 
   async findOne(id: string) {
     const profile = await this.prisma.user.findFirst({
@@ -94,7 +94,9 @@ export class ProfilesService {
     return { message: 'Successfully updated!' };
   }
 
-  async getPollingDataAiSuggestions(id: string): Promise<{ data: string[] | null }> {
+  async getPollingDataAiSuggestions(
+    id: string,
+  ): Promise<{ data: string[] | null }> {
     const user = await this.prisma.user.findUnique({
       where: { id },
     });

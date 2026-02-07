@@ -1,4 +1,4 @@
-import { Found } from "@/types/types";
+import { Found } from "@/types/common";
 import { api } from "./axiosInstance";
 
 class SearchService {

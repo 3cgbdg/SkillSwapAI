@@ -1,4 +1,4 @@
-import { IChat, IMessage } from "@/types/types";
+import { IChat, IMessage } from "@/types/chat";
 import { api } from "./axiosInstance";
 
 class ChatsService {

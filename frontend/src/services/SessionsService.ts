@@ -1,4 +1,4 @@
-import { ISession } from "@/types/types";
+import { ISession } from "@/types/session";
 import { api } from "./axiosInstance";
 import { createSessionFormData } from "@/validation/createSession";
 

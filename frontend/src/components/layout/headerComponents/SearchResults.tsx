@@ -1,6 +1,6 @@
 import { Plus, Handshake } from "lucide-react";
 import Link from "next/link";
-import { FoundSkills, FoundUsers } from "@/types/types";
+import { FoundSkills, FoundUsers } from "@/types/common";
 
 interface SearchResultsProps {
   foundSkills: FoundSkills[];

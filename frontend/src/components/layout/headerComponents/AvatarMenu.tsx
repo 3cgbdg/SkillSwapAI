@@ -1,6 +1,6 @@
 import { UserRound, X } from "lucide-react";
 import Image from "next/image";
-import { useAppSelector } from "@/hooks/reduxHooks";
+import useProfile from "@/hooks/useProfile";
 import { Dispatch, SetStateAction } from "react";
 
 interface AvatarMenuProps {
@@ -12,7 +12,7 @@ interface AvatarMenuProps {
 }
 
 const AvatarMenu = ({ panel, onPanelChange, onLogOut }: AvatarMenuProps) => {
-  const { user } = useAppSelector((state) => state.auth);
+  const { data: user } = useProfile();
 
   return (
     <div className="hidden md:block">

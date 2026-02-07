@@ -1,16 +1,11 @@
 "use client";
 
 import { useSocket } from "@/context/SocketContext";
-import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
-import { updateChats } from "@/redux/chatsSlice";
-import {
-  addOnlineUser,
-  removeOnlineUser,
-  setOnlineUsers,
-} from "@/redux/onlineUsersSlice";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
+import useChats from "@/hooks/useChats";
+import useOnlineUsers from "@/hooks/useOnlineUsers";
 import ChatsService from "@/services/ChatsService";
 import useFriends from "@/hooks/useFriends";
-import { useMutation } from "@tanstack/react-query";
 import {
   PanelLeftClose,
   PanelLeftOpen,
@@ -32,31 +27,10 @@ const ChatSidebar = () => {
   const path = usePathname();
   const [chars, setChars] = useState<string>("");
   const { friends, isFetching, refetch } = useFriends();
-  const dispatch = useAppDispatch();
-  const { chats } = useAppSelector((state) => state.chats);
-  const { onlineUsers } = useAppSelector((state) => state.onlineUsers);
-  const { socket } = useSocket();
+  const queryClient = useQueryClient();
+  const { data: chats = [] } = useChats();
+  const onlineUsers = useOnlineUsers();
   const [isFullyOpen, setIsFullyOpen] = useState<boolean>(true);
-  useEffect(() => {
-    if (!socket) return;
-    socket.on("connect", () => {});
-    socket.on("friendsOnline", ({ users }: { users: string[] }) => {
-      dispatch(setOnlineUsers(users));
-    });
-    socket.on("setToOffline", ({ id }: { id: string }) => {
-      dispatch(removeOnlineUser(id));
-    });
-    socket.on("setToOnline", ({ id }: { id: string }) => {
-      dispatch(addOnlineUser(id));
-    });
-    return () => {
-      socket.off("setToOffline");
-      socket.off("setToOnline");
-      socket.off("friendsOnline");
-    };
-  }, [socket, dispatch]);
-
-  // friends are provided by useFriends(); call refetch() when we need to force load
 
   // for getting to chat or creating it
   const { mutate: createChat } = useMutation({
@@ -66,7 +40,11 @@ const ChatSidebar = () => {
       payload: { friendId: string; friendName: string };
     }) => ChatsService.createChat(payload),
     onSuccess: (data) => {
-      dispatch(updateChats(data.chat));
+      queryClient.setQueryData(["chats"], (old: any) => {
+        if (!old) return [data.chat];
+        return [data.chat, ...old];
+      });
+      router.push(`/chats/${data.chat.chatId}`);
     },
     onError: (err) => {
       toast.error(err.message);
@@ -208,9 +186,9 @@ const ChatSidebar = () => {
                 <span className="text-xs leading-4 text-gray">
                   {chat._max
                     ? new Date(chat._max.createdAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
                     : null}
                 </span>
                 {chat._count && chat._count.id > 0 && (

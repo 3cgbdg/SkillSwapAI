@@ -1,16 +1,14 @@
 "use client";
-import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
-import { updateChats } from "@/redux/chatsSlice";
-import ChatsService from "@/services/ChatsService";
-import { IMatch } from "@/types/types";
-import { useMutation } from "@tanstack/react-query";
+import { IMatch } from "@/types/match";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Search, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import MatchCard from "./MatchCard";
 import MatchesService from "@/services/MatchesService";
-import { addMatch } from "@/redux/matchesSlice";
 import { toast } from "react-toastify";
+import useMatches from "@/hooks/useMatches";
+import ChatsService from "@/services/ChatsService";
 
 const Matches = ({
   matches,
@@ -20,10 +18,10 @@ const Matches = ({
   option: "available" | "active";
 }) => {
   //array for checking if the item is in the active matches so we wont be able to generate new plan again
-  const activeMatches = useAppSelector((state) => state.matches.matches);
+  const { data: activeMatches = [] } = useMatches();
   const [filteredMatch, setFilteredMatch] = useState<IMatch[]>(matches);
   const [panel, setPanel] = useState<"skill" | "compatibility" | null>(null);
-  const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
   const router = useRouter();
   const { isPending, mutate: generateActiveMatch } = useMutation({
     mutationFn: async (partnerId: string) => {
@@ -32,7 +30,10 @@ const Matches = ({
     },
     onSuccess: (data) => {
       toast.success(data.message);
-      dispatch(addMatch(data.match));
+      queryClient.setQueryData(["matches"], (old: any) => {
+        if (!old) return [data.match];
+        return [...old, data.match];
+      });
       router.push(`/matches/${data.match.id}`);
     },
     onError: (err) => {
@@ -73,8 +74,11 @@ const Matches = ({
       payload: { friendId: string; friendName: string };
     }) => ChatsService.createChat(payload),
     onSuccess: (data) => {
+      queryClient.setQueryData(["chats"], (old: any) => {
+        if (!old) return [data.chat];
+        return [data.chat, ...old];
+      });
       router.push(`/chats/${data.chat.chatId}`);
-      dispatch(updateChats(data.chat));
     },
     onError: (err) => {
       toast.error(err.message);
