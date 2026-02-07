@@ -1,5 +1,5 @@
 
-export type ModuleStatusType = "LOCKED" | "AVAILABLE" | "COMPLETED";
+export type ModuleStatusType = "INPROGRESS" | "COMPLETED";
 
 export interface IGeneratedModule {
     id: string;
