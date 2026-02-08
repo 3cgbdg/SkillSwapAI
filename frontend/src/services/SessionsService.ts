@@ -18,11 +18,11 @@ class SessionsService {
   async createSession(
     data: Omit<createSessionFormData, "friendName">
   ): Promise<{ session: ISession; message: string }> {
-    const res = await api.post("/sessions", {
+    const res: any = await api.post("/sessions", {
       ...data,
       color: this.colors[Math.floor(Math.random() * 3)],
     });
-    return res.data;
+    return { session: res.data, message: res.message };
   }
 }
 

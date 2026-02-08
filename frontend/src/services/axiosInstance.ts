@@ -6,7 +6,7 @@ export const api = axios.create({
 });
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => response.data,
   async (error) => {
     const originalReq = error.config;
     if (

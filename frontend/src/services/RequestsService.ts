@@ -23,8 +23,8 @@ class RequestsService {
   }
 
   async deleteRequest(requestId: string): Promise<string> {
-    const res = await api.delete(`/requests/${requestId}`);
-    return res.data;
+    const res: any = await api.delete(`/requests/${requestId}`);
+    return res.message;
   }
 
   async acceptSessionRequest({
@@ -36,7 +36,7 @@ class RequestsService {
     requestId: string;
     friendId: string;
   }): Promise<string> {
-    const res = await api.post(`/sessions/${sessionId}/accepted`, {
+    const res: any = await api.post(`/sessions/${sessionId}/accepted`, {
       requestId,
       friendId,
     });
@@ -51,7 +51,7 @@ class RequestsService {
     requestId: string;
     friendId: string;
   }): Promise<string> {
-    const res = await api.post(`/sessions/${sessionId}/rejected`, {
+    const res: any = await api.post(`/sessions/${sessionId}/rejected`, {
       requestId,
       friendId,
     });

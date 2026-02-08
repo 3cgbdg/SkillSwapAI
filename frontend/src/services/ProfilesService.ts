@@ -13,8 +13,8 @@ class ProfilesService {
   }
 
   async uploadImage(form: FormData): Promise<{ url: string; message: string }> {
-    const res = await api.post("profiles/photo/upload", form);
-    return res.data;
+    const res: any = await api.post("profiles/photo/upload", form);
+    return { url: res.data.url, message: res.message };
   }
 
   async updateProfile(

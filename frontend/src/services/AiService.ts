@@ -5,8 +5,9 @@ class AiService {
     skills: string[];
     message: string;
   } | null> {
-    const res = await api.post("/ai/profile/skills");
-    return res.data;
+    const res: any = await api.post("/ai/profile/skills");
+    if (!res) return null;
+    return { skills: res.data, message: res.message };
   }
 }
 
