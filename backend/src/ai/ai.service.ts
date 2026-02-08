@@ -103,7 +103,7 @@ export class AiService {
       const lastDate = new Date(user.lastSkillsGenerationDate);
       const now = new Date();
 
-      const hoursDiff = (now.getTime() - lastDate.getTime()) / (3600 * 24);
+      const hoursDiff = (now.getTime() - lastDate.getTime()) / (1000 * 3600);
       if (hoursDiff < 24) {
         throw new ForbiddenException(
           'You have already regenerated skills. Wait till the next day.',
@@ -147,17 +147,16 @@ export class AiService {
       );
       await this.prisma.user.update({
         where: { id: myId },
-        data: { aiSuggestionSkills: readyAiArray },
+        data: {
+          aiSuggestionSkills: readyAiArray,
+          lastSkillsGenerationDate: new Date(),
+        },
       });
     }
     const returnAiArray = readyAiArray?.filter(
       (item) => !stringArraySkillsToLearn.includes(item),
     );
-    // updating our flag for tracking last date for using this api by user (limit 1 per day (except automized regeneration after signing up))
-    await this.prisma.user.update({
-      where: { id: myId },
-      data: { lastSkillsGenerationDate: new Date() },
-    });
+
     return returnAiArray
       ? { data: returnAiArray, message: 'Skills successfully generated!' }
       : null;

@@ -66,19 +66,13 @@ const Profile = ({
     queryFn: async () => {
       const res = await ProfilesService.getPollingDataAiSuggestions();
       if (res.data && res.data.length > 0) {
-        queryClient.setQueryData(["profile"], (old: any) => {
-          if (!old) return old;
-          return {
-            ...old,
-            aiSuggestionSkills: res.data,
-            lastSkillsGenerationDate: new Date().toISOString(),
-          };
-        });
+        await queryClient.invalidateQueries({ queryKey: ["profile"] });
       }
       return res.data;
     },
     refetchInterval: (query) => {
-      if (!query.state.data || query.state.data.length === 0) return 5000;
+      const data = query.state.data;
+      if (!data || data.length === 0) return 3000;
       return false;
     },
     enabled: !!user && (!user.aiSuggestionSkills || user.aiSuggestionSkills.length === 0),
@@ -131,7 +125,7 @@ const Profile = ({
           </div>
           <AddSkills />
           <div className="_border rounded-2xl px-6 py-5.5">
-            <div className="flex items-center justify-between gap-4 border-b-1 mb-4 border-gray py-1">
+            <div className="flex items-center justify-between gap-4 border-b mb-4 border-gray py-1">
               <h2 className="text-2xl leading-6 font-bold mb-4">
                 AI Skill Suggestions
               </h2>
