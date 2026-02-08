@@ -5,8 +5,7 @@ import { logInFormData } from "@/validation/logIn";
 
 class AuthService {
   async logIn(data: logInFormData): Promise<ApiResponse<null>> {
-    const res = await api.post("/auth/login", data);
-    return res.data;
+    return api.post("/auth/login", data);
   }
 
   async signUp(
@@ -14,17 +13,15 @@ class AuthService {
     knownSkills: string[] | null,
     skillsToLearn: string[] | null
   ): Promise<ApiResponse<null>> {
-    const res = await api.post("/auth/signup", {
+    return api.post("/auth/signup", {
       ...data,
       knownSkills,
       skillsToLearn,
     });
-    return res.data;
   }
 
   async logOut(): Promise<ApiResponse<null>> {
-    const res = await api.delete("/auth/logout");
-    return res.data;
+    return api.delete("/auth/logout");
   }
 }
 

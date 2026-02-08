@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   BadRequestException,
   Injectable,
   InternalServerErrorException,
@@ -20,13 +21,29 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
   async signup(
     dto: CreateAuthDto,
   ): Promise<{ access_token: string; refresh_token: string }> {
     if (dto.password !== dto.confirmPassword) {
       throw new BadRequestException();
     }
+
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ name: dto.name }, { email: dto.email }],
+      },
+    });
+
+    if (existingUser) {
+      if (existingUser.name === dto.name) {
+        throw new ConflictException('User with this name already exists');
+      }
+      if (existingUser.email === dto.email) {
+        throw new ConflictException('User with this email already exists');
+      }
+    }
+
     const hashedPassword = await bcrypt.hash(dto.password, 10);
     const user = await this.prisma.user.create({
       data: {

@@ -248,7 +248,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
                                     </button>
                                     {inputKnown.length >= 2 && renderSkillSearch("known", inputKnown, setInputKnown)}
                                 </div>
-                                <div className="flex gap-2 flex-wrap min-h-6">
+                                <div className="flex gap-2 flex-wrap">
                                     {knownSkills.map((skill: string) => (
                                         <span key={skill} className="bg-violet/10 text-violet px-3 py-1 rounded-full text-xs flex items-center gap-1 border border-violet/20">
                                             {skill}
@@ -280,7 +280,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
                                     </button>
                                     {inputToLearn.length >= 2 && renderSkillSearch("learn", inputToLearn, setInputToLearn)}
                                 </div>
-                                <div className="flex gap-2 flex-wrap min-h-6">
+                                <div className="flex gap-2 flex-wrap">
                                     {skillsToLearn.map((skill: string) => (
                                         <span key={skill} className="bg-cyan-500/10 text-cyan-600 px-3 py-1 rounded-full text-xs flex items-center gap-1 border border-cyan-500/20">
                                             {skill}
