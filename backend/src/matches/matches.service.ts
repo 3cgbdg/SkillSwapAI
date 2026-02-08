@@ -19,7 +19,7 @@ export class MatchesService {
     private readonly prisma: PrismaService,
     private readonly aiService: AiService,
     private readonly friendsService: FriendsService,
-  ) {}
+  ) { }
   async generateActiveMatch(
     myId: string,
     otherId: string,
@@ -125,26 +125,28 @@ export class MatchesService {
       (skill) => skill.title,
     );
     const knownSkillsTitles = myUser.knownSkills.map((skill) => skill.title);
+
     const users = await this.prisma.user.findMany({
-      where: { knownSkills: { some: { title: { in: skillsToLearnTitles } } } },
+      where: {
+        knownSkills: { some: { title: { in: skillsToLearnTitles } } },
+        NOT: [
+          { friendOf: { some: { id: myId } } },
+          { friends: { some: { id: myId } } },
+          { id: myId },
+        ],
+      },
       include: { knownSkills: true, skillsToLearn: true },
+      take: 9,
+      orderBy: {
+        knownSkills: { _count: 'desc' },
+        skillsToLearn: { _count: 'desc' }
+
+      }
     });
-    const updatedUsers = users.filter((other) => other.id != myId);
-    // checker for being in friendship
-    const checker = new FriendChecker(myUser);
-    const sortedUsers = updatedUsers
+
+    return users
       .map((user) => {
-        const knowsMySkills = user.knownSkills.some((skill) =>
-          skillsToLearnTitles.includes(skill.title),
-        );
-        const wantsMySkills = user.skillsToLearn.some((skill) =>
-          knownSkillsTitles.includes(skill.title),
-        );
-        const score = (knowsMySkills ? 1 : 0) + (wantsMySkills ? 1 : 0);
-        const isFriend = checker.isFriend(user);
         return {
-          score,
-          isFriend,
           other: {
             name: user.name,
             id: user.id,
@@ -154,8 +156,5 @@ export class MatchesService {
           },
         };
       })
-      .sort((a, b) => b.score - a.score);
-    const usersForMatch = sortedUsers.slice(0, 9);
-    return usersForMatch;
   }
 }
