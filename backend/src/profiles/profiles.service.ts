@@ -14,7 +14,7 @@ export class ProfilesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly s3Service: S3Service,
-  ) {}
+  ) { }
 
   async findOne(id: string): Promise<ReturnDataType<any>> {
     const profile = await this.prisma.user.findFirst({
@@ -101,5 +101,48 @@ export class ProfilesService {
     });
 
     return { data: user?.aiSuggestionSkills ?? null };
+  }
+
+  async findOrCreateGoogleUser(profile: any): Promise<User> {
+    const { id, emails, name, photos } = profile;
+    if (!emails || emails.length === 0) {
+      throw new InternalServerErrorException('Google profile must include an email');
+    }
+    const email = emails[0].value;
+
+    let user = await this.prisma.user.findFirst({
+      where: { googleId: id}
+    });
+
+    if (user) {
+      if (!user.googleId) {
+        user.googleId = id;
+        user.firstName = name?.givenName;
+        user.lastName = name?.familyName;
+        user.imageUrl = photos?.[0]?.value;
+        await this.prisma.user.update({
+          where: { id: user.id },
+          data: {
+            googleId: id,
+            firstName: name?.givenName,
+            lastName: name?.familyName,
+            imageUrl: photos?.[0]?.value,
+          },
+        });
+      }
+      return user;
+    }
+
+    user = await this.prisma.user.create({
+      data: {
+        googleId: id,
+        email,
+        firstName: name?.givenName,
+        lastName: name?.familyName,
+        imageUrl: photos?.[0]?.value,
+      },
+    });
+
+    return user;
   }
 }

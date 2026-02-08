@@ -8,5 +8,6 @@ import { S3Module } from 'src/s3/s3module';
   imports: [PrismModule, S3Module],
   controllers: [ProfilesController],
   providers: [ProfilesService],
+  exports: [ProfilesService],
 })
 export class ProfilesModule {}

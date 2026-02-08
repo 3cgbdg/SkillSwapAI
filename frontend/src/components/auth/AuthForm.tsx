@@ -8,7 +8,7 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import { Mail, Lock, User, Plus, X } from "lucide-react";
+import { Mail, Lock, User, X } from "lucide-react";             
 
 import FullSreenLoader from "@/components/FullSreenLoader";
 import Spinner from "@/components/Spinner";
@@ -327,6 +327,14 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
                     <span className="text-gray-400 text-xs font-bold px-2">OR</span>
                     <div className="grow border-t border-neutral-200"></div>
                 </div>
+
+                <Link
+                    href={`${process.env.NEXT_PUBLIC_API_URL}/auth/google`}
+                    className="flex items-center justify-center gap-3 w-full py-3.5 px-4 mb-4 _border rounded-xl font-semibold hover:bg-neutral-50 transition-colors"
+                >
+
+                    <span>Continue with Google</span>
+                </Link>
 
                 <div className="flex items-center gap-1 text-sm font-medium">
                     <span className="text-gray-500">
