@@ -1,11 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { getSearchDto } from './dto/get-search.dto';
 import { PrismaService } from 'prisma/prisma.service';
+import { ReturnDataType } from 'types/general';
 
 @Injectable()
 export class SearchService {
-  constructor(private readonly prisma: PrismaService) {}
-  async findAll(dto: getSearchDto, myId: string) {
+  constructor(private readonly prisma: PrismaService) { }
+  async findAll(
+    dto: getSearchDto,
+    myId: string,
+  ): Promise<ReturnDataType<any[]>> {
     const skills = await this.prisma.skill.findMany({
       where: { title: { contains: dto.chars, mode: 'insensitive' } },
       include: {
@@ -36,6 +40,6 @@ export class SearchService {
         !skill.knownBy.some((user) => user.id === myId) &&
         !skill.learnedBy.some((user) => user.id === myId),
     );
-    return [...newSkills, ...newUsers];
+    return { data: [...newSkills, ...newUsers] };
   }
 }

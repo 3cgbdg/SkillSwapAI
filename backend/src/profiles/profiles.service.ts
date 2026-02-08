@@ -7,6 +7,7 @@ import { User } from '@prisma/client';
 import { PrismaService } from 'prisma/prisma.service';
 import { S3Service } from 'src/s3/s3.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { IReturnMessage, ReturnDataType } from 'types/general';
 
 @Injectable()
 export class ProfilesService {
@@ -15,7 +16,7 @@ export class ProfilesService {
     private readonly s3Service: S3Service,
   ) {}
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<ReturnDataType<any>> {
     const profile = await this.prisma.user.findFirst({
       where: { id: id },
       include: {
@@ -23,29 +24,27 @@ export class ProfilesService {
         knownSkills: { select: { title: true } },
       },
     });
-    if (profile) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password, ...user } = profile;
-      return user;
-    }
-    return null;
+    if (!profile) return { data: null };
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...user } = profile;
+    return { data: user };
   }
 
   async uploadImage(
     file: Express.Multer.File,
     key: string,
     myId: string,
-  ): Promise<{ url: string; message: string }> {
+  ): Promise<ReturnDataType<{ url: string }>> {
     const url = await this.s3Service.uploadFile(file, key);
     if (url)
       await this.prisma.user.update({
         where: { id: myId },
         data: { imageUrl: url },
       });
-    return { url, message: 'Image is successfully uploaded' };
+    return { data: { url }, message: 'Image is successfully uploaded' };
   }
 
-  async deleteImage(user: User): Promise<{ message: string }> {
+  async deleteImage(user: User): Promise<IReturnMessage> {
     const hasAvatarImage = user.imageUrl ?? null;
     if (!hasAvatarImage) {
       throw new BadRequestException('There`s no avatar-image');
@@ -70,7 +69,7 @@ export class ProfilesService {
   async updateProfile(
     dto: UpdateProfileDto,
     user: User,
-  ): Promise<{ message: string }> {
+  ): Promise<IReturnMessage> {
     const dataToUpdate = (
       Object.keys(dto) as (keyof UpdateProfileDto)[]
     ).reduce((acc, key) => {
@@ -96,7 +95,7 @@ export class ProfilesService {
 
   async getPollingDataAiSuggestions(
     id: string,
-  ): Promise<{ data: string[] | null }> {
+  ): Promise<ReturnDataType<string[] | null>> {
     const user = await this.prisma.user.findUnique({
       where: { id },
     });

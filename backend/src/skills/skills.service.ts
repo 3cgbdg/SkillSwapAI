@@ -3,19 +3,20 @@ import { PrismaService } from 'prisma/prisma.service';
 import { getSkillsDto } from './dto/get-skills.dto';
 import { SkillDto } from './dto/skills.dto';
 import { User } from '@prisma/client';
+import { IReturnMessage, ReturnDataType } from 'types/general';
 
 @Injectable()
 export class SkillsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
-  async findAll(dto: getSkillsDto) {
+  async findAll(dto: getSkillsDto): Promise<ReturnDataType<any[]>> {
     const skills = await this.prisma.skill.findMany({
       where: { title: { contains: dto.chars, mode: 'insensitive' } },
     });
-    return skills;
+    return { data: skills };
   }
 
-  async addKnownSkill(userId: string, dto: SkillDto) {
+  async addKnownSkill(userId: string, dto: SkillDto): Promise<IReturnMessage> {
     let skill = await this.prisma.skill.findUnique({
       where: { title: dto.title },
     });
@@ -29,7 +30,11 @@ export class SkillsService {
     return { message: 'Successfully added!' };
   }
 
-  async addWantToLearnSkill(user: User, dto: SkillDto, aiGenerated: boolean) {
+  async addWantToLearnSkill(
+    user: User,
+    dto: SkillDto,
+    aiGenerated: boolean,
+  ): Promise<IReturnMessage> {
     let skill = await this.prisma.skill.findUnique({
       where: { title: dto.title },
     });
@@ -58,7 +63,7 @@ export class SkillsService {
     return { message: 'Successfully added!' };
   }
 
-  async deleteKnownSkill(userId: string, dto: SkillDto) {
+  async deleteKnownSkill(userId: string, dto: SkillDto): Promise<IReturnMessage> {
     await this.prisma.user.update({
       where: { id: userId },
       data: { knownSkills: { disconnect: { title: dto.title } } },
@@ -66,7 +71,10 @@ export class SkillsService {
     return { message: 'Successfully removed!' };
   }
 
-  async deleteWantToLearnSkill(userId: string, dto: SkillDto) {
+  async deleteWantToLearnSkill(
+    userId: string,
+    dto: SkillDto,
+  ): Promise<IReturnMessage> {
     await this.prisma.user.update({
       where: { id: userId },
       data: { skillsToLearn: { disconnect: { title: dto.title } } },

@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { CreateChatDto } from './dto/create-chat.dto';
+import { ReturnDataType } from 'types/general';
 
 @Injectable()
 export class ChatsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
-  async findOne(myId: string, friendId: string) {
+  async findOne(myId: string, friendId: string): Promise<ReturnDataType<any[]>> {
     const chat = await this.prisma.chat.findFirst({
       where: {
         AND: [
@@ -17,80 +18,55 @@ export class ChatsService {
       include: { messages: { orderBy: { createdAt: 'asc' } } },
     });
 
-    return [...(chat?.messages ?? [])];
+    const data = [...(chat?.messages ?? [])];
+    return { data };
   }
 
-  // later optimize it
-  async findAll(myId: string) {
-    const chats = await this.prisma.message.groupBy({
-      by: ['chatId'],
+  async findAll(myId: string): Promise<ReturnDataType<any>> {
+    const chats = await this.prisma.chat.findMany({
       where: {
-        OR: [{ fromId: myId }, { toId: myId }],
+        users: { some: { id: myId } },
       },
-      _max: { createdAt: true },
-      _count: { id: true },
-    });
-    if (chats.length > 0) {
-      const lastMessages = await this.prisma.message.findMany({
-        where: {
-          OR: [{ fromId: myId }, { toId: myId }],
+      include: {
+        users: {
+          where: { id: { not: myId } },
+          select: { id: true, name: true, imageUrl: true },
         },
-        orderBy: { createdAt: 'desc' },
-        distinct: ['chatId'],
-        include: {
-          from: { select: { id: true, name: true, imageUrl: true } },
-          to: { select: { id: true, name: true, imageUrl: true } },
+        messages: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
         },
-      });
-
-      const newChats = await Promise.all(
-        chats.map(async (chat) => {
-          const lastMsg = lastMessages.find((msg) => msg.chatId == chat.chatId);
-          if (!lastMsg) {
-            return {
-              ...chat,
-              lastMessageContent: null,
-              friend: null,
-            };
-          }
-
-          const friend = lastMsg.fromId === myId ? lastMsg.to : lastMsg.from;
-
-          return {
-            ...chat,
-            _count: {
-              id: await this.prisma.message.count({
-                where: { toId: myId, chatId: chat.chatId, isSeen: false },
-              }),
+        _count: {
+          select: {
+            messages: {
+              where: {
+                toId: myId,
+                isSeen: false,
+              },
             },
-            lastMessageContent: lastMsg.content,
-            friend,
-          };
-        }),
-      );
-
-      return newChats;
-    } else {
-      const chats = await this.prisma.chat.findMany({
-        where: { users: { some: { id: myId } } },
-        include: {
-          users: {
-            where: { NOT: { id: myId } },
-            select: { id: true, name: true, imageUrl: true },
           },
         },
-      });
-      const newChats = chats.map((chat) => {
-        return {
-          chatId: chat.id,
-          friend: chat.users[0],
-        };
-      });
-      return newChats;
-    }
+      },
+    });
+    const data = chats.map((chat) => {
+      const lastMsg = chat.messages[0];
+      return {
+        chatId: chat.id,
+        friend: chat.users[0] || null,
+        lastMessageContent: lastMsg?.content || null,
+        _count: {
+          id: chat._count.messages,
+        },
+        lastMessageAt: lastMsg?.createdAt || null,
+      };
+    });
+    return { data };
   }
 
-  async createChat(dto: CreateChatDto, myId: string) {
+  async createChat(
+    dto: CreateChatDto,
+    myId: string,
+  ): Promise<ReturnDataType<any>> {
     let chat = await this.prisma.chat.findFirst({
       where: {
         users: { some: { id: myId } },
@@ -107,12 +83,11 @@ export class ChatsService {
         },
       });
     }
-    return {
-      chat: {
-        chatId: chat.id,
-        friend: { name: dto.friendName, id: dto.friendId },
-        lastMessageContent: null,
-      },
+    const data = {
+      chatId: chat.id,
+      friend: { name: dto.friendName, id: dto.friendId },
+      lastMessageContent: null,
     };
+    return { data };
   }
 }

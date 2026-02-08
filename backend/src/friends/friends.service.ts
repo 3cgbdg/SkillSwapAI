@@ -6,14 +6,15 @@ import {
 import { CreateFriendDto } from './dto/create-friend.dto';
 import { PrismaService } from 'prisma/prisma.service';
 import { ChatGateway } from 'src/webSockets/chat.gateway';
+import { IReturnMessage, ReturnDataType } from 'types/general';
 
 @Injectable()
 export class FriendsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly chatGateway: ChatGateway,
-  ) {}
-  async create(dto: CreateFriendDto, id: string) {
+  ) { }
+  async create(dto: CreateFriendDto, id: string): Promise<IReturnMessage> {
     const user = await this.prisma.user.findUnique({ where: { id: dto.id } });
     if (!user) throw new NotFoundException();
     const friends = await this.prisma.friendship.findMany({
@@ -36,23 +37,26 @@ export class FriendsService {
     return { message: `${user.name} successfully added to friends!` };
   }
 
-  async findAll(id: string) {
-    const friends1 = await this.prisma.friendship.findMany({
-      where: { user1Id: id },
-      include: { user2: { select: { id: true, name: true, imageUrl: true } } },
+  async findAll(id: string): Promise<ReturnDataType<any>> {
+    const friends = await this.prisma.friendship.findMany({
+      where: {
+        OR: [{ user1Id: id }, { user2Id: id }],
+      },
+      include: {
+        user1: { select: { id: true, name: true, imageUrl: true } },
+        user2: { select: { id: true, name: true, imageUrl: true } },
+      },
     });
-    const friends2 = await this.prisma.friendship.findMany({
-      where: { user2Id: id },
-      include: { user1: { select: { id: true, name: true, imageUrl: true } } },
+    const data = friends.map((f) => {
+      if (f.user1Id == id) {
+        return f.user2;
+      } else return f.user1;
     });
-    return [
-      ...friends1.map((item) => item.user2),
-      ...friends2.map((item) => item.user1),
-    ];
+    return { data };
   }
 
-  async getOnlineFriends(myId: string): Promise<string[]> {
-    const friends = await this.chatGateway.getCurrentOnlineFriends(myId);
-    return friends;
+  async getOnlineFriends(myId: string): Promise<ReturnDataType<string[]>> {
+    const data = await this.chatGateway.getCurrentOnlineFriends(myId);
+    return { data };
   }
 }

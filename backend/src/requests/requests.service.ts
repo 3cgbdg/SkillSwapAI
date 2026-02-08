@@ -7,17 +7,19 @@ import {
 import { CreateRequestDto } from './dto/create-request.dto';
 import { PrismaService } from 'prisma/prisma.service';
 import { RequestGateway } from 'src/webSockets/request.gateway';
+import { IReturnMessage, ReturnDataType } from 'types/general';
 
 @Injectable()
 export class RequestsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly requestGateway: RequestGateway,
-  ) {}
+  ) { }
+
   async createForFriendship(
     dto: CreateRequestDto,
     userId: string,
-  ): Promise<{ message: string }> {
+  ): Promise<IReturnMessage> {
     if (dto.id) {
       const exist = await this.prisma.request.findFirst({
         where: {
@@ -27,7 +29,10 @@ export class RequestsService {
           ],
         },
       });
-      if (exist) throw new BadRequestException();
+      if (exist)
+        throw new BadRequestException(
+          'Friend request already exists or is pending.',
+        );
       const request = await this.prisma.request.create({
         data: { toId: dto.id, fromId: userId, type: 'FRIEND' },
         include: {
@@ -43,6 +48,18 @@ export class RequestsService {
         select: { id: true },
       });
       if (foundUser) {
+        const exist = await this.prisma.request.findFirst({
+          where: {
+            OR: [
+              { fromId: userId, toId: foundUser.id },
+              { fromId: foundUser.id, toId: userId },
+            ],
+          },
+        });
+        if (exist)
+          throw new BadRequestException(
+            'Friend request already exists or is pending.',
+          );
         const request = await this.prisma.request.create({
           data: { toId: foundUser.id, fromId: userId, type: 'FRIEND' },
           include: {
@@ -58,8 +75,8 @@ export class RequestsService {
     }
   }
 
-  async findAll(userId: string) {
-    const reqs = await this.prisma.request.findMany({
+  async findAll(userId: string): Promise<ReturnDataType<any>> {
+    const data = await this.prisma.request.findMany({
       where: { toId: userId },
       include: {
         from: { select: { name: true } },
@@ -67,7 +84,7 @@ export class RequestsService {
         to: { select: { name: true } },
       },
     });
-    return reqs;
+    return { data };
   }
 
   async createForSession(sessionId: string, myId: string, friendId: string) {
@@ -127,8 +144,9 @@ export class RequestsService {
       throw new InternalServerErrorException();
     }
   }
-  async deleteOne(requestId: string) {
+
+  async deleteOne(requestId: string): Promise<IReturnMessage> {
     const req = await this.prisma.request.delete({ where: { id: requestId } });
-    return req.id;
+    return { message: `Request with ID ${req.id} successfully deleted` };
   }
 }

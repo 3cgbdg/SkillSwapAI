@@ -9,6 +9,7 @@ import { firstValueFrom } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
 import { IGeneratedActiveMatch } from './ai.interface';
 import { PrismaService } from 'prisma/prisma.service';
+import { ReturnDataType } from 'types/general';
 import { User } from '@prisma/client';
 import { AxiosResponse } from 'axios';
 
@@ -22,7 +23,7 @@ export class AiService {
     private readonly prisma: PrismaService,
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
   async generateBodyForActiveMatch(
     myId: string,
     otherId: string,
@@ -79,9 +80,9 @@ export class AiService {
 
       return readyAiArray
         ? {
-            generatedData: readyAiArray,
-            other: users[0].id == myId ? users[1] : users[0],
-          }
+          generatedData: readyAiArray,
+          other: users[0].id == myId ? users[1] : users[0],
+        }
         : null;
     } else {
       throw new BadRequestException();
@@ -90,7 +91,7 @@ export class AiService {
 
   async getAiSuggestionSkills(
     myId: string,
-  ): Promise<{ skills: string[]; message: string } | null> {
+  ): Promise<ReturnDataType<string[]> | null> {
     if (!myId || myId.length == 0) {
       throw new BadRequestException();
     }
@@ -158,7 +159,7 @@ export class AiService {
       data: { lastSkillsGenerationDate: new Date() },
     });
     return returnAiArray
-      ? { skills: returnAiArray, message: 'Skills successfully generated!' }
+      ? { data: returnAiArray, message: 'Skills successfully generated!' }
       : null;
   }
 

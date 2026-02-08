@@ -7,9 +7,9 @@ import {
 import { Match } from '@prisma/client';
 import { PrismaService } from 'prisma/prisma.service';
 import { AiService } from 'src/ai/ai.service';
-import { FriendChecker } from 'src/common/utils/FriendChecker';
 import { FriendsService } from 'src/friends/friends.service';
 import { PlansService } from 'src/plans/plans.service';
+import { ReturnDataType } from 'types/general';
 import { IMatchResponse } from 'types/matches';
 
 @Injectable()
@@ -19,11 +19,11 @@ export class MatchesService {
     private readonly prisma: PrismaService,
     private readonly aiService: AiService,
     private readonly friendsService: FriendsService,
-  ) {}
+  ) { }
   async generateActiveMatch(
     myId: string,
     otherId: string,
-  ): Promise<{ match: Match; message: string }> {
+  ): Promise<ReturnDataType<Match>> {
     const existedMatchesForThisUsers = await this.prisma.match.findMany({
       where: {
         OR: [
@@ -70,13 +70,16 @@ export class MatchesService {
       activeMatch.id,
       result.generatedData.modules,
     );
+    const data = activeMatch;
     return {
-      match: activeMatch,
+      data,
       message: 'Active match has been successfully generated',
     };
   }
 
-  async getActiveMatches(myId: string): Promise<IMatchResponse[]> {
+  async getActiveMatches(
+    myId: string,
+  ): Promise<ReturnDataType<IMatchResponse[]>> {
     const matches = await this.prisma.match.findMany({
       where: { OR: [{ initiatorId: myId }, { otherId: myId }] },
       include: {
@@ -101,16 +104,17 @@ export class MatchesService {
       },
     });
 
-    return matches.map((match) => {
+    const data = matches.map((match) => {
       const otherUser =
         match.initiator.id === myId ? match.other : match.initiator;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { initiator, ...newMatch } = match;
       return { ...newMatch, other: otherUser };
     });
+    return { data };
   }
 
-  async getAvailableMatches(myId: string) {
+  async getAvailableMatches(myId: string): Promise<ReturnDataType<any>> {
     const myUser = await this.prisma.user.findUnique({
       where: { id: myId },
       include: {
@@ -124,38 +128,35 @@ export class MatchesService {
     const skillsToLearnTitles = myUser.skillsToLearn.map(
       (skill) => skill.title,
     );
-    const knownSkillsTitles = myUser.knownSkills.map((skill) => skill.title);
+
     const users = await this.prisma.user.findMany({
-      where: { knownSkills: { some: { title: { in: skillsToLearnTitles } } } },
+      where: {
+        knownSkills: { some: { title: { in: skillsToLearnTitles } } },
+        NOT: [
+          { friendOf: { some: { user1Id: myId } } },
+          { friends: { some: { user2Id: myId } } },
+          { id: myId },
+        ],
+      },
       include: { knownSkills: true, skillsToLearn: true },
+      take: 9,
+      orderBy: [
+        { knownSkills: { _count: 'desc' } },
+        { skillsToLearn: { _count: 'desc' } },
+      ],
     });
-    const updatedUsers = users.filter((other) => other.id != myId);
-    // checker for being in friendship
-    const checker = new FriendChecker(myUser);
-    const sortedUsers = updatedUsers
-      .map((user) => {
-        const knowsMySkills = user.knownSkills.some((skill) =>
-          skillsToLearnTitles.includes(skill.title),
-        );
-        const wantsMySkills = user.skillsToLearn.some((skill) =>
-          knownSkillsTitles.includes(skill.title),
-        );
-        const score = (knowsMySkills ? 1 : 0) + (wantsMySkills ? 1 : 0);
-        const isFriend = checker.isFriend(user);
-        return {
-          score,
-          isFriend,
-          other: {
-            name: user.name,
-            id: user.id,
-            imageUrl: user.imageUrl,
-            skillsToLearn: user.skillsToLearn,
-            knownSkills: user.knownSkills,
-          },
-        };
-      })
-      .sort((a, b) => b.score - a.score);
-    const usersForMatch = sortedUsers.slice(0, 9);
-    return usersForMatch;
+
+    const data = users.map((user) => {
+      return {
+        other: {
+          name: user.name,
+          id: user.id,
+          imageUrl: user.imageUrl,
+          skillsToLearn: user.skillsToLearn,
+          knownSkills: user.knownSkills,
+        },
+      };
+    });
+    return { data };
   }
 }

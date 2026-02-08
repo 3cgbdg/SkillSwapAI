@@ -21,6 +21,7 @@ import { PrismaService } from 'prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
 import type { RequestWithUser, JwtPayload } from 'types/auth';
+import type { IReturnMessage, ReturnDataType } from 'types/general';
 
 @Controller('auth')
 export class AuthController {
@@ -35,7 +36,7 @@ export class AuthController {
   async signup(
     @Body() createAuthDto: CreateAuthDto,
     @Res() res: Response,
-  ): Promise<Response<any, Record<string, any>>> {
+  ): Promise<Response<IReturnMessage>> {
     const response = await this.authService.signup(createAuthDto);
 
     res.cookie('access_token', response.access_token, {
@@ -65,7 +66,7 @@ export class AuthController {
   async login(
     @Body() LoginAuthDto: LoginAuthDto,
     @Res() res: Response,
-  ): Promise<Response<any, Record<string, any>>> {
+  ): Promise<Response<IReturnMessage>> {
     const response = await this.authService.login(LoginAuthDto);
     res.cookie('access_token', response.access_token, {
       httpOnly: true,
@@ -94,25 +95,22 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   async profile(
     @Req() request: RequestWithUser,
-  ): Promise<Omit<User, 'password'> | null> {
+  ): Promise<ReturnDataType<Omit<User, 'password'>>> {
     const user = await this.prisma.user.findUnique({
       where: { id: request.user.id },
       include: { skillsToLearn: true, knownSkills: true },
     });
-    if (user) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password, ...returnData } = user;
-      console.log(returnData);
-      return returnData;
-    }
-    return null;
+    if (!user) throw new NotFoundException();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...returnData } = user;
+    return { data: returnData };
   }
 
   @Post('refresh')
   async refreshToken(
     @Req() req: Request,
     @Res() res: Response,
-  ): Promise<Response<any, Record<string, any>>> {
+  ): Promise<Response<IReturnMessage>> {
     const refreshToken = (req.cookies as Record<string, string | undefined>)[
       'refresh_token'
     ];
@@ -150,7 +148,7 @@ export class AuthController {
   }
 
   @Delete('logout')
-  logout(@Res({ passthrough: true }) res: Response): { message: string } {
+  logout(@Res({ passthrough: true }) res: Response): IReturnMessage {
     res.clearCookie('access_token', {
       httpOnly: true,
       secure: this.configService.get<string>('NODE_ENV') === 'production',
