@@ -12,7 +12,7 @@ export class FriendsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly chatGateway: ChatGateway,
-  ) { }
+  ) {}
   async create(dto: CreateFriendDto, id: string) {
     const user = await this.prisma.user.findUnique({ where: { id: dto.id } });
     if (!user) throw new NotFoundException();
@@ -37,35 +37,20 @@ export class FriendsService {
   }
 
   async findAll(id: string) {
-    const friends1 = await this.prisma.friendship.findMany({
-      where: { user1Id: id },
-      include: { user2: { select: { id: true, name: true, imageUrl: true } } },
-    });
-    const friends2 = await this.prisma.friendship.findMany({
-      where: { user2Id: id },
-      include: { user1: { select: { id: true, name: true, imageUrl: true } } },
-    });
-
     const friends = await this.prisma.friendship.findMany({
       where: {
-        OR: [
-          { user1Id: id },
-          { user2Id: id },
-        ],
+        OR: [{ user1Id: id }, { user2Id: id }],
       },
       include: {
         user1: { select: { id: true, name: true, imageUrl: true } },
         user2: { select: { id: true, name: true, imageUrl: true } },
       },
     });
-    return friends.map(f => {
+    return friends.map((f) => {
       if (f.user1Id == id) {
-        return f.user2
-      }
-      else return f.user1
-    })
-
-
+        return f.user2;
+      } else return f.user1;
+    });
   }
 
   async getOnlineFriends(myId: string): Promise<string[]> {

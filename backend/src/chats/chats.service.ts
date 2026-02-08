@@ -4,7 +4,7 @@ import { CreateChatDto } from './dto/create-chat.dto';
 
 @Injectable()
 export class ChatsService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async findOne(myId: string, friendId: string) {
     const chat = await this.prisma.chat.findFirst({
@@ -21,7 +21,6 @@ export class ChatsService {
   }
 
   async findAll(myId: string) {
-
     const chats = await this.prisma.chat.findMany({
       where: {
         users: { some: { id: myId } },
@@ -48,17 +47,17 @@ export class ChatsService {
       },
     });
     return chats.map((chat) => {
-    const lastMsg = chat.messages[0];
-    return {
-      chatId: chat.id,
-      friend: chat.users[0] || null,
-      lastMessageContent: lastMsg?.content || null,
-      _count: {
-        id: chat._count.messages,
-      },
-      lastMessageAt: lastMsg?.createdAt || null,
-    };
-  });
+      const lastMsg = chat.messages[0];
+      return {
+        chatId: chat.id,
+        friend: chat.users[0] || null,
+        lastMessageContent: lastMsg?.content || null,
+        _count: {
+          id: chat._count.messages,
+        },
+        lastMessageAt: lastMsg?.createdAt || null,
+      };
+    });
   }
 
   async createChat(dto: CreateChatDto, myId: string) {

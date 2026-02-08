@@ -29,7 +29,7 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
-  ) { }
+  ) {}
 
   @Post('signup')
   async signup(
@@ -37,7 +37,6 @@ export class AuthController {
     @Res() res: Response,
   ): Promise<Response<any, Record<string, any>>> {
     const response = await this.authService.signup(createAuthDto);
-
 
     res.cookie('access_token', response.access_token, {
       httpOnly: true,

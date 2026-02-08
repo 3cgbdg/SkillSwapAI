@@ -7,7 +7,6 @@ import {
 import { Match } from '@prisma/client';
 import { PrismaService } from 'prisma/prisma.service';
 import { AiService } from 'src/ai/ai.service';
-import { FriendChecker } from 'src/common/utils/FriendChecker';
 import { FriendsService } from 'src/friends/friends.service';
 import { PlansService } from 'src/plans/plans.service';
 import { IMatchResponse } from 'types/matches';
@@ -124,14 +123,13 @@ export class MatchesService {
     const skillsToLearnTitles = myUser.skillsToLearn.map(
       (skill) => skill.title,
     );
-    const knownSkillsTitles = myUser.knownSkills.map((skill) => skill.title);
 
     const users = await this.prisma.user.findMany({
       where: {
         knownSkills: { some: { title: { in: skillsToLearnTitles } } },
         NOT: [
-          { friendOf: { some: { id: myId } } },
-          { friends: { some: { id: myId } } },
+          { friendOf: { some: { user1Id: myId } } },
+          { friends: { some: { user2Id: myId } } },
           { id: myId },
         ],
       },
@@ -139,22 +137,20 @@ export class MatchesService {
       take: 9,
       orderBy: {
         knownSkills: { _count: 'desc' },
-        skillsToLearn: { _count: 'desc' }
-
-      }
+        skillsToLearn: { _count: 'desc' },
+      },
     });
 
-    return users
-      .map((user) => {
-        return {
-          other: {
-            name: user.name,
-            id: user.id,
-            imageUrl: user.imageUrl,
-            skillsToLearn: user.skillsToLearn,
-            knownSkills: user.knownSkills,
-          },
-        };
-      })
+    return users.map((user) => {
+      return {
+        other: {
+          name: user.name,
+          id: user.id,
+          imageUrl: user.imageUrl,
+          skillsToLearn: user.skillsToLearn,
+          knownSkills: user.knownSkills,
+        },
+      };
+    });
   }
 }
