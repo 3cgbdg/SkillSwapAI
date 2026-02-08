@@ -4,6 +4,7 @@ import { PrismaService } from 'prisma/prisma.service';
 import { RequestsService } from 'src/requests/requests.service';
 import { RequestGateway } from 'src/webSockets/request.gateway';
 import { UpdateSessionStatusDto } from './dto/update-session-status.dto';
+import { IReturnMessage, ReturnDataType } from 'types/general';
 
 @Injectable()
 export class SessionsService {
@@ -11,11 +12,11 @@ export class SessionsService {
     private readonly prisma: PrismaService,
     private readonly requests: RequestsService,
     private readonly requestGateway: RequestGateway,
-  ) {}
+  ) { }
   async create(
     dto: CreateSessionDto,
     myId: string,
-  ): Promise<{ message: string; session: any }> {
+  ): Promise<ReturnDataType<any>> {
     const now = new Date();
     const overlappingSessions = await this.prisma.session.findMany({
       where: {
@@ -69,30 +70,20 @@ export class SessionsService {
       dto.friendId,
     );
     this.requestGateway.notifyUserSession(dto.friendId, { request });
-    return friendship.user1.id == myId
-      ? {
-          message: 'Session has been successfully created',
-          session: {
-            ...session,
-            friend: {
-              id: friendship.user2.id,
-              name: friendship.user2.name,
-            },
-          },
-        }
-      : {
-          message: 'Session has been successfully created',
-          session: {
-            ...session,
-            friend: {
-              id: friendship.user1.id,
-              name: friendship.user1.name,
-            },
-          },
-        };
+    const data = {
+      ...session,
+      friend:
+        friendship.user1.id == myId
+          ? { id: friendship.user2.id, name: friendship.user2.name }
+          : { id: friendship.user1.id, name: friendship.user1.name },
+    };
+    return {
+      message: 'Session has been successfully created',
+      data,
+    };
   }
 
-  async findAll(month: number, myId: string) {
+  async findAll(month: number, myId: string): Promise<ReturnDataType<any[]>> {
     const currentDate = new Date();
     const year = currentDate.getFullYear();
     const firstDay = new Date(year, month, 1);
@@ -109,17 +100,17 @@ export class SessionsService {
         users: { select: { id: true, name: true } },
       },
     });
-    const newSessions = sessions.map((item) => {
+    const data = sessions.map((item) => {
       const { users, ...session } = item;
       const friend = users.find((user) => user.id !== myId);
       if (friend)
         return { ...session, friend: { id: friend.id, name: friend.name } };
       return session;
     });
-    return newSessions;
+    return { data };
   }
 
-  async findTodaysSessions(myId: string) {
+  async findTodaysSessions(myId: string): Promise<ReturnDataType<any[]>> {
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date();
@@ -136,21 +127,21 @@ export class SessionsService {
         users: { select: { id: true, name: true } },
       },
     });
-    const newSessions = sessions.map((item) => {
+    const data = sessions.map((item) => {
       const { users, ...session } = item;
       const friend = users.find((user) => user.id !== myId);
       if (friend)
         return { ...session, friend: { id: friend.id, name: friend.name } };
       return session;
     });
-    return newSessions;
+    return { data };
   }
 
   async acceptSessionRequest(
     dto: UpdateSessionStatusDto,
     myId: string,
     sessionId: string,
-  ) {
+  ): Promise<ReturnDataType<string>> {
     const session = await this.prisma.session.update({
       where: { id: sessionId },
       data: { status: 'AGREED' },
@@ -172,14 +163,15 @@ export class SessionsService {
     this.requestGateway.notifyUserAcceptedSession(originalReq.fromId, {
       request,
     });
-    return req.id;
+    return { data: req.id, message: 'Session request accepted' };
   }
+
   // rejecting the session request, in other words -- deleting the session
   async rejectSessionRequest(
     dto: UpdateSessionStatusDto,
     myId: string,
     sessionId: string,
-  ) {
+  ): Promise<ReturnDataType<string>> {
     const originalReq = await this.prisma.request.findUnique({
       where: { id: dto.requestId },
     });
@@ -200,6 +192,6 @@ export class SessionsService {
     this.requestGateway.notifyUserRejectedSession(originalReq.fromId, {
       request,
     });
-    return req.id;
+    return { data: req.id, message: 'Session request rejected' };
   }
 }

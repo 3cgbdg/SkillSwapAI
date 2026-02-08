@@ -9,6 +9,7 @@ import { PrismaService } from 'prisma/prisma.service';
 import { AiService } from 'src/ai/ai.service';
 import { FriendsService } from 'src/friends/friends.service';
 import { PlansService } from 'src/plans/plans.service';
+import { ReturnDataType } from 'types/general';
 import { IMatchResponse } from 'types/matches';
 
 @Injectable()
@@ -22,7 +23,7 @@ export class MatchesService {
   async generateActiveMatch(
     myId: string,
     otherId: string,
-  ): Promise<{ match: Match; message: string }> {
+  ): Promise<ReturnDataType<Match>> {
     const existedMatchesForThisUsers = await this.prisma.match.findMany({
       where: {
         OR: [
@@ -69,13 +70,16 @@ export class MatchesService {
       activeMatch.id,
       result.generatedData.modules,
     );
+    const data = activeMatch;
     return {
-      match: activeMatch,
+      data,
       message: 'Active match has been successfully generated',
     };
   }
 
-  async getActiveMatches(myId: string): Promise<IMatchResponse[]> {
+  async getActiveMatches(
+    myId: string,
+  ): Promise<ReturnDataType<IMatchResponse[]>> {
     const matches = await this.prisma.match.findMany({
       where: { OR: [{ initiatorId: myId }, { otherId: myId }] },
       include: {
@@ -100,16 +104,17 @@ export class MatchesService {
       },
     });
 
-    return matches.map((match) => {
+    const data = matches.map((match) => {
       const otherUser =
         match.initiator.id === myId ? match.other : match.initiator;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { initiator, ...newMatch } = match;
       return { ...newMatch, other: otherUser };
     });
+    return { data };
   }
 
-  async getAvailableMatches(myId: string) {
+  async getAvailableMatches(myId: string): Promise<ReturnDataType<any>> {
     const myUser = await this.prisma.user.findUnique({
       where: { id: myId },
       include: {
@@ -135,13 +140,13 @@ export class MatchesService {
       },
       include: { knownSkills: true, skillsToLearn: true },
       take: 9,
-      orderBy: {
-        knownSkills: { _count: 'desc' },
-        skillsToLearn: { _count: 'desc' },
-      },
+      orderBy: [
+        { knownSkills: { _count: 'desc' } },
+        { skillsToLearn: { _count: 'desc' } },
+      ],
     });
 
-    return users.map((user) => {
+    const data = users.map((user) => {
       return {
         other: {
           name: user.name,
@@ -152,5 +157,6 @@ export class MatchesService {
         },
       };
     });
+    return { data };
   }
 }

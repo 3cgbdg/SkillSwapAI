@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { CreateChatDto } from './dto/create-chat.dto';
+import { ReturnDataType } from 'types/general';
 
 @Injectable()
 export class ChatsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
-  async findOne(myId: string, friendId: string) {
+  async findOne(myId: string, friendId: string): Promise<ReturnDataType<any[]>> {
     const chat = await this.prisma.chat.findFirst({
       where: {
         AND: [
@@ -17,10 +18,11 @@ export class ChatsService {
       include: { messages: { orderBy: { createdAt: 'asc' } } },
     });
 
-    return [...(chat?.messages ?? [])];
+    const data = [...(chat?.messages ?? [])];
+    return { data };
   }
 
-  async findAll(myId: string) {
+  async findAll(myId: string): Promise<ReturnDataType<any>> {
     const chats = await this.prisma.chat.findMany({
       where: {
         users: { some: { id: myId } },
@@ -46,7 +48,7 @@ export class ChatsService {
         },
       },
     });
-    return chats.map((chat) => {
+    const data = chats.map((chat) => {
       const lastMsg = chat.messages[0];
       return {
         chatId: chat.id,
@@ -58,9 +60,13 @@ export class ChatsService {
         lastMessageAt: lastMsg?.createdAt || null,
       };
     });
+    return { data };
   }
 
-  async createChat(dto: CreateChatDto, myId: string) {
+  async createChat(
+    dto: CreateChatDto,
+    myId: string,
+  ): Promise<ReturnDataType<any>> {
     let chat = await this.prisma.chat.findFirst({
       where: {
         users: { some: { id: myId } },
@@ -77,12 +83,11 @@ export class ChatsService {
         },
       });
     }
-    return {
-      chat: {
-        chatId: chat.id,
-        friend: { name: dto.friendName, id: dto.friendId },
-        lastMessageContent: null,
-      },
+    const data = {
+      chatId: chat.id,
+      friend: { name: dto.friendName, id: dto.friendId },
+      lastMessageContent: null,
     };
+    return { data };
   }
 }
