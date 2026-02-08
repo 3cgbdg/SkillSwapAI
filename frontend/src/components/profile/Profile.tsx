@@ -62,14 +62,14 @@ const Profile = ({
     },
   });
 
-  const { data: pollingData } = useQuery({
+  const { data: pollingData } = useQuery<string[] | null>({
     queryKey: ["ai-suggestions", user?.id],
     queryFn: async () => {
-      const res = await ProfilesService.getPollingDataAiSuggestions();
-      if (res.data && res.data.length > 0) {
+      const data = await ProfilesService.getPollingDataAiSuggestions();
+      if (data && data.length > 0) {
         await queryClient.invalidateQueries({ queryKey: ["profile"] });
       }
-      return res.data;
+      return data || null;
     },
     refetchInterval: (query) => {
       const data = query.state.data;
@@ -143,7 +143,7 @@ const Profile = ({
               {isPending ? (
                 <Spinner color="blue" size={32} />
               ) : (user.aiSuggestionSkills && user.aiSuggestionSkills.length > 0) || (pollingData && pollingData.length > 0) ? (
-                (user.aiSuggestionSkills && user.aiSuggestionSkills.length > 0 ? user.aiSuggestionSkills : pollingData!).map((skill, idx) => (
+                ((user.aiSuggestionSkills && user.aiSuggestionSkills.length > 0 ? user.aiSuggestionSkills : pollingData) || []).map((skill: string, idx: number) => (
                   <div
                     key={idx}
                     className="not-last:border-b py-3 border-b-neutral-300"

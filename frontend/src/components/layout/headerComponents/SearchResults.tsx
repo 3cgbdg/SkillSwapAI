@@ -21,7 +21,7 @@ const SearchResults = ({
   return (
     <div className="flex flex-col gap-4 items-start text-sm font-semibold">
       {foundSkills.length > 0 && (
-        <div className="flex flex-col gap-2 pb-4 not-last:border-b-[1px] border-neutral-300 w-full">
+        <div className="flex flex-col gap-2 pb-4 not-last:border-b border-neutral-300 w-full">
           <h3 className="text-xl md:text-lg leading-9 md:leading-7 font-semibold md:font-medium">
             Skills
           </h3>

@@ -18,9 +18,9 @@ You should analyze patterns, industry trends, and logical skill progressions.
 Guidelines:
 1. Output must be a **pure JSON array of strings**, e.g.:
    ["Machine Learning", "GraphQL", "Docker", "UI Design"]
-2. Each skill name should be short, specific, and relevant to the given skills.
-3. Suggest **exactly 5 skills** that would be valuable to learn next.
-4. Focus on realistic and modern skills that complement both what the user knows and wants to learn.
+2. Each skill name should be short, specific, and relevant.
+3. Suggest **exactly 5 skills**.
+4. If the user provided no skills, suggest the most popular/trending skills for modern tech and design.
 5. Do not include explanations, descriptions, or any extra text — only valid JSON.
 
 Example:

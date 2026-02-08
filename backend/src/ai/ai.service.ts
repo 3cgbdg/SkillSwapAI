@@ -133,18 +133,22 @@ export class AiService {
       );
 
     const rawAiArray = fastApiResponse?.data?.AIReport;
+    console.log('AI Microservice raw response:', rawAiArray);
     const readyAiArray: string[] | null =
       this._parseAiResponse<string[]>(rawAiArray);
-    if (readyAiArray && readyAiArray.length > 0) {
-      await Promise.all(
-        readyAiArray.map(async (skill) => {
-          await this.prisma.skill.upsert({
-            where: { title: skill },
-            update: {},
-            create: { title: skill },
-          });
-        }),
-      );
+    console.log('Parsed AI array:', readyAiArray);
+    if (readyAiArray) {
+      if (readyAiArray.length > 0) {
+        await Promise.all(
+          readyAiArray.map(async (skill) => {
+            await this.prisma.skill.upsert({
+              where: { title: skill },
+              update: {},
+              create: { title: skill },
+            });
+          }),
+        );
+      }
       await this.prisma.user.update({
         where: { id: myId },
         data: {
@@ -171,7 +175,8 @@ export class AiService {
         return match
           ? (JSON.parse(match[1]) as T)
           : (JSON.parse(rawAiResponse) as T);
-      } catch {
+      } catch (e) {
+        console.error('Error parsing AI response:', e, 'Raw string:', rawAiResponse);
         return null;
       }
     } else {

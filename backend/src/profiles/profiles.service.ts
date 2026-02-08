@@ -8,12 +8,14 @@ import { PrismaService } from 'prisma/prisma.service';
 import { S3Service } from 'src/s3/s3.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { IReturnMessage, ReturnDataType } from 'types/general';
+import { AiService } from 'src/ai/ai.service';
 
 @Injectable()
 export class ProfilesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly s3Service: S3Service,
+    private readonly aiService: AiService,
   ) { }
 
   async findOne(id: string): Promise<ReturnDataType<any>> {
@@ -111,7 +113,7 @@ export class ProfilesService {
     const email = emails[0].value;
 
     let user = await this.prisma.user.findFirst({
-      where: { googleId: id}
+      where: { googleId: id }
     });
 
     if (user) {
@@ -142,6 +144,9 @@ export class ProfilesService {
         imageUrl: photos?.[0]?.value,
       },
     });
+
+    // generate ai suggestions for the new user
+    void this.aiService.getAiSuggestionSkills(user.id);
 
     return user;
   }

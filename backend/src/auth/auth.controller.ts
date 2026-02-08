@@ -43,7 +43,7 @@ export class AuthController {
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
-  async googleAuthRedirect(@Req() req: Request, @Res() res: Response): Promise<IReturnMessage> {
+  async googleAuthRedirect(@Req() req: Request, @Res() res: Response) {
     const profile = req.user as any;
     if (!profile) {
       throw new HttpException('Google authentication failed', HttpStatus.UNAUTHORIZED);
@@ -72,7 +72,8 @@ export class AuthController {
       maxAge: 1000 * 3600 * 24 * 7,
     });
 
-    return { message: 'Successfully logged in with Google!' };
+    const frontendUrl = this.configService.get<string>('CORS_ORIGIN') || 'http://localhost:3000';
+    return res.redirect(`${frontendUrl}/dashboard`);
   }
 
   @Post('signup')
