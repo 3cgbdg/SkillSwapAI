@@ -1,4 +1,4 @@
-import { IMatch } from "@/types/types";
+import { IMatch } from "@/types/match";
 import { api } from "./axiosInstance";
 
 class MatchesService {

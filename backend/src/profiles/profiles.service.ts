@@ -14,7 +14,7 @@ export class ProfilesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly s3Service: S3Service,
-  ) { }
+  ) {}
 
   async findOne(id: string): Promise<ReturnDataType<any>> {
     const profile = await this.prisma.user.findFirst({

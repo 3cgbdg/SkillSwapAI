@@ -7,7 +7,7 @@ import type { ReturnDataType } from 'types/general';
 @Controller('ai')
 @UseGuards(AuthGuard('jwt'))
 export class AiController {
-  constructor(private readonly aiService: AiService) { }
+  constructor(private readonly aiService: AiService) {}
 
   @Post('profile/skills')
   async getPlan(

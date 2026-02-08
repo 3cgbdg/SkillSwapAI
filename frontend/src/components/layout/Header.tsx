@@ -1,12 +1,12 @@
 "use client";
 
-import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
-import { addWantToLearnSkill, logOut } from "@/redux/authSlice";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSocket } from "@/context/SocketContext";
-import { Found, FoundSkills, FoundUsers, IRequest } from "@/types/types";
+import { IUser } from "@/types/auth";
+import { Found, FoundSkills, FoundUsers } from "@/types/common";
+import { IRequest } from "@/types/session";
 import AuthService from "@/services/AuthService";
 import RequestsService from "@/services/RequestsService";
 import SearchService from "@/services/SearchService";
@@ -26,7 +26,6 @@ const Header = () => {
   const [panel, setPanel] = useState<
     "avatarMenu" | "search" | "notifs" | "navMenu" | null
   >(null);
-  const dispatch = useAppDispatch();
   const router = useRouter();
   const [word, setWord] = useState<string>("");
   const [foundUsers, setFoundUsers] = useState<FoundUsers[]>([]);
@@ -39,7 +38,7 @@ const Header = () => {
   const mutation = useMutation({
     mutationFn: async () => await AuthService.logOut(),
     onSuccess: () => {
-      dispatch(logOut());
+      queryClient.clear();
       router.push("/auth/login");
     },
   });
@@ -205,7 +204,7 @@ const Header = () => {
 
   return (
     <div className="flex items-center justify-between bg-white py-[14px] px-2 md:px-6 relative ">
-      <div className="flex items-center gap-6 grow-1">
+      <div className="flex items-center gap-6 grow">
         <HeaderLogo />
       </div>
 
@@ -223,7 +222,17 @@ const Header = () => {
         }}
         onAddLearn={(skill) => {
           mutationAddLearn.mutate(skill);
-          dispatch(addWantToLearnSkill(skill));
+          queryClient.setQueryData(["profile"], (old: any) => {
+            if (!old) return old;
+            const newItem = {
+              id: "temporary-id",
+              title: skill,
+            };
+            return {
+              ...old,
+              skillsToLearn: [...(old.skillsToLearn || []), newItem],
+            };
+          });
         }}
         onCreateFriendRequest={(userId) => createFriendRequest({ id: userId })}
         onRemoveSkill={(skillId) =>
@@ -247,7 +256,17 @@ const Header = () => {
           }}
           onAddLearn={(skill) => {
             mutationAddLearn.mutate(skill);
-            dispatch(addWantToLearnSkill(skill));
+            queryClient.setQueryData(["profile"], (old: any) => {
+              if (!old) return old;
+              const newItem = {
+                id: "temporary-id",
+                title: skill,
+              };
+              return {
+                ...old,
+                skillsToLearn: [...(old.skillsToLearn || []), newItem],
+              };
+            });
           }}
           onCreateFriendRequest={(userId) =>
             createFriendRequest({ id: userId })

@@ -1,4 +1,5 @@
-import { ApiResponse, IUser } from "@/types/types";
+import { IUser } from "@/types/auth";
+import { ApiResponse } from "@/types/common";
 import { api } from "./axiosInstance";
 
 class ProfilesService {

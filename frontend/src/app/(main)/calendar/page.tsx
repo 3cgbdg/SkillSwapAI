@@ -1,13 +1,14 @@
 "use client";
 import Calendar from "@/components/calendar/Calendar";
 import Spinner from "@/components/Spinner";
-import { useAppSelector } from "@/hooks/reduxHooks";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import useSessions from "@/hooks/useSessions";
 
 const Page = () => {
   const [now, setNow] = useState(new Date());
 
-  const { sessions } = useAppSelector((state) => state.sessions);
+  const { data: sessions = [] } = useSessions();
+
   useEffect(() => {
     const interval = setInterval(() => {
       setNow(new Date());
@@ -15,11 +16,12 @@ const Page = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const upcoming =
-    sessions &&
-    sessions
+  const upcoming = useMemo(() => {
+    if (!sessions) return [];
+    return sessions
       .filter((s) => s.start > now.getHours())
       .sort((a, b) => a.start - b.start);
+  }, [sessions, now]);
   return (
     <div className="grid grid-cols-3 gap-8 items-start">
       <div className="_border overflow-hidden rounded-[10px] col-span-3 xl:col-span-2">
@@ -29,7 +31,7 @@ const Page = () => {
       </div>
       <div className="_border overflow-hidden  rounded-[10px] col-span-3 xl:col-span-1">
         {/* header */}
-        <div className="border-b-1 border-neutral-300">
+        <div className="border-b border-neutral-300">
           <div className=" gap-2 p-6 ">
             <h2 className="text-xl leading-7 font-bold">Upcoming Sessions</h2>
           </div>

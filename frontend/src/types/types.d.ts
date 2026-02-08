@@ -92,6 +92,8 @@ export interface IGeneratedPlan {
   modules: IGeneratedModule[];
 }
 
+export type ModuleStatus = "INPROGRESS" | "COMPLETED";
+
 export interface IGeneratedModule {
   id: string;
   title: string;

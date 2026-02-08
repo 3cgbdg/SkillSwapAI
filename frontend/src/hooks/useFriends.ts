@@ -1,7 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import FriendsService from "@/services/FriendsService";
 import RequestsService from "@/services/RequestsService";
-import { ApiResponse, IFriend, IRequest } from "@/types/types";
+import { ApiResponse } from "@/types/common";
+import { IFriend } from "@/types/chat";
+import { IRequest } from "@/types/session";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
 // hook for maintaining friends and friends requests in cache and in case refething it

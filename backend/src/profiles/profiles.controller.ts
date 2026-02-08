@@ -22,7 +22,7 @@ import type { IReturnMessage, ReturnDataType } from 'types/general';
 @Controller('profiles')
 @UseGuards(AuthGuard('jwt'))
 export class ProfilesController {
-  constructor(private readonly profilesService: ProfilesService) { }
+  constructor(private readonly profilesService: ProfilesService) {}
 
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<ReturnDataType<any>> {

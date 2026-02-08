@@ -3,25 +3,24 @@
 import FullSreenLoader from "@/components/FullSreenLoader";
 import ModuleAccordion from "@/components/matches/ModuleAccordion";
 import Spinner from "@/components/Spinner";
-import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
-import { updateChats } from "@/redux/chatsSlice";
 import ChatsService from "@/services/ChatsService";
 import PlansService from "@/services/PlansService";
-import { IMatch } from "@/types/types";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { IChat, IGeneratedModule, IMatch } from "@/types/types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, MessageSquareMore, UserRound } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import useMatches from "@/hooks/useMatches";
 
 const Page = () => {
   const { id } = useParams() as { id: string };
-  const { matches } = useAppSelector((state) => state.matches);
+  const { data: matches = [] } = useMatches();
   const [currentMatch, setCurrentMatch] = useState<IMatch | null>(null);
   const [isActive, setIsActive] = useState<null | number>(null);
   const router = useRouter();
-  const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!matches || matches.length == 0) return;
@@ -41,7 +40,10 @@ const Page = () => {
     }) => ChatsService.createChat(payload),
     onSuccess: (data) => {
       router.push(`/chats/${data.chat.chatId}`);
-      dispatch(updateChats(data.chat));
+      queryClient.setQueryData(["chats"], (old: IChat[] = []) => {
+        if (old.some((c) => c.chatId === data.chat.chatId)) return old;
+        return [data.chat, ...old];
+      });
     },
     onError: (err) => {
       toast.error(err.message);
@@ -153,7 +155,7 @@ const Page = () => {
                     </p>
                     <h3 className="page-title mt-4 text-blue!">
                       {(plan.modules.reduce(
-                        (acc, cur) =>
+                        (acc: number, cur: IGeneratedModule) =>
                           acc + (cur.status == "INPROGRESS" ? 0 : 1),
                         0
                       ) /
@@ -177,7 +179,7 @@ const Page = () => {
               </div>
               <div className="flex flex-col gap-4">
                 {plan &&
-                  plan.modules.map((module, idx) => (
+                  plan.modules.map((module: IGeneratedModule, idx: number) => (
                     <ModuleAccordion
                       planId={plan.id}
                       idx={idx}

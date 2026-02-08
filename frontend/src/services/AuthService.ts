@@ -1,4 +1,4 @@
-import { ApiResponse } from "@/types/types";
+import { ApiResponse } from "@/types/common";
 import { api } from "./axiosInstance";
 import { signUpFormData } from "@/validation/signUp";
 import { logInFormData } from "@/validation/logIn";
