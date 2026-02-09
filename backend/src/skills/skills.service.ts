@@ -44,16 +44,27 @@ export class SkillsService {
 
     if (aiGenerated) {
       try {
-        const updatedAISuggestions = user.aiSuggestionSkills.filter(
+        let aiSuggestionSkills = user.aiSuggestionSkills;
+
+        if (!aiSuggestionSkills) {
+          const dbUser = await this.prisma.user.findUnique({
+            where: { id: user.id },
+            select: { aiSuggestionSkills: true },
+          });
+          aiSuggestionSkills = dbUser?.aiSuggestionSkills || [];
+        }
+
+        const updatedAISuggestions = aiSuggestionSkills.filter(
           (item) => item !== dto.title,
         );
-        if (!user) throw new Error('User not found');
+
         await this.prisma.user.update({
           where: { id: user.id },
           data: { aiSuggestionSkills: updatedAISuggestions },
         });
-      } catch {
-        throw new InternalServerErrorException();
+      } catch (error) {
+        console.error('Error updating AI suggestions:', error);
+        throw new InternalServerErrorException('Failed to update AI suggestions');
       }
     }
     await this.prisma.user.update({
