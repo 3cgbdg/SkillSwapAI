@@ -36,8 +36,8 @@ export class RequestsService {
       const request = await this.prisma.request.create({
         data: { toId: dto.id, fromId: userId, type: 'FRIEND' },
         include: {
-          from: { select: { name: true } },
-          to: { select: { name: true } },
+          from: { select: { name: true, firstName: true, lastName: true } },
+          to: { select: { name: true, firstName: true, lastName: true } },
         },
       });
       this.requestGateway.notifyUser(dto.id, { request });
@@ -63,8 +63,8 @@ export class RequestsService {
         const request = await this.prisma.request.create({
           data: { toId: foundUser.id, fromId: userId, type: 'FRIEND' },
           include: {
-            from: { select: { name: true } },
-            to: { select: { name: true } },
+            from: { select: { name: true, firstName: true, lastName: true } },
+            to: { select: { name: true, firstName: true, lastName: true } },
           },
         });
         this.requestGateway.notifyUser(foundUser.id, { request });
@@ -79,9 +79,9 @@ export class RequestsService {
     const data = await this.prisma.request.findMany({
       where: { toId: userId },
       include: {
-        from: { select: { name: true } },
+        from: { select: { name: true, firstName: true, lastName: true } },
         session: { select: { start: true, end: true, date: true } },
-        to: { select: { name: true } },
+        to: { select: { name: true, firstName: true, lastName: true } },
       },
     });
     return { data };
@@ -97,8 +97,8 @@ export class RequestsService {
       },
       include: {
         session: { select: { start: true, end: true, date: true } },
-        from: { select: { name: true } },
-        to: { select: { name: true } },
+        from: { select: { name: true, firstName: true, lastName: true } },
+        to: { select: { name: true, firstName: true, lastName: true } },
       },
     });
     return request;

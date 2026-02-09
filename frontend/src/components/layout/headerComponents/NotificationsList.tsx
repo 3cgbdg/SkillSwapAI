@@ -1,5 +1,6 @@
 import { Check, X } from "lucide-react";
 import { IRequest } from "@/types/session";
+import { getUserDisplayName } from "@/utils/user";
 
 interface NotificationsListProps {
   reqs: IRequest[];
@@ -33,7 +34,7 @@ const NotificationsList = ({
   onDeleteRequest,
 }: NotificationsListProps) => {
   return (
-    <div className="flex flex-col gap-2 pb-4 not-last:border-b-[1px] border-neutral-300 w-full">
+    <div className="flex flex-col gap-2 pb-4 not-last:border-b border-neutral-300 w-full">
       <h3 className="text-lg leading-7 font-medium">Latest requests</h3>
       <div className="flex flex-col gap-1  border-neutral-300 max-h-[450px] overflow-x-auto">
         {reqs &&
@@ -50,7 +51,7 @@ const NotificationsList = ({
                   <div className="     rounded-xl transition-all mb-4">
                     {" "}
                     <span className="font-semibold">From:</span>{" "}
-                    {req.from?.name}
+                    {getUserDisplayName(req.from)}
                   </div>
                   <div className="grid grid-cols-2 items-center gap-2 ">
                     <button
@@ -82,7 +83,7 @@ const NotificationsList = ({
                   <div className="     rounded-xl transition-all ">
                     {" "}
                     <span className="font-semibold">From:</span>{" "}
-                    {req.from?.name}
+                    {getUserDisplayName(req.from)}
                   </div>
                   {req.session.date && (
                     <div className="flex  flex-col  mb-4">
@@ -136,7 +137,7 @@ const NotificationsList = ({
                 </h2>
                 <div className="     rounded-xl transition-all ">
                   {" "}
-                  <span className="font-semibold">From:</span> {req.from?.name}
+                  <span className="font-semibold">From:</span> {getUserDisplayName(req.from)}
                 </div>
                 {req.session.title && (
                   <div className="flex  flex-col  mb-4">
@@ -164,7 +165,7 @@ const NotificationsList = ({
                 </h2>
                 <div className="     rounded-xl transition-all ">
                   {" "}
-                  <span className="font-semibold">From:</span> {req.from?.name}
+                  <span className="font-semibold">From:</span> {getUserDisplayName(req.from)}
                 </div>
                 {req.session.title && (
                   <div className="flex  flex-col  mb-4">

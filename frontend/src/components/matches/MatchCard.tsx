@@ -11,6 +11,7 @@ import {
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React from "react";
+import { getUserDisplayName } from "@/utils/user";
 
 const MatchCard = ({
   match,
@@ -52,16 +53,16 @@ const MatchCard = ({
             />
           )}
         </div>
-        <h2 className="leading-7 text-lg font-semibold">{match.other.name}</h2>
+        <h2 className="leading-7 text-lg font-semibold">{getUserDisplayName(match.other)}</h2>
       </div>
-      <div className="flex flex-col gap-4 mb-6 grow-1 ">
+      <div className="flex flex-col gap-4 mb-6 grow ">
         <div className="flex flex-col gap-2">
           <h3 className="text-sm leading-5 font-medium">Teaches:</h3>
           <div className="flex flex-wrap gap-2">
             {match.other.knownSkills.map((skill, idx) => (
               <span
                 key={idx}
-                className="text-xs leading-5 text-neutral-600 px-1.5 bg-lightBlue border-blue border-1 font-semibold rounded-xl"
+                className="text-xs leading-5 text-neutral-600 px-1.5 bg-lightBlue border-blue border font-semibold rounded-xl"
               >
                 {skill.title}
               </span>
@@ -74,7 +75,7 @@ const MatchCard = ({
             {match.other.skillsToLearn.map((skill, idx) => (
               <span
                 key={idx}
-                className="text-xs leading-5 text-neutral-600 px-1.5 border-neutral-600  border-1 font-semibold rounded-xl"
+                className="text-xs leading-5 text-neutral-600 px-1.5 border-neutral-600  border font-semibold rounded-xl"
               >
                 {skill.title}
               </span>
@@ -110,7 +111,7 @@ const MatchCard = ({
                   getOrCreateChat({
                     payload: {
                       friendId: match.other.id,
-                      friendName: match.other.name,
+                      friendName: getUserDisplayName(match.other),
                     },
                   })
                 }
@@ -122,7 +123,7 @@ const MatchCard = ({
               <button
                 onClick={() =>
                   router.push(
-                    `/calendar?schedule=true&name=${encodeURIComponent(match.other.name)}`
+                    `/calendar?schedule=true&name=${encodeURIComponent(getUserDisplayName(match.other))}`
                   )
                 }
                 className="button-transparent rounded-md! flex gap-1 items-center  font-medium!"

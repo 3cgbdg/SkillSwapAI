@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
         hostname: "skillswap-ai-v3.s3.eu-central-1.amazonaws.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+        pathname: "/**",
+      },
     ],
   },
 };

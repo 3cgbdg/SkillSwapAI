@@ -26,8 +26,8 @@ class ProfilesService {
     return res.data;
   }
 
-  async getPollingDataAiSuggestions(): Promise<ApiResponse<null | string[]>> {
-    const res = await api.get("profiles/ai-suggestions/polling");
+  async getPollingDataAiSuggestions(): Promise<string[] | null> {
+    const res: any = await api.get("profiles/ai-suggestions/polling");
     return res.data;
   }
 

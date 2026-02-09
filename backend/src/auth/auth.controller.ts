@@ -22,6 +22,7 @@ import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
 import type { RequestWithUser, JwtPayload } from 'types/auth';
 import type { IReturnMessage, ReturnDataType } from 'types/general';
+import { ProfilesService } from 'src/profiles/profiles.service';
 
 @Controller('auth')
 export class AuthController {
@@ -30,7 +31,50 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
-  ) {}
+    private readonly profilesService: ProfilesService,
+  ) { }
+
+
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth() {
+    // triggers google auth redirect
+  }
+
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthRedirect(@Req() req: Request, @Res() res: Response) {
+    const profile = req.user as any;
+    if (!profile) {
+      throw new HttpException('Google authentication failed', HttpStatus.UNAUTHORIZED);
+    }
+
+    const user = await this.profilesService.findOrCreateGoogleUser(profile);
+    const response = await this.authService.loginWithUser(user);
+
+    res.cookie('access_token', response.access_token, {
+      httpOnly: true,
+      secure: this.configService.get<string>('NODE_ENV') === 'production',
+      sameSite:
+        this.configService.get<string>('NODE_ENV') === 'production'
+          ? 'none'
+          : 'lax',
+      maxAge: 1000 * 60 * 15,
+    });
+
+    res.cookie('refresh_token', response.refresh_token, {
+      httpOnly: true,
+      secure: this.configService.get<string>('NODE_ENV') === 'production',
+      sameSite:
+        this.configService.get<string>('NODE_ENV') === 'production'
+          ? 'none'
+          : 'lax',
+      maxAge: 1000 * 3600 * 24 * 7,
+    });
+
+    const frontendUrl = this.configService.get<string>('CORS_ORIGIN') || 'http://localhost:3000';
+    return res.redirect(`${frontendUrl}/dashboard`);
+  }
 
   @Post('signup')
   async signup(

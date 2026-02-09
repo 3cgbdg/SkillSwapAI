@@ -11,6 +11,7 @@ import Spinner from "../Spinner";
 import { differenceInHours } from "date-fns";
 import ProfilesService from "@/services/ProfilesService";
 import useProfile from "@/hooks/useProfile";
+import { getUserDisplayName } from "@/utils/user";
 
 const Profile = ({
   setIsEditing,
@@ -61,14 +62,14 @@ const Profile = ({
     },
   });
 
-  const { data: pollingData } = useQuery({
+  const { data: pollingData } = useQuery<string[] | null>({
     queryKey: ["ai-suggestions", user?.id],
     queryFn: async () => {
-      const res = await ProfilesService.getPollingDataAiSuggestions();
-      if (res.data && res.data.length > 0) {
+      const data = await ProfilesService.getPollingDataAiSuggestions();
+      if (data && data.length > 0) {
         await queryClient.invalidateQueries({ queryKey: ["profile"] });
       }
-      return res.data;
+      return data || null;
     },
     refetchInterval: (query) => {
       const data = query.state.data;
@@ -112,7 +113,7 @@ const Profile = ({
               )}
             </div>
             <div className="flex flex-col gap-[10px] md:basis-[520px] w-full">
-              <h1 className="text-3xl leading-9.5 font-bold ">{user?.name}</h1>
+              <h1 className="text-3xl leading-9.5 font-bold ">{getUserDisplayName(user)}</h1>
               {user.bio && <p className="text-gray">{user.bio}</p>}
               <button
                 onClick={() => setIsEditing(true)}
@@ -142,7 +143,7 @@ const Profile = ({
               {isPending ? (
                 <Spinner color="blue" size={32} />
               ) : (user.aiSuggestionSkills && user.aiSuggestionSkills.length > 0) || (pollingData && pollingData.length > 0) ? (
-                (user.aiSuggestionSkills && user.aiSuggestionSkills.length > 0 ? user.aiSuggestionSkills : pollingData!).map((skill, idx) => (
+                ((user.aiSuggestionSkills && user.aiSuggestionSkills.length > 0 ? user.aiSuggestionSkills : pollingData) || []).map((skill: string, idx: number) => (
                   <div
                     key={idx}
                     className="not-last:border-b py-3 border-b-neutral-300"

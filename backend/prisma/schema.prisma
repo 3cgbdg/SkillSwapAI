@@ -25,10 +25,13 @@ enum RequestType {
 }
 
 model User {
-  aiSuggestionSkills       String[]?
+  aiSuggestionSkills       String[] @default([])
+  googleId                 String?  @unique
+  firstName                String?
+  lastName                 String?
   id                       String       @id @default(uuid())
-  name                     String       @unique
-  password                 String
+  name                     String?       @unique
+  password                 String?
   imageUrl                 String?
   email                    String       @unique
   bio                      String?

@@ -81,6 +81,21 @@ export class AuthService {
     return { access_token, refresh_token };
   }
 
+  async loginWithUser(
+    user: Partial<User>,
+  ): Promise<{ access_token: string; refresh_token: string }> {
+    const access_token = this.jwtService.sign({ userId: user.id });
+    const refresh_token = this.jwtService.sign(
+      { userId: user.id },
+      {
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+        expiresIn: '7d',
+      },
+    );
+
+    return { access_token, refresh_token };
+  }
+
   async login(
     dto: LoginAuthDto,
   ): Promise<{ access_token: string; refresh_token: string }> {
@@ -90,7 +105,7 @@ export class AuthService {
     if (!user) {
       throw new NotFoundException();
     }
-    const isGood = await bcrypt.compare(dto.password, user.password);
+    const isGood = await bcrypt.compare(dto.password, user.password!);
     if (!isGood) throw new InternalServerErrorException();
     const access_token = this.jwtService.sign({ userId: user.id });
     const refresh_token = this.jwtService.sign(
