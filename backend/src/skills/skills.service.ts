@@ -7,7 +7,7 @@ import { IReturnMessage, ReturnDataType } from 'types/general';
 
 @Injectable()
 export class SkillsService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async findAll(dto: getSkillsDto): Promise<ReturnDataType<any[]>> {
     const skills = await this.prisma.skill.findMany({
@@ -64,7 +64,9 @@ export class SkillsService {
         });
       } catch (error) {
         console.error('Error updating AI suggestions:', error);
-        throw new InternalServerErrorException('Failed to update AI suggestions');
+        throw new InternalServerErrorException(
+          'Failed to update AI suggestions',
+        );
       }
     }
     await this.prisma.user.update({
@@ -74,7 +76,10 @@ export class SkillsService {
     return { message: 'Successfully added!' };
   }
 
-  async deleteKnownSkill(userId: string, dto: SkillDto): Promise<IReturnMessage> {
+  async deleteKnownSkill(
+    userId: string,
+    dto: SkillDto,
+  ): Promise<IReturnMessage> {
     await this.prisma.user.update({
       where: { id: userId },
       data: { knownSkills: { disconnect: { title: dto.title } } },

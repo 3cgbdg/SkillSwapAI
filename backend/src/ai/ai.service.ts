@@ -23,7 +23,7 @@ export class AiService {
     private readonly prisma: PrismaService,
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
   async generateBodyForActiveMatch(
     myId: string,
     otherId: string,
@@ -59,12 +59,48 @@ export class AiService {
             {
               user1:
                 users[0].id == myId
-                  ? { ...updatedSkillsBodyUsers[0], knownSkills: updatedSkillsBodyUsers[0].knownSkills.length ? updatedSkillsBodyUsers[0].knownSkills : ["General Discussion"], skillsToLearn: updatedSkillsBodyUsers[0].skillsToLearn.length ? updatedSkillsBodyUsers[0].skillsToLearn : ["New Insights"] }
-                  : { ...updatedSkillsBodyUsers[1], knownSkills: updatedSkillsBodyUsers[1].knownSkills.length ? updatedSkillsBodyUsers[1].knownSkills : ["General Discussion"], skillsToLearn: updatedSkillsBodyUsers[1].skillsToLearn.length ? updatedSkillsBodyUsers[1].skillsToLearn : ["New Insights"] },
+                  ? {
+                      ...updatedSkillsBodyUsers[0],
+                      knownSkills: updatedSkillsBodyUsers[0].knownSkills.length
+                        ? updatedSkillsBodyUsers[0].knownSkills
+                        : ['General Discussion'],
+                      skillsToLearn: updatedSkillsBodyUsers[0].skillsToLearn
+                        .length
+                        ? updatedSkillsBodyUsers[0].skillsToLearn
+                        : ['New Insights'],
+                    }
+                  : {
+                      ...updatedSkillsBodyUsers[1],
+                      knownSkills: updatedSkillsBodyUsers[1].knownSkills.length
+                        ? updatedSkillsBodyUsers[1].knownSkills
+                        : ['General Discussion'],
+                      skillsToLearn: updatedSkillsBodyUsers[1].skillsToLearn
+                        .length
+                        ? updatedSkillsBodyUsers[1].skillsToLearn
+                        : ['New Insights'],
+                    },
               user2:
                 users[0].id !== myId
-                  ? { ...updatedSkillsBodyUsers[0], knownSkills: updatedSkillsBodyUsers[0].knownSkills.length ? updatedSkillsBodyUsers[0].knownSkills : ["General Discussion"], skillsToLearn: updatedSkillsBodyUsers[0].skillsToLearn.length ? updatedSkillsBodyUsers[0].skillsToLearn : ["New Insights"] }
-                  : { ...updatedSkillsBodyUsers[1], knownSkills: updatedSkillsBodyUsers[1].knownSkills.length ? updatedSkillsBodyUsers[1].knownSkills : ["General Discussion"], skillsToLearn: updatedSkillsBodyUsers[1].skillsToLearn.length ? updatedSkillsBodyUsers[1].skillsToLearn : ["New Insights"] },
+                  ? {
+                      ...updatedSkillsBodyUsers[0],
+                      knownSkills: updatedSkillsBodyUsers[0].knownSkills.length
+                        ? updatedSkillsBodyUsers[0].knownSkills
+                        : ['General Discussion'],
+                      skillsToLearn: updatedSkillsBodyUsers[0].skillsToLearn
+                        .length
+                        ? updatedSkillsBodyUsers[0].skillsToLearn
+                        : ['New Insights'],
+                    }
+                  : {
+                      ...updatedSkillsBodyUsers[1],
+                      knownSkills: updatedSkillsBodyUsers[1].knownSkills.length
+                        ? updatedSkillsBodyUsers[1].knownSkills
+                        : ['General Discussion'],
+                      skillsToLearn: updatedSkillsBodyUsers[1].skillsToLearn
+                        .length
+                        ? updatedSkillsBodyUsers[1].skillsToLearn
+                        : ['New Insights'],
+                    },
             },
             {
               headers: {
@@ -80,9 +116,9 @@ export class AiService {
 
       return readyAiArray
         ? {
-          generatedData: readyAiArray,
-          other: users[0].id == myId ? users[1] : users[0],
-        }
+            generatedData: readyAiArray,
+            other: users[0].id == myId ? users[1] : users[0],
+          }
         : null;
     } else {
       throw new BadRequestException();
@@ -133,10 +169,8 @@ export class AiService {
       );
 
     const rawAiArray = fastApiResponse?.data?.AIReport;
-    console.log('AI Microservice raw response:', rawAiArray);
     const readyAiArray: string[] | null =
       this._parseAiResponse<string[]>(rawAiArray);
-    console.log('Parsed AI array:', readyAiArray);
     if (readyAiArray) {
       if (readyAiArray.length > 0) {
         await Promise.all(
@@ -176,7 +210,12 @@ export class AiService {
           ? (JSON.parse(match[1]) as T)
           : (JSON.parse(rawAiResponse) as T);
       } catch (e) {
-        console.error('Error parsing AI response:', e, 'Raw string:', rawAiResponse);
+        console.error(
+          'Error parsing AI response:',
+          e,
+          'Raw string:',
+          rawAiResponse,
+        );
         return null;
       }
     } else {

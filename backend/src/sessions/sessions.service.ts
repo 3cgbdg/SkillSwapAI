@@ -4,7 +4,7 @@ import { PrismaService } from 'prisma/prisma.service';
 import { RequestsService } from 'src/requests/requests.service';
 import { RequestGateway } from 'src/webSockets/request.gateway';
 import { UpdateSessionStatusDto } from './dto/update-session-status.dto';
-import { IReturnMessage, ReturnDataType } from 'types/general';
+import { ReturnDataType } from 'types/general';
 
 @Injectable()
 export class SessionsService {
@@ -12,7 +12,7 @@ export class SessionsService {
     private readonly prisma: PrismaService,
     private readonly requests: RequestsService,
     private readonly requestGateway: RequestGateway,
-  ) { }
+  ) {}
   async create(
     dto: CreateSessionDto,
     myId: string,

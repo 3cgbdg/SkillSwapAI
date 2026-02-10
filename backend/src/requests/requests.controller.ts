@@ -17,7 +17,7 @@ import type { IReturnMessage, ReturnDataType } from 'types/general';
 @Controller('requests')
 @UseGuards(AuthGuard('jwt'))
 export class RequestsController {
-  constructor(private readonly requestsService: RequestsService) { }
+  constructor(private readonly requestsService: RequestsService) {}
 
   @Post()
   async create(

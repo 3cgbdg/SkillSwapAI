@@ -8,3 +8,16 @@ export interface RequestWithUser extends Request {
 export interface JwtPayload {
     userId: string;
 }
+
+export interface GoogleProfile {
+    id: string;
+    emails: { value: string; verified: boolean }[];
+    name: {
+        givenName: string;
+        familyName: string;
+    };
+    photos: { value: string }[];
+    provider: string;
+    _raw: string;
+    _json: any;
+}

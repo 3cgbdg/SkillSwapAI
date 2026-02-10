@@ -26,7 +26,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-  ) { }
+  ) {}
   @WebSocketServer()
   server: Server;
   async handleConnection(client: Socket<any, any, any, SocketData>) {
@@ -61,9 +61,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
               .to(`user:${friendId}`)
               .emit('setToOnline', { id: payload.userId });
         }
-        console.log(`[ChatGateway] User ${payload.userId} connected (Socket: ${client.id})`);
-      } catch (err) {
-        console.error('[ChatGateway] Connection auth failed:', err.message);
+      } catch (err: unknown) {
+        console.error(
+          '[ChatGateway] Connection auth failed:',
+          err instanceof Error ? err.message : String(err),
+        );
         client.disconnect();
       }
     } else {
@@ -72,7 +74,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   handleDisconnect(client: Socket<any, any, any, SocketData>) {
-    console.log(`[ChatGateway] Client disconnected: ${client.id} (User: ${client.data.userId})`);
+    if (client.data.userId) {
+      void client.leave(`user:${client.data.userId}`);
+    }
   }
 
   async getCurrentOnlineFriends(id: string): Promise<string[]> {

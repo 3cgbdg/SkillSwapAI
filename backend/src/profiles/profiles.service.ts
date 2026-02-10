@@ -9,6 +9,7 @@ import { S3Service } from 'src/s3/s3.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { IReturnMessage, ReturnDataType } from 'types/general';
 import { AiService } from 'src/ai/ai.service';
+import { GoogleProfile } from 'types/auth';
 
 @Injectable()
 export class ProfilesService {
@@ -16,7 +17,7 @@ export class ProfilesService {
     private readonly prisma: PrismaService,
     private readonly s3Service: S3Service,
     private readonly aiService: AiService,
-  ) { }
+  ) {}
 
   async findOne(id: string): Promise<ReturnDataType<any>> {
     const profile = await this.prisma.user.findFirst({
@@ -105,15 +106,17 @@ export class ProfilesService {
     return { data: user?.aiSuggestionSkills ?? null };
   }
 
-  async findOrCreateGoogleUser(profile: any): Promise<User> {
+  async findOrCreateGoogleUser(profile: GoogleProfile): Promise<User> {
     const { id, emails, name, photos } = profile;
     if (!emails || emails.length === 0) {
-      throw new InternalServerErrorException('Google profile must include an email');
+      throw new InternalServerErrorException(
+        'Google profile must include an email',
+      );
     }
     const email = emails[0].value;
 
     let user = await this.prisma.user.findFirst({
-      where: { googleId: id }
+      where: { googleId: id },
     });
 
     if (user) {
@@ -134,7 +137,9 @@ export class ProfilesService {
       data: {
         googleId: id,
         email,
-        name: name ? `${name.givenName} ${name.familyName}` : `User ${id.slice(0, 5)}`,
+        name: name
+          ? `${name.givenName} ${name.familyName}`
+          : `User ${id.slice(0, 5)}`,
         imageUrl: photos?.[0]?.value,
       },
     });

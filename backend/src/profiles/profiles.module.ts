@@ -11,4 +11,4 @@ import { AiModule } from 'src/ai/ai.module';
   providers: [ProfilesService],
   exports: [ProfilesService],
 })
-export class ProfilesModule { }
+export class ProfilesModule {}

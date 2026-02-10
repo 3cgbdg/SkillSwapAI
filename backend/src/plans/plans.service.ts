@@ -15,7 +15,7 @@ export class PlansService {
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
-  ) { }
+  ) {}
   async getPlan(matchId: string) {
     const match = await this.prisma.match.findUnique({
       where: { id: matchId },

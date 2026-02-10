@@ -19,7 +19,7 @@ export class MatchesService {
     private readonly prisma: PrismaService,
     private readonly aiService: AiService,
     private readonly friendsService: FriendsService,
-  ) { }
+  ) {}
   async generateActiveMatch(
     myId: string,
     otherId: string,
@@ -125,13 +125,8 @@ export class MatchesService {
     const skillsToLearnTitles = myUser.skillsToLearn.map(
       (skill) => skill.title,
     );
-    const myKnownSkillsTitles = myUser.knownSkills.map(
-      (skill) => skill.title,
-    );
+    const myKnownSkillsTitles = myUser.knownSkills.map((skill) => skill.title);
 
-    console.log('DEBUG: myId', myId);
-    console.log('DEBUG: skillsToLearnTitles', skillsToLearnTitles);
-    console.log('DEBUG: myKnownSkillsTitles', myKnownSkillsTitles);
     const users = await this.prisma.user.findMany({
       where: {
         AND: [
@@ -140,7 +135,9 @@ export class MatchesService {
               {
                 OR: [
                   {
-                    knownSkills: { some: { title: { in: skillsToLearnTitles } } },
+                    knownSkills: {
+                      some: { title: { in: skillsToLearnTitles } },
+                    },
                   },
                   {
                     skillsToLearn: {
@@ -182,8 +179,6 @@ export class MatchesService {
         { skillsToLearn: { _count: 'desc' } },
       ],
     });
-    console.log('DEBUG: Users found for available matches:', users.length);
-    console.log('DEBUG: Users:', JSON.stringify(users, null, 2));
     const data = users.map((user) => {
       return {
         isFriend: user.friendOf.length > 0 || user.friends.length > 0,

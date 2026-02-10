@@ -10,4 +10,4 @@ import { ChatGateway } from 'src/webSockets/chat.gateway';
   providers: [FriendsService, ChatGateway],
   exports: [FriendsService],
 })
-export class FriendsModule { }
+export class FriendsModule {}

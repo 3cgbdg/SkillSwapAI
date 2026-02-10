@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
+import { GoogleProfile } from 'types/auth';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import { AuthGuard } from '@nestjs/passport';
 import type { Request, Response } from 'express';
@@ -32,8 +33,7 @@ export class AuthController {
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
     private readonly profilesService: ProfilesService,
-  ) { }
-
+  ) {}
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
@@ -44,13 +44,16 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   async googleAuthRedirect(@Req() req: Request, @Res() res: Response) {
-    const profile = req.user as any;
+    const profile = req.user as GoogleProfile;
     if (!profile) {
-      throw new HttpException('Google authentication failed', HttpStatus.UNAUTHORIZED);
+      throw new HttpException(
+        'Google authentication failed',
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     const user = await this.profilesService.findOrCreateGoogleUser(profile);
-    const response = await this.authService.loginWithUser(user);
+    const response = this.authService.loginWithUser(user);
 
     res.cookie('access_token', response.access_token, {
       httpOnly: true,
@@ -72,7 +75,8 @@ export class AuthController {
       maxAge: 1000 * 3600 * 24 * 7,
     });
 
-    const frontendUrl = this.configService.get<string>('CORS_ORIGIN') || 'http://localhost:3000';
+    const frontendUrl =
+      this.configService.get<string>('CORS_ORIGIN') || 'http://localhost:3000';
     return res.redirect(`${frontendUrl}/dashboard`);
   }
 

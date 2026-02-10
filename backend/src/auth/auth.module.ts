@@ -12,4 +12,4 @@ import { ProfilesModule } from 'src/profiles/profiles.module';
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, GoogleStrategy],
 })
-export class AuthModule { }
+export class AuthModule {}

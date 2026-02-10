@@ -5,7 +5,7 @@ import { ReturnDataType } from 'types/general';
 
 @Injectable()
 export class SearchService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
   async findAll(
     dto: getSearchDto,
     myId: string,

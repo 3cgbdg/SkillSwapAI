@@ -17,7 +17,7 @@ import { ReturnDataType } from 'types/general';
 @Controller('chats')
 @UseGuards(AuthGuard('jwt'))
 export class ChatsController {
-  constructor(private readonly chatsService: ChatsService) { }
+  constructor(private readonly chatsService: ChatsService) {}
   @Get()
   async findAll(@Req() req: RequestWithUser): Promise<ReturnDataType<any>> {
     return this.chatsService.findAll(req.user.id);

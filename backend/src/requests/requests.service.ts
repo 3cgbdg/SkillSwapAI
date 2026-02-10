@@ -14,7 +14,7 @@ export class RequestsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly requestGateway: RequestGateway,
-  ) { }
+  ) {}
 
   async createForFriendship(
     dto: CreateRequestDto,
@@ -41,7 +41,10 @@ export class RequestsService {
         },
       });
       this.requestGateway.notifyUser(dto.id, { request });
-      return { data: request, message: 'Friend request is successfully created' };
+      return {
+        data: request,
+        message: 'Friend request is successfully created',
+      };
     } else {
       const foundUser = await this.prisma.user.findUnique({
         where: { name: dto.name },
@@ -59,7 +62,10 @@ export class RequestsService {
           },
         });
         if (exist) {
-          return { data: null, message: 'Request with such name already exists' };
+          return {
+            data: null,
+            message: 'Request with such name already exists',
+          };
         }
 
         const request = await this.prisma.request.create({
@@ -74,7 +80,10 @@ export class RequestsService {
           },
         });
         this.requestGateway.notifyUser(foundUser.id, { request });
-        return { data: request, message: 'Friend request is successfully created' };
+        return {
+          data: request,
+          message: 'Friend request is successfully created',
+        };
       } else {
         throw new NotFoundException('User with such username wasn`t found');
       }

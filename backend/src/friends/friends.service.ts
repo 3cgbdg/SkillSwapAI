@@ -13,7 +13,7 @@ export class FriendsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly chatGateway: ChatGateway,
-  ) { }
+  ) {}
   async create(dto: CreateFriendDto, id: string): Promise<IReturnMessage> {
     const user = await this.prisma.user.findUnique({ where: { id: dto.id } });
     if (!user) throw new NotFoundException();

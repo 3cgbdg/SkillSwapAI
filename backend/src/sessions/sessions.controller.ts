@@ -18,7 +18,7 @@ import type { ReturnDataType } from 'types/general';
 @Controller('sessions')
 @UseGuards(AuthGuard('jwt'))
 export class SessionsController {
-  constructor(private readonly sessionService: SessionsService) { }
+  constructor(private readonly sessionService: SessionsService) {}
 
   @Post()
   async create(

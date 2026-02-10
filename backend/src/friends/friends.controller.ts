@@ -7,7 +7,7 @@ import { IReturnMessage, ReturnDataType } from 'types/general';
 @Controller('friends')
 @UseGuards(AuthGuard('jwt'))
 export class FriendsController {
-  constructor(private readonly friendsService: FriendsService) { }
+  constructor(private readonly friendsService: FriendsService) {}
 
   @Post()
   async create(

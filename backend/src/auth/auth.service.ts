@@ -21,7 +21,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
   async signup(
     dto: CreateAuthDto,
   ): Promise<{ access_token: string; refresh_token: string }> {
@@ -81,9 +81,10 @@ export class AuthService {
     return { access_token, refresh_token };
   }
 
-  async loginWithUser(
-    user: Partial<User>,
-  ): Promise<{ access_token: string; refresh_token: string }> {
+  loginWithUser(user: Partial<User>): {
+    access_token: string;
+    refresh_token: string;
+  } {
     const access_token = this.jwtService.sign({ userId: user.id });
     const refresh_token = this.jwtService.sign(
       { userId: user.id },

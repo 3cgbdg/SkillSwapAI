@@ -5,9 +5,12 @@ import { ReturnDataType } from 'types/general';
 
 @Injectable()
 export class ChatsService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
-  async findOne(myId: string, friendId: string): Promise<ReturnDataType<any[]>> {
+  async findOne(
+    myId: string,
+    friendId: string,
+  ): Promise<ReturnDataType<any[]>> {
     const chat = await this.prisma.chat.findFirst({
       where: {
         AND: [

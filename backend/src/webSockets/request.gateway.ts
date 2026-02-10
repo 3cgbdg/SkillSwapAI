@@ -17,8 +17,9 @@ import type { SocketData } from '../../types/general';
   },
 })
 export class RequestGateway
-  implements OnGatewayConnection, OnGatewayDisconnect {
-  constructor(private readonly jwtService: JwtService) { }
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
+  constructor(private readonly jwtService: JwtService) {}
   @WebSocketServer()
   server: Server;
 
@@ -34,7 +35,7 @@ export class RequestGateway
         ) as unknown as JwtPayload;
         client.data.userId = payload.userId;
         void client.join(`user:${payload.userId}`);
-      } catch (err) {
+      } catch {
         client.disconnect();
       }
     } else {
@@ -43,6 +44,9 @@ export class RequestGateway
   }
 
   handleDisconnect(client: Socket<any, any, any, SocketData>) {
+    if (client.data.userId) {
+      void client.leave(`user:${client.data.userId}`);
+    }
   }
 
   notifyUser(toId: string, payload: unknown) {
