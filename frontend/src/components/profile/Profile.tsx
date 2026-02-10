@@ -11,6 +11,8 @@ import Spinner from "../Spinner";
 import { differenceInHours } from "date-fns";
 import ProfilesService from "@/services/ProfilesService";
 import useProfile from "@/hooks/useProfile";
+import { useState, useEffect, useCallback } from "react";
+import { intervalToDuration, formatDuration } from "date-fns";
 
 const Profile = ({
   setIsEditing,
@@ -19,6 +21,7 @@ const Profile = ({
 }) => {
   const { data: user } = useProfile();
   const queryClient = useQueryClient();
+  const [timeLeft, setTimeLeft] = useState<string | null>(null);
 
   const { mutate: addNewSkillToLearn } = useMutation({
     mutationFn: async (title: string) => {
@@ -61,6 +64,13 @@ const Profile = ({
     },
   });
 
+  const cantGenerateSkills = useMemo(() => {
+    if (!user?.lastSkillsGenerationDate) return false;
+    return (
+      differenceInHours(new Date(), new Date(user.lastSkillsGenerationDate)) <= 24
+    );
+  }, [user?.lastSkillsGenerationDate]);
+
   const { data: pollingData } = useQuery<string[] | null>({
     queryKey: ["ai-suggestions", user?.id],
     queryFn: async () => {
@@ -75,24 +85,48 @@ const Profile = ({
       if (!data || data.length === 0) return 3000;
       return false;
     },
-    enabled: !!user && (!user.aiSuggestionSkills || user.aiSuggestionSkills.length === 0),
+    enabled: !!user && (!user.aiSuggestionSkills || user.aiSuggestionSkills.length === 0) && !cantGenerateSkills,
     refetchOnWindowFocus: false,
   });
 
-  const isGeneratingInitial = !!user && (!user.aiSuggestionSkills || user.aiSuggestionSkills.length === 0);
+  const updateCountdown = useCallback(() => {
+    if (!user?.lastSkillsGenerationDate) return;
 
-  const cantGenerateSkills = useMemo(() => {
-    if (!user?.lastSkillsGenerationDate) return false;
-    return (
-      differenceInHours(new Date(), new Date(user.lastSkillsGenerationDate)) <= 24
-    );
+    const lastDate = new Date(user.lastSkillsGenerationDate);
+    const nextAvailableDate = new Date(lastDate.getTime() + 24 * 60 * 60 * 1000);
+    const now = new Date();
+
+    if (now >= nextAvailableDate) {
+      setTimeLeft(null);
+      return;
+    }
+
+    const duration = intervalToDuration({ start: now, end: nextAvailableDate });
+
+    const h = (duration.hours || 0).toString().padStart(2, "0");
+    const m = (duration.minutes || 0).toString().padStart(2, "0");
+    const s = (duration.seconds || 0).toString().padStart(2, "0");
+
+    setTimeLeft(`${h}:${m}:${s}`);
   }, [user?.lastSkillsGenerationDate]);
+
+  useEffect(() => {
+    if (cantGenerateSkills) {
+      updateCountdown();
+      const interval = setInterval(updateCountdown, 1000);
+      return () => clearInterval(interval);
+    } else {
+      setTimeLeft(null);
+    }
+  }, [cantGenerateSkills, updateCountdown]);
+
+  const isGeneratingInitial = !!user && (!user.aiSuggestionSkills || user.aiSuggestionSkills.length === 0) && !cantGenerateSkills;
 
   const buttonText = useMemo(() => {
     if (isPending || isGeneratingInitial) return "Generating suggestions...";
-    if (cantGenerateSkills) return "Wait 24h for next generation";
+    if (cantGenerateSkills) return `Wait ${timeLeft || "24h"} for next generation`;
     return "Regenerate";
-  }, [isPending, isGeneratingInitial, cantGenerateSkills]);
+  }, [isPending, isGeneratingInitial, cantGenerateSkills, timeLeft]);
 
   return (
     <>
@@ -132,7 +166,7 @@ const Profile = ({
               <button
                 disabled={cantGenerateSkills || isPending || isGeneratingInitial}
                 onClick={() => getNewAiSuggestionSkills()}
-                className={`button-blue ${(cantGenerateSkills || isPending || isGeneratingInitial) ? "bg-gray! cursor-auto!" : ""
+                className={`button-blue min-w-[260px] ${(cantGenerateSkills || isPending || isGeneratingInitial) ? "bg-gray! cursor-auto!" : ""
                   }`}
               >
                 {buttonText}
@@ -167,11 +201,13 @@ const Profile = ({
                     </div>
                   </div>
                 ))
-              ) : !user.aiSuggestionSkills || user.aiSuggestionSkills.length === 0 ? (
+              ) : isGeneratingInitial ? (
                 <Spinner color="blue" size={32} />
               ) : (
-                <span className="text-center">
-                  {cantGenerateSkills ? "💤💤💤" : "Regenerate"}
+                <span className="text-center text-gray italic py-8">
+                  {cantGenerateSkills
+                    ? "No skills to suggest right now. Come back once the timer runs out! 💤"
+                    : "No suggestions found. Try regenerating!"}
                 </span>
               )}
             </div>
