@@ -10,8 +10,8 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import React from "react";
-import { getUserDisplayName } from "@/utils/user";
 
 const MatchCard = ({
   match,
@@ -30,7 +30,7 @@ const MatchCard = ({
   >;
   match: IMatch;
   getOrCreateChat: UseMutateFunction<
-    { chat: IChat },
+    IChat,
     Error,
     { payload: { friendId: string; friendName: string } },
     unknown
@@ -53,7 +53,7 @@ const MatchCard = ({
             />
           )}
         </div>
-        <h2 className="leading-7 text-lg font-semibold">{getUserDisplayName(match.other)}</h2>
+        <h2 className="section-title">{match.other.name}</h2>
       </div>
       <div className="flex flex-col gap-4 mb-6 grow ">
         <div className="flex flex-col gap-2">
@@ -111,7 +111,7 @@ const MatchCard = ({
                   getOrCreateChat({
                     payload: {
                       friendId: match.other.id,
-                      friendName: getUserDisplayName(match.other),
+                      friendName: match.other.name,
                     },
                   })
                 }
@@ -123,7 +123,7 @@ const MatchCard = ({
               <button
                 onClick={() =>
                   router.push(
-                    `/calendar?schedule=true&name=${encodeURIComponent(getUserDisplayName(match.other))}`
+                    `/calendar?schedule=true&name=${encodeURIComponent(match.other.name)}`
                   )
                 }
                 className="button-transparent rounded-md! flex gap-1 items-center  font-medium!"

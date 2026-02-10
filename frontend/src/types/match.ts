@@ -3,7 +3,7 @@ export interface IMatch {
     aiExplanation?: string;
     keyBenefits: string[];
     id: string;
-    isFriend?: string;
+    isFriend?: boolean;
     other: {
         id: string;
         name: string;

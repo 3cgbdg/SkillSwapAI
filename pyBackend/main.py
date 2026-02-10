@@ -5,9 +5,11 @@ from dotenv import load_dotenv
 from logger import logger
 from api.match import router as match_router
 from api.profile import router as profile_router
+from mangum import Mangum
 load_dotenv()
 
 app = FastAPI(description="Python AI microservice")
+handler = Mangum(app)
 
 # health check endpoint
 @app.get('/health')

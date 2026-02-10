@@ -11,7 +11,6 @@ import Spinner from "../Spinner";
 import { differenceInHours } from "date-fns";
 import ProfilesService from "@/services/ProfilesService";
 import useProfile from "@/hooks/useProfile";
-import { getUserDisplayName } from "@/utils/user";
 
 const Profile = ({
   setIsEditing,
@@ -113,7 +112,7 @@ const Profile = ({
               )}
             </div>
             <div className="flex flex-col gap-[10px] md:basis-[520px] w-full">
-              <h1 className="text-3xl leading-9.5 font-bold ">{getUserDisplayName(user)}</h1>
+              <h1 className="page-title">{user?.name}</h1>
               {user.bio && <p className="text-gray">{user.bio}</p>}
               <button
                 onClick={() => setIsEditing(true)}

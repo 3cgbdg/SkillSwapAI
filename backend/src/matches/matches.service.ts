@@ -48,7 +48,7 @@ export class MatchesService {
     if (!result?.generatedData) throw new InternalServerErrorException();
     const activeMatch = await this.prisma.match.create({
       data: {
-        compatibility: result.generatedData.compatibility,
+        compatibility: Math.round(Number(result.generatedData.compatibility)),
         aiExplanation: result.generatedData.aiExplanation,
         keyBenefits: result.generatedData.keyBenefits,
         other: { connect: { id: result.other.id } },
@@ -103,7 +103,6 @@ export class MatchesService {
         },
       },
     });
-
     const data = matches.map((match) => {
       const otherUser =
         match.initiator.id === myId ? match.other : match.initiator;
@@ -120,34 +119,74 @@ export class MatchesService {
       include: {
         skillsToLearn: true,
         knownSkills: true,
-        friendOf: true,
-        friends: true,
       },
     });
     if (!myUser) throw new NotFoundException('User was not found');
     const skillsToLearnTitles = myUser.skillsToLearn.map(
       (skill) => skill.title,
     );
+    const myKnownSkillsTitles = myUser.knownSkills.map(
+      (skill) => skill.title,
+    );
 
+    console.log('DEBUG: myId', myId);
+    console.log('DEBUG: skillsToLearnTitles', skillsToLearnTitles);
+    console.log('DEBUG: myKnownSkillsTitles', myKnownSkillsTitles);
     const users = await this.prisma.user.findMany({
       where: {
-        knownSkills: { some: { title: { in: skillsToLearnTitles } } },
+        AND: [
+          {
+            OR: [
+              {
+                OR: [
+                  {
+                    knownSkills: { some: { title: { in: skillsToLearnTitles } } },
+                  },
+                  {
+                    skillsToLearn: {
+                      some: { title: { in: myKnownSkillsTitles } },
+                    },
+                  },
+                ],
+              },
+              { friendOf: { some: { user1Id: myId } } },
+              { friendOf: { some: { user2Id: myId } } },
+              { friends: { some: { user1Id: myId } } },
+              { friends: { some: { user2Id: myId } } },
+            ],
+          },
+        ],
         NOT: [
-          { friendOf: { some: { user1Id: myId } } },
-          { friends: { some: { user2Id: myId } } },
           { id: myId },
+          { matchesInitiated: { some: { otherId: myId } } },
+          { matchesReceived: { some: { initiatorId: myId } } },
         ],
       },
-      include: { knownSkills: true, skillsToLearn: true },
-      take: 9,
+      include: {
+        knownSkills: true,
+        skillsToLearn: true,
+        friendOf: {
+          where: {
+            OR: [{ user1Id: myId }, { user2Id: myId }],
+          },
+        },
+        friends: {
+          where: {
+            OR: [{ user1Id: myId }, { user2Id: myId }],
+          },
+        },
+      },
+      take: 20,
       orderBy: [
         { knownSkills: { _count: 'desc' } },
         { skillsToLearn: { _count: 'desc' } },
       ],
     });
-
+    console.log('DEBUG: Users found for available matches:', users.length);
+    console.log('DEBUG: Users:', JSON.stringify(users, null, 2));
     const data = users.map((user) => {
       return {
+        isFriend: user.friendOf.length > 0 || user.friends.length > 0,
         other: {
           name: user.name,
           id: user.id,

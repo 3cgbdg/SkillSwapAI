@@ -23,7 +23,7 @@ export class RequestsController {
   async create(
     @Body() createRequestDto: CreateRequestDto,
     @Req() req: RequestWithUser,
-  ): Promise<IReturnMessage> {
+  ): Promise<ReturnDataType<any>> {
     return this.requestsService.createForFriendship(
       createRequestDto,
       req.user.id,

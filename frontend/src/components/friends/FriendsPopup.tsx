@@ -31,7 +31,7 @@ const FriendsPopup = ({
     }) => ChatsService.createChat(payload),
     onSuccess: (data) => {
       setIsPopupOpen(false);
-      router.push(`/chats/${data.chat.chatId}`);
+      router.push(`/chats/${data.chatId}`);
       queryClient.invalidateQueries({ queryKey: ["chats"] });
     },
     onError: (err) => {
@@ -93,7 +93,7 @@ const FriendsPopup = ({
                           createChat({
                             payload: {
                               friendId: friend.id,
-                              friendName: friend.name,
+                              friendName: friend.name || "",
                             },
                           })
                         }

@@ -19,11 +19,7 @@ export class SearchService {
     });
     const users = await this.prisma.user.findMany({
       where: {
-        OR: [
-          { name: { contains: dto.chars, mode: 'insensitive' } },
-          { firstName: { contains: dto.chars, mode: 'insensitive' } },
-          { lastName: { contains: dto.chars, mode: 'insensitive' } },
-        ],
+        OR: [{ name: { contains: dto.chars, mode: 'insensitive' } }],
         NOT: {
           OR: [
             { friends: { some: { user2Id: myId } } },
@@ -38,8 +34,6 @@ export class SearchService {
     const newUsers = users.map((user) => ({
       id: user.id,
       name: user.name,
-      firstName: user.firstName,
-      lastName: user.lastName,
     }));
     const newSkills = skills.filter(
       (skill) =>

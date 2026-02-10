@@ -20,6 +20,11 @@ const Matches = ({
   //array for checking if the item is in the active matches so we wont be able to generate new plan again
   const { data: activeMatches = [] } = useMatches();
   const [filteredMatch, setFilteredMatch] = useState<IMatch[]>(matches);
+
+  useEffect(() => {
+    setFilteredMatch(matches);
+  }, [matches]);
+
   const [panel, setPanel] = useState<"skill" | "compatibility" | null>(null);
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -75,10 +80,10 @@ const Matches = ({
     }) => ChatsService.createChat(payload),
     onSuccess: (data) => {
       queryClient.setQueryData(["chats"], (old: any) => {
-        if (!old) return [data.chat];
-        return [data.chat, ...old];
+        if (!old) return [data];
+        return [data, ...old];
       });
-      router.push(`/chats/${data.chat.chatId}`);
+      router.push(`/chats/${data.chatId}`);
     },
     onError: (err) => {
       toast.error(err.message);

@@ -40,7 +40,7 @@ const Page = () => {
       payload: { friendId: string; friendName: string };
     }) => ChatsService.createChat(payload),
     onSuccess: (data) => {
-      router.push(`/chats/${data.chat.chatId}`);
+      router.push(`/chats/${data.chatId}`);
       queryClient.invalidateQueries({ queryKey: ["chats"] });
     },
     onError: (err) => {
@@ -71,7 +71,7 @@ const Page = () => {
                   />
                 )}
               </div>
-              <h2 className="section-title">{profile?.name}</h2>
+              <h1 className="page-title">{profile.name}</h1>
               {profile.bio !== null && profile.bio.length > 0 && (
                 <div className="w-full ">
                   <h3 className="text-lg leading-7 ">Bio:</h3>
@@ -90,7 +90,7 @@ const Page = () => {
                     className="button-blue flex items-center gap-5"
                   >
                     <MessageSquareMore size={20} />
-                    <span>Message {profile?.name}</span>
+                    <span>Message {profile.name}</span>
                   </button>
                   <button
                     onClick={() =>
@@ -214,7 +214,7 @@ const Page = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div >
       )}
     </>
   );

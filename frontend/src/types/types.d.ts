@@ -2,8 +2,6 @@ export interface IUser {
   id: string;
   aiSuggestionSkills: string[] | null;
   name: string;
-  firstName?: string;
-  lastName?: string;
   email: string;
   knownSkills?: { id: string; title: string }[];
   skillsToLearn?: { id: string; title: string }[];
@@ -14,8 +12,8 @@ export interface IUser {
 }
 
 export interface IFriend {
-  name: string;
-  imageUrl: string;
+  name?: string;
+  imageUrl: string | undefined;
   id: string;
   newMessagesQuantity?: number;
   lastMessage?: { content: string; createdAt: string };
@@ -62,8 +60,8 @@ interface IRequest {
   id: string;
   fromId: string;
   toId: string;
-  from: { name?: string; firstName?: string; lastName?: string };
-  to: { name?: string; firstName?: string; lastName?: string };
+  from: { name?: string };
+  to: { name?: string };
   type: "FRIEND" | "SESSIONCREATED" | "SESSIONACCEPTED" | "SESSIONREJECTED";
   sessionId: string;
   session: {
@@ -79,7 +77,7 @@ export interface IMatch {
   aiExplanation?: string;
   keyBenefits: string[];
   id: string;
-  isFriend?: string;
+  isFriend?: boolean;
   other: {
     id: string;
     name: string;
@@ -124,8 +122,6 @@ export type ApiResponse<T> = {
 export interface FoundUsers {
   id: string;
   name?: string;
-  firstName?: string;
-  lastName?: string;
 }
 
 export interface FoundSkills {

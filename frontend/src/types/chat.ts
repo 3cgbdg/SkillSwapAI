@@ -1,5 +1,5 @@
 export interface IFriend {
-    name: string;
+    name?: string;
     imageUrl: string;
     id: string;
     newMessagesQuantity?: number;
@@ -12,6 +12,7 @@ export interface IChat {
     chatId: string;
     lastMessageContent?: string;
     friend: IFriend;
+
 }
 
 export interface IMessage {
