@@ -74,7 +74,7 @@ const FriendsPopup = ({
                         )}
                       </div>
                       <span className="text-lg leading-7 font-semibold ">
-                        {friend.name}
+                        {friend.name || friend.firstName + " " + friend.lastName}
                       </span>
                     </div>
                     <div className="flex gap-4">
@@ -93,7 +93,7 @@ const FriendsPopup = ({
                           createChat({
                             payload: {
                               friendId: friend.id,
-                              friendName: friend.name,
+                              friendName: friend.name || friend.firstName + " " + friend.lastName,
                             },
                           })
                         }

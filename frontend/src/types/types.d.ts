@@ -14,11 +14,13 @@ export interface IUser {
 }
 
 export interface IFriend {
-  name: string;
-  imageUrl: string;
+  name?: string;
+  imageUrl: string | undefined;
   id: string;
   newMessagesQuantity?: number;
   lastMessage?: { content: string; createdAt: string };
+  firstName?: string;
+  lastName?: string;
 }
 
 export interface IChat {
@@ -48,6 +50,8 @@ export interface ISession {
   friend: {
     id: string;
     name: string;
+    firstName?: string;
+    lastName?: string;
   };
   status: SessionStatusEnum;
   meetingLink: string | null;
@@ -79,10 +83,12 @@ export interface IMatch {
   aiExplanation?: string;
   keyBenefits: string[];
   id: string;
-  isFriend?: string;
+  isFriend?: boolean;
   other: {
     id: string;
     name: string;
+    firstName?: string;
+    lastName?: string;
     imageUrl: string;
     knownSkills: { title: string }[];
     skillsToLearn: { title: string }[];

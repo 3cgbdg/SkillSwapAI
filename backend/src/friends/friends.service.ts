@@ -43,8 +43,8 @@ export class FriendsService {
         OR: [{ user1Id: id }, { user2Id: id }],
       },
       include: {
-        user1: { select: { id: true, name: true, imageUrl: true } },
-        user2: { select: { id: true, name: true, imageUrl: true } },
+        user1: { select: { id: true, name: true, imageUrl: true, firstName: true, lastName: true } },
+        user2: { select: { id: true, name: true, imageUrl: true, firstName: true, lastName: true } },
       },
     });
     const data = friends.map((f) => {

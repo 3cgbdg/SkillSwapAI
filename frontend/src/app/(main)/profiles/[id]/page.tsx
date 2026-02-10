@@ -9,6 +9,7 @@ import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
+import { getUserDisplayName } from "@/utils/user";
 
 const Page = () => {
   const { id } = useParams() as { id: string };
@@ -71,7 +72,7 @@ const Page = () => {
                   />
                 )}
               </div>
-              <h2 className="section-title">{profile?.name}</h2>
+              <h2 className="section-title">{getUserDisplayName(profile)}</h2>
               {profile.bio !== null && profile.bio.length > 0 && (
                 <div className="w-full ">
                   <h3 className="text-lg leading-7 ">Bio:</h3>
@@ -84,18 +85,18 @@ const Page = () => {
                   <button
                     onClick={() =>
                       createChat({
-                        payload: { friendId: id, friendName: profile.name },
+                        payload: { friendId: id, friendName: getUserDisplayName(profile) },
                       })
                     }
                     className="button-blue flex items-center gap-5"
                   >
                     <MessageSquareMore size={20} />
-                    <span>Message {profile?.name}</span>
+                    <span>Message {getUserDisplayName(profile)}</span>
                   </button>
                   <button
                     onClick={() =>
                       router.push(
-                        `/calendar?schedule=true&name=${encodeURIComponent(profile.name)}`
+                        `/calendar?schedule=true&name=${encodeURIComponent(getUserDisplayName(profile))}`
                       )
                     }
                     className="button-transparent rounded-md! flex items-center gap-5"

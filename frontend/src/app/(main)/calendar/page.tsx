@@ -3,6 +3,7 @@ import Calendar from "@/components/calendar/Calendar";
 import Spinner from "@/components/Spinner";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import useSessions from "@/hooks/useSessions";
+import { getUserDisplayName } from "@/utils/user";
 
 const Page = () => {
   const [now, setNow] = useState(new Date());
@@ -49,7 +50,7 @@ const Page = () => {
                   <span className=" text-xs leading-4 ">{item.start}:00</span>
                 </div>
                 <h3 className="leading-5 font-semibold">
-                  {item.title} with {item.friend.name}
+                  {item.title} with {getUserDisplayName(item.friend)}
                 </h3>
               </div>
             ))

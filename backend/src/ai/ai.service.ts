@@ -47,7 +47,7 @@ export class AiService {
 
         return {
           id: item.id,
-          name: item.name,
+          name: item.name || 'Anonymous',
           knownSkills,
           skillsToLearn,
         };
@@ -55,16 +55,16 @@ export class AiService {
       const fastApiResponse: AxiosResponse<FastApiResponse> =
         await firstValueFrom(
           this.httpService.post<FastApiResponse>(
-            `${this.configService.get<string>('FASTAPI_URL')}/match/active`,
+            `${this.configService.get<string>('FASTAPI_URL')?.replace(/\/$/, '')}/match/active`,
             {
               user1:
                 users[0].id == myId
-                  ? updatedSkillsBodyUsers[0]
-                  : updatedSkillsBodyUsers[1],
+                  ? { ...updatedSkillsBodyUsers[0], knownSkills: updatedSkillsBodyUsers[0].knownSkills.length ? updatedSkillsBodyUsers[0].knownSkills : ["General Discussion"], skillsToLearn: updatedSkillsBodyUsers[0].skillsToLearn.length ? updatedSkillsBodyUsers[0].skillsToLearn : ["New Insights"] }
+                  : { ...updatedSkillsBodyUsers[1], knownSkills: updatedSkillsBodyUsers[1].knownSkills.length ? updatedSkillsBodyUsers[1].knownSkills : ["General Discussion"], skillsToLearn: updatedSkillsBodyUsers[1].skillsToLearn.length ? updatedSkillsBodyUsers[1].skillsToLearn : ["New Insights"] },
               user2:
                 users[0].id !== myId
-                  ? updatedSkillsBodyUsers[0]
-                  : updatedSkillsBodyUsers[1],
+                  ? { ...updatedSkillsBodyUsers[0], knownSkills: updatedSkillsBodyUsers[0].knownSkills.length ? updatedSkillsBodyUsers[0].knownSkills : ["General Discussion"], skillsToLearn: updatedSkillsBodyUsers[0].skillsToLearn.length ? updatedSkillsBodyUsers[0].skillsToLearn : ["New Insights"] }
+                  : { ...updatedSkillsBodyUsers[1], knownSkills: updatedSkillsBodyUsers[1].knownSkills.length ? updatedSkillsBodyUsers[1].knownSkills : ["General Discussion"], skillsToLearn: updatedSkillsBodyUsers[1].skillsToLearn.length ? updatedSkillsBodyUsers[1].skillsToLearn : ["New Insights"] },
             },
             {
               headers: {

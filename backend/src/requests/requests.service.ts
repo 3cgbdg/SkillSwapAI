@@ -120,8 +120,8 @@ export class RequestsService {
         },
         include: {
           session: { select: { title: true } },
-          from: { select: { name: true } },
-          to: { select: { name: true } },
+          from: { select: { name: true, firstName: true, lastName: true } },
+          to: { select: { name: true, firstName: true, lastName: true } },
         },
       });
       return request;
@@ -135,8 +135,8 @@ export class RequestsService {
         },
         include: {
           session: { select: { title: true } },
-          from: { select: { name: true } },
-          to: { select: { name: true } },
+          from: { select: { name: true, firstName: true, lastName: true } },
+          to: { select: { name: true, firstName: true, lastName: true } },
         },
       });
       return request;
