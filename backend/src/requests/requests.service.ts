@@ -19,7 +19,7 @@ export class RequestsService {
   async createForFriendship(
     dto: CreateRequestDto,
     userId: string,
-  ): Promise<IReturnMessage> {
+  ): Promise<ReturnDataType<any>> {
     if (dto.id) {
       const exist = await this.prisma.request.findFirst({
         where: {
@@ -36,39 +36,45 @@ export class RequestsService {
       const request = await this.prisma.request.create({
         data: { toId: dto.id, fromId: userId, type: 'FRIEND' },
         include: {
-          from: { select: { name: true, firstName: true, lastName: true } },
-          to: { select: { name: true, firstName: true, lastName: true } },
+          from: { select: { name: true } },
+          to: { select: { name: true } },
         },
       });
       this.requestGateway.notifyUser(dto.id, { request });
-      return { message: 'Friend request is successfully created' };
+      return { data: request, message: 'Friend request is successfully created' };
     } else {
       const foundUser = await this.prisma.user.findUnique({
         where: { name: dto.name },
-        select: { id: true },
       });
       if (foundUser) {
+        if (foundUser.id === userId) {
+          throw new BadRequestException('You cannot send request to yourself');
+        }
+
         const exist = await this.prisma.request.findFirst({
           where: {
-            OR: [
-              { fromId: userId, toId: foundUser.id },
-              { fromId: foundUser.id, toId: userId },
-            ],
+            fromId: userId,
+            toId: foundUser.id,
+            type: 'FRIEND',
           },
         });
-        if (exist)
-          throw new BadRequestException(
-            'Friend request already exists or is pending.',
-          );
+        if (exist) {
+          return { data: null, message: 'Request with such name already exists' };
+        }
+
         const request = await this.prisma.request.create({
-          data: { toId: foundUser.id, fromId: userId, type: 'FRIEND' },
+          data: {
+            fromId: userId,
+            toId: foundUser.id,
+            type: 'FRIEND',
+          },
           include: {
-            from: { select: { name: true, firstName: true, lastName: true } },
-            to: { select: { name: true, firstName: true, lastName: true } },
+            from: { select: { id: true, name: true, imageUrl: true } },
+            to: { select: { name: true } },
           },
         });
         this.requestGateway.notifyUser(foundUser.id, { request });
-        return { message: 'Friend request is successfully created' };
+        return { data: request, message: 'Friend request is successfully created' };
       } else {
         throw new NotFoundException('User with such username wasn`t found');
       }
@@ -79,9 +85,9 @@ export class RequestsService {
     const data = await this.prisma.request.findMany({
       where: { toId: userId },
       include: {
-        from: { select: { name: true, firstName: true, lastName: true } },
+        from: { select: { name: true } },
         session: { select: { start: true, end: true, date: true } },
-        to: { select: { name: true, firstName: true, lastName: true } },
+        to: { select: { name: true } },
       },
     });
     return { data };
@@ -97,8 +103,8 @@ export class RequestsService {
       },
       include: {
         session: { select: { start: true, end: true, date: true } },
-        from: { select: { name: true, firstName: true, lastName: true } },
-        to: { select: { name: true, firstName: true, lastName: true } },
+        from: { select: { name: true } },
+        to: { select: { name: true } },
       },
     });
     return request;
@@ -120,8 +126,8 @@ export class RequestsService {
         },
         include: {
           session: { select: { title: true } },
-          from: { select: { name: true, firstName: true, lastName: true } },
-          to: { select: { name: true, firstName: true, lastName: true } },
+          from: { select: { name: true } },
+          to: { select: { name: true } },
         },
       });
       return request;
@@ -135,8 +141,8 @@ export class RequestsService {
         },
         include: {
           session: { select: { title: true } },
-          from: { select: { name: true, firstName: true, lastName: true } },
-          to: { select: { name: true, firstName: true, lastName: true } },
+          from: { select: { name: true } },
+          to: { select: { name: true } },
         },
       });
       return request;
@@ -146,7 +152,7 @@ export class RequestsService {
   }
 
   async deleteOne(requestId: string): Promise<IReturnMessage> {
-    const req = await this.prisma.request.delete({ where: { id: requestId } });
-    return { message: `Request with ID ${req.id} successfully deleted` };
+    await this.prisma.request.deleteMany({ where: { id: requestId } });
+    return { message: `Request successfully cleared` };
   }
 }

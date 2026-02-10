@@ -15,7 +15,7 @@ export class PlansService {
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
-  ) {}
+  ) { }
   async getPlan(matchId: string) {
     const match = await this.prisma.match.findUnique({
       where: { id: matchId },
@@ -27,7 +27,7 @@ export class PlansService {
       throw new NotFoundException('Match was not found!');
     }
 
-    return match.plan;
+    return { data: match.plan };
   }
 
   async createPlan(matchId: string, modules: IGeneratedActiveMatch['modules']) {

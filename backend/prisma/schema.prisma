@@ -27,8 +27,6 @@ enum RequestType {
 model User {
   aiSuggestionSkills       String[] @default([])
   googleId                 String?  @unique
-  firstName                String?
-  lastName                 String?
   id                       String       @id @default(uuid())
   name                     String?       @unique
   password                 String?

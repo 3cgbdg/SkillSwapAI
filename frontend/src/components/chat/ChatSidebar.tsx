@@ -18,7 +18,6 @@ import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Spinner from "../Spinner";
-import { getUserDisplayName } from "@/utils/user";
 
 // friend interface
 
@@ -42,10 +41,10 @@ const ChatSidebar = () => {
     }) => ChatsService.createChat(payload),
     onSuccess: (data) => {
       queryClient.setQueryData(["chats"], (old: any) => {
-        if (!old) return [data.chat];
-        return [data.chat, ...old];
+        if (!old) return [data];
+        return [data, ...old];
       });
-      router.push(`/chats/${data.chat.chatId}`);
+      router.push(`/chats/${data.chatId}`);
     },
     onError: (err) => {
       toast.error(err.message);
@@ -91,7 +90,7 @@ const ChatSidebar = () => {
                     <div className="flex flex-col  gap-1 max-h-[500px]  border-neutral-300">
                       {friends
                         .filter((friend) =>
-                          getUserDisplayName(friend)
+                          (friend.name || "")
                             .toLowerCase()
                             .includes(chars.toLocaleLowerCase())
                         )
@@ -103,7 +102,7 @@ const ChatSidebar = () => {
                                 createChat({
                                   payload: {
                                     friendId: friend.id,
-                                    friendName: getUserDisplayName(friend),
+                                    friendName: friend.name || "",
                                   },
                                 });
                               }}
@@ -111,7 +110,7 @@ const ChatSidebar = () => {
                               className="flex gap-2 button-transparent items-center  rounded-xl  "
                             >
                               <Users size={20} />
-                              {getUserDisplayName(friend)}
+                              {friend.name}
                             </button>
                           );
                         })}
@@ -168,7 +167,7 @@ const ChatSidebar = () => {
               {isFullyOpen && (
                 <div className="text-left ">
                   <h3 className="max-w-[160px] truncate font-medium">
-                    {getUserDisplayName(chat.friend)}
+                    {chat.friend.name}
                   </h3>
                   <div className="relative max-w-[150px]">
                     <p className="text-gray leading-5 text-sm truncate">

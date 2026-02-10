@@ -39,10 +39,10 @@ const Page = () => {
       payload: { friendId: string; friendName: string };
     }) => ChatsService.createChat(payload),
     onSuccess: (data) => {
-      router.push(`/chats/${data.chat.chatId}`);
+      router.push(`/chats/${data.chatId}`);
       queryClient.setQueryData(["chats"], (old: IChat[] = []) => {
-        if (old.some((c) => c.chatId === data.chat.chatId)) return old;
-        return [data.chat, ...old];
+        if (old.some((c) => c.chatId === data.chatId)) return old;
+        return [data, ...old];
       });
     },
     onError: (err) => {

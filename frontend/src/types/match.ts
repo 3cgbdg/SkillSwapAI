@@ -7,8 +7,6 @@ export interface IMatch {
     other: {
         id: string;
         name: string;
-        firstName?: string;
-        lastName?: string;
         imageUrl: string;
         knownSkills: { title: string }[];
         skillsToLearn: { title: string }[];

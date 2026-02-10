@@ -17,10 +17,10 @@ class RequestsService {
     name?: string;
     id?: string;
   }): Promise<ApiResponse<null>> {
-    const res = name
+    const res: any = name
       ? await api.post("/requests", { name })
       : await api.post("/requests", { id });
-    return res.data;
+    return res;
   }
 
   async deleteRequest(requestId: string): Promise<string> {

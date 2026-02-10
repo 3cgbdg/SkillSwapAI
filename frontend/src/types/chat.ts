@@ -3,8 +3,6 @@ export interface IFriend {
     imageUrl: string;
     id: string;
     newMessagesQuantity?: number;
-    firstName?: string;
-    lastName?: string;
     lastMessage?: { content: string; createdAt: string };
 }
 

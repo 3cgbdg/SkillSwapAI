@@ -31,7 +31,7 @@ const FriendsPopup = ({
     }) => ChatsService.createChat(payload),
     onSuccess: (data) => {
       setIsPopupOpen(false);
-      router.push(`/chats/${data.chat.chatId}`);
+      router.push(`/chats/${data.chatId}`);
       queryClient.invalidateQueries({ queryKey: ["chats"] });
     },
     onError: (err) => {
@@ -74,7 +74,7 @@ const FriendsPopup = ({
                         )}
                       </div>
                       <span className="text-lg leading-7 font-semibold ">
-                        {friend.name || friend.firstName + " " + friend.lastName}
+                        {friend.name}
                       </span>
                     </div>
                     <div className="flex gap-4">
@@ -93,7 +93,7 @@ const FriendsPopup = ({
                           createChat({
                             payload: {
                               friendId: friend.id,
-                              friendName: friend.name || friend.firstName + " " + friend.lastName,
+                              friendName: friend.name || "",
                             },
                           })
                         }

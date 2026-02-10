@@ -246,9 +246,7 @@ const Page = () => {
                 )}
               </div>
               <div className="">
-                <h3 className="text-xl leading-7 font-semibold">
-                  {currentChat?.friend.name || currentChat?.friend.firstName + " " + currentChat?.friend.lastName}
-                </h3>
+                {currentChat && currentChat.friend.name}
                 <span
                   className={`text-sm leading-5  ${currentChat && onlineUsers.includes(currentChat.friend.id) ? "text-green-300" : "text-gray"}`}
                 >

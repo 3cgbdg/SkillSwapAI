@@ -10,4 +10,4 @@ import { RequestGateway } from 'src/webSockets/request.gateway';
   providers: [RequestsService, RequestGateway],
   exports: [RequestsService],
 })
-export class RequestsModule {}
+export class RequestsModule { }

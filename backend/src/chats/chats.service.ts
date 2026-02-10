@@ -30,7 +30,7 @@ export class ChatsService {
       include: {
         users: {
           where: { id: { not: myId } },
-          select: { id: true, name: true, firstName: true, lastName: true, imageUrl: true },
+          select: { id: true, name: true, imageUrl: true },
         },
         messages: {
           orderBy: { createdAt: 'desc' },
@@ -85,7 +85,7 @@ export class ChatsService {
     }
     const data = {
       chatId: chat.id,
-      friend: { name: dto.friendName, firstName: null, lastName: null, id: dto.friendId },
+      friend: { name: dto.friendName, id: dto.friendId },
       lastMessageContent: null,
     };
     return { data };

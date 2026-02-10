@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { getUserDisplayName } from "@/utils/user";
 
 const Page = () => {
   const { data: user } = useProfile();
@@ -25,9 +24,7 @@ const Page = () => {
       <div className="p-8! flex items-center justify-between bg-[#F2F6FDFF] gap-2 _border rounded-[10px] border-0! shadow-xs!">
         <div className="flex flex-col gap-5 basis-[450px] w-full">
           <div className="flex flex-col gap-1">
-            <h2 className="text-xl leading-7 font-medium">
-              Hello, {getUserDisplayName(user)}!
-            </h2>
+            <h1 className="page-title">Welcome back, {user?.name}!</h1>
             <h1 className="text-4xl leading-10 font-extrabold ">
               Welcome to SkillSwap AI
             </h1>
@@ -125,7 +122,7 @@ const Page = () => {
                   key={item.id}
                   className="_border rounded-xl overflow-hidden flex flex-col"
                 >
-                  <div className="not-last:border-b-[1px] border-neutral-300 flex justify-between items-center p-4 pt-5">
+                  <div className="not-last:border-b border-neutral-300 flex justify-between items-center p-4 pt-5">
                     <div className="">
                       <h3 className="text-lg leading-7 font-semibold ">
                         {item.title}
@@ -138,7 +135,7 @@ const Page = () => {
                 </div>
               ))
           ) : (
-            <div className="not-last:border-b-[1px] _border flex justify-between items-center p-4 pt-5 rounded-md mx-auto px-10">
+            <div className="not-last:border-b _border flex justify-between items-center p-4 pt-5 rounded-md mx-auto px-10">
               No upcoming sessions
             </div>
           ))}

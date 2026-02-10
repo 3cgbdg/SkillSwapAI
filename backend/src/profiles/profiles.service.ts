@@ -118,16 +118,11 @@ export class ProfilesService {
 
     if (user) {
       if (!user.googleId) {
-        user.googleId = id;
-        user.firstName = name?.givenName;
-        user.lastName = name?.familyName;
-        user.imageUrl = photos?.[0]?.value;
         await this.prisma.user.update({
           where: { id: user.id },
           data: {
             googleId: id,
-            firstName: name?.givenName,
-            lastName: name?.familyName,
+            name: name ? `${name.givenName} ${name.familyName}` : user.name,
             imageUrl: photos?.[0]?.value,
           },
         });
@@ -139,8 +134,7 @@ export class ProfilesService {
       data: {
         googleId: id,
         email,
-        firstName: name?.givenName,
-        lastName: name?.familyName,
+        name: name ? `${name.givenName} ${name.familyName}` : `User ${id.slice(0, 5)}`,
         imageUrl: photos?.[0]?.value,
       },
     });

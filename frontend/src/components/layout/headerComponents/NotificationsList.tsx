@@ -1,6 +1,5 @@
 import { Check, X } from "lucide-react";
 import { IRequest } from "@/types/session";
-import { getUserDisplayName } from "@/utils/user";
 
 interface NotificationsListProps {
   reqs: IRequest[];
@@ -38,10 +37,10 @@ const NotificationsList = ({
       <h3 className="text-lg leading-7 font-medium">Latest requests</h3>
       <div className="flex flex-col gap-1  border-neutral-300 max-h-[450px] overflow-x-auto">
         {reqs &&
-          reqs.map((req, index) => {
+          reqs.map((req) => {
             return req.type == "FRIEND" ? (
               <div
-                key={index}
+                key={req.id}
                 className="flex gap-2 w-full _border p-2 flex-col"
               >
                 <div className="flex flex-col  ">
@@ -51,7 +50,7 @@ const NotificationsList = ({
                   <div className="     rounded-xl transition-all mb-4">
                     {" "}
                     <span className="font-semibold">From:</span>{" "}
-                    {getUserDisplayName(req.from)}
+                    {req.from.name}
                   </div>
                   <div className="grid grid-cols-2 items-center gap-2 ">
                     <button
@@ -73,7 +72,7 @@ const NotificationsList = ({
               </div>
             ) : req.type == "SESSIONCREATED" ? (
               <div
-                key={index}
+                key={req.id}
                 className="flex gap-2 w-full _border p-2 flex-col"
               >
                 <div className="flex flex-col  ">
@@ -83,7 +82,7 @@ const NotificationsList = ({
                   <div className="     rounded-xl transition-all ">
                     {" "}
                     <span className="font-semibold">From:</span>{" "}
-                    {getUserDisplayName(req.from)}
+                    {req.from.name}
                   </div>
                   {req.session.date && (
                     <div className="flex  flex-col  mb-4">
@@ -131,14 +130,11 @@ const NotificationsList = ({
                 </div>
               </div>
             ) : req.type == "SESSIONACCEPTED" ? (
-              <div className="flex flex-col  ">
+              <div key={req.id} className="flex flex-col  ">
                 <h2 className="text-lg leading-7 font-semibold">
                   Session Request 🗓️
                 </h2>
-                <div className="     rounded-xl transition-all ">
-                  {" "}
-                  <span className="font-semibold">From:</span> {getUserDisplayName(req.from)}
-                </div>
+                <span className="font-semibold">From:</span> {req.from.name}
                 {req.session.title && (
                   <div className="flex  flex-col  mb-4">
                     <div className="rounded-xl transition-all  font-medium">
@@ -159,14 +155,11 @@ const NotificationsList = ({
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col  ">
+              <div key={req.id} className="flex flex-col  ">
                 <h2 className="text-lg leading-7 font-semibold">
                   Session Request 🗓️
                 </h2>
-                <div className="     rounded-xl transition-all ">
-                  {" "}
-                  <span className="font-semibold">From:</span> {getUserDisplayName(req.from)}
-                </div>
+                <span className="font-semibold">From:</span> {req.from.name}
                 {req.session.title && (
                   <div className="flex  flex-col  mb-4">
                     <div className="rounded-xl transition-all  font-medium">

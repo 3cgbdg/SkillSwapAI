@@ -2,8 +2,6 @@ export interface IUser {
   id: string;
   aiSuggestionSkills: string[] | null;
   name: string;
-  firstName?: string;
-  lastName?: string;
   email: string;
   knownSkills?: { id: string; title: string }[];
   skillsToLearn?: { id: string; title: string }[];
@@ -19,8 +17,6 @@ export interface IFriend {
   id: string;
   newMessagesQuantity?: number;
   lastMessage?: { content: string; createdAt: string };
-  firstName?: string;
-  lastName?: string;
 }
 
 export interface IChat {
@@ -50,8 +46,6 @@ export interface ISession {
   friend: {
     id: string;
     name: string;
-    firstName?: string;
-    lastName?: string;
   };
   status: SessionStatusEnum;
   meetingLink: string | null;
@@ -66,8 +60,8 @@ interface IRequest {
   id: string;
   fromId: string;
   toId: string;
-  from: { name?: string; firstName?: string; lastName?: string };
-  to: { name?: string; firstName?: string; lastName?: string };
+  from: { name?: string };
+  to: { name?: string };
   type: "FRIEND" | "SESSIONCREATED" | "SESSIONACCEPTED" | "SESSIONREJECTED";
   sessionId: string;
   session: {
@@ -87,8 +81,6 @@ export interface IMatch {
   other: {
     id: string;
     name: string;
-    firstName?: string;
-    lastName?: string;
     imageUrl: string;
     knownSkills: { title: string }[];
     skillsToLearn: { title: string }[];
@@ -130,8 +122,6 @@ export type ApiResponse<T> = {
 export interface FoundUsers {
   id: string;
   name?: string;
-  firstName?: string;
-  lastName?: string;
 }
 
 export interface FoundSkills {

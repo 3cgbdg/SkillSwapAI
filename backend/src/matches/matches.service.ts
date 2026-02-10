@@ -58,8 +58,6 @@ export class MatchesService {
         other: {
           select: {
             name: true,
-            firstName: true,
-            lastName: true,
             skillsToLearn: { select: { title: true } },
             knownSkills: { select: { title: true } },
           },
@@ -89,8 +87,6 @@ export class MatchesService {
           select: {
             id: true,
             name: true,
-            firstName: true,
-            lastName: true,
             knownSkills: { select: { title: true } },
             skillsToLearn: { select: { title: true } },
             imageUrl: true,
@@ -100,8 +96,6 @@ export class MatchesService {
           select: {
             id: true,
             name: true,
-            firstName: true,
-            lastName: true,
             knownSkills: { select: { title: true } },
             skillsToLearn: { select: { title: true } },
             imageUrl: true,
@@ -135,13 +129,16 @@ export class MatchesService {
       (skill) => skill.title,
     );
 
+    console.log('DEBUG: myId', myId);
+    console.log('DEBUG: skillsToLearnTitles', skillsToLearnTitles);
+    console.log('DEBUG: myKnownSkillsTitles', myKnownSkillsTitles);
     const users = await this.prisma.user.findMany({
       where: {
         AND: [
           {
             OR: [
               {
-                AND: [
+                OR: [
                   {
                     knownSkills: { some: { title: { in: skillsToLearnTitles } } },
                   },
@@ -185,13 +182,13 @@ export class MatchesService {
         { skillsToLearn: { _count: 'desc' } },
       ],
     });
+    console.log('DEBUG: Users found for available matches:', users.length);
+    console.log('DEBUG: Users:', JSON.stringify(users, null, 2));
     const data = users.map((user) => {
       return {
         isFriend: user.friendOf.length > 0 || user.friends.length > 0,
         other: {
           name: user.name,
-          firstName: user.firstName,
-          lastName: user.lastName,
           id: user.id,
           imageUrl: user.imageUrl,
           skillsToLearn: user.skillsToLearn,

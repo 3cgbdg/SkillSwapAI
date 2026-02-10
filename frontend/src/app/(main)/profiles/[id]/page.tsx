@@ -9,7 +9,6 @@ import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
-import { getUserDisplayName } from "@/utils/user";
 
 const Page = () => {
   const { id } = useParams() as { id: string };
@@ -41,7 +40,7 @@ const Page = () => {
       payload: { friendId: string; friendName: string };
     }) => ChatsService.createChat(payload),
     onSuccess: (data) => {
-      router.push(`/chats/${data.chat.chatId}`);
+      router.push(`/chats/${data.chatId}`);
       queryClient.invalidateQueries({ queryKey: ["chats"] });
     },
     onError: (err) => {
@@ -72,7 +71,7 @@ const Page = () => {
                   />
                 )}
               </div>
-              <h2 className="section-title">{getUserDisplayName(profile)}</h2>
+              <h1 className="page-title">{profile.name}</h1>
               {profile.bio !== null && profile.bio.length > 0 && (
                 <div className="w-full ">
                   <h3 className="text-lg leading-7 ">Bio:</h3>
@@ -85,18 +84,18 @@ const Page = () => {
                   <button
                     onClick={() =>
                       createChat({
-                        payload: { friendId: id, friendName: getUserDisplayName(profile) },
+                        payload: { friendId: id, friendName: profile.name },
                       })
                     }
                     className="button-blue flex items-center gap-5"
                   >
                     <MessageSquareMore size={20} />
-                    <span>Message {getUserDisplayName(profile)}</span>
+                    <span>Message {profile.name}</span>
                   </button>
                   <button
                     onClick={() =>
                       router.push(
-                        `/calendar?schedule=true&name=${encodeURIComponent(getUserDisplayName(profile))}`
+                        `/calendar?schedule=true&name=${encodeURIComponent(profile.name)}`
                       )
                     }
                     className="button-transparent rounded-md! flex items-center gap-5"
@@ -215,7 +214,7 @@ const Page = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div >
       )}
     </>
   );
