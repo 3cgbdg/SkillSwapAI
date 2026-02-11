@@ -42,6 +42,7 @@ const Page = () => {
           <Image
             src={"/dashboardImage.png"}
             fill
+            sizes="(max-width: 768px) 100vw, 50vw"
             alt="dashboard preview image"
           />
         </div>

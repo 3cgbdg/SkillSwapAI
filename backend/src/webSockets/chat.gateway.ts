@@ -9,6 +9,7 @@ import { PrismaService } from 'prisma/prisma.service';
 import { Socket, Server } from 'socket.io';
 import * as cookie from 'cookie';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { Inject } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
@@ -25,8 +26,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-  ) {}
+  ) { }
   @WebSocketServer()
   server: Server;
   async handleConnection(client: Socket<any, any, any, SocketData>) {
@@ -34,12 +36,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (cookies) {
       const parsed = cookie.parse(cookies);
       const token = parsed['access_token'];
+      if (!token) {
+        console.warn('[ChatGateway] Cookie present but access_token missing');
+        return client.disconnect();
+      }
       try {
-        const payload = this.jwtService.verify(
-          token as string,
-        ) as unknown as JwtPayload;
+        const payload = this.jwtService.verify(token as string, {
+          secret: this.configService.get<string>('JWT_SECRET'),
+        }) as unknown as JwtPayload;
         client.data.userId = payload.userId;
-        void client.join(`user:${payload.userId}`);
+        await client.join(`user:${payload.userId}`);
+        console.log(`[ChatGateway] User ${payload.userId} connected and joined room: user:${payload.userId}`);
         await this.cacheManager.set(`user:online:${payload.userId}`, 1, 80000);
         const currentOnlineFriends = await this.getCurrentOnlineFriends(
           payload.userId,
@@ -70,6 +77,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
     } else {
       console.warn('[ChatGateway] Connection attempt without cookies');
+      client.disconnect();
     }
   }
 

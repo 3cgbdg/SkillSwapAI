@@ -40,6 +40,7 @@ const Profile = ({
     },
     onError: (err) => {
       toast.error(err.message);
+      void queryClient.invalidateQueries({ queryKey: ["profile"] });
     },
   });
 
@@ -57,10 +58,12 @@ const Profile = ({
           };
         });
         toast.success(data.message);
+        void queryClient.invalidateQueries({ queryKey: ["profile"] });
       }
     },
     onError: (err) => {
       toast.error(err.message);
+      void queryClient.invalidateQueries({ queryKey: ["profile"] });
     },
   });
 
@@ -71,23 +74,6 @@ const Profile = ({
     );
   }, [user?.lastSkillsGenerationDate]);
 
-  const { data: pollingData } = useQuery<string[] | null>({
-    queryKey: ["ai-suggestions", user?.id],
-    queryFn: async () => {
-      const data = await ProfilesService.getPollingDataAiSuggestions();
-      if (data && data.length > 0) {
-        await queryClient.invalidateQueries({ queryKey: ["profile"] });
-      }
-      return data || null;
-    },
-    refetchInterval: (query) => {
-      const data = query.state.data;
-      if (!data || data.length === 0) return 3000;
-      return false;
-    },
-    enabled: !!user && (!user.aiSuggestionSkills || user.aiSuggestionSkills.length === 0) && !cantGenerateSkills,
-    refetchOnWindowFocus: false,
-  });
 
   const updateCountdown = useCallback(() => {
     if (!user?.lastSkillsGenerationDate) return;
@@ -120,13 +106,12 @@ const Profile = ({
     }
   }, [cantGenerateSkills, updateCountdown]);
 
-  const isGeneratingInitial = !!user && (!user.aiSuggestionSkills || user.aiSuggestionSkills.length === 0) && !cantGenerateSkills;
 
   const buttonText = useMemo(() => {
-    if (isPending || isGeneratingInitial) return "Generating suggestions...";
+    if (isPending) return "Generating suggestions...";
     if (cantGenerateSkills) return `Wait ${timeLeft || "24h"} for next generation`;
-    return "Regenerate";
-  }, [isPending, isGeneratingInitial, cantGenerateSkills, timeLeft]);
+    return (!user?.aiSuggestionSkills || user.aiSuggestionSkills.length === 0) ? "Generate AI Suggestions" : "Regenerate";
+  }, [isPending, cantGenerateSkills, user?.aiSuggestionSkills, timeLeft]);
 
   return (
     <>
@@ -139,6 +124,7 @@ const Profile = ({
                   className=" object-cover"
                   src={user.imageUrl}
                   fill
+                  sizes="96px"
                   alt="user image"
                 />
               ) : (
@@ -164,9 +150,9 @@ const Profile = ({
                 AI Skill Suggestions
               </h2>
               <button
-                disabled={cantGenerateSkills || isPending || isGeneratingInitial}
+                disabled={cantGenerateSkills || isPending}
                 onClick={() => getNewAiSuggestionSkills()}
-                className={`button-blue min-w-[260px] ${(cantGenerateSkills || isPending || isGeneratingInitial) ? "bg-gray! cursor-auto!" : ""
+                className={`button-blue min-w-[260px] ${(cantGenerateSkills || isPending) ? "bg-gray! cursor-auto!" : ""
                   }`}
               >
                 {buttonText}
@@ -175,8 +161,8 @@ const Profile = ({
             <div className="flex flex-col gap-4">
               {isPending ? (
                 <Spinner color="blue" size={32} />
-              ) : (user.aiSuggestionSkills && user.aiSuggestionSkills.length > 0) || (pollingData && pollingData.length > 0) ? (
-                ((user.aiSuggestionSkills && user.aiSuggestionSkills.length > 0 ? user.aiSuggestionSkills : pollingData) || []).map((skill: string, idx: number) => (
+              ) : (user.aiSuggestionSkills && user.aiSuggestionSkills.length > 0) ? (
+                (user.aiSuggestionSkills || []).map((skill: string, idx: number) => (
                   <div
                     key={idx}
                     className="not-last:border-b py-3 border-b-neutral-300"
@@ -201,8 +187,6 @@ const Profile = ({
                     </div>
                   </div>
                 ))
-              ) : isGeneratingInitial ? (
-                <Spinner color="blue" size={32} />
               ) : (
                 <span className="text-center text-gray italic py-8">
                   {cantGenerateSkills

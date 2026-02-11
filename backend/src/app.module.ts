@@ -13,6 +13,7 @@ import { MatchesModule } from './matches/matches.module';
 import { S3Module } from './s3/s3module';
 import { PlansModule } from './plans/plans.module';
 import { AiModule } from './ai/ai.module';
+import { WebSocketsModule } from './webSockets/webSockets.module';
 import { AppController } from './app.controller';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -72,6 +73,7 @@ import { APP_GUARD } from '@nestjs/core';
     PlansModule,
 
     AiModule,
+    WebSocketsModule,
   ],
   controllers: [AppController],
   providers: [
@@ -81,4 +83,4 @@ import { APP_GUARD } from '@nestjs/core';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }

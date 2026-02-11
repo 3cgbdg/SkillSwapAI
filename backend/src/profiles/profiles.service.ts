@@ -96,16 +96,6 @@ export class ProfilesService {
     return { message: 'Successfully updated!' };
   }
 
-  async getPollingDataAiSuggestions(
-    id: string,
-  ): Promise<ReturnDataType<string[] | null>> {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
-    });
-
-    return { data: user?.aiSuggestionSkills ?? null };
-  }
-
   async findOrCreateGoogleUser(profile: GoogleProfile): Promise<User> {
     const { id, emails, name, photos } = profile;
     if (!emails || emails.length === 0) {
