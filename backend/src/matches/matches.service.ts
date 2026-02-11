@@ -4,16 +4,19 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { Match } from '@prisma/client';
+import { Plan } from '@prisma/client';
 import { PrismaService } from 'prisma/prisma.service';
 import { AiService } from 'src/ai/ai.service';
-import { FriendsService } from 'src/friends/friends.service';
 import { PlansService } from 'src/plans/plans.service';
 import { ReturnDataType } from 'types/general';
-import { IMatchResponse } from 'types/matches';
+import { IMatchResponse, IAvailableMatchItem } from 'types/matches';
+import { IGeneratedActiveMatch } from 'src/ai/ai.interface';
+import { MATCHES_CONSTANTS } from 'src/constants/matches';
+import { MatchesUtils } from 'src/utils/matches.utils';
 
 @Injectable()
 export class MatchesService {
+
   constructor(
     private readonly plansService: PlansService,
     private readonly prisma: PrismaService,
@@ -22,20 +25,10 @@ export class MatchesService {
   async generateActiveMatch(
     myId: string,
     otherId: string,
-  ): Promise<ReturnDataType<any>> {
-    const existedMatchesForThisUsers = await this.prisma.match.findMany({
-      where: {
-        OR: [
-          {
-            AND: [{ initiatorId: myId }, { otherId: otherId }],
-          },
-          {
-            AND: [{ initiatorId: otherId }, { otherId: myId }],
-          },
-        ],
-      },
-    });
-    if (existedMatchesForThisUsers.length > 0) {
+  ): Promise<ReturnDataType<Plan>> {
+    const exists = await this.doesMatchesExistsForUser(myId, otherId);
+
+    if (exists) {
       throw new ForbiddenException(
         'You have already created active match with this person',
       );
@@ -56,131 +49,57 @@ export class MatchesService {
     };
   }
 
-
-
-
-
-
   async getActiveMatches(
     myId: string,
   ): Promise<ReturnDataType<IMatchResponse[]>> {
     const matches = await this.prisma.match.findMany({
       where: { OR: [{ initiatorId: myId }, { otherId: myId }] },
       include: {
-        initiator: {
-          select: {
-            id: true,
-            name: true,
-            knownSkills: { select: { title: true } },
-            skillsToLearn: { select: { title: true } },
-            imageUrl: true,
-          },
-        },
-        other: {
-          select: {
-            id: true,
-            name: true,
-            knownSkills: { select: { title: true } },
-            skillsToLearn: { select: { title: true } },
-            imageUrl: true,
-          },
-        },
+        initiator: MatchesUtils.userSelect(),
+        other: MatchesUtils.userSelect(),
       },
+      orderBy: { createdAt: 'desc' },
     });
-    const data = matches.map((match) => {
-      const otherUser =
-        match.initiator.id === myId ? match.other : match.initiator;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { initiator, ...newMatch } = match;
-      return { ...newMatch, other: otherUser };
-    });
+
+    const data = matches.map((match) => MatchesUtils.mapToMatchResponse(match, myId));
     return { data };
   }
 
-  async getAvailableMatches(myId: string): Promise<ReturnDataType<any>> {
+  async getAvailableMatches(myId: string): Promise<ReturnDataType<IAvailableMatchItem[]>> {
     const myUser = await this.prisma.user.findUnique({
       where: { id: myId },
-      include: {
-        skillsToLearn: true,
-        knownSkills: true,
-      },
+      include: { skillsToLearn: true, knownSkills: true },
     });
+
     if (!myUser) throw new NotFoundException('User was not found');
-    const skillsToLearnTitles = myUser.skillsToLearn.map(
-      (skill) => skill.title,
-    );
-    const myKnownSkillsTitles = myUser.knownSkills.map((skill) => skill.title);
+
+    const learnTitles = myUser.skillsToLearn.map((s) => s.title);
+    const knowTitles = myUser.knownSkills.map((s) => s.title);
 
     const users = await this.prisma.user.findMany({
-      where: {
-        AND: [
-          {
-            OR: [
-              {
-                OR: [
-                  {
-                    knownSkills: {
-                      some: { title: { in: skillsToLearnTitles } },
-                    },
-                  },
-                  {
-                    skillsToLearn: {
-                      some: { title: { in: myKnownSkillsTitles } },
-                    },
-                  },
-                ],
-              },
-              { friendOf: { some: { user1Id: myId } } },
-              { friendOf: { some: { user2Id: myId } } },
-              { friends: { some: { user1Id: myId } } },
-              { friends: { some: { user2Id: myId } } },
-            ],
-          },
-        ],
-        NOT: [
-          { id: myId },
-          { matchesInitiated: { some: { otherId: myId } } },
-          { matchesReceived: { some: { initiatorId: myId } } },
-        ],
-      },
+      where: MatchesUtils.buildAvailableMatchesFilter(myId, learnTitles, knowTitles),
       include: {
         knownSkills: true,
         skillsToLearn: true,
-        friendOf: {
-          where: {
-            OR: [{ user1Id: myId }, { user2Id: myId }],
-          },
-        },
-        friends: {
-          where: {
-            OR: [{ user1Id: myId }, { user2Id: myId }],
-          },
-        },
+        friendOf: { where: { OR: [{ user1Id: myId }, { user2Id: myId }] } },
+        friends: { where: { OR: [{ user1Id: myId }, { user2Id: myId }] } },
       },
-      take: 20,
+      take: MATCHES_CONSTANTS.DEFAULT_TAKE,
       orderBy: [
         { knownSkills: { _count: 'desc' } },
         { skillsToLearn: { _count: 'desc' } },
       ],
     });
-    const data = users.map((user) => {
-      return {
-        isFriend: user.friendOf.length > 0 || user.friends.length > 0,
-        other: {
-          name: user.name,
-          id: user.id,
-          imageUrl: user.imageUrl,
-          skillsToLearn: user.skillsToLearn,
-          knownSkills: user.knownSkills,
-        },
-      };
-    });
+
+    const data = users.map((u) => MatchesUtils.mapToAvailableMatch(u));
     return { data };
   }
 
-
-
-  private async createMatch(myId: string, otherId: string, result: any): Promise<string> {
+  private async createMatch(
+    myId: string,
+    otherId: string,
+    result: { generatedData: IGeneratedActiveMatch },
+  ): Promise<string> {
     const activeMatch = await this.prisma.match.create({
       data: {
         compatibility: Math.round(Number(result.generatedData.compatibility)),
@@ -189,18 +108,16 @@ export class MatchesService {
         other: { connect: { id: otherId } },
         initiator: { connect: { id: myId } },
       },
-      include: {
-        other: {
-          select: {
-            name: true,
-            skillsToLearn: { select: { title: true } },
-            knownSkills: { select: { title: true } },
-          },
-        },
-      },
     });
-    if (!activeMatch)
-      throw new InternalServerErrorException('Cannot createt active match');
+
+    if (!activeMatch) throw new InternalServerErrorException('Cannot create active match');
     return activeMatch.id;
+  }
+
+  private async doesMatchesExistsForUser(myId: string, otherId: string): Promise<boolean> {
+    const count = await this.prisma.match.count({
+      where: MatchesUtils.getMatchFilter(myId, otherId),
+    });
+    return count > 0;
   }
 }

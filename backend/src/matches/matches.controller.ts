@@ -9,10 +9,10 @@ import {
 } from '@nestjs/common';
 import { MatchesService } from './matches.service';
 import { AuthGuard } from '@nestjs/passport';
-import { Match } from '@prisma/client';
+import { Match, Plan } from '@prisma/client';
 import type { RequestWithUser } from 'types/auth';
 import { ReturnDataType } from 'types/general';
-import { IMatchResponse } from 'types/matches';
+import { IMatchResponse, IAvailableMatchItem } from 'types/matches';
 @UseGuards(AuthGuard('jwt'))
 @Controller('matches')
 export class MatchesController {
@@ -22,7 +22,7 @@ export class MatchesController {
   async create(
     @Req() req: RequestWithUser,
     @Body('otherId') otherId: string,
-  ): Promise<ReturnDataType<any>> {
+  ): Promise<ReturnDataType<Plan>> {
     if (!otherId || otherId.length == 0)
       throw new BadRequestException('No user id!');
     return this.matchesService.generateActiveMatch(req.user.id, otherId);
@@ -38,7 +38,7 @@ export class MatchesController {
   @Get('available')
   async getAvailableMatches(
     @Req() req: RequestWithUser,
-  ): Promise<ReturnDataType<any>> {
+  ): Promise<ReturnDataType<IAvailableMatchItem[]>> {
     return this.matchesService.getAvailableMatches(req.user.id);
   }
 }
