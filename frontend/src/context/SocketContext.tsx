@@ -36,23 +36,35 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       console.log("[SocketContext] No user found, skipping socket connection.");
       return;
     }
-    console.log("[SocketContext] Initiating socket connection to:", process.env.NEXT_PUBLIC_API_URL);
+    console.log("[SocketContext] Initiating socket connection");
     const sock = io(`${process.env.NEXT_PUBLIC_API_URL}`, {
       withCredentials: true,
       transports: ["websocket", "polling"], // Ensure multiple transports are tried
     });
 
     sock.on("connect_error", (err) => {
-      console.error("[SocketContext] Connection error:", err.message);
+      console.error("[SocketContext] Connection error:", err.message, err);
     });
+
+    sock.on("disconnect", (reason) => {
+      console.warn("[SocketContext] Disconnected:", reason);
+    });
+
+    sock.on("reconnect_attempt", () => {
+      console.log("[SocketContext] Attempting to reconnect...");
+    });
+
     setSocket(sock);
 
     const intervalHeartbeat = setInterval(() => {
-      sock.emit("heartbeat");
+      if (sock.connected) {
+        console.log("[SocketContext] Sending heartbeat...");
+        sock.emit("heartbeat");
+      }
     }, 30000);
 
     sock.on("connect", () => {
-      console.log("[SocketContext] Connected to socket, refreshing profile...");
+      console.log("[SocketContext] Connected to socket with ID:", sock.id);
       void queryClient.invalidateQueries({ queryKey: ["profile"] });
     });
 

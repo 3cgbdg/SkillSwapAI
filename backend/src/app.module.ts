@@ -37,14 +37,23 @@ import { APP_GUARD } from '@nestjs/core';
       imports: [ConfigModule],
       inject: [ConfigService],
       isGlobal: true,
-      useFactory: (configService: ConfigService) => ({
-        store: redisStore,
-        ttl: 0,
-        tls: true,
-        host: configService.get<string>('REDIS_HOST'),
-        port: configService.get<number>('REDIS_PORT'),
-        password: configService.get<string>('REDIS_PASSWORD') || null,
-      }),
+      useFactory: async (configService: ConfigService) => {
+        const host = configService.get<string>('REDIS_HOST');
+        if (!host) {
+          console.log('[CacheModule] REDIS_HOST not found, using memory store');
+          return {
+            ttl: 3600,
+          };
+        }
+        return {
+          store: redisStore,
+          ttl: 3600,
+          tls: true,
+          host: host,
+          port: configService.get<number>('REDIS_PORT'),
+          password: configService.get<string>('REDIS_PASSWORD') || null,
+        };
+      },
     }),
     ThrottlerModule.forRoot([
       {

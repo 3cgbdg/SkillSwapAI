@@ -13,7 +13,6 @@ import { ReturnDataType } from 'types/general';
 import { User } from '@prisma/client';
 import { AxiosResponse } from 'axios';
 import { RequestGateway } from 'src/webSockets/request.gateway';
-
 interface FastApiResponse {
   AIReport: string | object;
 }
@@ -193,8 +192,7 @@ export class AiService {
         },
       });
 
-      console.log(`[AiService] Notifying user ${myId} about ready suggestions`);
-      this.requestGateway.notifyAiSuggestions(myId, readyAiArray);
+      void this.requestGateway.notifyAiSuggestions(myId, readyAiArray);
     }
     return readyAiArray
       ? { data: readyAiArray, message: 'Skills successfully generated!' }
