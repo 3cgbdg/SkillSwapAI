@@ -8,12 +8,11 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import { Mail, Lock, User, X } from "lucide-react";             
+import { Mail, Lock, User, X } from "lucide-react";
 
 import FullSreenLoader from "@/components/FullSreenLoader";
 import Spinner from "@/components/Spinner";
 import AuthService from "@/services/AuthService";
-import ProfilesService from "@/services/ProfilesService";
 import SkillsService from "@/services/SkillsService";
 import { logInSchema } from "@/validation/logIn";
 import { signUpSchema } from "@/validation/signUp";
@@ -64,15 +63,10 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
         },
         onSuccess: async (data) => {
             toast.success(data.message);
-            try {
-                await queryClient.prefetchQuery({
-                    queryKey: ["profile"],
-                    queryFn: ProfilesService.getOwnProfile,
-                });
-                router.push("/dashboard");
-            } catch (err) {
-                toast.error(`Unable to fetch profile after ${mode}.`);
-            }
+            // Invalidate and navigateto ensure fresh session pickup
+            await queryClient.invalidateQueries({ queryKey: ["profile"] });
+            router.push("/dashboard");
+            router.refresh();
         },
         onError: (err: any) => {
             toast.error(err.message);

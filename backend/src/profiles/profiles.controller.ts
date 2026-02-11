@@ -52,12 +52,4 @@ export class ProfilesController {
   ): Promise<IReturnMessage> {
     return this.profilesService.updateProfile(dto, req.user);
   }
-
-  @Get('ai-suggestions/polling')
-  @UseGuards(AuthGuard('jwt'))
-  async getPollingDataAiSuggestions(
-    @Req() req: RequestWithUser,
-  ): Promise<ReturnDataType<string[] | null>> {
-    return this.profilesService.getPollingDataAiSuggestions(req.user.id);
-  }
 }

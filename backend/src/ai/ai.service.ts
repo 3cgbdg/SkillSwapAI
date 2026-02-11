@@ -12,7 +12,7 @@ import { PrismaService } from 'prisma/prisma.service';
 import { ReturnDataType } from 'types/general';
 import { User } from '@prisma/client';
 import { AxiosResponse } from 'axios';
-
+import { RequestGateway } from 'src/webSockets/request.gateway';
 interface FastApiResponse {
   AIReport: string | object;
 }
@@ -23,7 +23,8 @@ export class AiService {
     private readonly prisma: PrismaService,
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
-  ) {}
+    private readonly requestGateway: RequestGateway,
+  ) { }
   async generateBodyForActiveMatch(
     myId: string,
     otherId: string,
@@ -60,47 +61,47 @@ export class AiService {
               user1:
                 users[0].id == myId
                   ? {
-                      ...updatedSkillsBodyUsers[0],
-                      knownSkills: updatedSkillsBodyUsers[0].knownSkills.length
-                        ? updatedSkillsBodyUsers[0].knownSkills
-                        : ['General Discussion'],
-                      skillsToLearn: updatedSkillsBodyUsers[0].skillsToLearn
-                        .length
-                        ? updatedSkillsBodyUsers[0].skillsToLearn
-                        : ['New Insights'],
-                    }
+                    ...updatedSkillsBodyUsers[0],
+                    knownSkills: updatedSkillsBodyUsers[0].knownSkills.length
+                      ? updatedSkillsBodyUsers[0].knownSkills
+                      : ['General Discussion'],
+                    skillsToLearn: updatedSkillsBodyUsers[0].skillsToLearn
+                      .length
+                      ? updatedSkillsBodyUsers[0].skillsToLearn
+                      : ['New Insights'],
+                  }
                   : {
-                      ...updatedSkillsBodyUsers[1],
-                      knownSkills: updatedSkillsBodyUsers[1].knownSkills.length
-                        ? updatedSkillsBodyUsers[1].knownSkills
-                        : ['General Discussion'],
-                      skillsToLearn: updatedSkillsBodyUsers[1].skillsToLearn
-                        .length
-                        ? updatedSkillsBodyUsers[1].skillsToLearn
-                        : ['New Insights'],
-                    },
+                    ...updatedSkillsBodyUsers[1],
+                    knownSkills: updatedSkillsBodyUsers[1].knownSkills.length
+                      ? updatedSkillsBodyUsers[1].knownSkills
+                      : ['General Discussion'],
+                    skillsToLearn: updatedSkillsBodyUsers[1].skillsToLearn
+                      .length
+                      ? updatedSkillsBodyUsers[1].skillsToLearn
+                      : ['New Insights'],
+                  },
               user2:
                 users[0].id !== myId
                   ? {
-                      ...updatedSkillsBodyUsers[0],
-                      knownSkills: updatedSkillsBodyUsers[0].knownSkills.length
-                        ? updatedSkillsBodyUsers[0].knownSkills
-                        : ['General Discussion'],
-                      skillsToLearn: updatedSkillsBodyUsers[0].skillsToLearn
-                        .length
-                        ? updatedSkillsBodyUsers[0].skillsToLearn
-                        : ['New Insights'],
-                    }
+                    ...updatedSkillsBodyUsers[0],
+                    knownSkills: updatedSkillsBodyUsers[0].knownSkills.length
+                      ? updatedSkillsBodyUsers[0].knownSkills
+                      : ['General Discussion'],
+                    skillsToLearn: updatedSkillsBodyUsers[0].skillsToLearn
+                      .length
+                      ? updatedSkillsBodyUsers[0].skillsToLearn
+                      : ['New Insights'],
+                  }
                   : {
-                      ...updatedSkillsBodyUsers[1],
-                      knownSkills: updatedSkillsBodyUsers[1].knownSkills.length
-                        ? updatedSkillsBodyUsers[1].knownSkills
-                        : ['General Discussion'],
-                      skillsToLearn: updatedSkillsBodyUsers[1].skillsToLearn
-                        .length
-                        ? updatedSkillsBodyUsers[1].skillsToLearn
-                        : ['New Insights'],
-                    },
+                    ...updatedSkillsBodyUsers[1],
+                    knownSkills: updatedSkillsBodyUsers[1].knownSkills.length
+                      ? updatedSkillsBodyUsers[1].knownSkills
+                      : ['General Discussion'],
+                    skillsToLearn: updatedSkillsBodyUsers[1].skillsToLearn
+                      .length
+                      ? updatedSkillsBodyUsers[1].skillsToLearn
+                      : ['New Insights'],
+                  },
             },
             {
               headers: {
@@ -116,9 +117,9 @@ export class AiService {
 
       return readyAiArray
         ? {
-            generatedData: readyAiArray,
-            other: users[0].id == myId ? users[1] : users[0],
-          }
+          generatedData: readyAiArray,
+          other: users[0].id == myId ? users[1] : users[0],
+        }
         : null;
     } else {
       throw new BadRequestException();
@@ -190,13 +191,11 @@ export class AiService {
           lastSkillsGenerationDate: new Date(),
         },
       });
-    }
-    const returnAiArray = readyAiArray?.filter(
-      (item) => !stringArraySkillsToLearn.includes(item),
-    );
 
-    return returnAiArray
-      ? { data: returnAiArray, message: 'Skills successfully generated!' }
+      void this.requestGateway.notifyAiSuggestions(myId, readyAiArray);
+    }
+    return readyAiArray
+      ? { data: readyAiArray, message: 'Skills successfully generated!' }
       : null;
   }
 

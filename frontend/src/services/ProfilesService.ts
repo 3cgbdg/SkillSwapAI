@@ -26,10 +26,6 @@ class ProfilesService {
     return res.data;
   }
 
-  async getPollingDataAiSuggestions(): Promise<string[] | null> {
-    const res: any = await api.get("profiles/ai-suggestions/polling");
-    return res.data;
-  }
 
   async deleteAvatarImage(): Promise<ApiResponse<null>> {
     const res = await api.delete("profiles/photo/delete");

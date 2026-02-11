@@ -33,7 +33,7 @@ export class AuthController {
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
     private readonly profilesService: ProfilesService,
-  ) {}
+  ) { }
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
@@ -63,6 +63,7 @@ export class AuthController {
           ? 'none'
           : 'lax',
       maxAge: 1000 * 60 * 15,
+      path: '/',
     });
 
     res.cookie('refresh_token', response.refresh_token, {
@@ -73,6 +74,7 @@ export class AuthController {
           ? 'none'
           : 'lax',
       maxAge: 1000 * 3600 * 24 * 7,
+      path: '/',
     });
 
     const frontendUrl =
@@ -96,6 +98,7 @@ export class AuthController {
           : 'lax',
 
       maxAge: 1000 * 60 * 15,
+      path: '/',
     });
     res.cookie('refresh_token', response.refresh_token, {
       httpOnly: true,
@@ -106,6 +109,7 @@ export class AuthController {
           : 'lax',
 
       maxAge: 1000 * 3600 * 24 * 7,
+      path: '/',
     });
     return res.json({ message: 'Successfully signed up!' });
   }
@@ -125,6 +129,7 @@ export class AuthController {
           : 'lax',
 
       maxAge: 1000 * 60 * 15,
+      path: '/',
     });
     res.cookie('refresh_token', response.refresh_token, {
       httpOnly: true,
@@ -135,6 +140,7 @@ export class AuthController {
           : 'lax',
 
       maxAge: 1000 * 3600 * 24 * 7,
+      path: '/',
     });
     return res.json({ message: 'Successfully logged in!' });
   }
@@ -144,6 +150,7 @@ export class AuthController {
   async profile(
     @Req() request: RequestWithUser,
   ): Promise<ReturnDataType<Omit<User, 'password'>>> {
+    console.log('[AuthController] Profile request for user:', request.user?.id);
     const user = await this.prisma.user.findUnique({
       where: { id: request.user.id },
       include: { skillsToLearn: true, knownSkills: true },
@@ -162,6 +169,7 @@ export class AuthController {
     const refreshToken = (req.cookies as Record<string, string | undefined>)[
       'refresh_token'
     ];
+    console.log('[AuthController] Refresh token found in cookies:', !!refreshToken);
     if (!refreshToken) {
       throw new HttpException('No refresh token', HttpStatus.UNAUTHORIZED);
     }
@@ -190,6 +198,7 @@ export class AuthController {
           ? 'none'
           : 'lax',
       maxAge: 1000 * 60 * 15,
+      path: '/',
     });
 
     return res.json({ message: 'Access token refreshed' });
@@ -204,6 +213,7 @@ export class AuthController {
         this.configService.get<string>('NODE_ENV') === 'production'
           ? 'none'
           : 'lax',
+      path: '/',
     });
     res.clearCookie('refresh_token', {
       httpOnly: true,
@@ -212,6 +222,7 @@ export class AuthController {
         this.configService.get<string>('NODE_ENV') === 'production'
           ? 'none'
           : 'lax',
+      path: '/',
     });
 
     return { message: 'Successfully logged out!' };
