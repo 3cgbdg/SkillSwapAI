@@ -2,30 +2,32 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { ReturnDataType } from 'types/general';
+import { IChatListItem, IChatResponse } from 'types/chats';
+import { Message } from '@prisma/client';
 
 @Injectable()
 export class ChatsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async findOne(
     myId: string,
     friendId: string,
-  ): Promise<ReturnDataType<any[]>> {
+  ): Promise<ReturnDataType<Message[]>> {
     const chat = await this.prisma.chat.findFirst({
       where: {
-        AND: [
-          { users: { some: { id: myId } } },
-          { users: { some: { id: friendId } } },
-        ],
+        users: { every: { id: { in: [myId, friendId] } } },
       },
-      include: { messages: { orderBy: { createdAt: 'asc' } } },
+      include: {
+        messages: {
+          orderBy: { createdAt: 'asc' },
+        },
+      },
     });
 
-    const data = [...(chat?.messages ?? [])];
-    return { data };
+    return { data: chat?.messages ?? [] };
   }
 
-  async findAll(myId: string): Promise<ReturnDataType<any>> {
+  async findAll(myId: string): Promise<ReturnDataType<IChatListItem[]>> {
     const chats = await this.prisma.chat.findMany({
       where: {
         users: { some: { id: myId } },
@@ -51,7 +53,8 @@ export class ChatsService {
         },
       },
     });
-    const data = chats.map((chat) => {
+
+    const data: IChatListItem[] = chats.map((chat) => {
       const lastMsg = chat.messages[0];
       return {
         chatId: chat.id,
@@ -63,17 +66,17 @@ export class ChatsService {
         lastMessageAt: lastMsg?.createdAt || null,
       };
     });
+
     return { data };
   }
 
   async createChat(
     dto: CreateChatDto,
     myId: string,
-  ): Promise<ReturnDataType<any>> {
+  ): Promise<ReturnDataType<IChatResponse>> {
     let chat = await this.prisma.chat.findFirst({
       where: {
-        users: { some: { id: myId } },
-        AND: { users: { some: { id: dto.friendId } } },
+        users: { every: { id: { in: [myId, dto.friendId] } } },
       },
     });
 
@@ -86,11 +89,13 @@ export class ChatsService {
         },
       });
     }
-    const data = {
+
+    const data: IChatResponse = {
       chatId: chat.id,
       friend: { name: dto.friendName, id: dto.friendId },
       lastMessageContent: null,
     };
+
     return { data };
   }
 }

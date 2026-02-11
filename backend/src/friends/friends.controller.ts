@@ -3,11 +3,13 @@ import { FriendsService } from './friends.service';
 import { CreateFriendDto } from './dto/create-friend.dto';
 import { AuthGuard } from '@nestjs/passport';
 import type { RequestWithUser } from 'types/auth';
+import { IFriendItem } from 'types/friends';
 import { IReturnMessage, ReturnDataType } from 'types/general';
+
 @Controller('friends')
 @UseGuards(AuthGuard('jwt'))
 export class FriendsController {
-  constructor(private readonly friendsService: FriendsService) {}
+  constructor(private readonly friendsService: FriendsService) { }
 
   @Post()
   async create(
@@ -18,7 +20,7 @@ export class FriendsController {
   }
 
   @Get()
-  async findAll(@Req() req: RequestWithUser): Promise<ReturnDataType<any>> {
+  async findAll(@Req() req: RequestWithUser): Promise<ReturnDataType<IFriendItem[]>> {
     return this.friendsService.findAll(req.user.id);
   }
 

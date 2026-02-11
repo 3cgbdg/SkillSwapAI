@@ -18,12 +18,11 @@ export class MatchesService {
     private readonly plansService: PlansService,
     private readonly prisma: PrismaService,
     private readonly aiService: AiService,
-    private readonly friendsService: FriendsService,
-  ) {}
+  ) { }
   async generateActiveMatch(
     myId: string,
     otherId: string,
-  ): Promise<ReturnDataType<Match>> {
+  ): Promise<ReturnDataType<any>> {
     const existedMatchesForThisUsers = await this.prisma.match.findMany({
       where: {
         OR: [
@@ -46,36 +45,21 @@ export class MatchesService {
       otherId,
     );
     if (!result?.generatedData) throw new InternalServerErrorException();
-    const activeMatch = await this.prisma.match.create({
-      data: {
-        compatibility: Math.round(Number(result.generatedData.compatibility)),
-        aiExplanation: result.generatedData.aiExplanation,
-        keyBenefits: result.generatedData.keyBenefits,
-        other: { connect: { id: result.other.id } },
-        initiator: { connect: { id: myId } },
-      },
-      include: {
-        other: {
-          select: {
-            name: true,
-            skillsToLearn: { select: { title: true } },
-            knownSkills: { select: { title: true } },
-          },
-        },
-      },
-    });
-    if (!activeMatch)
-      throw new InternalServerErrorException('Cannot createt active match');
-    await this.plansService.createPlan(
-      activeMatch.id,
+    const activeMatchId = await this.createMatch(myId, otherId, result);
+    const plan = await this.plansService.createPlan(
+      activeMatchId,
       result.generatedData.modules,
     );
-    const data = activeMatch;
     return {
-      data,
+      data: plan,
       message: 'Active match has been successfully generated',
     };
   }
+
+
+
+
+
 
   async getActiveMatches(
     myId: string,
@@ -192,5 +176,31 @@ export class MatchesService {
       };
     });
     return { data };
+  }
+
+
+
+  private async createMatch(myId: string, otherId: string, result: any): Promise<string> {
+    const activeMatch = await this.prisma.match.create({
+      data: {
+        compatibility: Math.round(Number(result.generatedData.compatibility)),
+        aiExplanation: result.generatedData.aiExplanation,
+        keyBenefits: result.generatedData.keyBenefits,
+        other: { connect: { id: otherId } },
+        initiator: { connect: { id: myId } },
+      },
+      include: {
+        other: {
+          select: {
+            name: true,
+            skillsToLearn: { select: { title: true } },
+            knownSkills: { select: { title: true } },
+          },
+        },
+      },
+    });
+    if (!activeMatch)
+      throw new InternalServerErrorException('Cannot createt active match');
+    return activeMatch.id;
   }
 }

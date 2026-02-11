@@ -13,13 +13,15 @@ import { GetChatDto } from './dto/get-chat.dto';
 import { CreateChatDto } from './dto/create-chat.dto';
 import type { RequestWithUser } from 'types/auth';
 import { ReturnDataType } from 'types/general';
+import { IChatListItem, IChatResponse } from 'types/chats';
+import { Message } from '@prisma/client';
 
 @Controller('chats')
 @UseGuards(AuthGuard('jwt'))
 export class ChatsController {
-  constructor(private readonly chatsService: ChatsService) {}
+  constructor(private readonly chatsService: ChatsService) { }
   @Get()
-  async findAll(@Req() req: RequestWithUser): Promise<ReturnDataType<any>> {
+  async findAll(@Req() req: RequestWithUser): Promise<ReturnDataType<IChatListItem[]>> {
     return this.chatsService.findAll(req.user.id);
   }
 
@@ -27,7 +29,7 @@ export class ChatsController {
   async findOne(
     @Query() dto: GetChatDto,
     @Req() req: RequestWithUser,
-  ): Promise<ReturnDataType<any[]>> {
+  ): Promise<ReturnDataType<Message[]>> {
     return this.chatsService.findOne(req.user.id, dto.with);
   }
 
@@ -35,7 +37,7 @@ export class ChatsController {
   async createChat(
     @Body() dto: CreateChatDto,
     @Req() req: RequestWithUser,
-  ): Promise<ReturnDataType<any>> {
+  ): Promise<ReturnDataType<IChatResponse>> {
     return this.chatsService.createChat(dto, req.user.id);
   }
 }
