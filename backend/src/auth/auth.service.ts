@@ -4,6 +4,8 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { PrismaService } from 'prisma/prisma.service';
@@ -13,6 +15,7 @@ import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import { AiService } from 'src/ai/ai.service';
+import { JwtPayload } from 'types/auth';
 
 @Injectable()
 export class AuthService {
@@ -21,7 +24,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
   async signup(
     dto: CreateAuthDto,
   ): Promise<{ access_token: string; refresh_token: string }> {
@@ -120,7 +123,15 @@ export class AuthService {
     return { access_token, refresh_token };
   }
 
-  createTokenForRefresh(user: User): string {
-    return this.jwtService.sign({ userId: user.id });
+  createTokenForAccessToken(userId: string): string {
+    return this.jwtService.sign({ userId });
+  }
+
+  async decodeRefreshToken(token: string): Promise<JwtPayload> {
+    try {
+      return this.jwtService.decode(token);
+    } catch {
+      throw new HttpException('Invalid token', HttpStatus.UNAUTHORIZED);
+    }
   }
 }
