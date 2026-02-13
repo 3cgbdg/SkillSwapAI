@@ -257,7 +257,7 @@ const CalendarPopup = ({
                       <div className="flex flex-col  gap-1 max-h-[500px]  border-neutral-300">
                         {friends
                           .filter((friend) =>
-                            friend.name
+                            friend.name!
                               .toLowerCase()
                               .includes(chars.toLocaleLowerCase())
                           )
@@ -267,7 +267,7 @@ const CalendarPopup = ({
                                 className="cursor-pointer hover:opacity-75"
                                 key={idx}
                                 onClick={() => {
-                                  setValue("friendName", friend.name);
+                                  setValue("friendName", friend.name || "");
                                   setChars("");
                                 }}
                               >

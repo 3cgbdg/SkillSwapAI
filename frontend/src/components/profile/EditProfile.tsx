@@ -83,7 +83,7 @@ const EditProfile = ({
     mutationFn: async (file: File) => {
       const form = new FormData();
       form.append("image", file);
-      const data = await ProfilesService.uploadImage(form);
+      const data = await ProfilesService.uploadAvatarImage(form);
       queryClient.setQueryData(["profile"], (old: any) => {
         if (!old) return old;
         return {
