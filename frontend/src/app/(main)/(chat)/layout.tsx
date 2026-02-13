@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
 import ChatsService from "@/services/ChatsService";
 import { useParams } from "next/navigation";
-import { toast } from "react-toastify";
+import { showErrorToast } from "@/utils/toast";
 
 export default function ChatLayout({
   children,
@@ -22,7 +22,7 @@ export default function ChatLayout({
 
   // handling error
   useEffect(() => {
-    if (isError) toast.error(error.message);
+    if (isError) showErrorToast(error?.message || "An error occurred");
   }, [isError, error]);
 
   const { id } = useParams() as { id: string };

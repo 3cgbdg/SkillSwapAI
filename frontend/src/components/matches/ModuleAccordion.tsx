@@ -7,7 +7,7 @@ import { ChevronDown, Clock, Link as LinkIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Dispatch, SetStateAction } from "react";
-import { toast } from "react-toastify";
+import { showErrorToast, showSuccessToast } from "@/utils/toast";
 
 const ModuleAccordion = ({
   module,
@@ -34,14 +34,11 @@ const ModuleAccordion = ({
       return res;
     },
     onSuccess: (data) => {
-      toast.success(data.message);
-      if (data.status !== null) {
-        router.push("/dashboard");
-      }
-      queryClient.invalidateQueries({ queryKey: ["matches", id] });
+      queryClient.invalidateQueries({ queryKey: ["plans", id] });
+      showSuccessToast(data.message || "Plan updated");
     },
-    onError: (err) => {
-      toast.error(err.message);
+    onError: (err: Error) => {
+      showErrorToast(err.message);
     },
   });
   return (

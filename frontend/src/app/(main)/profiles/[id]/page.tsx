@@ -8,7 +8,7 @@ import { Calendar, MessageSquareMore, UserRound } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { toast } from "react-toastify";
+import { showErrorToast } from "@/utils/toast";
 
 const Page = () => {
   const { id } = useParams() as { id: string };
@@ -28,7 +28,7 @@ const Page = () => {
 
   useEffect(() => {
     if (isError) {
-      toast.error(error.message);
+      showErrorToast(error?.message || "An error occurred");
     }
   }, [error, isError]);
 
@@ -43,8 +43,8 @@ const Page = () => {
       router.push(`/chats/${data.chatId}`);
       queryClient.invalidateQueries({ queryKey: ["chats"] });
     },
-    onError: (err) => {
-      toast.error(err.message);
+    onError: (err: Error) => {
+      showErrorToast(err.message);
     },
   });
 
