@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dispatch, SetStateAction, useEffect } from "react";
 import ChatsService from "@/services/ChatsService";
 import Spinner from "../Spinner";
-import { toast } from "react-toastify";
+import { showErrorToast } from "@/utils/toast";
 
 const FriendsPopup = ({
   friends,
@@ -34,8 +34,8 @@ const FriendsPopup = ({
       router.push(`/chats/${data.chatId}`);
       queryClient.invalidateQueries({ queryKey: ["chats"] });
     },
-    onError: (err) => {
-      toast.error(err.message);
+    onError: (err: Error) => {
+      showErrorToast(err.message);
     },
   });
 

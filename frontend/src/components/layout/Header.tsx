@@ -19,7 +19,7 @@ import SearchInputMobile from "./headerComponents/SearchInputMobile";
 import NotificationsBell from "./headerComponents/NotificationsBell";
 import AvatarMenu from "./headerComponents/AvatarMenu";
 import NavigationMenu from "./headerComponents/NavigationMenu";
-import { toast } from "react-toastify";
+import { showErrorToast, showSuccessToast } from "@/utils/toast";
 import useFriends from "@/hooks/useFriends";
 
 const Header = () => {
@@ -75,7 +75,7 @@ const Header = () => {
   // handling api error
   useEffect(() => {
     if (isError) {
-      toast.error(error.message);
+      showErrorToast(error?.message || "An error occurred");
     }
   }, [isError, error]);
 
@@ -91,16 +91,16 @@ const Header = () => {
       setFoundUsers(() => data.filter((item) => item.name !== undefined));
       setFoundSkills(() => data.filter((item) => item.title !== undefined));
     },
-    onError: (err) => {
-      toast.error(err.message);
+    onError: (err: Error) => {
+      showErrorToast(err.message);
     },
   });
 
   // adding skill (want to learn)
   const mutationAddLearn = useMutation({
     mutationFn: async (str: string) => SkillsService.addWantToLearnSkill(str),
-    onError: (err) => {
-      toast.error(err.message);
+    onError: (err: Error) => {
+      showErrorToast(err.message);
     },
   });
 
@@ -154,8 +154,8 @@ const Header = () => {
         return old.filter((req: IRequest) => req.id !== id);
       });
     },
-    onError: (err) => {
-      toast.error(err.message);
+    onError: (err: Error) => {
+      showErrorToast(err.message);
     },
   });
 

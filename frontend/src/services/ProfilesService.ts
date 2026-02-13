@@ -14,8 +14,8 @@ class ProfilesService {
   }
 
   async uploadAvatarImage(form: FormData): Promise<{ url: string; message: string }> {
-    const res: any = await api.post("profiles/me/avatar/upload", form);
-    return { url: res.data.url, message: res.message };
+    const res = await api.post<{ url: string; message: string }>("profiles/me/avatar/upload", form);
+    return res.data;
   }
 
   async updateProfile(

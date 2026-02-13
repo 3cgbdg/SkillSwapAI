@@ -3,9 +3,11 @@
 import Matches from "@/components/matches/Matches";
 import Spinner from "@/components/Spinner";
 import MatchesService from "@/services/MatchesService";
+import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
-import { toast } from "react-toastify";
+import { useEffect, useState } from "react";
+import { showErrorToast } from "@/utils/toast";
+import useMatches from "@/hooks/useMatches";
 
 const Page = () => {
   //get and maintain available matches
@@ -23,10 +25,9 @@ const Page = () => {
   });
 
   // handling api error
-
   useEffect(() => {
     if (isError) {
-      toast.error(error.message);
+      showErrorToast(error?.message || "An error occurred");
     }
   }, [isError, error]);
 

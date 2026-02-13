@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import MatchCard from "./MatchCard";
 import MatchesService from "@/services/MatchesService";
-import { toast } from "react-toastify";
+import { showErrorToast, showSuccessToast } from "@/utils/toast";
 import useMatches from "@/hooks/useMatches";
 import ChatsService from "@/services/ChatsService";
 
@@ -34,15 +34,15 @@ const Matches = ({
       return data;
     },
     onSuccess: (data) => {
-      toast.success(data.message);
+      showSuccessToast(data.message || "Match generated");
       queryClient.setQueryData(["matches"], (old: any) => {
         if (!old) return [data.match];
         return [...old, data.match];
       });
       router.push(`/matches/${data.match.id}`);
     },
-    onError: (err) => {
-      toast.error(err.message);
+    onError: (err: Error) => {
+      showErrorToast(err.message);
     },
   });
 
@@ -85,8 +85,8 @@ const Matches = ({
       });
       router.push(`/chats/${data.chatId}`);
     },
-    onError: (err) => {
-      toast.error(err.message);
+    onError: (err: Error) => {
+      showErrorToast(err.message);
     },
   });
   return (

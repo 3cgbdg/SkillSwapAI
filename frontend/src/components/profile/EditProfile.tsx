@@ -12,7 +12,7 @@ import {
 } from "@/validation/editProfile";
 import { zodResolver } from "@hookform/resolvers/zod";
 import ProfilesService from "@/services/ProfilesService";
-import { toast } from "react-toastify";
+import { showErrorToast, showSuccessToast } from "@/utils/toast";
 import Spinner from "../Spinner";
 import useProfile from "@/hooks/useProfile";
 import { IUser } from "@/types/auth";
@@ -50,11 +50,11 @@ const EditProfile = ({
       } else return null;
     },
     onSuccess: (data) => {
-      toast.success(data?.message);
+      showSuccessToast(data?.message || "Profile updated");
       setIsCurrentlyEditing(false);
     },
-    onError: (err) => {
-      toast.error(err.message);
+    onError: (err: Error) => {
+      showErrorToast(err.message);
     },
   });
 
@@ -72,10 +72,10 @@ const EditProfile = ({
       return resData;
     },
     onSuccess: (data) => {
-      toast.success(data?.message);
+      showSuccessToast(data?.message || "Avatar deleted");
     },
-    onError: (err) => {
-      toast.error(err.message);
+    onError: (err: Error) => {
+      showErrorToast(err.message);
     },
   });
 
@@ -83,7 +83,7 @@ const EditProfile = ({
     mutationFn: async (file: File) => {
       const form = new FormData();
       form.append("image", file);
-      const data = await ProfilesService.uploadImage(form);
+      const data = await ProfilesService.uploadAvatarImage(form);
       queryClient.setQueryData(["profile"], (old: any) => {
         if (!old) return old;
         return {
@@ -94,10 +94,10 @@ const EditProfile = ({
       return data;
     },
     onSuccess: (data) => {
-      toast.success(data.message);
+      showSuccessToast(data.message || "Avatar uploaded");
     },
-    onError: (err) => {
-      toast.error(err.message);
+    onError: (err: Error) => {
+      showErrorToast(err.message);
     },
   });
 

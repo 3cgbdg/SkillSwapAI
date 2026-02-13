@@ -4,7 +4,7 @@ import SkillsService from "@/services/SkillsService";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, X } from "lucide-react";
 import { useRef, useState } from "react";
-import { toast } from "react-toastify";
+import { showErrorToast } from "@/utils/toast";
 import Spinner from "../Spinner";
 import useProfile from "@/hooks/useProfile";
 
@@ -23,8 +23,8 @@ const AddSkills = () => {
       SkillsService.getSkills(data),
     onSuccess: (data: { id: string; title: string }[]) =>
       setAvailableSkills(data),
-    onError: (err) => {
-      toast.error(err.message);
+    onError: (err: Error) => {
+      showErrorToast(err.message);
     },
   });
 
@@ -44,8 +44,8 @@ const AddSkills = () => {
         };
       });
     },
-    onError: (err) => {
-      toast.error(err.message);
+    onError: (err: Error) => {
+      showErrorToast(err.message);
     },
   });
 
@@ -66,8 +66,8 @@ const AddSkills = () => {
         };
       });
     },
-    onError: (err) => {
-      toast.error(err.message);
+    onError: (err: Error) => {
+      showErrorToast(err.message);
     },
   });
   // deleting skill (known)
@@ -83,8 +83,8 @@ const AddSkills = () => {
         };
       });
     },
-    onError: (err) => {
-      toast.error(err.message);
+    onError: (err: Error) => {
+      showErrorToast(err.message);
     },
   });
   // deleting skill (want to learn)
@@ -101,8 +101,8 @@ const AddSkills = () => {
         };
       });
     },
-    onError: (err) => {
-      toast.error(err.message);
+    onError: (err: Error) => {
+      showErrorToast(err.message);
     },
   });
   // input ref
@@ -241,7 +241,7 @@ const AddSkills = () => {
               if (learnRef.current) learnRef.current.value = "";
               setWantToLearnInput("");
             }}
-            className="button-blue flex-shrink-0"
+            className="button-blue shrink-0"
           >
             <Plus />
           </button>

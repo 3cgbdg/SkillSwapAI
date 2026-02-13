@@ -16,7 +16,7 @@ import {
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { showErrorToast } from "@/utils/toast";
 import Spinner from "../Spinner";
 
 // friend interface
@@ -46,8 +46,8 @@ const ChatSidebar = () => {
       });
       router.push(`/chats/${data.chatId}`);
     },
-    onError: (err) => {
-      toast.error(err.message);
+    onError: (err: Error) => {
+      showErrorToast(err.message);
     },
   });
 

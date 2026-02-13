@@ -16,7 +16,7 @@ import {
 } from "date-fns";
 import DesktopGridCalendar from "./DesktopGridCalendar";
 import TouchScreenCalendar from "./TouchScreenCalendar";
-import { toast } from "react-toastify";
+import { showErrorToast } from "@/utils/toast";
 import Spinner from "../Spinner";
 
 export type TableCellType = {
@@ -62,7 +62,7 @@ const Calendar = () => {
 
   useEffect(() => {
     if (isError) {
-      toast.error(error.message);
+      showErrorToast(error?.message || "An error occurred");
     }
   }, [error, isError]);
 
