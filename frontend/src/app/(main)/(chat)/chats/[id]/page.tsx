@@ -17,7 +17,7 @@ import useChats from "@/hooks/useChats";
 import useOnlineUsers from "@/hooks/useOnlineUsers";
 import Image from "next/image";
 import Link from "next/link";
-import { toast } from "react-toastify";
+import { showErrorToast } from "@/utils/toast";
 import Spinner from "@/components/Spinner";
 
 const Page = () => {
@@ -50,7 +50,7 @@ const Page = () => {
   // handling messages error
   useEffect(() => {
     if (isError) {
-      toast.error(error.message);
+      showErrorToast(error?.message || "An error occurred");
     }
   }, [error, isError]);
 

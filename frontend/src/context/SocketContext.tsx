@@ -1,7 +1,7 @@
 "use client";
 
 import { io, Socket } from "socket.io-client";
-import { toast } from "react-toastify";
+import { showSuccessToast } from "@/utils/toast";
 import {
   createContext,
   ReactNode,
@@ -87,18 +87,18 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       }
     };
 
-    const handleAiSuggestionsReady = () => {
-      toast.success("AI suggested some new skills for you!");
+    const onAiSkillsSuggestion = () => {
+      showSuccessToast("AI suggested some new skills for you!");
       void queryClient.invalidateQueries({ queryKey: ["profile"] });
     };
 
     sock.on("receiveMessage", handleReceiveMessage);
-    sock.on("aiSuggestionsReady", handleAiSuggestionsReady);
+    sock.on("aiSuggestionsReady", onAiSkillsSuggestion);
 
     return () => {
       clearInterval(intervalHeartbeat);
       sock.off("receiveMessage", handleReceiveMessage);
-      sock.off("aiSuggestionsReady", handleAiSuggestionsReady);
+      sock.off("aiSuggestionsReady", onAiSkillsSuggestion);
       sock.disconnect();
     };
   }, [user, queryClient]);

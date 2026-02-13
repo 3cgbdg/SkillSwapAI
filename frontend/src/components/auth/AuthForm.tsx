@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "react-toastify";
 import { Mail, Lock, User, X } from "lucide-react";
 
 import FullSreenLoader from "@/components/FullSreenLoader";
@@ -16,6 +15,7 @@ import AuthService from "@/services/AuthService";
 import SkillsService from "@/services/SkillsService";
 import { logInSchema } from "@/validation/logIn";
 import { signUpSchema } from "@/validation/signUp";
+import { showErrorToast, showSuccessToast } from "@/utils/toast";
 
 type AuthMode = "login" | "signup";
 
@@ -62,21 +62,21 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
             }
         },
         onSuccess: async (data) => {
-            toast.success(data.message);
+            showSuccessToast(data.message);
             // Invalidate and navigateto ensure fresh session pickup
             await queryClient.invalidateQueries({ queryKey: ["profile"] });
             router.push("/dashboard");
             router.refresh();
         },
-        onError: (err: any) => {
-            toast.error(err.message);
+        onError: (err: Error) => {
+            showErrorToast(err.message);
         },
     });
 
     const { mutate: getSkills, isPending: isFetchingSkills } = useMutation({
         mutationFn: async ({ chars }: { chars: string }) => SkillsService.getSkills(chars),
         onSuccess: (data: { id: string; title: string }[]) => setAvailableSkills(data),
-        onError: (err: any) => toast.error(err.message),
+        onError: (err: Error) => showErrorToast(err.message),
     });
 
     const onSubmit: SubmitHandler<any> = (data) => {

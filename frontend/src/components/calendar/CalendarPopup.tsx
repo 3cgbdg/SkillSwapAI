@@ -8,7 +8,7 @@ import { useSocket } from "@/context/SocketContext";
 import useFriends from "@/hooks/useFriends";
 import SessionsService from "@/services/SessionsService";
 import { createSessionFormData } from "@/validation/createSession";
-import { toast } from "react-toastify";
+import { showErrorToast, showSuccessToast } from "@/utils/toast";
 import Spinner from "../Spinner";
 import { AxiosError } from "axios";
 
@@ -46,7 +46,7 @@ const CalendarPopup = ({
     mutationFn: async (data: Omit<createSessionFormData, "friendName">) =>
       SessionsService.createSession(data),
     onSuccess: (data) => {
-      toast.success(data.message);
+      showSuccessToast(data.message || "Session created");
       setAddSessionPopup(false);
 
       if (socket?.connected)
@@ -257,7 +257,7 @@ const CalendarPopup = ({
                       <div className="flex flex-col  gap-1 max-h-[500px]  border-neutral-300">
                         {friends
                           .filter((friend) =>
-                            friend.name!
+                            (friend.name || "")
                               .toLowerCase()
                               .includes(chars.toLocaleLowerCase())
                           )

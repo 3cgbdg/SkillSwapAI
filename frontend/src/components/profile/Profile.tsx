@@ -1,5 +1,5 @@
 "use client";
-import { toast } from "react-toastify";
+import { showErrorToast, showSuccessToast } from "@/utils/toast";
 import AddSkills from "@/components/profile/AddSkills";
 import AiService from "@/services/AiService";
 import SkillsService from "@/services/SkillsService";
@@ -38,8 +38,8 @@ const Profile = ({
         };
       });
     },
-    onError: (err) => {
-      toast.error(err.message);
+    onError: (err: Error) => {
+      showErrorToast(err.message);
       void queryClient.invalidateQueries({ queryKey: ["profile"] });
     },
   });
@@ -57,12 +57,12 @@ const Profile = ({
             aiSuggestionSkills: data.skills,
           };
         });
-        toast.success(data.message);
+        showSuccessToast(data.message);
         void queryClient.invalidateQueries({ queryKey: ["profile"] });
       }
     },
-    onError: (err) => {
-      toast.error(err.message);
+    onError: (err: Error) => {
+      showErrorToast(err.message);
       void queryClient.invalidateQueries({ queryKey: ["profile"] });
     },
   });

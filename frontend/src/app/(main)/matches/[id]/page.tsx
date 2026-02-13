@@ -11,7 +11,7 @@ import { Calendar, MessageSquareMore, UserRound } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { showErrorToast } from "@/utils/toast";
 import useMatches from "@/hooks/useMatches";
 
 const Page = () => {
@@ -45,8 +45,8 @@ const Page = () => {
         return [data, ...old];
       });
     },
-    onError: (err) => {
-      toast.error(err.message);
+    onError: (err: Error) => {
+      showErrorToast(err.message);
     },
   });
 
@@ -65,7 +65,7 @@ const Page = () => {
 
   useEffect(() => {
     if (isError) {
-      toast.error(error.message);
+      showErrorToast(error?.message || "An error occurred");
     }
   }, [isError, error]);
 
