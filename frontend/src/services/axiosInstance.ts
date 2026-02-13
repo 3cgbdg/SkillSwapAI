@@ -67,9 +67,12 @@ api.interceptors.response.use(
     }
 
     // Standardize throttle/unauthorized toasts to avoid spamming
+    const isAuthPage = typeof window !== "undefined" &&
+      (window.location.pathname === "/auth/login" || window.location.pathname === "/auth/signup");
+
     if (error.response?.status === 429) {
       showErrorToast(error.message, "throttle-error");
-    } else if (error.response?.status === 401) {
+    } else if (error.response?.status === 401 && !isAuthPage) {
       showErrorToast(error.message, "auth-error");
     }
 
