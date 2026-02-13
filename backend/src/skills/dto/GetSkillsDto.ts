@@ -1,7 +1,7 @@
 import { Transform, TransformFnParams } from 'class-transformer';
 import { IsString, MinLength } from 'class-validator';
 
-export class getSkillsDto {
+export class GetSkillsDto {
   @IsString()
   @MinLength(2)
   @Transform(({ value }: TransformFnParams): string =>

@@ -9,7 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { SkillsService } from './skills.service';
-import { getSkillsDto } from './dto/get-skills.dto';
+import { GetSkillsDto } from './dto/GetSkillsDto';
 import { AuthGuard } from '@nestjs/passport';
 import { SkillDto } from './dto/skills.dto';
 import type { RequestWithUser } from 'types/auth';
@@ -17,22 +17,24 @@ import type { IReturnMessage, ReturnDataType } from 'types/general';
 
 @Controller('skills')
 export class SkillsController {
-  constructor(private readonly skillsService: SkillsService) {}
+  constructor(private readonly skillsService: SkillsService) { }
 
   @Get()
-  async findAll(@Query() dto: getSkillsDto): Promise<ReturnDataType<any[]>> {
+  async findAll(@Query() dto: GetSkillsDto): Promise<ReturnDataType<any[]>> {
     return this.skillsService.findAll(dto);
   }
-  @UseGuards(AuthGuard('jwt'))
+
   @Post('known')
+  @UseGuards(AuthGuard('jwt'))
   async addKnownSkill(
     @Req() req: RequestWithUser,
     @Body() dto: SkillDto,
   ): Promise<IReturnMessage> {
     return this.skillsService.addKnownSkill(req.user.id, dto);
   }
-  @UseGuards(AuthGuard('jwt'))
+
   @Post('want-to-learn')
+  @UseGuards(AuthGuard('jwt'))
   async addWantToLearnSkill(
     @Req() req: RequestWithUser,
     @Body() dto: SkillDto,
@@ -41,16 +43,17 @@ export class SkillsController {
     return this.skillsService.addWantToLearnSkill(req.user, dto, aiGenerated);
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Delete('known')
+  @UseGuards(AuthGuard('jwt'))
   async deleteKnownSkill(
     @Req() req: RequestWithUser,
     @Query() dto: SkillDto,
   ): Promise<IReturnMessage> {
     return this.skillsService.deleteKnownSkill(req.user.id, dto);
   }
-  @UseGuards(AuthGuard('jwt'))
+
   @Delete('want-to-learn')
+  @UseGuards(AuthGuard('jwt'))
   async deleteWantToLearnSkill(
     @Req() req: RequestWithUser,
     @Query() dto: SkillDto,

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma, User } from "@prisma/client";
 import { PrismaService } from "prisma/prisma.service";
 import { GoogleProfile } from "types/auth";
@@ -26,9 +26,11 @@ export class UsersService {
             where: { id },
             include: { skillsToLearn: true, knownSkills: true },
         });
-        if (!user) throw new NotFoundException("User not found");
 
-        // Remove password from the returned object
+        if (!user) {
+            throw new NotFoundException("User not found");
+        }
+
         const { password, ...userWithoutPassword } = user;
         return userWithoutPassword as any;
     }
@@ -42,37 +44,47 @@ export class UsersService {
     }
 
     async findOrCreateGoogleUser(profile: GoogleProfile): Promise<string> {
-        const { id, emails, name, photos } = profile;
-        if (!emails || emails.length === 0) {
-            throw new Error('No email found in Google profile');
-        }
-        const email = emails[0].value;
+        const { id: googleId, emails, name, photos } = profile;
+        const email = emails?.[0]?.value;
 
-        const existingUser = await this.prisma.user.findFirst({
-            where: { googleId: id },
+        if (!email) {
+            throw new BadRequestException('No email found in Google profile');
+        }
+
+        const user = await this.prisma.user.findFirst({
+            where: { OR: [{ googleId }, { email }] },
             select: { id: true, googleId: true, name: true }
         });
 
-        if (existingUser) {
-            if (!existingUser.googleId) {
-                await this.update(existingUser.id, {
-                    googleId: id,
-                    name: name ? `${name.givenName} ${name.familyName}` : existingUser.name,
-                    imageUrl: photos?.[0]?.value,
-                });
-            }
-            return existingUser.id;
+        if (user) {
+            return this.handleExistingUser(user, profile);
         }
 
         const newUser = await this.create({
-            googleId: id,
+            googleId,
             email,
-            name: name
-                ? `${name.givenName} ${name.familyName}`
-                : `User ${id.slice(0, 5)}`,
+            name: this.formatName(name, googleId),
             imageUrl: photos?.[0]?.value,
         });
 
         return newUser.id;
+    }
+
+    private async handleExistingUser(user: { id: string; googleId: string | null; name: string | null }, profile: GoogleProfile): Promise<string> {
+        if (!user.googleId) {
+            await this.update(user.id, {
+                googleId: profile.id,
+                name: this.formatName(profile.name, profile.id) || user.name,
+                imageUrl: profile.photos?.[0]?.value,
+            });
+        }
+        return user.id;
+    }
+
+    private formatName(name: GoogleProfile['name'], googleId: string): string {
+        if (name?.givenName && name?.familyName) {
+            return `${name.givenName} ${name.familyName}`;
+        }
+        return `User ${googleId.slice(0, 5)}`;
     }
 }

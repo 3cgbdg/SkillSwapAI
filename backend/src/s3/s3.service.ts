@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   DeleteObjectCommand,
@@ -11,24 +11,28 @@ export class S3Service {
   private readonly s3Client: S3Client;
   private readonly bucket: string;
   private readonly region: string;
+
   constructor(private readonly configService: ConfigService) {
-    const region = this.configService.get<string>('AWS_REGION');
-    if (region) this.region = region;
-    const accessKeyId = this.configService.get<string>('AWS_ACCESS_KEY_ID');
-    const secretAccessKey = this.configService.get<string>(
-      'AWS_SECRET_ACCESS_KEY',
-    );
-    this.bucket = this.configService.get<string>('AWS_S3_BUCKET_NAME')!;
-    if (!region || !accessKeyId || !secretAccessKey || !this.bucket) {
-      throw new InternalServerErrorException('Missing S3 Configuration');
-    }
+    this.region = this.getRequiredConfig('AWS_REGION');
+    this.bucket = this.getRequiredConfig('AWS_S3_BUCKET_NAME');
+    const accessKeyId = this.getRequiredConfig('AWS_ACCESS_KEY_ID');
+    const secretAccessKey = this.getRequiredConfig('AWS_SECRET_ACCESS_KEY');
+
     this.s3Client = new S3Client({
-      region: region,
+      region: this.region,
       credentials: {
-        accessKeyId: accessKeyId,
-        secretAccessKey: secretAccessKey,
+        accessKeyId,
+        secretAccessKey,
       },
     });
+  }
+
+  private getRequiredConfig(key: string): string {
+    const value = this.configService.get<string>(key);
+    if (!value) {
+      throw new InternalServerErrorException(`Missing S3 Configuration: ${key}`);
+    }
+    return value;
   }
 
   async uploadFile(file: Express.Multer.File, key: string): Promise<string> {
@@ -41,33 +45,35 @@ export class S3Service {
 
     try {
       await this.s3Client.send(command);
-      const url = `https://${this.bucket}.s3.${this.region}.amazonaws.com/${key}`;
-      return url;
-    } catch {
-      throw new InternalServerErrorException('Error uploading file');
+      return `https://${this.bucket}.s3.${this.region}.amazonaws.com/${key}`;
+    } catch (error) {
+      console.error('S3 Upload Error:', error);
+      throw new InternalServerErrorException('Failed to upload file to S3');
     }
   }
 
-  async deleteFile(key: string | null): Promise<void> {
-    const formattedKey = this.formatKey(key);
+  async deleteFile(url: string | null): Promise<void> {
+    if (!url) return;
+
+    const key = this.extractKeyFromUrl(url);
     const command = new DeleteObjectCommand({
       Bucket: this.bucket,
-      Key: formattedKey,
+      Key: key,
     });
 
     try {
       await this.s3Client.send(command);
-    } catch {
-      throw new InternalServerErrorException('Error deleting file');
+    } catch (error) {
+      console.error('S3 Delete Error:', error);
+      throw new InternalServerErrorException('Failed to delete file from S3');
     }
   }
 
-
-  private formatKey(key: string | null): string {
-    const formattedKey = key?.split('.com/')[1];
-    if (!formattedKey) {
-      throw new InternalServerErrorException('Error deleting file');
+  private extractKeyFromUrl(url: string): string {
+    const key = url.split('.com/')[1];
+    if (!key) {
+      throw new BadRequestException('Invalid S3 file URL');
     }
-    return formattedKey;
+    return key;
   }
 }

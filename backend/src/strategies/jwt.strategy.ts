@@ -29,7 +29,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       where: { id: payload.userId },
       select: { id: true },
     });
-    if (!user) throw new NotFoundException();
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
     return user;
   }
 }
