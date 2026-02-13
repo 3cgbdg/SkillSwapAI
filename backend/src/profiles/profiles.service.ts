@@ -73,14 +73,15 @@ export class ProfilesService {
     return { message: 'Successfully updated!' };
   }
 
-  private getChangedFields<T>(dto: Partial<T>, currentData: T): Partial<T> {
-    return (Object.keys(dto) as (keyof T)[]).reduce((acc, key) => {
+  private getChangedFields<T extends object>(dto: Partial<T>, currentData: T): Partial<T> {
+    const acc: Partial<T> = {};
+    (Object.keys(dto) as (keyof T)[]).forEach((key) => {
       const value = dto[key];
       if (value !== undefined && value !== currentData[key]) {
-        acc[key] = value as any;
+        acc[key] = value;
       }
-      return acc;
-    }, {} as Partial<T>);
+    });
+    return acc;
   }
 
   async findOrCreateGoogleUser(profile: GoogleProfile): Promise<string> {

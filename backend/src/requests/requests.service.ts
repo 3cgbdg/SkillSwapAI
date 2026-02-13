@@ -7,6 +7,7 @@ import { CreateRequestDto } from './dto/create-request.dto';
 import { PrismaService } from 'prisma/prisma.service';
 import { RequestGateway } from 'src/webSockets/request.gateway';
 import { IReturnMessage, ReturnDataType } from 'types/general';
+import { IRequestWithSession } from 'types/requests';
 
 @Injectable()
 export class RequestsService {
@@ -18,7 +19,7 @@ export class RequestsService {
   async createFriendRequest(
     dto: CreateRequestDto,
     userId: string,
-  ): Promise<ReturnDataType<any>> {
+  ): Promise<ReturnDataType<IRequestWithSession>> {
     if (dto.id) {
       return this.createFriendRequestById(dto.id, userId);
     }
@@ -30,13 +31,13 @@ export class RequestsService {
     return this.createFriendRequestByName(dto.name, userId);
   }
 
-  private async createFriendRequestById(recipientId: string, senderId: string) {
+  private async createFriendRequestById(recipientId: string, senderId: string): Promise<ReturnDataType<IRequestWithSession>> {
     await this.ensureRequestDoesNotExist(senderId, recipientId);
 
     const request = await this.prisma.request.create({
       data: { toId: recipientId, fromId: senderId, type: 'FRIEND' },
-      include: this.getFriendRequestInclude(),
-    });
+      include: this.getBasicRequestInclude(),
+    }) as unknown as IRequestWithSession;
 
     this.notifyRecipient(recipientId, request);
 
@@ -46,7 +47,7 @@ export class RequestsService {
     };
   }
 
-  private async createFriendRequestByName(recipientName: string, senderId: string) {
+  private async createFriendRequestByName(recipientName: string, senderId: string): Promise<ReturnDataType<IRequestWithSession>> {
     const recipient = await this.prisma.user.findUnique({
       where: { name: recipientName },
     });
@@ -63,8 +64,8 @@ export class RequestsService {
 
     const request = await this.prisma.request.create({
       data: { toId: recipient.id, fromId: senderId, type: 'FRIEND' },
-      include: this.getFriendRequestInclude(),
-    });
+      include: this.getBasicRequestInclude(),
+    }) as unknown as IRequestWithSession;
 
     this.notifyRecipient(recipient.id, request);
 
@@ -90,43 +91,36 @@ export class RequestsService {
     }
   }
 
-  private getFriendRequestInclude() {
+  private getBasicRequestInclude() {
     return {
       from: { select: { id: true, name: true, imageUrl: true } },
       to: { select: { id: true, name: true, imageUrl: true } },
+      session: { select: { title: true, start: true, end: true, date: true } },
     };
   }
 
-  private notifyRecipient(recipientId: string, request: any) {
+  private notifyRecipient(recipientId: string, request: IRequestWithSession) {
     this.requestGateway.notifyUser(recipientId, { request });
   }
 
-  async findAll(userId: string): Promise<ReturnDataType<any>> {
-    const requests = await this.prisma.request.findMany({
+  async findAll(userId: string): Promise<ReturnDataType<IRequestWithSession[]>> {
+    const requests = (await this.prisma.request.findMany({
       where: { toId: userId },
-      include: {
-        from: { select: { name: true, imageUrl: true } },
-        session: { select: { start: true, end: true, date: true } },
-        to: { select: { name: true } },
-      },
-    });
+      include: this.getBasicRequestInclude(),
+    })) as unknown as IRequestWithSession[];
     return { data: requests };
   }
 
-  async createSessionRequest(sessionId: string, senderId: string, recipientId: string) {
-    return this.prisma.request.create({
+  async createSessionRequest(sessionId: string, senderId: string, recipientId: string): Promise<IRequestWithSession> {
+    return (await this.prisma.request.create({
       data: {
         from: { connect: { id: senderId } },
         to: { connect: { id: recipientId } },
         session: { connect: { id: sessionId } },
         type: 'SESSIONCREATED',
       },
-      include: {
-        session: { select: { start: true, end: true, date: true } },
-        from: { select: { name: true } },
-        to: { select: { name: true } },
-      },
-    });
+      include: this.getBasicRequestInclude(),
+    })) as unknown as IRequestWithSession;
   }
 
   async createSessionStatusRequest(
@@ -134,21 +128,17 @@ export class RequestsService {
     senderId: string,
     recipientId: string,
     option: 'REJECTED' | 'ACCEPTED',
-  ) {
+  ): Promise<IRequestWithSession> {
     const type = option === 'ACCEPTED' ? 'SESSIONACCEPTED' : 'SESSIONREJECTED';
-    return this.prisma.request.create({
+    return (await this.prisma.request.create({
       data: {
         from: { connect: { id: senderId } },
         to: { connect: { id: recipientId } },
         session: { connect: { id: sessionId } },
         type,
       },
-      include: {
-        session: { select: { title: true } },
-        from: { select: { name: true } },
-        to: { select: { name: true } },
-      },
-    });
+      include: this.getBasicRequestInclude(),
+    })) as unknown as IRequestWithSession;
   }
 
   async deleteOne(requestId: string): Promise<IReturnMessage> {

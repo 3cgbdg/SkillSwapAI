@@ -108,9 +108,9 @@ export class AuthController {
     if (!refreshToken) {
       throw new HttpException('No refresh token', HttpStatus.UNAUTHORIZED);
     }
-    const payload: JwtPayload = await this.authService.decodeRefreshToken(refreshToken);
+    const payload: JwtPayload = await this.authService.decodeToken(refreshToken);
 
-    const newAccessToken = this.authService.createTokenForAccessToken(payload.userId);
+    const newAccessToken = this.authService.createAccessToken(payload.userId);
     this.cookiesService.setCookies(res, newAccessToken, refreshToken);
 
     return res.json({ message: 'Access token refreshed' });

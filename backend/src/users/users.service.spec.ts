@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
 import { PrismaService } from 'prisma/prisma.service';
+import { User } from '@prisma/client';
 import { NotFoundException } from '@nestjs/common';
 
 describe('UsersService', () => {
@@ -49,7 +50,7 @@ describe('UsersService', () => {
 
         it('should throw NotFoundException when prisma returns P2025 error', async () => {
             const error = new Error('Record not found');
-            (error as any).code = 'P2025';
+            (error as { code?: string }).code = 'P2025';
             (prisma.user.update as jest.Mock).mockRejectedValue(error);
 
             await expect(service.update(userId, updateData))
@@ -62,8 +63,8 @@ describe('UsersService', () => {
         const imageUrl = 'http://example.com/image.jpg';
 
         it('should successfully update user image url by calling update', async () => {
-            const updatedUser = { id: userId, imageUrl };
-            jest.spyOn(service, 'update').mockResolvedValue(updatedUser as any);
+            const updatedUser = { id: userId, imageUrl } as User;
+            jest.spyOn(service, 'update').mockResolvedValue(updatedUser);
 
             const result = await service.updateUserImageUrl(userId, imageUrl);
 

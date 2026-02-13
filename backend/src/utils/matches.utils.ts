@@ -1,4 +1,29 @@
 import { IMatchResponse, IAvailableMatchItem } from 'types/matches';
+import { Match as PrismaMatch, User as PrismaUser, Skill as PrismaSkill, Friendship } from '@prisma/client';
+
+export interface IMatchPrismaResult extends PrismaMatch {
+    initiator: {
+        id: string;
+        name: string | null;
+        imageUrl: string | null;
+        knownSkills: { title: string }[];
+        skillsToLearn: { title: string }[];
+    };
+    other: {
+        id: string;
+        name: string | null;
+        imageUrl: string | null;
+        knownSkills: { title: string }[];
+        skillsToLearn: { title: string }[];
+    };
+}
+
+export interface IUserWithFriendships extends PrismaUser {
+    knownSkills: PrismaSkill[];
+    skillsToLearn: PrismaSkill[];
+    friendOf: Friendship[];
+    friends: Friendship[];
+}
 
 export class MatchesUtils {
     static userSelect() {
@@ -13,7 +38,7 @@ export class MatchesUtils {
         };
     }
 
-    static mapToMatchResponse(match: any, myId: string): IMatchResponse {
+    static mapToMatchResponse(match: IMatchPrismaResult, myId: string): IMatchResponse {
         const otherUser = match.initiator.id === myId ? match.other : match.initiator;
         return {
             ...match,
@@ -21,7 +46,7 @@ export class MatchesUtils {
         };
     }
 
-    static mapToAvailableMatch(user: any): IAvailableMatchItem {
+    static mapToAvailableMatch(user: IUserWithFriendships): IAvailableMatchItem {
         return {
             isFriend: user.friendOf.length > 0 || user.friends.length > 0,
             other: {

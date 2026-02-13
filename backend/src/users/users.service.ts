@@ -1,7 +1,12 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { Prisma, User } from "@prisma/client";
+import { Prisma, User, Skill } from "@prisma/client";
 import { PrismaService } from "prisma/prisma.service";
 import { GoogleProfile } from "types/auth";
+
+type UserWithSkills = Omit<User, 'password'> & {
+    knownSkills: Skill[];
+    skillsToLearn: Skill[];
+};
 
 @Injectable()
 export class UsersService {
@@ -21,7 +26,7 @@ export class UsersService {
         }
     }
 
-    async findUniqueUserWithSkills(id: string): Promise<User & { knownSkills: any[]; skillsToLearn: any[] }> {
+    async findUniqueUserWithSkills(id: string): Promise<UserWithSkills> {
         const user = await this.prisma.user.findUnique({
             where: { id },
             include: { skillsToLearn: true, knownSkills: true },
@@ -32,7 +37,7 @@ export class UsersService {
         }
 
         const { password, ...userWithoutPassword } = user;
-        return userWithoutPassword as any;
+        return userWithoutPassword;
     }
 
     async updateUserImageUrl(id: string, imageUrl: string | null): Promise<User> {

@@ -6,6 +6,7 @@ import { RequestGateway } from 'src/webSockets/request.gateway';
 import { UpdateSessionStatusDto } from './dto/update-session-status.dto';
 import { ReturnDataType } from 'types/general';
 import { SessionsUtils } from './utils/sessions.utils';
+import { ISessionWithFriend, ISessionPrismaResult } from 'types/sessions';
 
 @Injectable()
 export class SessionsService {
@@ -18,7 +19,7 @@ export class SessionsService {
   async create(
     dto: CreateSessionDto,
     myId: string,
-  ): Promise<ReturnDataType<any>> {
+  ): Promise<ReturnDataType<ISessionWithFriend>> {
     SessionsUtils.validateSessionTime(dto.date, dto.start, dto.end);
 
     await this.ensureNoOverlappingSessions(dto);
@@ -41,14 +42,17 @@ export class SessionsService {
           connect: [{ id: myId }, { id: dto.friendId }],
         },
       },
-    });
+      include: {
+        users: { select: { id: true, name: true, imageUrl: true } },
+      },
+    }) as unknown as ISessionPrismaResult;
 
     const request = await this.requests.createSessionRequest(session.id, myId, dto.friendId);
     this.requestGateway.notifyUserSession(dto.friendId, { request });
 
     return {
       message: 'Session has been successfully created',
-      data: SessionsUtils.mapSessionWithFriend({ ...session, users: [friendship.user1, friendship.user2] }, myId),
+      data: SessionsUtils.mapSessionWithFriend(session, myId),
     };
   }
 
@@ -75,45 +79,45 @@ export class SessionsService {
         ],
       },
       include: {
-        user1: { select: { id: true, name: true } },
-        user2: { select: { id: true, name: true } },
+        user1: { select: { id: true, name: true, imageUrl: true } },
+        user2: { select: { id: true, name: true, imageUrl: true } },
       },
     });
   }
 
-  async findAll(month: number, myId: string): Promise<ReturnDataType<any[]>> {
+  async findAll(month: number, myId: string): Promise<ReturnDataType<ISessionWithFriend[]>> {
     const year = new Date().getFullYear();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
 
-    const sessions = await this.prisma.session.findMany({
+    const sessions = (await this.prisma.session.findMany({
       where: {
         users: { some: { id: myId } },
         date: { gte: firstDay, lte: lastDay },
       },
       include: {
-        users: { select: { id: true, name: true } },
+        users: { select: { id: true, name: true, imageUrl: true } },
       },
-    });
+    })) as unknown as ISessionPrismaResult[];
 
     return { data: sessions.map(s => SessionsUtils.mapSessionWithFriend(s, myId)) };
   }
 
-  async findTodaysSessions(myId: string): Promise<ReturnDataType<any[]>> {
+  async findTodaysSessions(myId: string): Promise<ReturnDataType<ISessionWithFriend[]>> {
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
 
-    const sessions = await this.prisma.session.findMany({
+    const sessions = (await this.prisma.session.findMany({
       where: {
         users: { some: { id: myId } },
         date: { gte: startOfDay, lte: endOfDay },
       },
       include: {
-        users: { select: { id: true, name: true } },
+        users: { select: { id: true, name: true, imageUrl: true } },
       },
-    });
+    })) as unknown as ISessionPrismaResult[];
 
     return { data: sessions.map(s => SessionsUtils.mapSessionWithFriend(s, myId)) };
   }

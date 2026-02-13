@@ -21,3 +21,8 @@ export interface GoogleProfile {
     _raw: string;
     _json: any;
 }
+
+export interface Tokens {
+    access_token: string;
+    refresh_token: string;
+}

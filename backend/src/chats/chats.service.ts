@@ -4,6 +4,7 @@ import { CreateChatDto } from './dto/create-chat.dto';
 import { ReturnDataType } from 'types/general';
 import { IChatListItem, IChatResponse } from 'types/chats';
 import { Message } from '@prisma/client';
+import { ChatsUtils } from 'src/utils/chats.utils';
 
 @Injectable()
 export class ChatsService {
@@ -18,9 +19,7 @@ export class ChatsService {
         users: { every: { id: { in: [myId, friendId] } } },
       },
       include: {
-        messages: {
-          orderBy: { createdAt: 'asc' },
-        },
+        messages: { orderBy: { createdAt: 'asc' } },
       },
     });
 
@@ -44,30 +43,14 @@ export class ChatsService {
         _count: {
           select: {
             messages: {
-              where: {
-                toId: myId,
-                isSeen: false,
-              },
+              where: { toId: myId, isSeen: false },
             },
           },
         },
       },
     });
 
-    const data: IChatListItem[] = chats.map((chat) => {
-      const lastMsg = chat.messages[0];
-      return {
-        chatId: chat.id,
-        friend: chat.users[0] || null,
-        lastMessageContent: lastMsg?.content || null,
-        _count: {
-          id: chat._count.messages,
-        },
-        lastMessageAt: lastMsg?.createdAt || null,
-      };
-    });
-
-    return { data };
+    return { data: chats.map((chat) => ChatsUtils.mapChatListItem(chat, myId)) };
   }
 
   async createChat(

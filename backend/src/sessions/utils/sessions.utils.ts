@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import { Session } from '@prisma/client';
+import { ISessionPrismaResult, ISessionWithFriend } from 'types/sessions';
 
 export class SessionsUtils {
     static validateSessionTime(date: string, start: number, end: number) {
@@ -29,13 +29,13 @@ export class SessionsUtils {
         return isToday && start < now.getHours();
     }
 
-    static mapSessionWithFriend(session: any, myId: string) {
+    static mapSessionWithFriend(session: ISessionPrismaResult, myId: string): ISessionWithFriend {
         const { users, ...sessionData } = session;
-        const friend = users?.find((user: any) => user.id !== myId);
+        const friend = users?.find((user) => user.id !== myId);
 
         return {
             ...sessionData,
-            friend: friend ? { id: friend.id, name: friend.name } : null,
+            friend: friend ? { id: friend.id, name: friend.name, imageUrl: friend.imageUrl } : null,
         };
     }
 }
