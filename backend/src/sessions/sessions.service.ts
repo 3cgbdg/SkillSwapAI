@@ -12,7 +12,7 @@ export class SessionsService {
     private readonly prisma: PrismaService,
     private readonly requests: RequestsService,
     private readonly requestGateway: RequestGateway,
-  ) {}
+  ) { }
   async create(
     dto: CreateSessionDto,
     myId: string,
@@ -64,7 +64,7 @@ export class SessionsService {
         },
       },
     });
-    const request = await this.requests.createForSession(
+    const request = await this.requests.createSessionRequest(
       session.id,
       myId,
       dto.friendId,
@@ -151,7 +151,7 @@ export class SessionsService {
     });
     if (!originalReq)
       throw new BadRequestException('Original request not found');
-    const request = await this.requests.createForStatusSession(
+    const request = await this.requests.createSessionStatusRequest(
       session.id,
       myId,
       originalReq.fromId,
@@ -177,7 +177,7 @@ export class SessionsService {
     });
     if (!originalReq)
       throw new BadRequestException('Original request not found');
-    const request = await this.requests.createForStatusSession(
+    const request = await this.requests.createSessionStatusRequest(
       sessionId,
       myId,
       originalReq.fromId,

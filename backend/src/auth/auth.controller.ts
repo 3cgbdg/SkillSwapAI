@@ -56,8 +56,8 @@ export class AuthController {
       );
     }
 
-    const user = await this.profilesService.findOrCreateGoogleUser(profile);
-    const response = this.authService.loginWithUser(user);
+    const userId = await this.profilesService.findOrCreateGoogleUser(profile);
+    const response = this.authService.loginWithUser(userId);
 
     this.cookiesService.setCookies(res, response.access_token, response.refresh_token);
 

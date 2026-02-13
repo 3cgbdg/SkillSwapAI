@@ -48,10 +48,11 @@ export class S3Service {
     }
   }
 
-  async deleteFile(key: string): Promise<void> {
+  async deleteFile(key: string | null): Promise<void> {
+    const formattedKey = this.formatKey(key);
     const command = new DeleteObjectCommand({
       Bucket: this.bucket,
-      Key: key,
+      Key: formattedKey,
     });
 
     try {
@@ -59,5 +60,14 @@ export class S3Service {
     } catch {
       throw new InternalServerErrorException('Error deleting file');
     }
+  }
+
+
+  private formatKey(key: string | null): string {
+    const formattedKey = key?.split('.com/')[1];
+    if (!formattedKey) {
+      throw new InternalServerErrorException('Error deleting file');
+    }
+    return formattedKey;
   }
 }

@@ -84,13 +84,13 @@ export class AuthService {
     return { access_token, refresh_token };
   }
 
-  loginWithUser(user: Partial<User>): {
+  loginWithUser(userId: string): {
     access_token: string;
     refresh_token: string;
   } {
-    const access_token = this.jwtService.sign({ userId: user.id });
+    const access_token = this.jwtService.sign({ userId });
     const refresh_token = this.jwtService.sign(
-      { userId: user.id },
+      { userId },
       {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
         expiresIn: '7d',
