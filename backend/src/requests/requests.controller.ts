@@ -17,22 +17,21 @@ import type { IReturnMessage, ReturnDataType } from 'types/general';
 @Controller('requests')
 @UseGuards(AuthGuard('jwt'))
 export class RequestsController {
-  constructor(private readonly requestsService: RequestsService) {}
+  constructor(private readonly requestsService: RequestsService) { }
 
   @Post()
   async create(
-    @Body() createRequestDto: CreateRequestDto,
+    @Body() dto: CreateRequestDto,
     @Req() req: RequestWithUser,
   ): Promise<ReturnDataType<any>> {
-    return this.requestsService.createForFriendship(
-      createRequestDto,
-      req.user.id,
-    );
+    return this.requestsService.createFriendRequest(dto, req.user.id);
   }
+
   @Get()
   async findAll(@Req() req: RequestWithUser): Promise<ReturnDataType<any>> {
     return this.requestsService.findAll(req.user.id);
   }
+
   @Delete(':id')
   async deleteOne(@Param('id') requestId: string): Promise<IReturnMessage> {
     return this.requestsService.deleteOne(requestId);

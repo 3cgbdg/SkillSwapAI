@@ -24,6 +24,8 @@ import { User } from '@prisma/client';
 import type { RequestWithUser, JwtPayload } from 'types/auth';
 import type { IReturnMessage, ReturnDataType } from 'types/general';
 import { ProfilesService } from 'src/profiles/profiles.service';
+import { CookiesService } from './cookies.service';
+import { UsersService } from 'src/users/users.service';
 
 @Controller('auth')
 export class AuthController {
@@ -33,6 +35,8 @@ export class AuthController {
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
     private readonly profilesService: ProfilesService,
+    private readonly cookiesService: CookiesService,
+    private readonly usersService: UsersService,
   ) { }
 
   @Get('google')
@@ -52,30 +56,10 @@ export class AuthController {
       );
     }
 
-    const user = await this.profilesService.findOrCreateGoogleUser(profile);
-    const response = this.authService.loginWithUser(user);
+    const userId = await this.profilesService.findOrCreateGoogleUser(profile);
+    const response = this.authService.loginWithUser(userId);
 
-    res.cookie('access_token', response.access_token, {
-      httpOnly: true,
-      secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite:
-        this.configService.get<string>('NODE_ENV') === 'production'
-          ? 'none'
-          : 'lax',
-      maxAge: 1000 * 60 * 15,
-      path: '/',
-    });
-
-    res.cookie('refresh_token', response.refresh_token, {
-      httpOnly: true,
-      secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite:
-        this.configService.get<string>('NODE_ENV') === 'production'
-          ? 'none'
-          : 'lax',
-      maxAge: 1000 * 3600 * 24 * 7,
-      path: '/',
-    });
+    this.cookiesService.setCookies(res, response.access_token, response.refresh_token);
 
     const frontendUrl =
       this.configService.get<string>('CORS_ORIGIN') || 'http://localhost:3000';
@@ -88,29 +72,7 @@ export class AuthController {
     @Res() res: Response,
   ): Promise<Response<IReturnMessage>> {
     const response = await this.authService.signup(createAuthDto);
-
-    res.cookie('access_token', response.access_token, {
-      httpOnly: true,
-      secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite:
-        this.configService.get<string>('NODE_ENV') === 'production'
-          ? 'none'
-          : 'lax',
-
-      maxAge: 1000 * 60 * 15,
-      path: '/',
-    });
-    res.cookie('refresh_token', response.refresh_token, {
-      httpOnly: true,
-      secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite:
-        this.configService.get<string>('NODE_ENV') === 'production'
-          ? 'none'
-          : 'lax',
-
-      maxAge: 1000 * 3600 * 24 * 7,
-      path: '/',
-    });
+    this.cookiesService.setCookies(res, response.access_token, response.refresh_token);
     return res.json({ message: 'Successfully signed up!' });
   }
 
@@ -120,28 +82,7 @@ export class AuthController {
     @Res() res: Response,
   ): Promise<Response<IReturnMessage>> {
     const response = await this.authService.login(LoginAuthDto);
-    res.cookie('access_token', response.access_token, {
-      httpOnly: true,
-      secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite:
-        this.configService.get<string>('NODE_ENV') === 'production'
-          ? 'none'
-          : 'lax',
-
-      maxAge: 1000 * 60 * 15,
-      path: '/',
-    });
-    res.cookie('refresh_token', response.refresh_token, {
-      httpOnly: true,
-      secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite:
-        this.configService.get<string>('NODE_ENV') === 'production'
-          ? 'none'
-          : 'lax',
-
-      maxAge: 1000 * 3600 * 24 * 7,
-      path: '/',
-    });
+    this.cookiesService.setCookies(res, response.access_token, response.refresh_token);
     return res.json({ message: 'Successfully logged in!' });
   }
 
@@ -150,20 +91,14 @@ export class AuthController {
   async profile(
     @Req() request: RequestWithUser,
   ): Promise<ReturnDataType<Omit<User, 'password'>>> {
-    console.log('[AuthController] Profile request for user:', request.user?.id);
-    const user = await this.prisma.user.findUnique({
-      where: { id: request.user.id },
-      include: { skillsToLearn: true, knownSkills: true },
-    });
-    if (!user) throw new NotFoundException();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...returnData } = user;
-    return { data: returnData };
+    const data = await this.usersService.findUniqueUserWithSkills(request.user.id);
+    return { data };
   }
 
   @Post('refresh')
+  @UseGuards(AuthGuard('jwt'))
   async refreshToken(
-    @Req() req: Request,
+    @Req() req: RequestWithUser,
     @Res() res: Response,
   ): Promise<Response<IReturnMessage>> {
     const refreshToken = (req.cookies as Record<string, string | undefined>)[
@@ -173,58 +108,17 @@ export class AuthController {
     if (!refreshToken) {
       throw new HttpException('No refresh token', HttpStatus.UNAUTHORIZED);
     }
-    let payload: JwtPayload;
-    try {
-      if (!refreshToken) throw new Error();
-      payload = this.jwtService.verify(refreshToken, {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET')!,
-      });
-    } catch {
-      throw new HttpException('Invalid refresh token', HttpStatus.UNAUTHORIZED);
-    }
+    const payload: JwtPayload = await this.authService.decodeToken(refreshToken);
 
-    const user = await this.prisma.user.findUnique({
-      where: { id: payload.userId },
-    });
-    if (!user) {
-      throw new NotFoundException();
-    }
-    const newAccessToken = this.authService.createTokenForRefresh(user);
-    res.cookie('access_token', newAccessToken, {
-      httpOnly: true,
-      secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite:
-        this.configService.get<string>('NODE_ENV') === 'production'
-          ? 'none'
-          : 'lax',
-      maxAge: 1000 * 60 * 15,
-      path: '/',
-    });
+    const newAccessToken = this.authService.createAccessToken(payload.userId);
+    this.cookiesService.setCookies(res, newAccessToken, refreshToken);
 
     return res.json({ message: 'Access token refreshed' });
   }
 
   @Delete('logout')
   logout(@Res({ passthrough: true }) res: Response): IReturnMessage {
-    res.clearCookie('access_token', {
-      httpOnly: true,
-      secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite:
-        this.configService.get<string>('NODE_ENV') === 'production'
-          ? 'none'
-          : 'lax',
-      path: '/',
-    });
-    res.clearCookie('refresh_token', {
-      httpOnly: true,
-      secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite:
-        this.configService.get<string>('NODE_ENV') === 'production'
-          ? 'none'
-          : 'lax',
-      path: '/',
-    });
-
+    this.cookiesService.clearCookies(res);
     return { message: 'Successfully logged out!' };
   }
 }

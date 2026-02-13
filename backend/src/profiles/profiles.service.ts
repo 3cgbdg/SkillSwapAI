@@ -10,6 +10,7 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { IReturnMessage, ReturnDataType } from 'types/general';
 import { AiService } from 'src/ai/ai.service';
 import { GoogleProfile } from 'types/auth';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class ProfilesService {
@@ -17,54 +18,42 @@ export class ProfilesService {
     private readonly prisma: PrismaService,
     private readonly s3Service: S3Service,
     private readonly aiService: AiService,
-  ) {}
+    private readonly usersService: UsersService,
+  ) { }
 
-  async findOne(id: string): Promise<ReturnDataType<any>> {
-    const profile = await this.prisma.user.findFirst({
-      where: { id: id },
+  async findOne(id: string): Promise<ReturnDataType<Partial<User> | null>> {
+    const profile = await this.prisma.user.findUnique({
+      where: { id },
       include: {
         skillsToLearn: { select: { title: true } },
         knownSkills: { select: { title: true } },
       },
     });
-    if (!profile) return { data: null };
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...user } = profile;
-    return { data: user };
+
+    if (!profile) {
+      return { data: null };
+    }
+
+    const { password, ...userWithoutPassword } = profile;
+    return { data: userWithoutPassword };
   }
 
-  async uploadImage(
+  async updateProfileAvatarImage(
     file: Express.Multer.File,
-    key: string,
     myId: string,
   ): Promise<ReturnDataType<{ url: string }>> {
+    const key = `avatars/${Date.now()}_${file.originalname}`;
     const url = await this.s3Service.uploadFile(file, key);
-    if (url)
-      await this.prisma.user.update({
-        where: { id: myId },
-        data: { imageUrl: url },
-      });
+    await this.usersService.updateUserImageUrl(myId, url);
     return { data: { url }, message: 'Image is successfully uploaded' };
   }
 
-  async deleteImage(user: User): Promise<IReturnMessage> {
-    const hasAvatarImage = user.imageUrl ?? null;
-    if (!hasAvatarImage) {
-      throw new BadRequestException('There`s no avatar-image');
-    }
-    const key = user.imageUrl?.split('.com/')[1];
-    if (key) {
-      try {
-        await this.s3Service.deleteFile(key);
-        await this.prisma.user.update({
-          where: { id: user.id },
-          data: { imageUrl: null },
-        });
-        return { message: 'Successfully deleted!' };
-      } catch {
-        throw new InternalServerErrorException('Something went wrong');
-      }
-    } else {
+  async deleteProfileAvatarImage(user: User): Promise<IReturnMessage> {
+    try {
+      await this.s3Service.deleteFile(user.imageUrl);
+      await this.usersService.updateUserImageUrl(user.id, null);
+      return { message: 'Successfully deleted!' };
+    } catch {
       throw new InternalServerErrorException('Something went wrong');
     }
   }
@@ -73,30 +62,29 @@ export class ProfilesService {
     dto: UpdateProfileDto,
     user: User,
   ): Promise<IReturnMessage> {
-    const dataToUpdate = (
-      Object.keys(dto) as (keyof UpdateProfileDto)[]
-    ).reduce((acc, key) => {
-      const value = dto[key];
-      if (value !== undefined && value !== user[key]) {
-        acc[key] = value;
-      }
-      return acc;
-    }, {} as Partial<UpdateProfileDto>);
+    const dataToUpdate = this.getChangedFields(dto, user);
+
     if (Object.keys(dataToUpdate).length === 0) {
       return { message: 'No changes detected' };
     }
-    try {
-      await this.prisma.user.update({
-        where: { id: user.id },
-        data: dataToUpdate,
-      });
-    } catch {
-      throw new InternalServerErrorException('Something went wrong');
-    }
+
+    await this.usersService.update(user.id, dataToUpdate);
+
     return { message: 'Successfully updated!' };
   }
 
-  async findOrCreateGoogleUser(profile: GoogleProfile): Promise<User> {
+  private getChangedFields<T extends object>(dto: Partial<T>, currentData: T): Partial<T> {
+    const acc: Partial<T> = {};
+    (Object.keys(dto) as (keyof T)[]).forEach((key) => {
+      const value = dto[key];
+      if (value !== undefined && value !== currentData[key]) {
+        acc[key] = value;
+      }
+    });
+    return acc;
+  }
+
+  async findOrCreateGoogleUser(profile: GoogleProfile): Promise<string> {
     const { id, emails, name, photos } = profile;
     if (!emails || emails.length === 0) {
       throw new InternalServerErrorException(
@@ -105,38 +93,11 @@ export class ProfilesService {
     }
     const email = emails[0].value;
 
-    let user = await this.prisma.user.findFirst({
-      where: { googleId: id },
-    });
-
-    if (user) {
-      if (!user.googleId) {
-        await this.prisma.user.update({
-          where: { id: user.id },
-          data: {
-            googleId: id,
-            name: name ? `${name.givenName} ${name.familyName}` : user.name,
-            imageUrl: photos?.[0]?.value,
-          },
-        });
-      }
-      return user;
-    }
-
-    user = await this.prisma.user.create({
-      data: {
-        googleId: id,
-        email,
-        name: name
-          ? `${name.givenName} ${name.familyName}`
-          : `User ${id.slice(0, 5)}`,
-        imageUrl: photos?.[0]?.value,
-      },
-    });
+    const userId = await this.usersService.findOrCreateGoogleUser(profile);
 
     // generate ai suggestions for the new user
-    void this.aiService.getAiSuggestionSkills(user.id);
+    void this.aiService.getAiSuggestionSkills(userId);
 
-    return user;
+    return userId;
   }
 }

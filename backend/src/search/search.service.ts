@@ -1,45 +1,42 @@
 import { Injectable } from '@nestjs/common';
-import { getSearchDto } from './dto/get-search.dto';
+import { Skill, User } from '@prisma/client';
+import { GetSearchDto } from './dto/GetSearchDto';
 import { PrismaService } from 'prisma/prisma.service';
 import { ReturnDataType } from 'types/general';
+import { ISearchUser, SearchUtils } from './utils/search.utils';
 
 @Injectable()
 export class SearchService {
-  constructor(private readonly prisma: PrismaService) {}
-  async findAll(
-    dto: getSearchDto,
-    myId: string,
-  ): Promise<ReturnDataType<any[]>> {
-    const skills = await this.prisma.skill.findMany({
-      where: { title: { contains: dto.chars, mode: 'insensitive' } },
-      include: {
-        knownBy: { select: { id: true } },
-        learnedBy: { select: { id: true } },
-      },
-    });
-    const users = await this.prisma.user.findMany({
-      where: {
-        OR: [{ name: { contains: dto.chars, mode: 'insensitive' } }],
-        NOT: {
-          OR: [
-            { friends: { some: { user2Id: myId } } },
-            { friendOf: { some: { user1Id: myId } } },
-            { id: myId },
-          ],
-        },
-      },
-      include: { friendOf: true, friends: true },
-    });
+  constructor(private readonly prisma: PrismaService) { }
 
-    const newUsers = users.map((user) => ({
-      id: user.id,
-      name: user.name,
-    }));
-    const newSkills = skills.filter(
-      (skill) =>
-        !skill.knownBy.some((user) => user.id === myId) &&
-        !skill.learnedBy.some((user) => user.id === myId),
-    );
-    return { data: [...newSkills, ...newUsers] };
+  async findAll(
+    dto: GetSearchDto,
+    myId: string,
+  ): Promise<ReturnDataType<(Skill | ISearchUser)[]>> {
+    const [skills, users] = await Promise.all([
+      this.prisma.skill.findMany({
+        where: { title: { contains: dto.chars, mode: 'insensitive' } },
+        include: {
+          knownBy: { select: { id: true } },
+          learnedBy: { select: { id: true } },
+        },
+      }),
+      this.prisma.user.findMany({
+        where: {
+          name: { contains: dto.chars, mode: 'insensitive' },
+          NOT: {
+            OR: [
+              { friends: { some: { user2Id: myId } } },
+              { friendOf: { some: { user1Id: myId } } },
+              { id: myId },
+            ],
+          },
+        },
+      }),
+    ]);
+
+    const data = SearchUtils.filterAndMapResults(skills, users, myId);
+
+    return { data };
   }
 }

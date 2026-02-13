@@ -4,15 +4,19 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  HttpException,
+  HttpStatus,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { PrismaService } from 'prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import { JwtService } from '@nestjs/jwt';
-import { User } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import { AiService } from 'src/ai/ai.service';
+import { JwtPayload, Tokens } from 'types/auth';
+import { AuthUtils } from 'src/utils/auth.utils';
 
 @Injectable()
 export class AuthService {
@@ -21,28 +25,14 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
-  ) {}
-  async signup(
-    dto: CreateAuthDto,
-  ): Promise<{ access_token: string; refresh_token: string }> {
+  ) { }
+
+  async signup(dto: CreateAuthDto): Promise<Tokens> {
     if (dto.password !== dto.confirmPassword) {
-      throw new BadRequestException();
+      throw new BadRequestException('Passwords do not match');
     }
 
-    const existingUser = await this.prisma.user.findFirst({
-      where: {
-        OR: [{ name: dto.name }, { email: dto.email }],
-      },
-    });
-
-    if (existingUser) {
-      if (existingUser.name === dto.name) {
-        throw new ConflictException('User with this name already exists');
-      }
-      if (existingUser.email === dto.email) {
-        throw new ConflictException('User with this email already exists');
-      }
-    }
+    await this.ensureUserDoesNotExist(dto.name, dto.email);
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
     const user = await this.prisma.user.create({
@@ -64,63 +54,51 @@ export class AuthService {
         },
       },
     });
-    if (!user) {
-      throw new InternalServerErrorException();
-    }
-    // generate ai  generation
+
+    if (!user) throw new InternalServerErrorException('Error creating user');
+
     void this.aiService.getAiSuggestionSkills(user.id);
-    //
-    const access_token = this.jwtService.sign({ userId: user.id });
-    const refresh_token = this.jwtService.sign(
-      { userId: user.id },
-      {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-        expiresIn: '7d',
-      },
-    );
-    return { access_token, refresh_token };
+
+    return AuthUtils.generateTokens(user.id, this.jwtService, this.configService);
   }
 
-  loginWithUser(user: Partial<User>): {
-    access_token: string;
-    refresh_token: string;
-  } {
-    const access_token = this.jwtService.sign({ userId: user.id });
-    const refresh_token = this.jwtService.sign(
-      { userId: user.id },
-      {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-        expiresIn: '7d',
-      },
-    );
+  private async ensureUserDoesNotExist(name: string, email: string) {
+    const user = await this.prisma.user.findFirst({
+      where: { OR: [{ name }, { email }] },
+    });
 
-    return { access_token, refresh_token };
+    if (user) {
+      if (user.name === name) throw new ConflictException('Name already exists');
+      if (user.email === email) throw new ConflictException('Email already exists');
+    }
   }
 
-  async login(
-    dto: LoginAuthDto,
-  ): Promise<{ access_token: string; refresh_token: string }> {
+  loginWithUser(userId: string): Tokens {
+    return AuthUtils.generateTokens(userId, this.jwtService, this.configService);
+  }
+
+  async login(dto: LoginAuthDto): Promise<Tokens> {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
-    if (!user) {
-      throw new NotFoundException();
-    }
-    const isGood = await bcrypt.compare(dto.password, user.password!);
-    if (!isGood) throw new InternalServerErrorException();
-    const access_token = this.jwtService.sign({ userId: user.id });
-    const refresh_token = this.jwtService.sign(
-      { userId: user.id },
-      {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-        expiresIn: '7d',
-      },
-    );
 
-    return { access_token, refresh_token };
+    if (!user || !user.password) throw new NotFoundException('Invalid credentials');
+
+    const isGood = await bcrypt.compare(dto.password, user.password);
+    if (!isGood) throw new UnauthorizedException('Invalid credentials');
+
+    return AuthUtils.generateTokens(user.id, this.jwtService, this.configService);
   }
 
-  createTokenForRefresh(user: User): string {
-    return this.jwtService.sign({ userId: user.id });
+  createAccessToken(userId: string): string {
+    return this.jwtService.sign({ userId });
+  }
+
+  async decodeToken(token: string): Promise<JwtPayload> {
+    try {
+      return this.jwtService.decode(token) as JwtPayload;
+    } catch {
+      throw new HttpException('Invalid token', HttpStatus.UNAUTHORIZED);
+    }
   }
 }

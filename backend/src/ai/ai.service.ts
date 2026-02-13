@@ -13,6 +13,8 @@ import { ReturnDataType } from 'types/general';
 import { User } from '@prisma/client';
 import { AxiosResponse } from 'axios';
 import { RequestGateway } from 'src/webSockets/request.gateway';
+import { AiUtils } from 'src/utils/ai.utils';
+
 interface FastApiResponse {
   AIReport: string | object;
 }
@@ -25,200 +27,112 @@ export class AiService {
     private readonly configService: ConfigService,
     private readonly requestGateway: RequestGateway,
   ) { }
+
+  private get fastApiUrl(): string {
+    return this.configService.get<string>('FASTAPI_URL', '').replace(/\/$/, '');
+  }
+
   async generateBodyForActiveMatch(
     myId: string,
     otherId: string,
   ): Promise<{ generatedData: IGeneratedActiveMatch; other: User } | null> {
-    if (!myId || myId.length == 0 || !otherId || otherId.length == 0) {
-      throw new BadRequestException();
+    if (!myId || !otherId) {
+      throw new BadRequestException('User IDs are required');
     }
+
     const users = await this.prisma.user.findMany({
-      where: {
-        id: {
-          in: [myId, otherId],
-        },
-      },
+      where: { id: { in: [myId, otherId] } },
       include: { skillsToLearn: true, knownSkills: true },
     });
 
-    if (users.length == 2) {
-      const updatedSkillsBodyUsers = users.map((item) => {
-        const skillsToLearn = item.skillsToLearn.map((skill) => skill.title);
-        const knownSkills = item.knownSkills.map((skill) => skill.title);
-
-        return {
-          id: item.id,
-          name: item.name || 'Anonymous',
-          knownSkills,
-          skillsToLearn,
-        };
-      });
-      const fastApiResponse: AxiosResponse<FastApiResponse> =
-        await firstValueFrom(
-          this.httpService.post<FastApiResponse>(
-            `${this.configService.get<string>('FASTAPI_URL')?.replace(/\/$/, '')}/match/active`,
-            {
-              user1:
-                users[0].id == myId
-                  ? {
-                    ...updatedSkillsBodyUsers[0],
-                    knownSkills: updatedSkillsBodyUsers[0].knownSkills.length
-                      ? updatedSkillsBodyUsers[0].knownSkills
-                      : ['General Discussion'],
-                    skillsToLearn: updatedSkillsBodyUsers[0].skillsToLearn
-                      .length
-                      ? updatedSkillsBodyUsers[0].skillsToLearn
-                      : ['New Insights'],
-                  }
-                  : {
-                    ...updatedSkillsBodyUsers[1],
-                    knownSkills: updatedSkillsBodyUsers[1].knownSkills.length
-                      ? updatedSkillsBodyUsers[1].knownSkills
-                      : ['General Discussion'],
-                    skillsToLearn: updatedSkillsBodyUsers[1].skillsToLearn
-                      .length
-                      ? updatedSkillsBodyUsers[1].skillsToLearn
-                      : ['New Insights'],
-                  },
-              user2:
-                users[0].id !== myId
-                  ? {
-                    ...updatedSkillsBodyUsers[0],
-                    knownSkills: updatedSkillsBodyUsers[0].knownSkills.length
-                      ? updatedSkillsBodyUsers[0].knownSkills
-                      : ['General Discussion'],
-                    skillsToLearn: updatedSkillsBodyUsers[0].skillsToLearn
-                      .length
-                      ? updatedSkillsBodyUsers[0].skillsToLearn
-                      : ['New Insights'],
-                  }
-                  : {
-                    ...updatedSkillsBodyUsers[1],
-                    knownSkills: updatedSkillsBodyUsers[1].knownSkills.length
-                      ? updatedSkillsBodyUsers[1].knownSkills
-                      : ['General Discussion'],
-                    skillsToLearn: updatedSkillsBodyUsers[1].skillsToLearn
-                      .length
-                      ? updatedSkillsBodyUsers[1].skillsToLearn
-                      : ['New Insights'],
-                  },
-            },
-            {
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            },
-          ),
-        );
-
-      const rawAiArray = fastApiResponse?.data?.AIReport;
-      const readyAiArray: IGeneratedActiveMatch | null =
-        this._parseAiResponse<IGeneratedActiveMatch>(rawAiArray);
-
-      return readyAiArray
-        ? {
-          generatedData: readyAiArray,
-          other: users[0].id == myId ? users[1] : users[0],
-        }
-        : null;
-    } else {
-      throw new BadRequestException();
+    if (users.length !== 2) {
+      throw new BadRequestException('Two users must be found');
     }
+
+    const u1 = users.find(u => u.id === myId)!;
+    const u2 = users.find(u => u.id !== myId)!;
+
+    const fastApiResponse: AxiosResponse<FastApiResponse> = await firstValueFrom(
+      this.httpService.post<FastApiResponse>(
+        `${this.fastApiUrl}/match/active`,
+        {
+          user1: AiUtils.formatUserForAi(u1),
+          user2: AiUtils.formatUserForAi(u2),
+        },
+        { headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+
+    const readyAiArray = AiUtils.parseAiResponse<IGeneratedActiveMatch>(fastApiResponse.data.AIReport);
+
+    return readyAiArray
+      ? { generatedData: readyAiArray, other: u2 }
+      : null;
   }
 
   async getAiSuggestionSkills(
     myId: string,
   ): Promise<ReturnDataType<string[]> | null> {
-    if (!myId || myId.length == 0) {
-      throw new BadRequestException();
-    }
+    if (!myId) throw new BadRequestException('User ID is required');
+
     const user = await this.prisma.user.findUnique({
       where: { id: myId },
       include: { skillsToLearn: true, knownSkills: true },
     });
-    if (user?.lastSkillsGenerationDate) {
-      const lastDate = new Date(user.lastSkillsGenerationDate);
-      const now = new Date();
 
-      const hoursDiff = (now.getTime() - lastDate.getTime()) / (1000 * 3600);
-      if (hoursDiff < 24) {
-        throw new ForbiddenException(
-          'You have already regenerated skills. Wait till the next day.',
-        );
-      }
-    }
     if (!user) throw new UnauthorizedException();
-    const stringArraySkillsToLearn = user?.skillsToLearn.map(
-      (item) => item.title,
-    );
-    const stringArrayKnownSkills = user?.knownSkills.map((item) => item.title);
 
-    const fastApiResponse: AxiosResponse<FastApiResponse> =
-      await firstValueFrom(
-        this.httpService.post<FastApiResponse>(
-          `${this.configService.get<string>('FASTAPI_URL')}/profile/skills`,
-          {
-            skillsToLearn: stringArraySkillsToLearn,
-            knownSkills: stringArrayKnownSkills,
-          },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          },
-        ),
-      );
+    this.validateRegenerationDate(user.lastSkillsGenerationDate);
 
-    const rawAiArray = fastApiResponse?.data?.AIReport;
-    const readyAiArray: string[] | null =
-      this._parseAiResponse<string[]>(rawAiArray);
-    if (readyAiArray) {
-      if (readyAiArray.length > 0) {
-        await Promise.all(
-          readyAiArray.map(async (skill) => {
-            await this.prisma.skill.upsert({
-              where: { title: skill },
-              update: {},
-              create: { title: skill },
-            });
-          }),
-        );
-      }
-      await this.prisma.user.update({
-        where: { id: myId },
-        data: {
-          aiSuggestionSkills: readyAiArray,
-          lastSkillsGenerationDate: new Date(),
+    const fastApiResponse: AxiosResponse<FastApiResponse> = await firstValueFrom(
+      this.httpService.post<FastApiResponse>(
+        `${this.fastApiUrl}/profile/skills`,
+        {
+          skillsToLearn: user.skillsToLearn.map(s => s.title),
+          knownSkills: user.knownSkills.map(s => s.title),
         },
-      });
+        { headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
 
+    const readyAiArray = AiUtils.parseAiResponse<string[]>(fastApiResponse.data.AIReport);
+
+    if (readyAiArray && readyAiArray.length > 0) {
+      await this.saveAiSuggestions(myId, readyAiArray);
       void this.requestGateway.notifyAiSuggestions(myId, readyAiArray);
     }
+
     return readyAiArray
       ? { data: readyAiArray, message: 'Skills successfully generated!' }
       : null;
   }
 
-  // private generic func  for parsing income ai response object
-  private _parseAiResponse<T>(rawAiResponse: unknown): T | null {
-    if (!rawAiResponse) return null;
-    if (typeof rawAiResponse === 'string') {
-      const match = rawAiResponse.match(/```json\s([\s\S]+?)```/);
-      try {
-        return match
-          ? (JSON.parse(match[1]) as T)
-          : (JSON.parse(rawAiResponse) as T);
-      } catch (e) {
-        console.error(
-          'Error parsing AI response:',
-          e,
-          'Raw string:',
-          rawAiResponse,
-        );
-        return null;
-      }
-    } else {
-      return rawAiResponse as T;
+  private validateRegenerationDate(lastDate: Date | null) {
+    if (!lastDate) return;
+
+    const hoursDiff = (new Date().getTime() - lastDate.getTime()) / (1000 * 3600);
+    if (hoursDiff < 24) {
+      throw new ForbiddenException('Wait 24 hours to regenerate skills.');
     }
+  }
+
+  private async saveAiSuggestions(userId: string, skills: string[]) {
+    await Promise.all(
+      skills.map((skill) =>
+        this.prisma.skill.upsert({
+          where: { title: skill },
+          update: {},
+          create: { title: skill },
+        }),
+      ),
+    );
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        aiSuggestionSkills: skills,
+        lastSkillsGenerationDate: new Date(),
+      },
+    });
   }
 }
