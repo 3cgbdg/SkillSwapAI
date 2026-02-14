@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { PrismaService } from 'prisma/prisma.service';
 import { RequestsService } from 'src/requests/requests.service';
@@ -14,7 +18,7 @@ export class SessionsService {
     private readonly prisma: PrismaService,
     private readonly requests: RequestsService,
     private readonly requestGateway: RequestGateway,
-  ) { }
+  ) {}
 
   async create(
     dto: CreateSessionDto,
@@ -29,7 +33,7 @@ export class SessionsService {
       throw new BadRequestException('Friend not found in your list');
     }
 
-    const session = await this.prisma.session.create({
+    const session = (await this.prisma.session.create({
       data: {
         title: dto.title,
         description: dto.description,
@@ -45,9 +49,13 @@ export class SessionsService {
       include: {
         users: { select: { id: true, name: true, imageUrl: true } },
       },
-    }) as unknown as ISessionPrismaResult;
+    })) as unknown as ISessionPrismaResult;
 
-    const request = await this.requests.createSessionRequest(session.id, myId, dto.friendId);
+    const request = await this.requests.createSessionRequest(
+      session.id,
+      myId,
+      dto.friendId,
+    );
     this.requestGateway.notifyUserSession(dto.friendId, { request });
 
     return {
@@ -85,7 +93,10 @@ export class SessionsService {
     });
   }
 
-  async findAll(month: number, myId: string): Promise<ReturnDataType<ISessionWithFriend[]>> {
+  async findAll(
+    month: number,
+    myId: string,
+  ): Promise<ReturnDataType<ISessionWithFriend[]>> {
     const year = new Date().getFullYear();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
@@ -100,10 +111,14 @@ export class SessionsService {
       },
     })) as unknown as ISessionPrismaResult[];
 
-    return { data: sessions.map(s => SessionsUtils.mapSessionWithFriend(s, myId)) };
+    return {
+      data: sessions.map((s) => SessionsUtils.mapSessionWithFriend(s, myId)),
+    };
   }
 
-  async findTodaysSessions(myId: string): Promise<ReturnDataType<ISessionWithFriend[]>> {
+  async findTodaysSessions(
+    myId: string,
+  ): Promise<ReturnDataType<ISessionWithFriend[]>> {
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date();
@@ -119,7 +134,9 @@ export class SessionsService {
       },
     })) as unknown as ISessionPrismaResult[];
 
-    return { data: sessions.map(s => SessionsUtils.mapSessionWithFriend(s, myId)) };
+    return {
+      data: sessions.map((s) => SessionsUtils.mapSessionWithFriend(s, myId)),
+    };
   }
 
   async acceptSessionRequest(
@@ -149,7 +166,9 @@ export class SessionsService {
 
     await this.prisma.request.delete({ where: { id: dto.requestId } });
 
-    this.requestGateway.notifyUserAcceptedSession(originalReq.fromId, { request });
+    this.requestGateway.notifyUserAcceptedSession(originalReq.fromId, {
+      request,
+    });
 
     return { data: dto.requestId, message: 'Session request accepted' };
   }
@@ -177,7 +196,9 @@ export class SessionsService {
     await this.prisma.request.delete({ where: { id: dto.requestId } });
     await this.prisma.session.delete({ where: { id: sessionId } });
 
-    this.requestGateway.notifyUserRejectedSession(originalReq.fromId, { request });
+    this.requestGateway.notifyUserRejectedSession(originalReq.fromId, {
+      request,
+    });
 
     return { data: dto.requestId, message: 'Session request rejected' };
   }

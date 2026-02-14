@@ -16,12 +16,11 @@ import { MatchesUtils } from 'src/utils/matches.utils';
 
 @Injectable()
 export class MatchesService {
-
   constructor(
     private readonly plansService: PlansService,
     private readonly prisma: PrismaService,
     private readonly aiService: AiService,
-  ) { }
+  ) {}
   async generateActiveMatch(
     myId: string,
     otherId: string,
@@ -61,11 +60,15 @@ export class MatchesService {
       orderBy: { createdAt: 'desc' },
     });
 
-    const data = matches.map((match) => MatchesUtils.mapToMatchResponse(match, myId));
+    const data = matches.map((match) =>
+      MatchesUtils.mapToMatchResponse(match, myId),
+    );
     return { data };
   }
 
-  async getAvailableMatches(myId: string): Promise<ReturnDataType<IAvailableMatchItem[]>> {
+  async getAvailableMatches(
+    myId: string,
+  ): Promise<ReturnDataType<IAvailableMatchItem[]>> {
     const myUser = await this.prisma.user.findUnique({
       where: { id: myId },
       include: { skillsToLearn: true, knownSkills: true },
@@ -77,7 +80,11 @@ export class MatchesService {
     const knowTitles = myUser.knownSkills.map((s) => s.title);
 
     const users = await this.prisma.user.findMany({
-      where: MatchesUtils.buildAvailableMatchesFilter(myId, learnTitles, knowTitles),
+      where: MatchesUtils.buildAvailableMatchesFilter(
+        myId,
+        learnTitles,
+        knowTitles,
+      ),
       include: {
         knownSkills: true,
         skillsToLearn: true,
@@ -110,11 +117,15 @@ export class MatchesService {
       },
     });
 
-    if (!activeMatch) throw new InternalServerErrorException('Cannot create active match');
+    if (!activeMatch)
+      throw new InternalServerErrorException('Cannot create active match');
     return activeMatch.id;
   }
 
-  private async doesMatchesExistsForUser(myId: string, otherId: string): Promise<boolean> {
+  private async doesMatchesExistsForUser(
+    myId: string,
+    otherId: string,
+  ): Promise<boolean> {
     const count = await this.prisma.match.count({
       where: MatchesUtils.getMatchFilter(myId, otherId),
     });

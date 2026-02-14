@@ -37,7 +37,7 @@ export class AuthController {
     private readonly profilesService: ProfilesService,
     private readonly cookiesService: CookiesService,
     private readonly usersService: UsersService,
-  ) { }
+  ) {}
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
@@ -59,7 +59,11 @@ export class AuthController {
     const userId = await this.profilesService.findOrCreateGoogleUser(profile);
     const response = this.authService.loginWithUser(userId);
 
-    this.cookiesService.setCookies(res, response.access_token, response.refresh_token);
+    this.cookiesService.setCookies(
+      res,
+      response.access_token,
+      response.refresh_token,
+    );
 
     const frontendUrl =
       this.configService.get<string>('CORS_ORIGIN') || 'http://localhost:3000';
@@ -72,7 +76,11 @@ export class AuthController {
     @Res() res: Response,
   ): Promise<Response<IReturnMessage>> {
     const response = await this.authService.signup(createAuthDto);
-    this.cookiesService.setCookies(res, response.access_token, response.refresh_token);
+    this.cookiesService.setCookies(
+      res,
+      response.access_token,
+      response.refresh_token,
+    );
     return res.json({ message: 'Successfully signed up!' });
   }
 
@@ -82,7 +90,11 @@ export class AuthController {
     @Res() res: Response,
   ): Promise<Response<IReturnMessage>> {
     const response = await this.authService.login(LoginAuthDto);
-    this.cookiesService.setCookies(res, response.access_token, response.refresh_token);
+    this.cookiesService.setCookies(
+      res,
+      response.access_token,
+      response.refresh_token,
+    );
     return res.json({ message: 'Successfully logged in!' });
   }
 
@@ -91,7 +103,9 @@ export class AuthController {
   async profile(
     @Req() request: RequestWithUser,
   ): Promise<ReturnDataType<Omit<User, 'password'>>> {
-    const data = await this.usersService.findUniqueUserWithSkills(request.user.id);
+    const data = await this.usersService.findUniqueUserWithSkills(
+      request.user.id,
+    );
     return { data };
   }
 
@@ -104,11 +118,15 @@ export class AuthController {
     const refreshToken = (req.cookies as Record<string, string | undefined>)[
       'refresh_token'
     ];
-    console.log('[AuthController] Refresh token found in cookies:', !!refreshToken);
+    console.log(
+      '[AuthController] Refresh token found in cookies:',
+      !!refreshToken,
+    );
     if (!refreshToken) {
       throw new HttpException('No refresh token', HttpStatus.UNAUTHORIZED);
     }
-    const payload: JwtPayload = await this.authService.decodeToken(refreshToken);
+    const payload: JwtPayload =
+      await this.authService.decodeToken(refreshToken);
 
     const newAccessToken = this.authService.createAccessToken(payload.userId);
     this.cookiesService.setCookies(res, newAccessToken, refreshToken);

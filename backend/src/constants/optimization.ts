@@ -1,3 +1,3 @@
 export const OPTIMIZATION_CONSTANTS = {
-    BATCH_SIZE: 1000,
-}
+  BATCH_SIZE: 1000,
+};

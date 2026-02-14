@@ -16,7 +16,7 @@ import { IMatchResponse, IAvailableMatchItem } from 'types/matches';
 @UseGuards(AuthGuard('jwt'))
 @Controller('matches')
 export class MatchesController {
-  constructor(private readonly matchesService: MatchesService) { }
+  constructor(private readonly matchesService: MatchesService) {}
 
   @Post()
   async create(

@@ -14,7 +14,7 @@ export class FriendsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly chatGateway: ChatGateway,
-  ) { }
+  ) {}
   async create(dto: CreateFriendDto, id: string): Promise<IReturnMessage> {
     const user = await this.prisma.user.findUnique({ where: { id: dto.id } });
     if (!user) throw new NotFoundException('User not found');
@@ -43,7 +43,7 @@ export class FriendsService {
     });
 
     const data: IFriendItem[] = friendships.map((f) =>
-      f.user1Id === id ? (f.user2 as IFriendItem) : (f.user1 as IFriendItem)
+      f.user1Id === id ? (f.user2 as IFriendItem) : (f.user1 as IFriendItem),
     );
 
     return { data };
@@ -53,7 +53,6 @@ export class FriendsService {
     const data = await this.chatGateway.getCurrentOnlineFriends(myId);
     return { data };
   }
-
 
   async doesFriendshipExist(myId: string, otherId: string): Promise<boolean> {
     const friendshipExists = await this.prisma.friendship.count({

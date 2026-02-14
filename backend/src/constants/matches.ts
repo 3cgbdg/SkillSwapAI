@@ -1,3 +1,3 @@
 export const MATCHES_CONSTANTS = {
-    DEFAULT_TAKE: 20,
-}
+  DEFAULT_TAKE: 20,
+};

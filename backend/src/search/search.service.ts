@@ -7,7 +7,7 @@ import { ISearchUser, SearchUtils } from './utils/search.utils';
 
 @Injectable()
 export class SearchService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async findAll(
     dto: GetSearchDto,

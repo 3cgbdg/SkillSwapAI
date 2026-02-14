@@ -25,7 +25,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
 
   async signup(dto: CreateAuthDto): Promise<Tokens> {
     if (dto.password !== dto.confirmPassword) {
@@ -59,7 +59,11 @@ export class AuthService {
 
     void this.aiService.getAiSuggestionSkills(user.id);
 
-    return AuthUtils.generateTokens(user.id, this.jwtService, this.configService);
+    return AuthUtils.generateTokens(
+      user.id,
+      this.jwtService,
+      this.configService,
+    );
   }
 
   private async ensureUserDoesNotExist(name: string, email: string) {
@@ -68,13 +72,19 @@ export class AuthService {
     });
 
     if (user) {
-      if (user.name === name) throw new ConflictException('Name already exists');
-      if (user.email === email) throw new ConflictException('Email already exists');
+      if (user.name === name)
+        throw new ConflictException('Name already exists');
+      if (user.email === email)
+        throw new ConflictException('Email already exists');
     }
   }
 
   loginWithUser(userId: string): Tokens {
-    return AuthUtils.generateTokens(userId, this.jwtService, this.configService);
+    return AuthUtils.generateTokens(
+      userId,
+      this.jwtService,
+      this.configService,
+    );
   }
 
   async login(dto: LoginAuthDto): Promise<Tokens> {
@@ -82,12 +92,17 @@ export class AuthService {
       where: { email: dto.email },
     });
 
-    if (!user || !user.password) throw new NotFoundException('Invalid credentials');
+    if (!user || !user.password)
+      throw new NotFoundException('Invalid credentials');
 
     const isGood = await bcrypt.compare(dto.password, user.password);
     if (!isGood) throw new UnauthorizedException('Invalid credentials');
 
-    return AuthUtils.generateTokens(user.id, this.jwtService, this.configService);
+    return AuthUtils.generateTokens(
+      user.id,
+      this.jwtService,
+      this.configService,
+    );
   }
 
   createAccessToken(userId: string): string {
@@ -96,7 +111,7 @@ export class AuthService {
 
   async decodeToken(token: string): Promise<JwtPayload> {
     try {
-      return this.jwtService.decode(token) as JwtPayload;
+      return this.jwtService.decode(token);
     } catch {
       throw new HttpException('Invalid token', HttpStatus.UNAUTHORIZED);
     }

@@ -26,7 +26,7 @@ export class AiService {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
     private readonly requestGateway: RequestGateway,
-  ) { }
+  ) {}
 
   private get fastApiUrl(): string {
     return this.configService.get<string>('FASTAPI_URL', '').replace(/\/$/, '');
@@ -49,25 +49,26 @@ export class AiService {
       throw new BadRequestException('Two users must be found');
     }
 
-    const u1 = users.find(u => u.id === myId)!;
-    const u2 = users.find(u => u.id !== myId)!;
+    const u1 = users.find((u) => u.id === myId)!;
+    const u2 = users.find((u) => u.id !== myId)!;
 
-    const fastApiResponse: AxiosResponse<FastApiResponse> = await firstValueFrom(
-      this.httpService.post<FastApiResponse>(
-        `${this.fastApiUrl}/match/active`,
-        {
-          user1: AiUtils.formatUserForAi(u1),
-          user2: AiUtils.formatUserForAi(u2),
-        },
-        { headers: { 'Content-Type': 'application/json' } },
-      ),
+    const fastApiResponse: AxiosResponse<FastApiResponse> =
+      await firstValueFrom(
+        this.httpService.post<FastApiResponse>(
+          `${this.fastApiUrl}/match/active`,
+          {
+            user1: AiUtils.formatUserForAi(u1),
+            user2: AiUtils.formatUserForAi(u2),
+          },
+          { headers: { 'Content-Type': 'application/json' } },
+        ),
+      );
+
+    const readyAiArray = AiUtils.parseAiResponse<IGeneratedActiveMatch>(
+      fastApiResponse.data.AIReport,
     );
 
-    const readyAiArray = AiUtils.parseAiResponse<IGeneratedActiveMatch>(fastApiResponse.data.AIReport);
-
-    return readyAiArray
-      ? { generatedData: readyAiArray, other: u2 }
-      : null;
+    return readyAiArray ? { generatedData: readyAiArray, other: u2 } : null;
   }
 
   async getAiSuggestionSkills(
@@ -84,18 +85,21 @@ export class AiService {
 
     this.validateRegenerationDate(user.lastSkillsGenerationDate);
 
-    const fastApiResponse: AxiosResponse<FastApiResponse> = await firstValueFrom(
-      this.httpService.post<FastApiResponse>(
-        `${this.fastApiUrl}/profile/skills`,
-        {
-          skillsToLearn: user.skillsToLearn.map(s => s.title),
-          knownSkills: user.knownSkills.map(s => s.title),
-        },
-        { headers: { 'Content-Type': 'application/json' } },
-      ),
-    );
+    const fastApiResponse: AxiosResponse<FastApiResponse> =
+      await firstValueFrom(
+        this.httpService.post<FastApiResponse>(
+          `${this.fastApiUrl}/profile/skills`,
+          {
+            skillsToLearn: user.skillsToLearn.map((s) => s.title),
+            knownSkills: user.knownSkills.map((s) => s.title),
+          },
+          { headers: { 'Content-Type': 'application/json' } },
+        ),
+      );
 
-    const readyAiArray = AiUtils.parseAiResponse<string[]>(fastApiResponse.data.AIReport);
+    const readyAiArray = AiUtils.parseAiResponse<string[]>(
+      fastApiResponse.data.AIReport,
+    );
 
     if (readyAiArray && readyAiArray.length > 0) {
       await this.saveAiSuggestions(myId, readyAiArray);
@@ -110,7 +114,8 @@ export class AiService {
   private validateRegenerationDate(lastDate: Date | null) {
     if (!lastDate) return;
 
-    const hoursDiff = (new Date().getTime() - lastDate.getTime()) / (1000 * 3600);
+    const hoursDiff =
+      (new Date().getTime() - lastDate.getTime()) / (1000 * 3600);
     if (hoursDiff < 24) {
       throw new ForbiddenException('Wait 24 hours to regenerate skills.');
     }

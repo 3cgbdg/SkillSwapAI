@@ -6,8 +6,8 @@ import { JwtModule } from '@nestjs/jwt';
 
 @Global()
 @Module({
-    imports: [ConfigModule, JwtModule],
-    providers: [RequestGateway, ChatGateway],
-    exports: [RequestGateway, ChatGateway],
+  imports: [ConfigModule, JwtModule],
+  providers: [RequestGateway, ChatGateway],
+  exports: [RequestGateway, ChatGateway],
 })
-export class WebSocketsModule { }
+export class WebSocketsModule {}

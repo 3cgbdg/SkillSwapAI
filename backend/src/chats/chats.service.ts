@@ -8,7 +8,7 @@ import { ChatsUtils } from 'src/utils/chats.utils';
 
 @Injectable()
 export class ChatsService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async findOne(
     myId: string,
@@ -50,7 +50,9 @@ export class ChatsService {
       },
     });
 
-    return { data: chats.map((chat) => ChatsUtils.mapChatListItem(chat, myId)) };
+    return {
+      data: chats.map((chat) => ChatsUtils.mapChatListItem(chat, myId)),
+    };
   }
 
   async createChat(

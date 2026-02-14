@@ -6,7 +6,7 @@ import { IModuleUpdateResponse } from 'types/plans';
 @Controller('plans')
 @UseGuards(AuthGuard('jwt'))
 export class PlansController {
-  constructor(private readonly plansService: PlansService) { }
+  constructor(private readonly plansService: PlansService) {}
 
   @Get(':id')
   async getPlan(@Param('id') matchId: string) {

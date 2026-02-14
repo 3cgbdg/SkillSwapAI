@@ -17,7 +17,7 @@ import type { IReturnMessage, ReturnDataType } from 'types/general';
 
 @Controller('skills')
 export class SkillsController {
-  constructor(private readonly skillsService: SkillsService) { }
+  constructor(private readonly skillsService: SkillsService) {}
 
   @Get()
   async findAll(@Query() dto: GetSkillsDto): Promise<ReturnDataType<any[]>> {

@@ -20,12 +20,13 @@ import type { SocketData } from '../../types/general';
   },
 })
 export class RequestGateway
-  implements OnGatewayConnection, OnGatewayDisconnect {
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-  ) { }
+  ) {}
   @WebSocketServer()
   server: Server;
 
@@ -37,11 +38,13 @@ export class RequestGateway
       const parsed = cookie.parse(cookies);
       const token = parsed['access_token'];
       if (!token) {
-        console.warn('[RequestGateway] Cookie present but access_token missing');
+        console.warn(
+          '[RequestGateway] Cookie present but access_token missing',
+        );
         return client.disconnect();
       }
       try {
-        const payload = this.jwtService.verify(token as string, {
+        const payload = this.jwtService.verify(token, {
           secret: this.configService.get<string>('JWT_SECRET'),
         }) as unknown as JwtPayload;
         client.data.userId = payload.userId;
@@ -54,7 +57,9 @@ export class RequestGateway
         const pendingKey = `pending_ai_suggestions:${payload.userId}`;
         const pendingData = await this.cacheManager.get(pendingKey);
         if (pendingData) {
-          this.server.to(`user:${payload.userId}`).emit('aiSuggestionsReady', pendingData);
+          this.server
+            .to(`user:${payload.userId}`)
+            .emit('aiSuggestionsReady', pendingData);
           await this.cacheManager.del(pendingKey);
         }
       } catch (err: unknown) {
@@ -65,7 +70,10 @@ export class RequestGateway
         client.disconnect();
       }
     } else {
-      console.warn('[RequestGateway] Connection attempt without cookies from:', client.id);
+      console.warn(
+        '[RequestGateway] Connection attempt without cookies from:',
+        client.id,
+      );
       client.disconnect();
     }
 
@@ -76,7 +84,9 @@ export class RequestGateway
   }
 
   handleDisconnect(client: Socket<any, any, any, SocketData>) {
-    console.log(`[RequestGateway] Client disconnected: ${client.id}, userId: ${client.data.userId}`);
+    console.log(
+      `[RequestGateway] Client disconnected: ${client.id}, userId: ${client.data.userId}`,
+    );
     if (client.data.userId) {
       void client.leave(`user:${client.data.userId}`);
     }

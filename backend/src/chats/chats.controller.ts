@@ -19,9 +19,11 @@ import { Message } from '@prisma/client';
 @Controller('chats')
 @UseGuards(AuthGuard('jwt'))
 export class ChatsController {
-  constructor(private readonly chatsService: ChatsService) { }
+  constructor(private readonly chatsService: ChatsService) {}
   @Get()
-  async findAll(@Req() req: RequestWithUser): Promise<ReturnDataType<IChatListItem[]>> {
+  async findAll(
+    @Req() req: RequestWithUser,
+  ): Promise<ReturnDataType<IChatListItem[]>> {
     return this.chatsService.findAll(req.user.id);
   }
 

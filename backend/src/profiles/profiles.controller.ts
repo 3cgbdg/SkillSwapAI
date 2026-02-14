@@ -23,10 +23,12 @@ import type { IReturnMessage, ReturnDataType } from 'types/general';
 @Controller('profiles')
 @UseGuards(AuthGuard('jwt'))
 export class ProfilesController {
-  constructor(private readonly profilesService: ProfilesService) { }
+  constructor(private readonly profilesService: ProfilesService) {}
 
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<ReturnDataType<Partial<User> | null>> {
+  async findOne(
+    @Param('id') id: string,
+  ): Promise<ReturnDataType<Partial<User> | null>> {
     return this.profilesService.findOne(id);
   }
 
@@ -43,7 +45,9 @@ export class ProfilesController {
   }
 
   @Delete('me/avatar/delete')
-  async deleteAvatarImage(@Req() req: RequestWithUser): Promise<IReturnMessage> {
+  async deleteAvatarImage(
+    @Req() req: RequestWithUser,
+  ): Promise<IReturnMessage> {
     return this.profilesService.deleteProfileAvatarImage(req.user);
   }
 

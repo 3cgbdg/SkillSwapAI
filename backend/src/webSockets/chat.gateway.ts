@@ -28,7 +28,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-  ) { }
+  ) {}
   @WebSocketServer()
   server: Server;
   async handleConnection(client: Socket<any, any, any, SocketData>) {
@@ -41,12 +41,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         return client.disconnect();
       }
       try {
-        const payload = this.jwtService.verify(token as string, {
+        const payload = this.jwtService.verify(token, {
           secret: this.configService.get<string>('JWT_SECRET'),
         }) as unknown as JwtPayload;
         client.data.userId = payload.userId;
         await client.join(`user:${payload.userId}`);
-        console.log(`[ChatGateway] User ${payload.userId} connected and joined room: user:${payload.userId}`);
+        console.log(
+          `[ChatGateway] User ${payload.userId} connected and joined room: user:${payload.userId}`,
+        );
         await this.cacheManager.set(`user:online:${payload.userId}`, 1, 80000);
         const currentOnlineFriends = await this.getCurrentOnlineFriends(
           payload.userId,
