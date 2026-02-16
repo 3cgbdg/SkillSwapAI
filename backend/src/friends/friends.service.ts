@@ -9,6 +9,8 @@ import { ChatGateway } from 'src/webSockets/chat.gateway';
 import { IReturnMessage, ReturnDataType } from 'types/general';
 import { IFriendItem } from 'types/friends';
 
+import { UserUtils } from 'src/utils/user.utils';
+
 @Injectable()
 export class FriendsService {
   constructor(
@@ -18,18 +20,29 @@ export class FriendsService {
   async create(dto: CreateFriendDto, id: string): Promise<IReturnMessage> {
     const user = await this.prisma.user.findUnique({ where: { id: dto.id } });
     if (!user) throw new NotFoundException('User not found');
+
     const friendshipExists = await this.doesFriendshipExist(id, dto.id);
     if (friendshipExists) {
       throw new BadRequestException('You are already friends with this user');
     }
-    await this.prisma.friendship.create({
-      data: { user1Id: dto.id, user2Id: id },
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.friendship.create({
+        data: { user1Id: dto.id, user2Id: id },
+      });
+      await tx.request.deleteMany({
+        where: { fromId: dto.id, toId: id, type: 'FRIEND' },
+      });
     });
-    await this.prisma.request.deleteMany({
-      where: { fromId: dto.id, toId: id, type: 'FRIEND' },
-    });
+
     return { message: `${user.name} successfully added to friends!` };
   }
+
+  // private async cleanupFriendRequests(fromId: string, toId: string) {
+  //   await this.prisma.request.deleteMany({
+  //     where: { fromId, toId, type: 'FRIEND' },
+  //   });
+  // }
 
   async findAll(id: string): Promise<ReturnDataType<IFriendItem[]>> {
     const friendships = await this.prisma.friendship.findMany({
@@ -42,8 +55,8 @@ export class FriendsService {
       },
     });
 
-    const data: IFriendItem[] = friendships.map((f) =>
-      f.user1Id === id ? (f.user2 as IFriendItem) : (f.user1 as IFriendItem),
+    const data: IFriendItem[] = friendships.map(
+      (f) => UserUtils.getOtherUser(id, f.user1, f.user2) as IFriendItem,
     );
 
     return { data };

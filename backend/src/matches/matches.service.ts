@@ -14,6 +14,8 @@ import { IGeneratedActiveMatch } from 'src/ai/ai.interface';
 import { MATCHES_CONSTANTS } from 'src/constants/matches';
 import { MatchesUtils } from 'src/utils/matches.utils';
 
+import { UserUtils } from 'src/utils/user.utils';
+
 @Injectable()
 export class MatchesService {
   constructor(
@@ -25,9 +27,9 @@ export class MatchesService {
     myId: string,
     otherId: string,
   ): Promise<ReturnDataType<Plan>> {
-    const exists = await this.doesMatchesExistsForUser(myId, otherId);
+    const matchExists = await this.doesMatchesExistsForUser(myId, otherId);
 
-    if (exists) {
+    if (matchExists) {
       throw new ForbiddenException(
         'You have already created active match with this person',
       );
@@ -60,9 +62,17 @@ export class MatchesService {
       orderBy: { createdAt: 'desc' },
     });
 
-    const data = matches.map((match) =>
-      MatchesUtils.mapToMatchResponse(match, myId),
-    );
+    const data = matches.map((match) => {
+      const otherUser = UserUtils.getOtherUser(
+        myId,
+        match.initiator,
+        match.other,
+      );
+      return {
+        ...match,
+        other: otherUser,
+      };
+    });
     return { data };
   }
 

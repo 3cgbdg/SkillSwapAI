@@ -41,7 +41,7 @@ import { TasksModule } from './tasks/tasks.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       isGlobal: true,
-      useFactory: (configService: ConfigService) => {
+      useFactory: async (configService: ConfigService) => {
         const host = configService.get<string>('REDIS_HOST');
         if (!host) {
           console.log('[CacheModule] REDIS_HOST not found, using memory store');
@@ -88,4 +88,4 @@ import { TasksModule } from './tasks/tasks.module';
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

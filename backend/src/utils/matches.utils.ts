@@ -5,6 +5,7 @@ import {
   Skill as PrismaSkill,
   Friendship,
 } from '@prisma/client';
+import { UserUtils } from './user.utils';
 
 export interface IMatchPrismaResult extends PrismaMatch {
   initiator: {
@@ -47,11 +48,23 @@ export class MatchesUtils {
     match: IMatchPrismaResult,
     myId: string,
   ): IMatchResponse {
-    const otherUser =
-      match.initiator.id === myId ? match.other : match.initiator;
+    const otherUser = UserUtils.getOtherUser(
+      myId,
+      match.initiator,
+      match.other,
+    );
     return {
       ...match,
       other: otherUser,
+    };
+  }
+
+  static availableMatchesInclude(myId: string) {
+    return {
+      knownSkills: true,
+      skillsToLearn: true,
+      friendOf: { where: { OR: [{ user1Id: myId }, { user2Id: myId }] } },
+      friends: { where: { OR: [{ user1Id: myId }, { user2Id: myId }] } },
     };
   }
 

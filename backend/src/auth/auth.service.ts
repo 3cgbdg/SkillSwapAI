@@ -95,8 +95,9 @@ export class AuthService {
     if (!user || !user.password)
       throw new NotFoundException('Invalid credentials');
 
-    const isGood = await bcrypt.compare(dto.password, user.password);
-    if (!isGood) throw new UnauthorizedException('Invalid credentials');
+    const isPasswordValid = await bcrypt.compare(dto.password, user.password);
+    if (!isPasswordValid)
+      throw new UnauthorizedException('Invalid credentials');
 
     return AuthUtils.generateTokens(
       user.id,
@@ -113,7 +114,7 @@ export class AuthService {
     try {
       return this.jwtService.decode(token);
     } catch {
-      throw new HttpException('Invalid token', HttpStatus.UNAUTHORIZED);
+      throw new UnauthorizedException('Invalid token');
     }
   }
 }

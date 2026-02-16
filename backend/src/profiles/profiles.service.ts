@@ -15,7 +15,7 @@ export class ProfilesService {
     private readonly s3Service: S3Service,
     private readonly aiService: AiService,
     private readonly usersService: UsersService,
-  ) { }
+  ) {}
 
   async findOne(id: string): Promise<ReturnDataType<Partial<User> | null>> {
     const profile = await this.prisma.user.findUnique({
