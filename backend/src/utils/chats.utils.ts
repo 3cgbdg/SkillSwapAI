@@ -8,7 +8,7 @@ interface IChatPrismaResult {
 }
 
 export class ChatsUtils {
-  static mapChatListItem(chat: IChatPrismaResult, myId: string): IChatListItem {
+  static mapChatListItem(chat: IChatPrismaResult): IChatListItem {
     const lastMsg = chat.messages?.[0];
     return {
       chatId: chat.id,

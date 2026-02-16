@@ -14,7 +14,7 @@ type UserWithSkills = Omit<User, 'password'> & {
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async update(id: string, data: Prisma.UserUpdateInput): Promise<User> {
     try {
@@ -22,11 +22,8 @@ export class UsersService {
         where: { id },
         data,
       });
-    } catch (error) {
-      if (error.code === 'P2025') {
-        throw new NotFoundException(`User with ID ${id} not found`);
-      }
-      throw error;
+    } catch {
+      throw new NotFoundException(`User with ID ${id} not found`);
     }
   }
 

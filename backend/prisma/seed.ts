@@ -89,6 +89,7 @@ async function main() {
 
     await prisma.user.create({
       data: {
+        isBot: true,
         email: faker.internet.email(),
         name: faker.person.fullName(),
         password: 'password123',

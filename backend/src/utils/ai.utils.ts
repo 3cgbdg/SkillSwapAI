@@ -1,5 +1,4 @@
 import { User as PrismaUser, Skill as PrismaSkill } from '@prisma/client';
-import { IGeneratedActiveMatch } from '../ai/ai.interface';
 
 interface IUserForAi extends PrismaUser {
   knownSkills: PrismaSkill[];

@@ -19,8 +19,12 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import * as redisStore from 'cache-manager-ioredis';
 import { APP_GUARD } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
+import { TasksModule } from './tasks/tasks.module';
+
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -37,7 +41,7 @@ import { APP_GUARD } from '@nestjs/core';
       imports: [ConfigModule],
       inject: [ConfigService],
       isGlobal: true,
-      useFactory: async (configService: ConfigService) => {
+      useFactory: (configService: ConfigService) => {
         const host = configService.get<string>('REDIS_HOST');
         if (!host) {
           console.log('[CacheModule] REDIS_HOST not found, using memory store');
@@ -64,25 +68,17 @@ import { APP_GUARD } from '@nestjs/core';
     AuthModule,
     S3Module,
     SkillsModule,
-
     SearchModule,
-
     ChatsModule,
-
     RequestsModule,
-
     FriendsModule,
-
     ProfilesModule,
-
     SessionsModule,
-
     MatchesModule,
-
     PlansModule,
-
     AiModule,
     WebSocketsModule,
+    TasksModule,
   ],
   controllers: [AppController],
   providers: [
@@ -92,4 +88,4 @@ import { APP_GUARD } from '@nestjs/core';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }

@@ -2,7 +2,7 @@ import { BadRequestException } from '@nestjs/common';
 import { ISessionPrismaResult, ISessionWithFriend } from 'types/sessions';
 
 export class SessionsUtils {
-  static validateSessionTime(date: string, start: number, end: number) {
+  static validateSessionTime(date: string, start: number) {
     const sessionDate = new Date(date);
     const now = new Date();
 
