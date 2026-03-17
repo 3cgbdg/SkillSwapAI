@@ -24,7 +24,7 @@ export class SessionsService {
     dto: CreateSessionDto,
     myId: string,
   ): Promise<ReturnDataType<ISessionWithFriend>> {
-    SessionsUtils.validateSessionTime(dto.date, dto.start, dto.end);
+    SessionsUtils.validateSessionTime(dto.date, dto.start);
 
     await this.ensureNoOverlappingSessions(dto);
 

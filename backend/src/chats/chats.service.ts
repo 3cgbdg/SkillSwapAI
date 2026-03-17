@@ -51,7 +51,7 @@ export class ChatsService {
     });
 
     return {
-      data: chats.map((chat) => ChatsUtils.mapChatListItem(chat, myId)),
+      data: chats.map((chat) => ChatsUtils.mapChatListItem(chat)),
     };
   }
 
