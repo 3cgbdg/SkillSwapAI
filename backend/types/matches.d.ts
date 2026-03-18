@@ -1,21 +1,21 @@
 export interface IMatchResponse {
-  compatibility: number,
-  aiExplanation: string,
-  id: string,
-  initiatorId: string,
-  otherId: string,
+  compatibility: number;
+  aiExplanation: string;
+  id: string;
+  initiatorId: string;
+  otherId: string;
   other: {
     id: string;
     name: string | null;
     imageUrl: string | null;
     knownSkills: {
-      title: string
-    }[],
+      title: string;
+    }[];
 
     skillsToLearn: {
-      title: string
-    }[],
-  }
+      title: string;
+    }[];
+  };
 }
 
 export interface IAvailableMatchItem {
@@ -26,5 +26,5 @@ export interface IAvailableMatchItem {
     imageUrl: string | null;
     knownSkills: { id: string; title: string }[];
     skillsToLearn: { id: string; title: string }[];
-  }
+  };
 }

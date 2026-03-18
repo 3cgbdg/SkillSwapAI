@@ -1,4 +1,9 @@
-import { ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Plan } from '@prisma/client';
 import { PrismaService } from 'prisma/prisma.service';
 import { IGeneratedActiveMatch } from 'src/ai/ai.interface';
@@ -8,7 +13,7 @@ import { PlansUtils } from 'src/utils/plans.utils';
 
 @Injectable()
 export class PlansService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
   async getPlan(matchId: string): Promise<ReturnDataType<Plan>> {
     const match = await this.prisma.match.findUnique({
       where: { id: matchId },
@@ -32,7 +37,8 @@ export class PlansService {
       },
     });
     if (!match) throw new NotFoundException('Match was not found!');
-    if (match.plan?.id) throw new ForbiddenException('Plan has been already created!');
+    if (match.plan?.id)
+      throw new ForbiddenException('Plan has been already created!');
 
     return this.prisma.plan.create({
       data: {
@@ -69,7 +75,9 @@ export class PlansService {
 
     if (!plan) throw new NotFoundException('Plan not found');
 
-    const remainingModules = plan.modules.filter((m) => m.status !== 'COMPLETED');
+    const remainingModules = plan.modules.filter(
+      (m) => m.status !== 'COMPLETED',
+    );
 
     if (remainingModules.length === 1 && remainingModules[0].id === moduleId) {
       await this.prisma.match.deleteMany({ where: { plan: { id: planId } } });
@@ -77,7 +85,8 @@ export class PlansService {
     }
 
     const moduleToUpdate = remainingModules.find((m) => m.id === moduleId);
-    if (!moduleToUpdate) throw new ForbiddenException('Module not found or already completed');
+    if (!moduleToUpdate)
+      throw new ForbiddenException('Module not found or already completed');
 
     try {
       await this.prisma.module.update({

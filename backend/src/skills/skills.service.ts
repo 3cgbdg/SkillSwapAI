@@ -7,7 +7,7 @@ import { IReturnMessage, ReturnDataType } from 'types/general';
 
 @Injectable()
 export class SkillsService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async findAll(dto: GetSkillsDto): Promise<ReturnDataType<any[]>> {
     const skills = await this.prisma.skill.findMany({
@@ -82,8 +82,8 @@ export class SkillsService {
 
   private async clearAISuggestion(user: User, skillTitle: string) {
     try {
-      const aiSuggestionSkills = user.aiSuggestionSkills ||
-        (await this.getUserAISuggestions(user.id));
+      const aiSuggestionSkills =
+        user.aiSuggestionSkills || (await this.getUserAISuggestions(user.id));
 
       const updatedSuggestions = aiSuggestionSkills.filter(
         (suggestion) => suggestion !== skillTitle,

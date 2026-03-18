@@ -14,7 +14,7 @@ export class RequestsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly requestGateway: RequestGateway,
-  ) { }
+  ) {}
 
   async createFriendRequest(
     dto: CreateRequestDto,
@@ -31,13 +31,16 @@ export class RequestsService {
     return this.createFriendRequestByName(dto.name, userId);
   }
 
-  private async createFriendRequestById(recipientId: string, senderId: string): Promise<ReturnDataType<IRequestWithSession>> {
+  private async createFriendRequestById(
+    recipientId: string,
+    senderId: string,
+  ): Promise<ReturnDataType<IRequestWithSession>> {
     await this.ensureRequestDoesNotExist(senderId, recipientId);
 
-    const request = await this.prisma.request.create({
+    const request = (await this.prisma.request.create({
       data: { toId: recipientId, fromId: senderId, type: 'FRIEND' },
       include: this.getBasicRequestInclude(),
-    }) as unknown as IRequestWithSession;
+    })) as unknown as IRequestWithSession;
 
     this.notifyRecipient(recipientId, request);
 
@@ -47,13 +50,18 @@ export class RequestsService {
     };
   }
 
-  private async createFriendRequestByName(recipientName: string, senderId: string): Promise<ReturnDataType<IRequestWithSession>> {
+  private async createFriendRequestByName(
+    recipientName: string,
+    senderId: string,
+  ): Promise<ReturnDataType<IRequestWithSession>> {
     const recipient = await this.prisma.user.findUnique({
       where: { name: recipientName },
     });
 
     if (!recipient) {
-      throw new NotFoundException(`User with username "${recipientName}" not found`);
+      throw new NotFoundException(
+        `User with username "${recipientName}" not found`,
+      );
     }
 
     if (recipient.id === senderId) {
@@ -62,10 +70,10 @@ export class RequestsService {
 
     await this.ensureRequestDoesNotExist(senderId, recipient.id);
 
-    const request = await this.prisma.request.create({
+    const request = (await this.prisma.request.create({
       data: { toId: recipient.id, fromId: senderId, type: 'FRIEND' },
       include: this.getBasicRequestInclude(),
-    }) as unknown as IRequestWithSession;
+    })) as unknown as IRequestWithSession;
 
     this.notifyRecipient(recipient.id, request);
 
@@ -87,7 +95,9 @@ export class RequestsService {
     });
 
     if (existingRequest) {
-      throw new BadRequestException('Friend request already exists or is pending.');
+      throw new BadRequestException(
+        'Friend request already exists or is pending.',
+      );
     }
   }
 
@@ -103,7 +113,9 @@ export class RequestsService {
     this.requestGateway.notifyUser(recipientId, { request });
   }
 
-  async findAll(userId: string): Promise<ReturnDataType<IRequestWithSession[]>> {
+  async findAll(
+    userId: string,
+  ): Promise<ReturnDataType<IRequestWithSession[]>> {
     const requests = (await this.prisma.request.findMany({
       where: { toId: userId },
       include: this.getBasicRequestInclude(),
@@ -111,7 +123,11 @@ export class RequestsService {
     return { data: requests };
   }
 
-  async createSessionRequest(sessionId: string, senderId: string, recipientId: string): Promise<IRequestWithSession> {
+  async createSessionRequest(
+    sessionId: string,
+    senderId: string,
+    recipientId: string,
+  ): Promise<IRequestWithSession> {
     return (await this.prisma.request.create({
       data: {
         from: { connect: { id: senderId } },

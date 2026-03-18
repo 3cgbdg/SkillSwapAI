@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'prisma/prisma.service';
 import { S3Service } from 'src/s3/s3.service';
@@ -19,7 +15,7 @@ export class ProfilesService {
     private readonly s3Service: S3Service,
     private readonly aiService: AiService,
     private readonly usersService: UsersService,
-  ) { }
+  ) {}
 
   async findOne(id: string): Promise<ReturnDataType<Partial<User> | null>> {
     const profile = await this.prisma.user.findUnique({
@@ -73,7 +69,10 @@ export class ProfilesService {
     return { message: 'Successfully updated!' };
   }
 
-  private getChangedFields<T extends object>(dto: Partial<T>, currentData: T): Partial<T> {
+  private getChangedFields<T extends object>(
+    dto: Partial<T>,
+    currentData: T,
+  ): Partial<T> {
     const acc: Partial<T> = {};
     (Object.keys(dto) as (keyof T)[]).forEach((key) => {
       const value = dto[key];
@@ -85,13 +84,12 @@ export class ProfilesService {
   }
 
   async findOrCreateGoogleUser(profile: GoogleProfile): Promise<string> {
-    const { id, emails, name, photos } = profile;
+    const { emails } = profile;
     if (!emails || emails.length === 0) {
       throw new InternalServerErrorException(
         'Google profile must include an email',
       );
     }
-    const email = emails[0].value;
 
     const userId = await this.usersService.findOrCreateGoogleUser(profile);
 

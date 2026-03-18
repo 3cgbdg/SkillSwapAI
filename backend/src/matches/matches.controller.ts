@@ -9,14 +9,14 @@ import {
 } from '@nestjs/common';
 import { MatchesService } from './matches.service';
 import { AuthGuard } from '@nestjs/passport';
-import { Match, Plan } from '@prisma/client';
+import { Plan } from '@prisma/client';
 import type { RequestWithUser } from 'types/auth';
 import { ReturnDataType } from 'types/general';
 import { IMatchResponse, IAvailableMatchItem } from 'types/matches';
 @UseGuards(AuthGuard('jwt'))
 @Controller('matches')
 export class MatchesController {
-  constructor(private readonly matchesService: MatchesService) { }
+  constructor(private readonly matchesService: MatchesService) {}
 
   @Post()
   async create(

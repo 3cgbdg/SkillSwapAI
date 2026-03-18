@@ -33,6 +33,7 @@ model User {
   imageUrl                 String?
   email                    String       @unique
   bio                      String?
+  isBot                    Boolean      @default(false)
   completedSessionsCount   Int          @default(0)
   knownSkills              Skill[]      @relation("knownSkills")
   skillsToLearn            Skill[]      @relation("skillsToLearn")

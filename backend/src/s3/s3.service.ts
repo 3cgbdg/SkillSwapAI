@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   DeleteObjectCommand,
@@ -30,7 +34,9 @@ export class S3Service {
   private getRequiredConfig(key: string): string {
     const value = this.configService.get<string>(key);
     if (!value) {
-      throw new InternalServerErrorException(`Missing S3 Configuration: ${key}`);
+      throw new InternalServerErrorException(
+        `Missing S3 Configuration: ${key}`,
+      );
     }
     return value;
   }

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Skill, User } from '@prisma/client';
+import { Skill } from '@prisma/client';
 import { GetSearchDto } from './dto/GetSearchDto';
 import { PrismaService } from 'prisma/prisma.service';
 import { ReturnDataType } from 'types/general';
@@ -7,7 +7,7 @@ import { ISearchUser, SearchUtils } from './utils/search.utils';
 
 @Injectable()
 export class SearchService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async findAll(
     dto: GetSearchDto,

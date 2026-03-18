@@ -1,4 +1,4 @@
 export interface IModuleUpdateResponse {
-    message: string;
-    status: 'Finished' | null;
+  message: string;
+  status: 'Finished' | null;
 }
