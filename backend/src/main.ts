@@ -21,6 +21,11 @@ async function bootstrap() {
   // global filter
   app.useGlobalFilters(new HttpExceptionFilter());
 
+  // Set global /api prefix for all routes (except health)
+  app.setGlobalPrefix('api', {
+    exclude: ['health'],
+  });
+
   // global interceptors
   app.useGlobalInterceptors(new LoggerInterceptor());
 
