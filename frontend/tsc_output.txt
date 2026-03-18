@@ -1,0 +1,1 @@
+src/providers/QueryProvider.tsx(5,36): error TS2307: Cannot find module '@tanstack/react-query-devtools' or its corresponding type declarations.
