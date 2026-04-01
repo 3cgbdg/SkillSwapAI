@@ -220,7 +220,7 @@ async function main() {
         name,
         password: 'bot_account_no_login',
         bio,
-        imageUrl: faker.image.avatar(),
+        imageUrl: null,
         knownSkills: {
           connect: userKnownSkills.map((s) => ({ id: s.id })),
         },

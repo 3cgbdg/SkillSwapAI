@@ -186,7 +186,7 @@ export class AdminSeedService {
           name,
           password: 'bot_account_no_login',
           bio: BOT_BIOS[faker.number.int({ min: 0, max: BOT_BIOS.length - 1 })],
-          imageUrl: faker.image.avatar(),
+          imageUrl: null,
           knownSkills: {
             connect: shuffled.slice(0, knownCount).map((s) => ({ id: s.id })),
           },
