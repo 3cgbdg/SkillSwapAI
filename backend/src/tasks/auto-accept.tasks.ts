@@ -2,10 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from 'prisma/prisma.service';
 import { OPTIMIZATION_CONSTANTS } from 'src/constants/optimization';
+
 interface RequestWithUsers {
   id: string;
   fromId: string;
   toId: string;
+  sessionId: string | null;
+  type: string;
   from: { name: string };
   to: { name: string };
 }
@@ -16,6 +19,10 @@ export class AutoAcceptTasks {
 
   constructor(private readonly prisma: PrismaService) {}
 
+  /**
+   * Auto-accept friend requests sent TO bot users.
+   * Runs every 30 seconds.
+   */
   @Cron(CronExpression.EVERY_30_SECONDS)
   async handleAutoAcceptFriends() {
     this.logger.debug('Running handleAutoAcceptFriends cron job');
@@ -24,13 +31,17 @@ export class AutoAcceptTasks {
     let totalProcessed = 0;
 
     while (true) {
-      const botRequests = await this.fetchPendingBotRequestsBatch(lastId);
+      const botRequests = await this.fetchPendingBotRequestsBatch(
+        lastId,
+        'FRIEND',
+      );
 
       if (botRequests.length === 0) {
         break;
       }
 
-      const processedCount = await this.processBotRequestsBatch(botRequests);
+      const processedCount =
+        await this.processBotFriendRequestsBatch(botRequests);
       totalProcessed += processedCount;
 
       lastId = botRequests[botRequests.length - 1].id;
@@ -43,13 +54,51 @@ export class AutoAcceptTasks {
     }
   }
 
+  /**
+   * Auto-accept session requests sent TO bot users.
+   * Runs every 30 seconds, offset by 15s from friend requests.
+   */
+  @Cron('15,45 * * * * *')
+  async handleAutoAcceptSessions() {
+    this.logger.debug('Running handleAutoAcceptSessions cron job');
+
+    let lastId: string | null = null;
+    let totalProcessed = 0;
+
+    while (true) {
+      const botRequests = await this.fetchPendingBotRequestsBatch(
+        lastId,
+        'SESSIONCREATED',
+      );
+
+      if (botRequests.length === 0) {
+        break;
+      }
+
+      const processedCount =
+        await this.processBotSessionRequestsBatch(botRequests);
+      totalProcessed += processedCount;
+
+      lastId = botRequests[botRequests.length - 1].id;
+    }
+
+    if (totalProcessed > 0) {
+      this.logger.log(
+        `Successfully processed ${totalProcessed} bot session requests`,
+      );
+    }
+  }
+
+  // ─── Shared Fetch ────────────────────────────────────────────
+
   private async fetchPendingBotRequestsBatch(
     lastId: string | null,
+    type: string,
   ): Promise<RequestWithUsers[]> {
     return (await this.prisma.request.findMany({
       where: {
         status: 'pending',
-        type: 'FRIEND',
+        type: type as any,
         to: {
           isBot: true,
         },
@@ -64,15 +113,19 @@ export class AutoAcceptTasks {
     })) as unknown as RequestWithUsers[];
   }
 
-  private async processBotRequestsBatch(
+  // ─── Friend Request Processing ───────────────────────────────
+
+  private async processBotFriendRequestsBatch(
     requests: RequestWithUsers[],
   ): Promise<number> {
-    this.logger.log(`Processing batch of ${requests.length} friend requests`);
+    this.logger.log(
+      `Processing batch of ${requests.length} friend requests`,
+    );
 
     const senderIds = requests.map((r) => r.fromId);
     const receiverIds = requests.map((r) => r.toId);
 
-    // 1. Fetch all existing friendships for these pairs to avoid N+1 reads
+    // Fetch all existing friendships to avoid N+1 reads
     const existingFriendships = await this.prisma.friendship.findMany({
       where: {
         OR: [
@@ -83,7 +136,9 @@ export class AutoAcceptTasks {
     });
 
     const friendshipSet = new Set(
-      existingFriendships.map((f) => [f.user1Id, f.user2Id].sort().join('-')),
+      existingFriendships.map((f) =>
+        [f.user1Id, f.user2Id].sort().join('-'),
+      ),
     );
 
     let processedInBatch = 0;
@@ -94,7 +149,6 @@ export class AutoAcceptTasks {
       const isAlreadyFriend = friendshipSet.has(friendshipKey);
 
       if (!isAlreadyFriend) {
-        // 2. Prepare Create Friendship operation
         operations.push(
           this.prisma.friendship.create({
             data: {
@@ -104,13 +158,12 @@ export class AutoAcceptTasks {
           }),
         );
         this.logger.debug(
-          `Queued friendship: ${request.from.name} and bot ${request.to.name}`,
+          `Queued friendship: ${request.from.name} ↔ bot ${request.to.name}`,
         );
-        // Add to set to avoid duplicates within the same batch
         friendshipSet.add(friendshipKey);
       }
 
-      // 3. Prepare Delete Request operation
+      // Delete the friend request
       operations.push(
         this.prisma.request.delete({
           where: { id: request.id },
@@ -123,10 +176,75 @@ export class AutoAcceptTasks {
       try {
         await this.prisma.$transaction(operations);
         this.logger.log(
-          `Transaction successful: processed ${processedInBatch} requests`,
+          `Transaction successful: processed ${processedInBatch} friend requests`,
         );
       } catch (error) {
-        this.logger.error(`Batch transaction failed: ${String(error)}`);
+        this.logger.error(`Friend batch transaction failed: ${String(error)}`);
+        return 0;
+      }
+    }
+
+    return processedInBatch;
+  }
+
+  // ─── Session Request Processing ──────────────────────────────
+
+  private async processBotSessionRequestsBatch(
+    requests: RequestWithUsers[],
+  ): Promise<number> {
+    this.logger.log(
+      `Processing batch of ${requests.length} session requests`,
+    );
+
+    let processedInBatch = 0;
+    const operations: any[] = [];
+
+    for (const request of requests) {
+      if (request.sessionId) {
+        // Mark the session as AGREED
+        operations.push(
+          this.prisma.session.update({
+            where: { id: request.sessionId },
+            data: { status: 'AGREED' },
+          }),
+        );
+
+        // Create an ACCEPTED notification back to the sender
+        operations.push(
+          this.prisma.request.create({
+            data: {
+              fromId: request.toId, // bot is responding
+              toId: request.fromId, // back to the original sender
+              sessionId: request.sessionId,
+              type: 'SESSIONACCEPTED',
+            },
+          }),
+        );
+
+        this.logger.debug(
+          `Bot ${request.to.name} accepted session from ${request.from.name}`,
+        );
+      }
+
+      // Delete the original SESSIONCREATED request
+      operations.push(
+        this.prisma.request.delete({
+          where: { id: request.id },
+        }),
+      );
+      processedInBatch++;
+    }
+
+    if (operations.length > 0) {
+      try {
+        await this.prisma.$transaction(operations);
+        this.logger.log(
+          `Transaction successful: processed ${processedInBatch} session requests`,
+        );
+      } catch (error) {
+        this.logger.error(
+          `Session batch transaction failed: ${String(error)}`,
+        );
         return 0;
       }
     }

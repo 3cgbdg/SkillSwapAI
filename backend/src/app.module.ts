@@ -15,6 +15,7 @@ import { PlansModule } from './plans/plans.module';
 import { AiModule } from './ai/ai.module';
 import { WebSocketsModule } from './webSockets/webSockets.module';
 import { AppController } from './app.controller';
+import { AdminModule } from './admin/admin.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import * as redisStore from 'cache-manager-ioredis';
@@ -79,6 +80,7 @@ import { TasksModule } from './tasks/tasks.module';
     AiModule,
     WebSocketsModule,
     TasksModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [
