@@ -201,8 +201,8 @@ const Matches = ({
               option={option}
               isInActiveMatches={
                 activeMatches.findIndex(
-                  (item) => item.other.id == match.other.id
-                ) == -1
+                  (item) => item?.other?.id === match?.other?.id
+                ) === -1
                   ? false
                   : true
               }

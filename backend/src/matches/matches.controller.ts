@@ -22,7 +22,7 @@ export class MatchesController {
   async create(
     @Req() req: RequestWithUser,
     @Body('otherId') otherId: string,
-  ): Promise<ReturnDataType<Plan>> {
+  ): Promise<ReturnDataType<IMatchResponse>> {
     if (!otherId || otherId.length == 0)
       throw new BadRequestException('No user id!');
     return this.matchesService.generateActiveMatch(req.user.id, otherId);

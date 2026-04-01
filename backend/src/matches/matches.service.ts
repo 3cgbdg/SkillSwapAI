@@ -26,7 +26,7 @@ export class MatchesService {
   async generateActiveMatch(
     myId: string,
     otherId: string,
-  ): Promise<ReturnDataType<Plan>> {
+  ): Promise<ReturnDataType<IMatchResponse>> {
     const matchExists = await this.doesMatchesExistsForUser(myId, otherId);
 
     if (matchExists) {
@@ -44,8 +44,24 @@ export class MatchesService {
       activeMatchId,
       result.generatedData.modules,
     );
+
+    const matchDb = await this.prisma.match.findUnique({
+      where: { id: activeMatchId },
+      include: {
+        initiator: MatchesUtils.userSelect(),
+        other: MatchesUtils.userSelect(),
+      },
+    });
+
+    if (!matchDb) throw new InternalServerErrorException('Match not found');
+
+    const mappedMatch = {
+      ...matchDb,
+      other: UserUtils.getOtherUser(myId, matchDb.initiator, matchDb.other),
+    };
+
     return {
-      data: plan,
+      data: mappedMatch as unknown as IMatchResponse,
       message: 'Active match has been successfully generated',
     };
   }
