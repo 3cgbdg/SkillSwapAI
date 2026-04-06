@@ -2,14 +2,18 @@ name: PyBackend CI/CD
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
     paths:
       - 'pyBackend/**'
       - '.github/workflows/pybackend.yml'
   pull_request:
-    branches: [main]
+    branches: [main, dev]
     paths:
       - 'pyBackend/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   AWS_REGION: eu-central-1
@@ -32,6 +36,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
       - name: Install dependencies
         run: |
@@ -93,7 +98,8 @@ jobs:
           # Copy source files into the package directory
           cp -r api logger.py main.py package/
           cd package
-          zip -r ../deploy.zip .
+          find . -type d -name "__pycache__" -exec rm -rf {} +
+          zip -r ../deploy.zip . -x "*.pyc" "*__pycache__*" "tests/*"
           cd ..
           echo "Deployment package size: $(du -sh deploy.zip)"
 
