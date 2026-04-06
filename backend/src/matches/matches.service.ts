@@ -22,7 +22,7 @@ export class MatchesService {
     private readonly plansService: PlansService,
     private readonly prisma: PrismaService,
     private readonly aiService: AiService,
-  ) {}
+  ) { }
   async generateActiveMatch(
     myId: string,
     otherId: string,
