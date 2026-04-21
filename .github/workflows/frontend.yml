@@ -10,10 +10,15 @@ on:
     branches: [main, dev]
     paths:
       - 'frontend/**'
+      - '.github/workflows/frontend.yml'  # Change 3: PR path consistency
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+# Change 2: Least-privilege token scope
+permissions:
+  contents: read
 
 env:
   AWS_REGION: eu-central-1
@@ -28,16 +33,17 @@ jobs:
   lint-and-test:
     name: Lint & Type Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10  # Change 4: Prevent runaway jobs
     defaults:
       run:
         working-directory: frontend
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2  (Change 1: SHA pin)
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642195f572a2b2b8a0a4b0e  # v4.4.0  (Change 1: SHA pin)
         with:
           node-version: '20'
           cache: 'npm'
@@ -56,6 +62,7 @@ jobs:
   build-and-push:
     name: Build & Push to ECR
     runs-on: ubuntu-latest
+    timeout-minutes: 20  # Change 4: Prevent runaway jobs
     needs: lint-and-test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     outputs:
@@ -63,18 +70,20 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2  (Change 1: SHA pin)
 
       - name: Cache Next.js build
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684  # v4.2.3  (Change 1: SHA pin)
         with:
           path: frontend/.next/cache
           key: ${{ runner.os }}-nextjs-${{ hashFiles('frontend/package-lock.json') }}-${{ hashFiles('frontend/**.[jt]s', 'frontend/**.[jt]sx') }}
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('frontend/package-lock.json') }}-
 
+      # TODO: Migrate to OIDC — replace IAM keys with role-to-assume
+      # See: https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722  # v4.1.0  (Change 1: SHA pin)
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -82,13 +91,13 @@ jobs:
 
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+        uses: aws-actions/amazon-ecr-login@062b18b96a7aff071d4dc91bc00c4c1a7945b076  # v2.0.1  (Change 1: SHA pin)
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2  # v3.10.0  (Change 1: SHA pin)
 
       - name: Build and push image to ECR
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198e362a7a9e12  # v6.18.0  (Changes 1 & 9: SHA pin + v5→v6)
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
@@ -110,15 +119,18 @@ jobs:
   deploy:
     name: Deploy to ECS
     runs-on: ubuntu-latest
+    timeout-minutes: 20  # Change 4: Prevent runaway jobs
     needs: build-and-push
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      # Change 8: Removed unnecessary checkout — deploy job only needs AWS CLI,
+      # not any files from the repo. Task definition is fetched directly from AWS.
 
+      # TODO: Migrate to OIDC — replace IAM keys with role-to-assume
+      # See: https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722  # v4.1.0  (Change 1: SHA pin)
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -133,16 +145,51 @@ jobs:
 
       - name: Update ECS task definition with new image
         id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        uses: aws-actions/amazon-ecs-render-task-definition@9666dc9a3bf790a3a6a49737b240f17fa599a5d2  # v1.5.3  (Change 1: SHA pin)
         with:
           task-definition: task-definition.json
           container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ needs.build-and-push.outputs.image }}
 
       - name: Deploy to Amazon ECS
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        uses: aws-actions/amazon-ecs-deploy-task-definition@2a0267a22fdc1f6fb9b0b7e6e849a2ee076d74ee  # v2.3.1  (Change 1: SHA pin)
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
+
+      # Change 6: Smoke test to validate deployment at application level
+      - name: Smoke test deployment
+        run: |
+          echo "⏳ Waiting 30s for service to stabilize..."
+          sleep 30
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            --max-time 10 --retry 3 --retry-delay 10 \
+            "${{ env.NEXT_PUBLIC_API_URL }}/../")
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
+            echo "✅ Frontend smoke test passed! HTTP $STATUS"
+          else
+            echo "❌ Frontend smoke test failed! HTTP $STATUS"
+            exit 1
+          fi
+
+      # Change 5: Clean up old ECR images — keep 5 most recent to control storage costs
+      - name: Clean up old ECR images
+        run: |
+          echo "🧹 Cleaning up old ECR images (keeping 5 most recent)..."
+          IMAGES_TO_DELETE=$(aws ecr describe-images \
+            --repository-name ${{ env.ECR_REPOSITORY }} \
+            --query 'sort_by(imageDetails,& imagePushedAt)[:-5].imageDigest' \
+            --output text)
+
+          if [ -n "$IMAGES_TO_DELETE" ] && [ "$IMAGES_TO_DELETE" != "None" ]; then
+            for digest in $IMAGES_TO_DELETE; do
+              aws ecr batch-delete-image \
+                --repository-name ${{ env.ECR_REPOSITORY }} \
+                --image-ids imageDigest=$digest
+            done
+            echo "✅ Cleaned up old ECR images"
+          else
+            echo "ℹ️ No old images to clean up"
+          fi
