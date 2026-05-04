@@ -1,0 +1,6 @@
+. "$(dirname "$0")/hook-env.sh"
+set -e
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+(cd "$ROOT/frontend" && npx tsc --noEmit)
+(cd "$ROOT/backend" && npx prisma generate)
+(cd "$ROOT/backend" && npx tsc --noEmit)

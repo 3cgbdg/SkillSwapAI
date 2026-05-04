@@ -2,6 +2,13 @@
   "private": true,
   "packageManager": "pnpm@10.21.0",
   "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "shadcn": "^4.2.0"
+  },
+  "scripts": {
+    "prepare": "husky",
+    "lint-staged": "lint-staged",
+    "check:types": "pnpm --dir frontend exec tsc --noEmit && pnpm --dir backend exec prisma generate && pnpm --dir backend exec tsc --noEmit"
   }
 }

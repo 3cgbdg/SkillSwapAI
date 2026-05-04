@@ -1,0 +1,2 @@
+. "$(dirname "$0")/hook-env.sh"
+lint-staged
