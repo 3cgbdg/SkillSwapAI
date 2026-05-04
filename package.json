@@ -1,4 +1,6 @@
 {
+  "private": true,
+  "packageManager": "pnpm@10.21.0",
   "devDependencies": {
     "shadcn": "^4.2.0"
   }
