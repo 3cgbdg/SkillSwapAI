@@ -1,4 +1,7 @@
-import { User as PrismaUser, Skill as PrismaSkill } from '@prisma/client';
+import {
+  User as PrismaUser,
+  Skill as PrismaSkill,
+} from '../prisma/prisma-exports.js';
 
 interface IUserForAi extends PrismaUser {
   knownSkills: PrismaSkill[];

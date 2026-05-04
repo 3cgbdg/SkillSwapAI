@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, User, Skill } from '@prisma/client';
+import { Prisma, User, Skill } from '../prisma/prisma-exports.js';
 import { PrismaService } from 'prisma/prisma.service';
 import { GoogleProfile } from 'types/auth';
 
@@ -37,7 +37,8 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    const { password, ...userWithoutPassword } = user;
+    const { password: _password, ...userWithoutPassword } = user;
+    void _password;
     return userWithoutPassword;
   }
 

@@ -12,7 +12,7 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
+    "start:prod": "node dist/src/main.js",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -35,7 +35,8 @@
     "@nestjs/schedule": "^6.0.1",
     "@nestjs/throttler": "^6.5.0",
     "@nestjs/websockets": "^11.1.6",
-    "@prisma/client": "^6.17.0",
+    "@prisma/adapter-pg": "^7.0.0",
+    "@prisma/client": "^7.0.0",
     "@types/cookie-parser": "^1.4.9",
     "axios": "^1.12.2",
     "bcryptjs": "^3.0.2",
@@ -46,11 +47,13 @@
     "class-validator": "^0.14.2",
     "cookie": "^1.0.2",
     "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.7",
     "ioredis": "^5.8.2",
     "passport": "^0.7.0",
     "passport-github2": "^0.1.12",
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",
+    "pg": "^8.13.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "socket.io": "^4.8.1",
@@ -72,6 +75,7 @@
     "@types/passport-github2": "^1.2.9",
     "@types/passport-google-oauth20": "^2.0.17",
     "@types/passport-jwt": "^4.0.1",
+    "@types/pg": "^8.20.0",
     "@types/supertest": "^6.0.2",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
@@ -79,13 +83,14 @@
     "globals": "^16.0.0",
     "jest": "^30.0.0",
     "prettier": "^3.4.2",
-    "prisma": "^6.17.0",
+    "prisma": "^7.0.0",
     "source-map-support": "^0.5.21",
     "supertest": "^7.0.0",
     "ts-jest": "^29.2.5",
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.19.4",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
   },
@@ -100,13 +105,18 @@
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
+    "moduleNameMapper": {
+      "^.*prisma/prisma-exports\\.js$": "<rootDir>/prisma/prisma-exports.jest.ts",
+      "^.*prisma/prisma-exports$": "<rootDir>/prisma/prisma-exports.jest.ts",
+      "^(\\.{1,2}/.*)\\.js$": "$1",
+      "^prisma/(.*)$": "<rootDir>/../prisma/$1",
+      "^src/(.*)$": "<rootDir>/$1",
+      "^types/(.*)$": "<rootDir>/../types/$1"
+    },
     "collectCoverageFrom": [
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
-  },
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
   }
 }

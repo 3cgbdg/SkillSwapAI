@@ -19,7 +19,7 @@ import type { Request, Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
-import { User } from '@prisma/client';
+import { User } from '../prisma/prisma-exports.js';
 import type { RequestWithUser, JwtPayload } from 'types/auth';
 import type { IReturnMessage, ReturnDataType } from 'types/general';
 import { ProfilesService } from 'src/profiles/profiles.service';

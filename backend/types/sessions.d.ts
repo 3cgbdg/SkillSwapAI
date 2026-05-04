@@ -1,4 +1,4 @@
-import { Session as PrismaSession } from '@prisma/client';
+import { Session as PrismaSession } from '../src/prisma/prisma-exports.js';
 
 export interface ISessionFriend {
   id: string;

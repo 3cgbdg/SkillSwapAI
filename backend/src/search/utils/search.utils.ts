@@ -1,4 +1,4 @@
-import { Skill, User } from '@prisma/client';
+import { Skill, User } from '../../prisma/prisma-exports.js';
 
 export interface ISearchUser {
   id: string;

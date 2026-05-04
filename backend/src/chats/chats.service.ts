@@ -3,7 +3,7 @@ import { PrismaService } from 'prisma/prisma.service';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { ReturnDataType } from 'types/general';
 import { IChatListItem, IChatResponse } from 'types/chats';
-import { Message } from '@prisma/client';
+import { Message } from '../prisma/prisma-exports.js';
 import { ChatsUtils } from 'src/utils/chats.utils';
 
 @Injectable()

@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { User } from '@prisma/client';
+import { User } from '../src/prisma/prisma-exports.js';
 
 export interface RequestWithUser extends Request {
   user: User;

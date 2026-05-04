@@ -29,12 +29,14 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 
 # creating non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nestjs -u 1001
 
-RUN chown -R nestjs:nodejs /app/prisma
+RUN chown nestjs:nodejs /app/prisma.config.ts && \
+    chown -R nestjs:nodejs /app/prisma
 
 USER nestjs
 

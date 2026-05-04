@@ -4,7 +4,6 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { Plan } from '@prisma/client';
 import { PrismaService } from 'prisma/prisma.service';
 import { AiService } from 'src/ai/ai.service';
 import { PlansService } from 'src/plans/plans.service';
@@ -22,7 +21,7 @@ export class MatchesService {
     private readonly plansService: PlansService,
     private readonly prisma: PrismaService,
     private readonly aiService: AiService,
-  ) { }
+  ) {}
   async generateActiveMatch(
     myId: string,
     otherId: string,
@@ -40,7 +39,7 @@ export class MatchesService {
     );
     if (!result?.generatedData) throw new InternalServerErrorException();
     const activeMatchId = await this.createMatch(myId, otherId, result);
-    const plan = await this.plansService.createPlan(
+    await this.plansService.createPlan(
       activeMatchId,
       result.generatedData.modules,
     );

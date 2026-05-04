@@ -1,3 +1,3 @@
-import { User } from '@prisma/client';
+import { User } from '../src/prisma/prisma-exports.js';
 
-export interface IFriendItem extends Pick<User, 'id' | 'name' | 'imageUrl'> {}
+export type IFriendItem = Pick<User, 'id' | 'name' | 'imageUrl'>;

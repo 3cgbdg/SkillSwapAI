@@ -10,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { IGeneratedActiveMatch } from './ai.interface';
 import { PrismaService } from 'prisma/prisma.service';
 import { ReturnDataType } from 'types/general';
-import { User } from '@prisma/client';
+import { User } from '../prisma/prisma-exports.js';
 import { AxiosResponse } from 'axios';
 import { RequestGateway } from 'src/webSockets/request.gateway';
 import { AiUtils } from 'src/utils/ai.utils';

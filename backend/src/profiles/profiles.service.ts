@@ -1,5 +1,5 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { User } from '@prisma/client';
+import { User } from '../prisma/prisma-exports.js';
 import { PrismaService } from 'prisma/prisma.service';
 import { S3Service } from 'src/s3/s3.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -30,7 +30,8 @@ export class ProfilesService {
       return { data: null };
     }
 
-    const { password, ...userWithoutPassword } = profile;
+    const { password: _password, ...userWithoutPassword } = profile;
+    void _password;
     return { data: userWithoutPassword };
   }
 

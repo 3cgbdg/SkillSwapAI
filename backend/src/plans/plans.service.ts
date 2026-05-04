@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { Plan } from '@prisma/client';
+import { Plan } from '../prisma/prisma-exports.js';
 import { PrismaService } from 'prisma/prisma.service';
 import { IGeneratedActiveMatch } from 'src/ai/ai.interface';
 import { ReturnDataType } from 'types/general';

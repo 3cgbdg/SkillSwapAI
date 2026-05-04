@@ -2,7 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { GetSkillsDto } from './dto/GetSkillsDto';
 import { SkillDto } from './dto/skills.dto';
-import { User } from '@prisma/client';
+import { User } from '../prisma/prisma-exports.js';
 import { IReturnMessage, ReturnDataType } from 'types/general';
 
 @Injectable()

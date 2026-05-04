@@ -1,7 +1,16 @@
-import { PrismaClient, Skill } from '@prisma/client';
+import 'dotenv/config';
+import { PrismaClient, Skill } from '../src/prisma/prisma-exports.js';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 import { faker } from '@faker-js/faker';
 
-const prisma = new PrismaClient();
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error('DATABASE_URL is not set');
+}
+
+const pool = new Pool({ connectionString });
+const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
 
 const TECHNICAL_SKILLS = [
   'TypeScript',
@@ -131,7 +140,7 @@ const BOT_COUNT = 150;
 const BOT_BIOS = [
   'Passionate learner always looking to swap skills and grow together.',
   'Tech enthusiast by day, creative thinker by night.',
-  'Love teaching what I know and learning what I don\'t!',
+  "Love teaching what I know and learning what I don't!",
   'Believe in the power of peer-to-peer learning.',
   'On a mission to master 10 skills before I turn 30.',
   'Jack of many trades, looking to become master of a few.',
@@ -140,7 +149,7 @@ const BOT_BIOS = [
   'Curious mind with a love for sharing knowledge.',
   'Looking for study buddies and skill-swap partners!',
   'Always up for a challenge and a new skill.',
-  'Let\'s learn something awesome together!',
+  "Let's learn something awesome together!",
   'Ready to teach, eager to learn.',
   'Building skills one swap at a time.',
   'Knowledge is best when shared.',
@@ -197,7 +206,10 @@ async function main() {
     // Generate unique email
     let email: string;
     do {
-      email = faker.internet.email({ firstName: name.split(' ')[0], lastName: name.split(' ')[1] || `bot${i}` });
+      email = faker.internet.email({
+        firstName: name.split(' ')[0],
+        lastName: name.split(' ')[1] || `bot${i}`,
+      });
     } while (usedEmails.has(email));
     usedEmails.add(email);
 
@@ -211,7 +223,8 @@ async function main() {
       knownSkillsCount + skillsToLearnCount,
     );
 
-    const bio = BOT_BIOS[faker.number.int({ min: 0, max: BOT_BIOS.length - 1 })];
+    const bio =
+      BOT_BIOS[faker.number.int({ min: 0, max: BOT_BIOS.length - 1 })];
 
     await prisma.user.create({
       data: {
@@ -247,4 +260,5 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await pool.end();
   });

@@ -9,7 +9,9 @@ describe('SessionsController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [SessionsController],
       providers: [SessionsService],
-    }).compile();
+    })
+      .useMocker(() => ({}))
+      .compile();
 
     controller = module.get<SessionsController>(SessionsController);
   });

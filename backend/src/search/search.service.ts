@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Skill } from '@prisma/client';
+import { Skill } from '../prisma/prisma-exports.js';
 import { GetSearchDto } from './dto/GetSearchDto';
 import { PrismaService } from 'prisma/prisma.service';
 import { ReturnDataType } from 'types/general';

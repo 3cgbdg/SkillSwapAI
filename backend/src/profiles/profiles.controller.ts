@@ -15,7 +15,7 @@ import {
 import { ProfilesService } from './profiles.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
-import { User } from '@prisma/client';
+import { User } from '../prisma/prisma-exports.js';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import type { RequestWithUser } from 'types/auth';
 import type { IReturnMessage, ReturnDataType } from 'types/general';
