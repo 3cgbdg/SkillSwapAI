@@ -29,6 +29,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { cn } from "@/lib/utils";
+import { formatSessionTimeRange } from "@/utils/sessionTime";
 
 const Page = () => {
   const { data: user, isLoading: profileLoading } = useProfile();
@@ -47,11 +48,7 @@ const Page = () => {
   const needsOnboarding = !loading && (knownCount === 0 || learnCount === 0);
 
   const upcoming = sessions
-    .filter((s) => {
-      const startDate = new Date(s.date);
-      startDate.setHours(s.start, 0, 0, 0);
-      return now <= startDate;
-    })
+    .filter((s) => new Date(s.startsAt) >= now)
     .slice(0, 3);
 
   const topMatches = [...matches]
@@ -204,7 +201,7 @@ const Page = () => {
                   <div>
                     <CardTitle className="text-base">{item.title}</CardTitle>
                     <CardDescription>
-                      {item.start}:00 – {item.end}:00
+                      {formatSessionTimeRange(item.startsAt, item.endsAt)}
                       {item.friend?.name ? ` · with ${item.friend.name}` : ""}
                     </CardDescription>
                   </div>

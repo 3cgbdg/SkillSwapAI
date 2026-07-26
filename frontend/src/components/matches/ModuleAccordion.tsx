@@ -41,7 +41,9 @@ const ModuleAccordion = ({
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["plans", id] });
       queryClient.invalidateQueries({ queryKey: ["matches", id] });
-      showSuccessToast(data.message || "Plan updated");
+      showSuccessToast(
+        data.message || "Module complete — nice work on your skill swap!"
+      );
     },
     onError: (err: Error) => {
       showErrorToast(err.message);

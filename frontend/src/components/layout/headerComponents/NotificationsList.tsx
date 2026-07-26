@@ -1,5 +1,6 @@
 import { Check, X } from "lucide-react";
 import { IRequest } from "@/types/session";
+import { formatSessionDay, formatSessionTimeRange } from "@/utils/sessionTime";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -81,21 +82,18 @@ const NotificationsList = ({
                 <p>
                   <span className="font-semibold">From:</span> {req.from.name}
                 </p>
-                {req.session.date && (
+                {req.session.startsAt && req.session.endsAt ? (
                   <div className="mb-4 flex flex-col">
                     <p className="font-medium">
-                      <span className="font-semibold">Date:</span>
-                      {new Date(req.session.date).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </p>
-                    <p className="font-medium">
-                      <span className="font-semibold">Time range:</span>{" "}
-                      {req.session.start}:00 - {req.session.end}:00
+                      <span className="font-semibold">When:</span>{" "}
+                      {formatSessionDay(req.session.startsAt)}{" "}
+                      {formatSessionTimeRange(
+                        req.session.startsAt,
+                        req.session.endsAt
+                      )}
                     </p>
                   </div>
-                )}
+                ) : null}
                 <div className="grid grid-cols-2 items-center gap-2">
                   <Button
                     type="button"

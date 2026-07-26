@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { formatSessionDay, formatSessionTimeRange } from "@/utils/sessionTime";
 
 const DISMISS_KEY = "skillswap:dismissed-session-warning";
 
@@ -27,14 +28,10 @@ const ComingSessionWarning = () => {
     if (!sessions || sessions.length === 0) return;
     const now = new Date();
     const upcoming = sessions.find((item) => {
-      const sessionDate = new Date(item.date);
-      const sessionStartHourBefore = new Date(sessionDate);
-      sessionStartHourBefore.setHours(item.start - 1, 0, 0, 0);
-      const sessionStart = new Date(sessionDate);
-      sessionStart.setHours(item.start, 0, 0, 0);
-      const sessionEnd = new Date(
-        sessionStart.getTime() + 60 * (item.end - item.start) * 60 * 1000
-      );
+      const sessionStart = new Date(item.startsAt);
+      const sessionEnd = new Date(item.endsAt);
+      const sessionStartHourBefore = new Date(sessionStart);
+      sessionStartHourBefore.setHours(sessionStart.getHours() - 1);
 
       return (
         (now >= sessionStartHourBefore && now <= sessionEnd) ||
@@ -85,8 +82,11 @@ const ComingSessionWarning = () => {
             </Button>
           </div>
           <span className="text-muted-foreground text-sm">
-            {new Date(upComingSession.date).toLocaleDateString()} |{" "}
-            {upComingSession.start}:00 - {upComingSession.end}:00
+            {formatSessionDay(upComingSession.startsAt)} |{" "}
+            {formatSessionTimeRange(
+              upComingSession.startsAt,
+              upComingSession.endsAt
+            )}
           </span>
           {upComingSession.friend ? (
             <span className="text-muted-foreground text-sm">

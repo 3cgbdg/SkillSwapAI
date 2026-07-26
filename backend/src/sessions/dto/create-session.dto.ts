@@ -1,13 +1,20 @@
-import { Type } from 'class-transformer';
 import {
   IsDateString,
+  IsIn,
   IsNotEmpty,
   IsOptional,
-  Matches,
-  Max,
-  Min,
-  ValidateIf,
+  IsString,
 } from 'class-validator';
+
+const SESSION_COLOR_KEYS = [
+  'plum',
+  'amber',
+  'sage',
+  'coral',
+  'slate',
+  'violet',
+] as const;
+
 export class CreateSessionDto {
   @IsNotEmpty({ message: 'Empty title' })
   title: string;
@@ -18,27 +25,20 @@ export class CreateSessionDto {
   @IsOptional()
   meetingLink?: string;
 
-  @IsNotEmpty({ message: 'Date value  is empty' })
-  @IsDateString({}, { message: 'Invalid time' })
-  date: string;
+  @IsNotEmpty({ message: 'Start time is required' })
+  @IsDateString({}, { message: 'Invalid startsAt' })
+  startsAt: string;
 
-  @Type(() => Number)
-  @IsNotEmpty({ message: 'Start hour range is empty' })
-  @Min(0, { message: 'Invalid time' })
-  @Max(23, { message: 'Invalid time' })
-  start: number;
+  @IsNotEmpty({ message: 'End time is required' })
+  @IsDateString({}, { message: 'Invalid endsAt' })
+  endsAt: string;
 
-  @ValidateIf((o: CreateSessionDto) => o.end !== 0 && o.start < o.end, {
-    message: 'Invalid time',
-  })
-  @Type(() => Number)
-  @IsNotEmpty({ message: 'End hour is empty' })
-  @Min(0)
-  @Max(23)
-  end: number;
+  @IsString()
+  @IsNotEmpty({ message: 'Timezone is required' })
+  timeZone: string;
 
   @IsNotEmpty({ message: 'Invalid color' })
-  @Matches(/^#/)
+  @IsIn(SESSION_COLOR_KEYS, { message: 'Invalid session color' })
   color: string;
 
   @IsNotEmpty({ message: 'Friend ID is empty' })

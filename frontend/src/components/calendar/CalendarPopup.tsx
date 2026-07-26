@@ -1,47 +1,106 @@
 "use client";
-import { formatDate } from "@/app/utils/calendar";
+
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Users } from "lucide-react";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { useSocket } from "@/context/SocketContext";
-import useFriends from "@/hooks/useFriends";
-import SessionsService from "@/services/SessionsService";
-import { createSessionFormData } from "@/validation/createSession";
-import { showSuccessToast } from "@/utils/toast";
-import { Spinner } from "@/components/ui/spinner";
 import { AxiosError } from "axios";
+
+import type { CalendarPopupPrefill } from "@/components/calendar/Calendar";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+import { useSocket } from "@/context/SocketContext";
+import useFriends from "@/hooks/useFriends";
+import SessionsService from "@/services/SessionsService";
+import {
+  SESSION_COLOR_KEYS,
+  SESSION_COLOR_STYLES,
+  resolveSessionColor,
+} from "@/utils/sessionColors";
+import { showSuccessToast } from "@/utils/toast";
+import {
+  createSessionFormData,
+  createSessionSchema,
+} from "@/validation/createSession";
+import type { SessionColorKey } from "@/types/session";
+import { cn } from "@/lib/utils";
+
+function toDatetimeLocalValue(date: Date): string {
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function fromDatetimeLocalValue(value: string): string {
+  return new Date(value).toISOString();
+}
+
+const DURATION_PRESETS = [
+  { label: "30 min", minutes: 30 },
+  { label: "1 hr", minutes: 60 },
+  { label: "1.5 hr", minutes: 90 },
+] as const;
 
 const CalendarPopup = ({
-  year,
-  month,
+  weekAnchor,
+  prefill,
   setAddSessionPopup,
   otherName,
+  onClose,
 }: {
   otherName: string | null;
-  year: number;
-  month: number;
+  weekAnchor: Date;
+  prefill: CalendarPopupPrefill;
   setAddSessionPopup: Dispatch<SetStateAction<boolean>>;
+  onClose?: () => void;
 }) => {
+  const defaultTz = useMemo(
+    () => Intl.DateTimeFormat().resolvedOptions().timeZone,
+    []
+  );
+  const defaultStart = useMemo(() => {
+    if (prefill?.startsAt) return new Date(prefill.startsAt);
+    const d = new Date(weekAnchor);
+    d.setHours(10, 0, 0, 0);
+    return d;
+  }, [prefill?.startsAt, weekAnchor]);
+  const defaultEnd = useMemo(() => {
+    if (prefill?.endsAt) return new Date(prefill.endsAt);
+    const d = new Date(defaultStart);
+    d.setHours(d.getHours() + 1);
+    return d;
+  }, [prefill?.endsAt, defaultStart]);
+
   const {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
-  } = useForm<createSessionFormData>();
+  } = useForm<createSessionFormData>({
+    resolver: zodResolver(createSessionSchema) as never,
+    defaultValues: {
+      friendName: otherName ?? "",
+      friendId: "",
+      title: "",
+      startsAt: defaultStart.toISOString(),
+      endsAt: defaultEnd.toISOString(),
+      timeZone: defaultTz,
+      color: "plum",
+    },
+  });
+
   const queryClient = useQueryClient();
-  const firstDay = new Date(year, month, 1);
   const { socket } = useSocket();
   const [chars, setChars] = useState<string>("");
   const [addFriendButton, setAddFriendButton] = useState<boolean>(false);
@@ -50,6 +109,10 @@ const CalendarPopup = ({
     string | null
   >(null);
 
+  const startsAtIso = watch("startsAt");
+  const endsAtIso = watch("endsAt");
+  const selectedColor = watch("color") as SessionColorKey;
+
   const createSessionMutation = useMutation({
     mutationKey: ["session"],
     mutationFn: async (data: Omit<createSessionFormData, "friendName">) =>
@@ -57,10 +120,10 @@ const CalendarPopup = ({
     onSuccess: (data) => {
       showSuccessToast(data.message || "Session created");
       setAddSessionPopup(false);
+      onClose?.();
 
       if (socket?.connected)
         socket.emit("createSessionRequest", { id: data.session.id });
-      queryClient.invalidateQueries({ queryKey: ["sessions", month] });
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
     },
     onError: (error: unknown) => {
@@ -74,8 +137,10 @@ const CalendarPopup = ({
     if (friends) {
       const realFriend = friends.find((item) => item.name === friendName);
       if (realFriend) {
-        newData.friendId = realFriend.id;
-        createSessionMutation.mutate(newData);
+        createSessionMutation.mutate({
+          ...newData,
+          friendId: realFriend.id,
+        });
       } else {
         setBadRequestErrorMessage(
           "There`s no such friend in your list. Firstly add Friend!"
@@ -92,17 +157,33 @@ const CalendarPopup = ({
     }
   }, [otherName, setValue, refetch]);
 
+  useEffect(() => {
+    setValue("startsAt", defaultStart.toISOString());
+    setValue("endsAt", defaultEnd.toISOString());
+  }, [defaultStart, defaultEnd, setValue]);
+
+  const applyDuration = (minutes: number) => {
+    const start = new Date(startsAtIso || defaultStart.toISOString());
+    const end = new Date(start.getTime() + minutes * 60_000);
+    setValue("endsAt", end.toISOString());
+  };
+
+  const close = () => {
+    setAddSessionPopup(false);
+    onClose?.();
+  };
+
   return (
     <Dialog
       open
       onOpenChange={(open) => {
-        if (!open) setAddSessionPopup(false);
+        if (!open) close();
       }}
     >
       <DialogContent className="max-w-[500px] sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="text-lg leading-7 font-semibold">
-            Create a new Session
+          <DialogTitle className="font-heading text-h3">
+            Create a new session
           </DialogTitle>
         </DialogHeader>
         <form
@@ -117,19 +198,16 @@ const CalendarPopup = ({
               type="text"
               id="title"
             />
-            {errors.title && (
-              <span
-                data-testid="error"
-                className="font-medium text-destructive"
-              >
+            {errors.title ? (
+              <span className="font-medium text-destructive">
                 {errors.title.message}
               </span>
-            )}
+            ) : null}
           </div>
           <div className="flex flex-col gap-1">
             <Label htmlFor="description">
               Description{" "}
-              <span className="text-muted-foreground">(Optional)</span>
+              <span className="text-muted-foreground">(optional)</span>
             </Label>
             <Textarea
               maxLength={50}
@@ -141,71 +219,107 @@ const CalendarPopup = ({
           </div>
           <div className="flex flex-col gap-1">
             <Label htmlFor="meetingLink">
-              Meeting Link{" "}
-              <span className="text-muted-foreground">(Optional)</span>
+              Meeting link{" "}
+              <span className="text-muted-foreground">(optional)</span>
             </Label>
             <Input
               {...register("meetingLink")}
-              placeholder="Enter meeting link"
-              type="text"
+              placeholder="https://"
+              type="url"
               id="meetingLink"
             />
           </div>
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex flex-1 flex-col gap-1">
-              <Label htmlFor="start">Start Hour</Label>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="startsAtLocal">Starts</Label>
               <Input
-                {...register("start")}
-                placeholder="Enter start hour"
-                type="text"
-                id="start"
+                id="startsAtLocal"
+                type="datetime-local"
+                value={toDatetimeLocalValue(
+                  new Date(startsAtIso || defaultStart)
+                )}
+                onChange={(e) =>
+                  setValue("startsAt", fromDatetimeLocalValue(e.target.value))
+                }
               />
-              {errors.start && (
-                <span
-                  data-testid="error"
-                  className="font-medium text-destructive"
-                >
-                  {errors.start.message}
+              {errors.startsAt ? (
+                <span className="font-medium text-destructive">
+                  {errors.startsAt.message}
                 </span>
-              )}
+              ) : null}
             </div>
-            <div className="flex flex-1 flex-col gap-1">
-              <Label htmlFor="end">End Hour</Label>
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="endsAtLocal">Ends</Label>
               <Input
-                {...register("end")}
-                placeholder="Enter end hour"
-                type="text"
-                id="end"
+                id="endsAtLocal"
+                type="datetime-local"
+                value={toDatetimeLocalValue(new Date(endsAtIso || defaultEnd))}
+                onChange={(e) =>
+                  setValue("endsAt", fromDatetimeLocalValue(e.target.value))
+                }
               />
-              {errors.end && (
-                <span
-                  data-testid="error"
-                  className="font-medium text-destructive"
-                >
-                  {errors.end.message}
+              {errors.endsAt ? (
+                <span className="font-medium text-destructive">
+                  {errors.endsAt.message}
                 </span>
-              )}
+              ) : null}
             </div>
           </div>
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="date">Date</Label>
-            <Input
-              min={formatDate(firstDay)}
-              {...register("date", { required: "Field is required" })}
-              type="date"
-              id="date"
-            />
-            {errors.date && (
-              <span
-                data-testid="error"
-                className="font-medium text-destructive"
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-muted-foreground text-xs">Duration</span>
+            {DURATION_PRESETS.map((preset) => (
+              <Button
+                key={preset.minutes}
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => applyDuration(preset.minutes)}
               >
-                {errors.date.message}
-              </span>
-            )}
+                {preset.label}
+              </Button>
+            ))}
           </div>
+
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="timeZone">Timezone</Label>
+            <Input {...register("timeZone")} id="timeZone" readOnly />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label>Color</Label>
+            <div className="flex flex-wrap gap-2">
+              {SESSION_COLOR_KEYS.map((key) => {
+                const style = resolveSessionColor(key);
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    className={cn(
+                      "h-8 w-8 rounded-full border-2 border-transparent ring-offset-background transition",
+                      selectedColor === key &&
+                        "border-primary ring-2 ring-primary"
+                    )}
+                    style={{
+                      backgroundColor: SESSION_COLOR_STYLES[key].bg,
+                      color: style.color,
+                    }}
+                    aria-label={`Color ${key}`}
+                    onClick={() => setValue("color", key)}
+                  />
+                );
+              })}
+            </div>
+          </div>
+
+          <input type="hidden" {...register("startsAt")} />
+          <input type="hidden" {...register("endsAt")} />
+          <input type="hidden" {...register("timeZone")} />
+          <input type="hidden" {...register("color")} />
+
           <div className="relative flex flex-col gap-1">
-            <Label htmlFor="friendName">Choose partner:</Label>
+            <Label htmlFor="friendName">Partner</Label>
             <Input
               type="text"
               placeholder="Find by name"
@@ -221,7 +335,7 @@ const CalendarPopup = ({
             {!isFetching ? (
               friends &&
               chars.length > 0 && (
-                <div className="absolute left-0 top-full z-50 max-h-[300px] min-w-[250px] overflow-y-auto">
+                <div className="absolute top-full left-0 z-50 max-h-[300px] min-w-[250px] overflow-y-auto">
                   <Card className="mt-2 gap-1 p-2">
                     <div className="flex max-h-[500px] flex-col gap-1">
                       {friends
@@ -251,25 +365,22 @@ const CalendarPopup = ({
             ) : (
               <Spinner size="md" />
             )}
-            {errors.friendName && (
-              <span
-                data-testid="error"
-                className="font-medium text-destructive"
-              >
+            {errors.friendName ? (
+              <span className="font-medium text-destructive">
                 {errors.friendName.message}
               </span>
-            )}
+            ) : null}
           </div>
-          {badRequestErrorMessage && (
-            <span data-testid="error" className="font-medium text-destructive">
+          {badRequestErrorMessage ? (
+            <span className="font-medium text-destructive">
               {badRequestErrorMessage}
             </span>
-          )}
+          ) : null}
           <div className="flex w-full items-center gap-4">
             <Button type="submit" className="w-full">
               Create
             </Button>
-            {addFriendButton && otherName && (
+            {addFriendButton && otherName ? (
               <Button
                 type="button"
                 variant="outline"
@@ -278,7 +389,7 @@ const CalendarPopup = ({
               >
                 Add friend <Users size={16} />
               </Button>
-            )}
+            ) : null}
           </div>
         </form>
       </DialogContent>

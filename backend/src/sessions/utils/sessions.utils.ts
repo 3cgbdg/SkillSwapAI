@@ -2,31 +2,23 @@ import { BadRequestException } from '@nestjs/common';
 import { ISessionPrismaResult, ISessionWithFriend } from 'types/sessions';
 
 export class SessionsUtils {
-  static validateSessionTime(date: string, start: number) {
-    const sessionDate = new Date(date);
+  static validateSessionTime(startsAt: string) {
+    const start = new Date(startsAt);
     const now = new Date();
-
-    if (this.isDateInPast(sessionDate, now)) {
-      throw new BadRequestException('The time must not have passed.');
+    if (Number.isNaN(start.getTime())) {
+      throw new BadRequestException('Invalid session time.');
     }
-
-    if (this.isHourInPast(sessionDate, start, now)) {
+    if (start.getTime() < now.getTime()) {
       throw new BadRequestException('The time must not have passed.');
     }
   }
 
-  private static isDateInPast(date: Date, now: Date): boolean {
-    const compareDate = new Date(date);
-    compareDate.setHours(0, 0, 0, 0);
-    const nowDate = new Date(now);
-    nowDate.setHours(0, 0, 0, 0);
-
-    return compareDate < nowDate;
-  }
-
-  private static isHourInPast(date: Date, start: number, now: Date): boolean {
-    const isToday = date.toDateString() === now.toDateString();
-    return isToday && start < now.getHours();
+  static validateRange(startsAt: string, endsAt: string) {
+    const start = new Date(startsAt);
+    const end = new Date(endsAt);
+    if (end.getTime() <= start.getTime()) {
+      throw new BadRequestException('End time must be after start time.');
+    }
   }
 
   static mapSessionWithFriend(

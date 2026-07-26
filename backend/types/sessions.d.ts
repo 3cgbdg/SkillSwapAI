@@ -6,8 +6,7 @@ export interface ISessionFriend {
   imageUrl?: string | null;
 }
 
-export interface ISessionWithFriend extends Omit<PrismaSession, 'date'> {
-  date: Date | string;
+export interface ISessionWithFriend extends PrismaSession {
   friend: ISessionFriend | null;
 }
 

@@ -132,7 +132,7 @@ const Profile = ({
 
   return (
     <div className="flex flex-col gap-8">
-      <Card className="p-8">
+      <Card className="p-8" elevation="raised">
         <div className="flex flex-col items-start gap-6 md:flex-row">
           <UserAvatar
             name={user.name}
@@ -140,22 +140,70 @@ const Profile = ({
             size="xl"
             className="size-24"
           />
-          <div className="flex w-full flex-col gap-3 md:max-w-xl">
-            <h1 className="font-heading text-h1 text-foreground">
-              {user.name}
-            </h1>
+          <div className="flex w-full flex-col gap-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <h1 className="font-heading text-h1 text-foreground">
+                {user.name}
+              </h1>
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-2"
+                onClick={() => setIsEditing(true)}
+              >
+                <Pencil size={18} />
+                Edit profile
+              </Button>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="bg-surface-raised rounded-lg border border-border p-4">
+                <p className="text-muted-foreground mb-2 text-xs font-semibold uppercase tracking-wide">
+                  I teach
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {(user.knownSkills ?? []).length > 0 ? (
+                    user.knownSkills!.map((s) => (
+                      <span
+                        key={s.id}
+                        className="bg-primary/10 text-primary rounded-full px-3 py-1 text-sm font-medium"
+                      >
+                        {s.title}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-muted-foreground text-sm">
+                      Add skills you can share
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="bg-surface-raised rounded-lg border border-border p-4">
+                <p className="text-muted-foreground mb-2 text-xs font-semibold uppercase tracking-wide">
+                  I want to learn
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {(user.skillsToLearn ?? []).length > 0 ? (
+                    user.skillsToLearn!.map((s) => (
+                      <span
+                        key={s.id}
+                        className="bg-brand-accent/20 text-foreground rounded-full px-3 py-1 text-sm font-medium"
+                      >
+                        {s.title}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-muted-foreground text-sm">
+                      Add skills you&apos;re exploring
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
             {user.bio ? (
-              <p className="text-muted-foreground">{user.bio}</p>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                {user.bio}
+              </p>
             ) : null}
-            <Button
-              type="button"
-              variant="outline"
-              className="mt-1 w-fit gap-2"
-              onClick={() => setIsEditing(true)}
-            >
-              <Pencil size={18} />
-              Edit Profile
-            </Button>
           </div>
         </div>
       </Card>

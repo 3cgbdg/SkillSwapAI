@@ -2,8 +2,8 @@
 import { IMatch } from "@/types/match";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Search, Users } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useMemo } from "react";
 import MatchCard from "./MatchCard";
 import MatchesService from "@/services/MatchesService";
 import { showErrorToast, showSuccessToast } from "@/utils/toast";
@@ -35,21 +35,24 @@ const Matches = ({
   option: "available" | "active";
 }) => {
   const { data: activeMatches = [] } = useMatches();
-  const [filteredMatch, setFilteredMatch] = useState<IMatch[]>(matches);
-  const [skillFilter, setSkillFilter] = useState("");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const skillFilter = searchParams.get("skill") ?? "";
+  const sortParam = searchParams.get("sort");
 
-  useEffect(() => {
-    setFilteredMatch(matches);
-  }, [matches]);
+  const setSearchParam = (key: string, value: string | null) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (!value) params.delete(key);
+    else params.set(key, value);
+    const qs = params.toString();
+    router.replace(qs ? `/matches?${qs}` : "/matches");
+  };
 
-  useEffect(() => {
+  const filteredMatch = useMemo(() => {
     const value = skillFilter.toLowerCase().trim();
-    if (!value) {
-      setFilteredMatch(matches);
-      return;
-    }
-    setFilteredMatch(
-      matches.filter(
+    let list = matches;
+    if (value) {
+      list = matches.filter(
         (match) =>
           match.other.knownSkills.some((item) =>
             item.title.toLowerCase().includes(value)
@@ -57,24 +60,32 @@ const Matches = ({
           match.other.skillsToLearn.some((item) =>
             item.title.toLowerCase().includes(value)
           )
-      )
-    );
-  }, [skillFilter, matches]);
+      );
+    }
+    if (option === "active" && sortParam) {
+      list = [...list].sort((a, b) =>
+        sortParam === "compat-asc"
+          ? a.compatibility - b.compatibility
+          : b.compatibility - a.compatibility
+      );
+    }
+    return list;
+  }, [matches, skillFilter, sortParam, option]);
 
   const queryClient = useQueryClient();
-  const router = useRouter();
+  const navRouter = useRouter();
   const { isPending, mutate: generateActiveMatch } = useMutation({
     mutationFn: async (partnerId: string) => {
       const data = await MatchesService.generateActiveMatch(partnerId);
       return data;
     },
     onSuccess: (data) => {
-      showSuccessToast(data.message || "Match generated");
+      showSuccessToast(data.message || "Your training plan is ready!");
       queryClient.setQueryData(["matches"], (old: any) => {
         if (!old) return [data.match];
         return [...old, data.match];
       });
-      router.push(`/matches/${data.match.id}`);
+      navRouter.push(`/matches/${data.match.id}`);
     },
     onError: (err: Error) => {
       showErrorToast(err.message);
@@ -92,7 +103,7 @@ const Matches = ({
         if (!old) return [data];
         return [data, ...old];
       });
-      router.push(`/chats/${data.chatId}`);
+      navRouter.push(`/chats/${data.chatId}`);
     },
     onError: (err: Error) => {
       showErrorToast(err.message);
@@ -135,24 +146,12 @@ const Matches = ({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="min-w-[220px]">
                     <DropdownMenuItem
-                      onClick={() =>
-                        setFilteredMatch((prev) =>
-                          [...prev].sort(
-                            (a, b) => a.compatibility - b.compatibility
-                          )
-                        )
-                      }
+                      onClick={() => setSearchParam("sort", "compat-asc")}
                     >
                       From lowest to highest
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      onClick={() =>
-                        setFilteredMatch((prev) =>
-                          [...prev].sort(
-                            (a, b) => b.compatibility - a.compatibility
-                          )
-                        )
-                      }
+                      onClick={() => setSearchParam("sort", "compat-desc")}
                     >
                       From highest to lowest
                     </DropdownMenuItem>
@@ -172,7 +171,9 @@ const Matches = ({
                 <DropdownMenuContent align="end" className="min-w-[240px] p-2">
                   <Input
                     value={skillFilter}
-                    onChange={(e) => setSkillFilter(e.target.value)}
+                    onChange={(e) =>
+                      setSearchParam("skill", e.target.value || null)
+                    }
                     placeholder="Type in a skill"
                     onKeyDown={(e) => e.stopPropagation()}
                   />

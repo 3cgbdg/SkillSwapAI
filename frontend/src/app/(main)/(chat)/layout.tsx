@@ -37,9 +37,9 @@ export default function ChatLayout({
   const showSidebar = isMobile === null ? true : !isMobile || !id;
 
   return (
-    <div className="flex max-h-[800px] gap-8 md:max-h-[705px]">
+    <div className="flex min-h-[min(75dvh,800px)] gap-4 md:gap-6">
       {showSidebar ? <ChatSidebar /> : null}
-      <div className="w-full">{children}</div>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
     </div>
   );
 }

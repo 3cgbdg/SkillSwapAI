@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Oswald } from "next/font/google";
+import { Fraunces, Inter } from "next/font/google";
 import "@/styles/globals.css";
 import QueryProvider from "@/providers/QueryProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
@@ -9,8 +9,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-const OswaldFont = Oswald({
-  variable: "--font-oswald",
+const FrauncesFont = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
 });
 
@@ -32,7 +32,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={cn(InterFont.variable, OswaldFont.variable)}
+      className={cn(InterFont.variable, FrauncesFont.variable)}
       suppressHydrationWarning
     >
       <body className="relative font-sans antialiased">

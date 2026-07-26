@@ -35,42 +35,12 @@ export interface IMessage {
   isSeen: boolean;
 }
 
-export interface ISession {
-  id: string;
-  title: string;
-  start: number;
-  end: number;
-  description?: string;
-  color: string;
-  date: Date;
-  friend: {
-    id: string;
-    name: string;
-  };
-  status: SessionStatusEnum;
-  meetingLink: string | null;
-}
+export type { ISession, IRequest, SessionStatusType } from "./session";
 
 export const SessionStatusEnum = {
   PENDING = "PENDING",
   AGREED = "AGREED",
 } as const;
-
-interface IRequest {
-  id: string;
-  fromId: string;
-  toId: string;
-  from: { name?: string };
-  to: { name?: string };
-  type: "FRIEND" | "SESSIONCREATED" | "SESSIONACCEPTED" | "SESSIONREJECTED";
-  sessionId: string;
-  session: {
-    date?: string;
-    start?: number;
-    end?: number;
-    title?: string;
-  }; //if request type is session
-}
 
 export interface IMatch {
   compatibility: number;

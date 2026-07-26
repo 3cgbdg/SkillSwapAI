@@ -1,10 +1,12 @@
 "use client";
 
+import { ChatsEmptyLanding } from "@/components/chat/ChatsEmptyLanding";
+
 const Page = () => {
   return (
-    <span className="hidden mt-40 md:flex justify-center w-full">
-      Choose chat to start conversation
-    </span>
+    <div className="hidden min-h-[50dvh] flex-1 items-center justify-center md:flex">
+      <ChatsEmptyLanding />
+    </div>
   );
 };
 

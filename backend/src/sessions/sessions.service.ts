@@ -24,9 +24,10 @@ export class SessionsService {
     dto: CreateSessionDto,
     myId: string,
   ): Promise<ReturnDataType<ISessionWithFriend>> {
-    SessionsUtils.validateSessionTime(dto.date, dto.start);
+    SessionsUtils.validateSessionTime(dto.startsAt);
+    SessionsUtils.validateRange(dto.startsAt, dto.endsAt);
 
-    await this.ensureNoOverlappingSessions(dto);
+    await this.ensureNoOverlappingSessions(dto, myId, dto.friendId);
 
     const friendship = await this.findFriendship(myId, dto.friendId);
     if (!friendship) {
@@ -37,9 +38,9 @@ export class SessionsService {
       data: {
         title: dto.title,
         description: dto.description,
-        start: dto.start,
-        end: dto.end,
-        date: new Date(dto.date),
+        startsAt: new Date(dto.startsAt),
+        endsAt: new Date(dto.endsAt),
+        timeZone: dto.timeZone,
         meetingLink: dto.meetingLink,
         color: dto.color,
         users: {
@@ -64,12 +65,19 @@ export class SessionsService {
     };
   }
 
-  private async ensureNoOverlappingSessions(dto: CreateSessionDto) {
+  private async ensureNoOverlappingSessions(
+    dto: CreateSessionDto,
+    myId: string,
+    friendId: string,
+  ) {
+    const startsAt = new Date(dto.startsAt);
+    const endsAt = new Date(dto.endsAt);
+
     const overlappingSessions = await this.prisma.session.findMany({
       where: {
-        date: new Date(dto.date),
-        start: { lt: dto.end },
-        end: { gt: dto.start },
+        users: { some: { id: { in: [myId, friendId] } } },
+        startsAt: { lt: endsAt },
+        endsAt: { gt: startsAt },
       },
     });
 
@@ -94,21 +102,26 @@ export class SessionsService {
   }
 
   async findAll(
-    month: number,
+    from: string,
+    to: string,
     myId: string,
   ): Promise<ReturnDataType<ISessionWithFriend[]>> {
-    const year = new Date().getFullYear();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+
+    if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
+      throw new BadRequestException('Invalid date range');
+    }
 
     const sessions = (await this.prisma.session.findMany({
       where: {
         users: { some: { id: myId } },
-        date: { gte: firstDay, lte: lastDay },
+        startsAt: { gte: fromDate, lte: toDate },
       },
       include: {
         users: { select: { id: true, name: true, imageUrl: true } },
       },
+      orderBy: { startsAt: 'asc' },
     })) as unknown as ISessionPrismaResult[];
 
     return {
@@ -127,11 +140,12 @@ export class SessionsService {
     const sessions = (await this.prisma.session.findMany({
       where: {
         users: { some: { id: myId } },
-        date: { gte: startOfDay, lte: endOfDay },
+        startsAt: { gte: startOfDay, lte: endOfDay },
       },
       include: {
         users: { select: { id: true, name: true, imageUrl: true } },
       },
+      orderBy: { startsAt: 'asc' },
     })) as unknown as ISessionPrismaResult[];
 
     return {

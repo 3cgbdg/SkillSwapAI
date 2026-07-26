@@ -14,12 +14,13 @@ import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { showErrorToast } from "@/utils/toast";
+import { sessionStartDate } from "@/utils/sessionTime";
 
 export type CalendarSession = {
   id: string;
   title: string;
-  start: number;
-  end: number;
+  startsAt: string | Date;
+  endsAt: string | Date;
   description?: string;
   color: string;
   status: ISession["status"];
@@ -31,6 +32,11 @@ export type TableCellType = {
   sessions: CalendarSession[];
 };
 
+export type CalendarPopupPrefill = {
+  startsAt: string;
+  endsAt: string;
+} | null;
+
 const Calendar = () => {
   const searchParams = useSearchParams();
   const scheduleName = searchParams.get("name");
@@ -39,10 +45,12 @@ const Calendar = () => {
   const [weekAnchor, setWeekAnchor] = useState(() => new Date());
   const [addSessionPopup, setAddSessionPopup] = useState(false);
   const [schedulePartner, setSchedulePartner] = useState<string | null>(null);
+  const [popupPrefill, setPopupPrefill] = useState<CalendarPopupPrefill>(null);
 
   const weekStart = startOfWeek(weekAnchor, { weekStartsOn: 0 });
   const weekEnd = endOfWeek(weekAnchor, { weekStartsOn: 0 });
-  const month = weekAnchor.getMonth();
+  const rangeFrom = weekStart.toISOString();
+  const rangeTo = weekEnd.toISOString();
 
   const {
     data: sessions = [],
@@ -50,8 +58,8 @@ const Calendar = () => {
     isError,
     error,
   } = useQuery({
-    queryKey: ["sessions", month],
-    queryFn: () => SessionsService.getSessions(month),
+    queryKey: ["sessions", rangeFrom, rangeTo],
+    queryFn: () => SessionsService.getSessionsRange(rangeFrom, rangeTo),
   });
 
   useEffect(() => {
@@ -67,23 +75,16 @@ const Calendar = () => {
     }
   }, [shouldOpenSchedule, scheduleName]);
 
-  const normalizedSessions = useMemo(() => {
-    return sessions.map((session) => ({
-      ...session,
-      date: new Date(session.date),
-    }));
-  }, [sessions]);
-
   const tableCells: TableCellType[] = useMemo(() => {
     return Array.from({ length: 7 }, (_, i) => {
       const date = addDays(weekStart, i);
-      const daySessions = normalizedSessions
-        .filter((session) => isSameDay(session.date, date))
+      const daySessions = sessions
+        .filter((session) => isSameDay(sessionStartDate(session), date))
         .map((session) => ({
           id: session.id,
           title: session.title,
-          start: session.start,
-          end: session.end,
+          startsAt: session.startsAt,
+          endsAt: session.endsAt,
           description: session.description,
           color: session.color,
           status: session.status,
@@ -91,15 +92,13 @@ const Calendar = () => {
         }));
       return { date, sessions: daySessions };
     });
-  }, [normalizedSessions, weekStart]);
+  }, [sessions, weekStart]);
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold leading-9 text-foreground">
-            Calendar
-          </h1>
+          <h1 className="font-heading text-h1 text-foreground">Calendar</h1>
           <p className="text-muted-foreground text-sm">
             {format(weekStart, "MMM d")} – {format(weekEnd, "MMM d, yyyy")}
           </p>
@@ -128,6 +127,7 @@ const Calendar = () => {
             className="gap-2"
             onClick={() => {
               setSchedulePartner(null);
+              setPopupPrefill(null);
               setAddSessionPopup(true);
             }}
           >
@@ -137,7 +137,7 @@ const Calendar = () => {
         </div>
       </div>
 
-      <Card className="overflow-hidden p-0">
+      <Card className="overflow-hidden p-0" elevation="raised">
         {isLoading ? (
           <div className="flex h-[440px] items-center justify-center">
             <Spinner size="xl" />
@@ -145,7 +145,13 @@ const Calendar = () => {
         ) : (
           <>
             <div className="hidden md:block">
-              <DesktopGridCalendar tableCells={tableCells} />
+              <DesktopGridCalendar
+                tableCells={tableCells}
+                onCreateSlot={(startsAt, endsAt) => {
+                  setPopupPrefill({ startsAt, endsAt });
+                  setAddSessionPopup(true);
+                }}
+              />
             </div>
             <div className="md:hidden">
               <TouchScreenCalendar tableCells={tableCells} />
@@ -156,10 +162,14 @@ const Calendar = () => {
 
       {addSessionPopup ? (
         <CalendarPopup
-          year={weekAnchor.getFullYear()}
-          month={weekAnchor.getMonth()}
+          weekAnchor={weekAnchor}
+          prefill={popupPrefill}
           otherName={schedulePartner}
           setAddSessionPopup={setAddSessionPopup}
+          onClose={() => {
+            setPopupPrefill(null);
+            setAddSessionPopup(false);
+          }}
         />
       ) : null}
     </div>

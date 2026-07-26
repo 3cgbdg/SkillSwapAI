@@ -48,7 +48,7 @@ const ChatSidebar = () => {
   return (
     <Card
       className={cn(
-        "flex h-full shrink-0 grow-0 flex-col overflow-hidden rounded-[10px] py-6 px-4",
+        "flex h-full min-h-[min(75dvh,800px)] shrink-0 grow-0 flex-col overflow-hidden rounded-xl py-4 px-3 md:px-4",
         isFullyOpen ? "md:w-[340px]" : "md:w-fit",
         "w-full"
       )}
@@ -60,9 +60,7 @@ const ChatSidebar = () => {
             isFullyOpen ? "justify-between" : "justify-center"
           )}
         >
-          {isFullyOpen && (
-            <h2 className="text-2xl font-bold leading-8">Messages</h2>
-          )}
+          {isFullyOpen && <h2 className="font-heading text-h2">Messages</h2>}
           <Button
             type="button"
             variant="ghost"
@@ -146,8 +144,8 @@ const ChatSidebar = () => {
             key={chat.chatId}
             onClick={() => router.push(`/chats/${chat.chatId}`)}
             className={cn(
-              "group flex cursor-pointer justify-between gap-4 rounded-[6px] p-3.5 transition-all hover:bg-secondary",
-              path === `/chats/${chat.chatId}` && "bg-secondary"
+              "group flex cursor-pointer justify-between gap-4 rounded-lg p-3 transition-all hover:bg-muted",
+              path === `/chats/${chat.chatId}` && "bg-muted"
             )}
           >
             <div className="flex items-center gap-4">

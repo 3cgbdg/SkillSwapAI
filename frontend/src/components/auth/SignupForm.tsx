@@ -9,6 +9,7 @@ import { useState, type ComponentProps } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 import { AuthBrand } from "@/components/auth/AuthBrand";
+import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 import { SkillPicker } from "@/components/auth/SkillPicker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -19,6 +20,11 @@ import { Label } from "@/components/ui/label";
 import AuthService from "@/services/AuthService";
 import { signUpSchema, type signUpFormData } from "@/validation/signUp";
 import { showErrorToast, showSuccessToast } from "@/utils/toast";
+import {
+  passwordStrengthLabel,
+  passwordStrengthScore,
+} from "@/utils/passwordStrength";
+import { Progress } from "@/components/ui/progress";
 
 function PasswordField({
   id,
@@ -85,6 +91,8 @@ export function SignupForm() {
 
   const knownSkills = watch("knownSkills");
   const skillsToLearn = watch("skillsToLearn");
+  const passwordValue = watch("password") ?? "";
+  const strength = passwordStrengthScore(passwordValue);
 
   const mutation = useMutation({
     mutationFn: async (data: signUpFormData) => {
@@ -110,7 +118,7 @@ export function SignupForm() {
       <CardContent className="flex flex-col gap-6 pt-10">
         <AuthBrand />
         <div className="text-center">
-          <h2 className="font-oswald text-3xl font-bold">Join Our Community</h2>
+          <h2 className="font-heading text-h2">Join our community</h2>
           <p className="text-muted-foreground mt-2 text-sm">
             Create your account to connect and learn.
           </p>
@@ -139,6 +147,14 @@ export function SignupForm() {
             onToggle={() => setShowPassword((v) => !v)}
             {...register("password")}
           />
+          {passwordValue ? (
+            <div className="flex flex-col gap-1">
+              <Progress value={(strength / 4) * 100} className="h-1.5" />
+              <p className="text-muted-foreground text-xs">
+                Strength: {passwordStrengthLabel(strength)}
+              </p>
+            </div>
+          ) : null}
           <PasswordField
             id="confirmPassword"
             label="Confirm Password"
@@ -203,12 +219,7 @@ export function SignupForm() {
         </form>
       </CardContent>
       <CardFooter className="flex flex-col gap-4 border-t">
-        <Link
-          href={`${process.env.NEXT_PUBLIC_API_URL}/auth/google`}
-          className="border-border hover:bg-muted flex w-full items-center justify-center rounded-lg border px-4 py-2.5 text-sm font-semibold transition-colors"
-        >
-          Continue with Google
-        </Link>
+        <GoogleAuthButton />
         <p className="text-muted-foreground text-center text-sm">
           Already have an account?{" "}
           <Link

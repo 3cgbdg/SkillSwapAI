@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { AuthBrand } from "@/components/auth/AuthBrand";
+import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
@@ -46,7 +47,7 @@ export function LoginForm() {
       <CardContent className="flex flex-col gap-6 pt-10">
         <AuthBrand />
         <div className="text-center">
-          <h2 className="font-oswald text-3xl font-bold">Welcome Back!</h2>
+          <h2 className="font-heading text-h2">Welcome back</h2>
           <p className="text-muted-foreground mt-2 text-sm">
             Log in to your SkillSwap AI account.
           </p>
@@ -88,6 +89,14 @@ export function LoginForm() {
               </button>
             </div>
           </Field>
+          <div className="flex justify-end">
+            <Link
+              href="/auth/forgot-password"
+              className="text-primary text-sm font-medium hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
           <Button
             type="submit"
             className="w-full"
@@ -99,12 +108,7 @@ export function LoginForm() {
         </form>
       </CardContent>
       <CardFooter className="flex flex-col gap-4 border-t">
-        <Link
-          href={`${process.env.NEXT_PUBLIC_API_URL}/auth/google`}
-          className="border-border hover:bg-muted flex w-full items-center justify-center rounded-lg border px-4 py-2.5 text-sm font-semibold transition-colors"
-        >
-          Continue with Google
-        </Link>
+        <GoogleAuthButton />
         <p className="text-muted-foreground text-center text-sm">
           Don&apos;t have an account?{" "}
           <Link

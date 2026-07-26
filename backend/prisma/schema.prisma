@@ -113,18 +113,18 @@ model Message {
 
 model Session {
   id          String        @id @default(uuid())
-  title       String        @unique
-  start       Int
-  end         Int
+  title       String
   description String?
   status      SessionStatus @default(PENDING)
-  date        DateTime
+  startsAt    DateTime
+  endsAt      DateTime
+  timeZone    String        @default("UTC")
   color       String
   users       User[]        @relation("userSessions")
   request     Request[]     @relation("sessionRequest")
   meetingLink String?
 
-  @@index([date])
+  @@index([startsAt])
   @@index([status])
 }
 

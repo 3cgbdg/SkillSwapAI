@@ -1,17 +1,25 @@
 export type SessionStatusType = "PENDING" | "AGREED";
 
+export type SessionColorKey =
+  | "plum"
+  | "amber"
+  | "sage"
+  | "coral"
+  | "slate"
+  | "violet";
+
 export interface ISession {
   id: string;
   title: string;
-  start: number;
-  end: number;
+  startsAt: string | Date;
+  endsAt: string | Date;
+  timeZone: string;
   description?: string;
-  color: string;
-  date: Date;
+  color: SessionColorKey | string;
   friend: {
     id: string;
     name: string;
-  };
+  } | null;
   status: SessionStatusType;
   meetingLink: string | null;
 }
@@ -25,9 +33,9 @@ export interface IRequest {
   type: "FRIEND" | "SESSIONCREATED" | "SESSIONACCEPTED" | "SESSIONREJECTED";
   sessionId: string;
   session: {
-    date?: string;
-    start?: number;
-    end?: number;
+    startsAt?: string;
+    endsAt?: string;
     title?: string;
-  }; //if request type is session
+    timeZone?: string;
+  };
 }

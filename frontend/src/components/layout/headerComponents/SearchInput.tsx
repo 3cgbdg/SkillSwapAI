@@ -57,7 +57,7 @@ const SearchInput = ({
         onFocus={() => setFocused(true)}
         onBlur={() => setTimeout(() => setFocused(false), 150)}
         type="search"
-        className="min-w-[220px]"
+        className="bg-muted/30 border-border min-w-[220px] rounded-lg"
         placeholder="Search for skills or users..."
         aria-label="Search for skills or users"
       />
