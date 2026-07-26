@@ -57,3 +57,12 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 /generated/prisma
 /src/generated
+
+# Accidental tsc emit next to Prisma sources (breaks prisma CLI)
+*.tsbuildinfo
+/prisma.config.js
+/prisma.config.js.map
+/prisma.config.d.ts
+/prisma/**/*.js
+/prisma/**/*.js.map
+/prisma/**/*.d.ts
