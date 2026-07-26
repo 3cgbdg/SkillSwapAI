@@ -1,4 +1,4 @@
-import { Skill, User } from '../../prisma/prisma-exports.js';
+import { Skill } from '../../prisma/prisma-exports.js';
 
 export interface ISearchUser {
   id: string;
@@ -13,7 +13,7 @@ interface ISearchSkill extends Skill {
 export class SearchUtils {
   static filterAndMapResults(
     skills: ISearchSkill[],
-    users: User[],
+    users: ISearchUser[],
     myId: string,
   ): (Skill | ISearchUser)[] {
     const formattedUsers = users.map((user) => ({

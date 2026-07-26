@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { Plan } from '../prisma/prisma-exports.js';
+import { Plan, Prisma } from '../prisma/prisma-exports.js';
 import { PrismaService } from 'prisma/prisma.service';
 import { IGeneratedActiveMatch } from 'src/ai/ai.interface';
 import { ReturnDataType } from 'types/general';
@@ -40,9 +40,17 @@ export class PlansService {
     if (match.plan?.id)
       throw new ForbiddenException('Plan has been already created!');
 
-    return this.prisma.plan.create({
+    return this.createPlanInTransaction(this.prisma, match.id, modules);
+  }
+
+  createPlanInTransaction(
+    tx: Prisma.TransactionClient,
+    matchId: string,
+    modules: IGeneratedActiveMatch['modules'],
+  ) {
+    return tx.plan.create({
       data: {
-        match: { connect: { id: match.id } },
+        match: { connect: { id: matchId } },
         modules: {
           create: modules.map((m) => ({
             title: m.title,

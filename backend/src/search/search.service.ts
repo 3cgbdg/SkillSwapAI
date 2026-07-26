@@ -20,6 +20,7 @@ export class SearchService {
           knownBy: { select: { id: true } },
           learnedBy: { select: { id: true } },
         },
+        take: 50,
       }),
       this.prisma.user.findMany({
         where: {
@@ -32,6 +33,8 @@ export class SearchService {
             ],
           },
         },
+        select: { id: true, name: true },
+        take: 50,
       }),
     ]);
 

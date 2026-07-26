@@ -10,7 +10,7 @@ import { Socket, Server } from 'socket.io';
 import * as cookie from 'cookie';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { Inject } from '@nestjs/common';
+import { Inject, OnApplicationShutdown } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import type { SocketData } from '../../types/general';
@@ -22,7 +22,9 @@ import type { JwtPayload } from '../../types/auth';
     credentials: true,
   },
 })
-export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class ChatGateway
+  implements OnGatewayConnection, OnGatewayDisconnect, OnApplicationShutdown
+{
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
@@ -87,6 +89,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (client.data.userId) {
       void client.leave(`user:${client.data.userId}`);
     }
+  }
+
+  onApplicationShutdown() {
+    this.server?.disconnectSockets(true);
   }
 
   async getCurrentOnlineFriends(id: string): Promise<string[]> {

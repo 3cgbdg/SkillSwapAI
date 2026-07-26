@@ -76,6 +76,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: test-secret-key
           AWS_REGION: eu-north-1
           FASTAPI_URL: http://localhost:8000
+          FASTAPI_SERVICE_TOKEN: test-service-token-16chars
 
   # ─── 2. BUILD & PUSH TO ECR ────────────────────────────────────────────────
   build-and-push:
@@ -196,7 +197,7 @@ jobs:
           sleep 30
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
             --max-time 10 --retry 3 --retry-delay 10 \
-            "http://skillswap-alb-496974982.eu-central-1.elb.amazonaws.com/api/health")
+            "http://skillswap-alb-496974982.eu-central-1.elb.amazonaws.com/health")
           if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
             echo "✅ Backend smoke test passed! HTTP $STATUS"
           else

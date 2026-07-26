@@ -1,22 +1,19 @@
 from os import getenv
-from dotenv import load_dotenv
-from openai import OpenAI
+from openai import AsyncOpenAI
 from logger import logger
-load_dotenv()
 
-# openai integration
+_client: AsyncOpenAI | None = None
 
-def init_ai():
+
+def get_ai_client() -> AsyncOpenAI:
+    global _client
+    if _client is not None:
+        return _client
+
     api_key = getenv("OPENAI_API_KEY")
     if not api_key:
         logger.error("Failed to get openai api_key", exc_info=True)
         raise RuntimeError("Failed to get openai api_key")
-    client = OpenAI(api_key=api_key)
-   
-    return client
 
-ai_client = init_ai()
-
-
-
-
+    _client = AsyncOpenAI(api_key=api_key, timeout=25.0, max_retries=2)
+    return _client

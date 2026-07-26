@@ -14,9 +14,11 @@ class MatchesService {
 
   async generateActiveMatch(
     partnerId: string
-  ): Promise<{ match: IMatch; message: string }> {
-    const res: any = await api.post("/matches", { otherId: partnerId });
-    return { match: res.data, message: res.message };
+  ): Promise<{ jobId: string; message: string }> {
+    const res: { jobId?: string; message?: string; data?: { jobId: string } } =
+      await api.post("/matches", { otherId: partnerId });
+    const jobId = res.jobId ?? res.data?.jobId ?? "";
+    return { jobId, message: res.message ?? "Match generation started" };
   }
 }
 

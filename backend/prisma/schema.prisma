@@ -48,7 +48,9 @@ model User {
   matchesReceived          Match[]      @relation("otherUser")
   friends                  Friendship[] @relation("UserFriends")
   friendOf                 Friendship[] @relation("UserFriendsInverse")
-  lastSkillsGenerationDate DateTime?     
+  lastSkillsGenerationDate DateTime?
+
+  @@index([isBot])
 }
 
 model Friendship {
@@ -78,6 +80,7 @@ model Request {
   @@index([toId])
   @@index([sessionId])
   @@index([type])
+  @@index([status, type])
 }
 
 model Skill {
@@ -106,6 +109,7 @@ model Message {
   isSeen    Boolean  @default(false)
 
   @@index([chatId])
+  @@index([chatId, createdAt])
   @@index([fromId])
   @@index([toId])
   @@index([createdAt])
@@ -125,6 +129,7 @@ model Session {
   meetingLink String?
 
   @@index([startsAt])
+  @@index([startsAt, endsAt])
   @@index([status])
 }
 
@@ -159,7 +164,7 @@ model Module {
   status     ModuleStatus @default(INPROGRESS)
   objectives String[]
   activities String[]
-  timeline   Int
+  timeline   Float
   resources  Resource[]
   planId     String
   plan       Plan         @relation(fields: [planId], references: [id], onDelete: Cascade)

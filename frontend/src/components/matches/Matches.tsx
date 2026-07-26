@@ -80,12 +80,10 @@ const Matches = ({
       return data;
     },
     onSuccess: (data) => {
-      showSuccessToast(data.message || "Your training plan is ready!");
-      queryClient.setQueryData(["matches"], (old: any) => {
-        if (!old) return [data.match];
-        return [...old, data.match];
-      });
-      navRouter.push(`/matches/${data.match.id}`);
+      showSuccessToast(
+        data.message ||
+          "Generating your training plan — we'll notify you when it's ready."
+      );
     },
     onError: (err: Error) => {
       showErrorToast(err.message);

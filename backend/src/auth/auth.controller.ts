@@ -26,6 +26,8 @@ import { ProfilesService } from 'src/profiles/profiles.service';
 import { CookiesService } from './cookies.service';
 import { UsersService } from 'src/users/users.service';
 
+import { Throttle } from '@nestjs/throttler';
+
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -70,6 +72,7 @@ export class AuthController {
   }
 
   @Post('signup')
+  @Throttle({ short: { limit: 5, ttl: 60_000 } })
   async signup(
     @Body() createAuthDto: CreateAuthDto,
     @Res() res: Response,
@@ -84,6 +87,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @Throttle({ short: { limit: 10, ttl: 60_000 } })
   async login(
     @Body() LoginAuthDto: LoginAuthDto,
     @Res() res: Response,

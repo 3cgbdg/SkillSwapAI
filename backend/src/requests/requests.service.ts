@@ -101,7 +101,7 @@ export class RequestsService {
     }
   }
 
-  private getBasicRequestInclude() {
+  getBasicRequestInclude() {
     return {
       from: { select: { id: true, name: true, imageUrl: true } },
       to: { select: { id: true, name: true, imageUrl: true } },
@@ -119,6 +119,8 @@ export class RequestsService {
     const requests = (await this.prisma.request.findMany({
       where: { toId: userId },
       include: this.getBasicRequestInclude(),
+      take: 100,
+      orderBy: { id: 'desc' },
     })) as unknown as IRequestWithSession[];
     return { data: requests };
   }

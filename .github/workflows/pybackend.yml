@@ -105,7 +105,7 @@ jobs:
         working-directory: pyBackend
         run: |
           # Copy source files into the package directory
-          cp -r api logger.py main.py package/
+          cp -r api core schemas logger.py main.py package/
           cd package
           find . -type d -name "__pycache__" -exec rm -rf {} +
           zip -r ../deploy.zip . -x "*.pyc" "*__pycache__*" "tests/*"

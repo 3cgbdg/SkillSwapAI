@@ -62,7 +62,7 @@ const MatchCard = ({
   isInActiveMatches: boolean;
   option: "available" | "active";
   generateActiveMatch: UseMutateFunction<
-    { match: IMatch; message: string },
+    { jobId: string; message: string },
     Error,
     string,
     unknown

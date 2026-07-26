@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -34,29 +35,38 @@ export class SessionsService {
       throw new BadRequestException('Friend not found in your list');
     }
 
-    const session = await this.prisma.session.create({
-      data: {
-        title: dto.title,
-        description: dto.description,
-        startsAt: new Date(dto.startsAt),
-        endsAt: new Date(dto.endsAt),
-        timeZone: dto.timeZone,
-        meetingLink: dto.meetingLink,
-        color: dto.color,
-        users: {
-          connect: [{ id: myId }, { id: dto.friendId }],
+    const { session, request } = await this.prisma.$transaction(async (tx) => {
+      const createdSession = await tx.session.create({
+        data: {
+          title: dto.title,
+          description: dto.description,
+          startsAt: new Date(dto.startsAt),
+          endsAt: new Date(dto.endsAt),
+          timeZone: dto.timeZone,
+          meetingLink: dto.meetingLink,
+          color: dto.color,
+          users: {
+            connect: [{ id: myId }, { id: dto.friendId }],
+          },
         },
-      },
-      include: {
-        users: { select: { id: true, name: true, imageUrl: true } },
-      },
+        include: {
+          users: { select: { id: true, name: true, imageUrl: true } },
+        },
+      });
+
+      const createdRequest = await tx.request.create({
+        data: {
+          from: { connect: { id: myId } },
+          to: { connect: { id: dto.friendId } },
+          session: { connect: { id: createdSession.id } },
+          type: 'SESSIONCREATED',
+        },
+        include: this.requests.getBasicRequestInclude(),
+      });
+
+      return { session: createdSession, request: createdRequest };
     });
 
-    const request = await this.requests.createSessionRequest(
-      session.id,
-      myId,
-      dto.friendId,
-    );
     this.requestGateway.notifyUserSession(dto.friendId, { request });
 
     return {
@@ -122,6 +132,7 @@ export class SessionsService {
         users: { select: { id: true, name: true, imageUrl: true } },
       },
       orderBy: { startsAt: 'asc' },
+      take: 200,
     })) as unknown as ISessionPrismaResult[];
 
     return {
@@ -146,6 +157,7 @@ export class SessionsService {
         users: { select: { id: true, name: true, imageUrl: true } },
       },
       orderBy: { startsAt: 'asc' },
+      take: 50,
     })) as unknown as ISessionPrismaResult[];
 
     return {
@@ -158,10 +170,7 @@ export class SessionsService {
     myId: string,
     sessionId: string,
   ): Promise<ReturnDataType<string>> {
-    const session = await this.prisma.session.update({
-      where: { id: sessionId },
-      data: { status: 'AGREED' },
-    });
+    await this.assertSessionParticipant(sessionId, myId);
 
     const originalReq = await this.prisma.request.findUnique({
       where: { id: dto.requestId },
@@ -171,14 +180,26 @@ export class SessionsService {
       throw new NotFoundException('Original request not found');
     }
 
-    const request = await this.requests.createSessionStatusRequest(
-      session.id,
-      myId,
-      originalReq.fromId,
-      'ACCEPTED',
-    );
+    const request = await this.prisma.$transaction(async (tx) => {
+      await tx.session.update({
+        where: { id: sessionId },
+        data: { status: 'AGREED' },
+      });
 
-    await this.prisma.request.delete({ where: { id: dto.requestId } });
+      const statusRequest = await tx.request.create({
+        data: {
+          from: { connect: { id: myId } },
+          to: { connect: { id: originalReq.fromId } },
+          session: { connect: { id: sessionId } },
+          type: 'SESSIONACCEPTED',
+        },
+        include: this.requests.getBasicRequestInclude(),
+      });
+
+      await tx.request.delete({ where: { id: dto.requestId } });
+
+      return statusRequest;
+    });
 
     this.requestGateway.notifyUserAcceptedSession(originalReq.fromId, {
       request,
@@ -192,6 +213,8 @@ export class SessionsService {
     myId: string,
     sessionId: string,
   ): Promise<ReturnDataType<string>> {
+    await this.assertSessionParticipant(sessionId, myId);
+
     const originalReq = await this.prisma.request.findUnique({
       where: { id: dto.requestId },
     });
@@ -200,20 +223,41 @@ export class SessionsService {
       throw new NotFoundException('Original request not found');
     }
 
-    const request = await this.requests.createSessionStatusRequest(
-      sessionId,
-      myId,
-      originalReq.fromId,
-      'REJECTED',
-    );
+    const request = await this.prisma.$transaction(async (tx) => {
+      const statusRequest = await tx.request.create({
+        data: {
+          from: { connect: { id: myId } },
+          to: { connect: { id: originalReq.fromId } },
+          session: { connect: { id: sessionId } },
+          type: 'SESSIONREJECTED',
+        },
+        include: this.requests.getBasicRequestInclude(),
+      });
 
-    await this.prisma.request.delete({ where: { id: dto.requestId } });
-    await this.prisma.session.delete({ where: { id: sessionId } });
+      await tx.request.delete({ where: { id: dto.requestId } });
+      await tx.session.delete({ where: { id: sessionId } });
+
+      return statusRequest;
+    });
 
     this.requestGateway.notifyUserRejectedSession(originalReq.fromId, {
       request,
     });
 
     return { data: dto.requestId, message: 'Session request rejected' };
+  }
+
+  private async assertSessionParticipant(sessionId: string, userId: string) {
+    const session = await this.prisma.session.findFirst({
+      where: {
+        id: sessionId,
+        users: { some: { id: userId } },
+      },
+      select: { id: true },
+    });
+
+    if (!session) {
+      throw new ForbiddenException('You are not a participant of this session');
+    }
   }
 }

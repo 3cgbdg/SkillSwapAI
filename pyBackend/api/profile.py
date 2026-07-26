@@ -1,59 +1,49 @@
-from fastapi import HTTPException,APIRouter
-from core.openai import ai_client
-from logger import logger 
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
+from core.openai import get_ai_client
+from core.auth import verify_service_token
+from core.prompts import PROFILE_SKILLS_PROMPT
+from logger import logger
 from time import perf_counter
-router = APIRouter(prefix="/profile", tags=["profile"])
+import json
 
-@router.post('/skills')
-async def createAiSkillsSuggestions(skillsToLearn:list[str],knownSkills:list[str]):
+router = APIRouter(
+    prefix="/profile",
+    tags=["profile"],
+    dependencies=[Depends(verify_service_token)],
+)
+
+
+class SkillsRequest(BaseModel):
+    skillsToLearn: list[str] = Field(max_length=30)
+    knownSkills: list[str] = Field(max_length=30)
+
+
+@router.post("/skills")
+async def createAiSkillsSuggestions(body: SkillsRequest):
     logger.info("API profile/skills")
-    prompt =  """
-You are an AI Skill Recommender for a learning app.
-
-Your task:
-Based on the user's known skills and desired skills, suggest new related skills
-that would be a natural next step to learn or improve.
-You should analyze patterns, industry trends, and logical skill progressions.
-
-Guidelines:
-1. Output must be a **pure JSON array of strings**, e.g.:
-   ["Machine Learning", "GraphQL", "Docker", "UI Design"]
-2. Each skill name should be short, specific, and relevant.
-3. Suggest **exactly 5 skills**.
-4. If the user provided no skills, suggest the most popular/trending skills for modern tech and design.
-5. Do not include explanations, descriptions, or any extra text — only valid JSON.
-
-Example:
-Input:
-knownSkills: ["HTML", "CSS", "JavaScript"]
-skillsToLearn: ["React", "Node.js"]
-
-Output:
-["TypeScript", "Redux", "REST API Design", "Express.js", "MongoDB", "Next.js"]
-
-     """
-    # configuration for gpt requests   
     try:
-        start =perf_counter()
+        start = perf_counter()
         logger.info("Starting ai request")
-        completion = ai_client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-                {"role": "system", "content": prompt},
-                {"role": "user",    "content": f"""
-                skills user wants to learn: {skillsToLearn},
-                 skills user already knows: {knownSkills}
-                """ }
+        client = get_ai_client()
+        completion = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            response_format={"type": "json_object"},
+            messages=[
+                {"role": "system", "content": PROFILE_SKILLS_PROMPT},
+                {
+                    "role": "user",
+                    "content": f"skills user wants to learn: {body.skillsToLearn}, skills user already knows: {body.knownSkills}",
+                },
             ],
-        temperature=0.7
+            temperature=0.7,
         )
-        end =perf_counter()
-        logger.info(f"Finished ai request | DURATION - {end-start}s")
-        
-        return {"AIReport": completion.choices[0].message.content}
+        end = perf_counter()
+        logger.info(f"Finished ai request | DURATION - {end - start}s")
+        content = completion.choices[0].message.content or "{}"
+        parsed = json.loads(content)
+        skills = parsed.get("skills", parsed if isinstance(parsed, list) else [])
+        return {"AIReport": json.dumps(skills)}
     except Exception as error:
         logger.error("Failed to make ai request", exc_info=True)
-        raise HTTPException(status_code=500,detail=str(error))
-
-
-    
+        raise HTTPException(status_code=500, detail=str(error))

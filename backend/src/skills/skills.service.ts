@@ -12,6 +12,7 @@ export class SkillsService {
   async findAll(dto: GetSkillsDto): Promise<ReturnDataType<any[]>> {
     const skills = await this.prisma.skill.findMany({
       where: { title: { contains: dto.chars, mode: 'insensitive' } },
+      take: 50,
     });
     return { data: skills };
   }

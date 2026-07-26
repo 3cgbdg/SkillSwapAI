@@ -12,14 +12,14 @@ import * as bcrypt from 'bcryptjs';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { AiService } from 'src/ai/ai.service';
+import { AiJobsService } from 'src/queues/ai-jobs.service';
 import { JwtPayload, Tokens } from 'types/auth';
 import { AuthUtils } from 'src/utils/auth.utils';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly aiService: AiService,
+    private readonly aiJobsService: AiJobsService,
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
@@ -55,7 +55,7 @@ export class AuthService {
 
     if (!user) throw new InternalServerErrorException('Error creating user');
 
-    void this.aiService.getAiSuggestionSkills(user.id).catch(() => {});
+    this.aiJobsService.enqueueSkillSuggestions(user.id);
 
     return AuthUtils.generateTokens(
       user.id,

@@ -11,10 +11,13 @@ import {
   useRef,
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import useProfile from "@/hooks/useProfile";
 import useChats from "@/hooks/useChats";
 import { SocketContextType } from "@/types/socket";
 import { IChat } from "@/types/chat";
+import { IMatch } from "@/types/match";
+import { showErrorToast } from "@/utils/toast";
 
 const SocketContext = createContext<SocketContextType>({ socket: null });
 
@@ -23,6 +26,7 @@ export const useSocket = () => useContext(SocketContext);
 export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const queryClient = useQueryClient();
+  const router = useRouter();
   const { data: user } = useProfile();
   const { data: chats = [] } = useChats();
   const chatsRef = useRef<IChat[]>(chats);
@@ -103,16 +107,30 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       void queryClient.invalidateQueries({ queryKey: ["profile"] });
     };
 
+    const onMatchReady = (payload: { match: IMatch; message?: string }) => {
+      showSuccessToast(payload.message || "Your training plan is ready!");
+      void queryClient.invalidateQueries({ queryKey: ["matches"] });
+      router.push(`/matches/${payload.match.id}`);
+    };
+
+    const onMatchFailed = (payload: { message?: string }) => {
+      showErrorToast(payload.message || "Failed to generate match");
+    };
+
     sock.on("receiveMessage", handleReceiveMessage);
     sock.on("aiSuggestionsReady", onAiSkillsSuggestion);
+    sock.on("matchReady", onMatchReady);
+    sock.on("matchFailed", onMatchFailed);
 
     return () => {
       clearInterval(intervalHeartbeat);
       sock.off("receiveMessage", handleReceiveMessage);
       sock.off("aiSuggestionsReady", onAiSkillsSuggestion);
+      sock.off("matchReady", onMatchReady);
+      sock.off("matchFailed", onMatchFailed);
       sock.disconnect();
     };
-  }, [user, queryClient]);
+  }, [user, queryClient, router]);
   return (
     <SocketContext.Provider value={{ socket }}>
       {children}

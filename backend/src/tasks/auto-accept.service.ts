@@ -1,8 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from 'prisma/prisma.service';
 import { OPTIMIZATION_CONSTANTS } from 'src/constants/optimization';
 import type { RequestType } from 'types/requests';
+import {
+  CRON_LOCK_AUTO_ACCEPT_FRIENDS,
+  CRON_LOCK_AUTO_ACCEPT_SESSIONS,
+  releaseAdvisoryLock,
+  tryAcquireAdvisoryLock,
+} from 'src/tasks/advisory-lock.util';
 
 interface RequestWithUsers {
   id: string;
@@ -15,18 +20,45 @@ interface RequestWithUsers {
 }
 
 @Injectable()
-export class AutoAcceptTasks {
-  private readonly logger = new Logger(AutoAcceptTasks.name);
+export class AutoAcceptService {
+  private readonly logger = new Logger(AutoAcceptService.name);
 
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * Auto-accept friend requests sent TO bot users.
-   * Runs every 30 seconds.
-   */
-  @Cron(CronExpression.EVERY_30_SECONDS)
-  async handleAutoAcceptFriends() {
-    this.logger.debug('Running handleAutoAcceptFriends cron job');
+  async runAutoAcceptFriends(): Promise<void> {
+    const acquired = await tryAcquireAdvisoryLock(
+      this.prisma,
+      CRON_LOCK_AUTO_ACCEPT_FRIENDS,
+    );
+    if (!acquired) {
+      return;
+    }
+
+    try {
+      await this.processFriends();
+    } finally {
+      await releaseAdvisoryLock(this.prisma, CRON_LOCK_AUTO_ACCEPT_FRIENDS);
+    }
+  }
+
+  async runAutoAcceptSessions(): Promise<void> {
+    const acquired = await tryAcquireAdvisoryLock(
+      this.prisma,
+      CRON_LOCK_AUTO_ACCEPT_SESSIONS,
+    );
+    if (!acquired) {
+      return;
+    }
+
+    try {
+      await this.processSessions();
+    } finally {
+      await releaseAdvisoryLock(this.prisma, CRON_LOCK_AUTO_ACCEPT_SESSIONS);
+    }
+  }
+
+  private async processFriends() {
+    this.logger.debug('Running auto-accept friends job');
 
     let lastId: string | null = null;
     let totalProcessed = 0;
@@ -55,13 +87,8 @@ export class AutoAcceptTasks {
     }
   }
 
-  /**
-   * Auto-accept session requests sent TO bot users.
-   * Runs every 30 seconds, offset by 15s from friend requests.
-   */
-  @Cron('15,45 * * * * *')
-  async handleAutoAcceptSessions() {
-    this.logger.debug('Running handleAutoAcceptSessions cron job');
+  private async processSessions() {
+    this.logger.debug('Running auto-accept sessions job');
 
     let lastId: string | null = null;
     let totalProcessed = 0;
@@ -90,8 +117,6 @@ export class AutoAcceptTasks {
     }
   }
 
-  // ─── Shared Fetch ────────────────────────────────────────────
-
   private async fetchPendingBotRequestsBatch(
     lastId: string | null,
     type: RequestType,
@@ -114,8 +139,6 @@ export class AutoAcceptTasks {
     })) as unknown as RequestWithUsers[];
   }
 
-  // ─── Friend Request Processing ───────────────────────────────
-
   private async processBotFriendRequestsBatch(
     requests: RequestWithUsers[],
   ): Promise<number> {
@@ -124,7 +147,6 @@ export class AutoAcceptTasks {
     const senderIds = requests.map((r) => r.fromId);
     const receiverIds = requests.map((r) => r.toId);
 
-    // Fetch all existing friendships to avoid N+1 reads
     const existingFriendships = await this.prisma.friendship.findMany({
       where: {
         OR: [
@@ -154,13 +176,9 @@ export class AutoAcceptTasks {
             },
           }),
         );
-        this.logger.debug(
-          `Queued friendship: ${request.from.name} ↔ bot ${request.to.name}`,
-        );
         friendshipSet.add(friendshipKey);
       }
 
-      // Delete the friend request
       operations.push(
         this.prisma.request.delete({
           where: { id: request.id },
@@ -172,9 +190,6 @@ export class AutoAcceptTasks {
     if (operations.length > 0) {
       try {
         await this.prisma.$transaction(operations);
-        this.logger.log(
-          `Transaction successful: processed ${processedInBatch} friend requests`,
-        );
       } catch (error) {
         this.logger.error(`Friend batch transaction failed: ${String(error)}`);
         return 0;
@@ -183,8 +198,6 @@ export class AutoAcceptTasks {
 
     return processedInBatch;
   }
-
-  // ─── Session Request Processing ──────────────────────────────
 
   private async processBotSessionRequestsBatch(
     requests: RequestWithUsers[],
@@ -196,7 +209,6 @@ export class AutoAcceptTasks {
 
     for (const request of requests) {
       if (request.sessionId) {
-        // Mark the session as AGREED
         operations.push(
           this.prisma.session.update({
             where: { id: request.sessionId },
@@ -204,24 +216,18 @@ export class AutoAcceptTasks {
           }),
         );
 
-        // Create an ACCEPTED notification back to the sender
         operations.push(
           this.prisma.request.create({
             data: {
-              fromId: request.toId, // bot is responding
-              toId: request.fromId, // back to the original sender
+              fromId: request.toId,
+              toId: request.fromId,
               sessionId: request.sessionId,
               type: 'SESSIONACCEPTED',
             },
           }),
         );
-
-        this.logger.debug(
-          `Bot ${request.to.name} accepted session from ${request.from.name}`,
-        );
       }
 
-      // Delete the original SESSIONCREATED request
       operations.push(
         this.prisma.request.delete({
           where: { id: request.id },
@@ -233,9 +239,6 @@ export class AutoAcceptTasks {
     if (operations.length > 0) {
       try {
         await this.prisma.$transaction(operations);
-        this.logger.log(
-          `Transaction successful: processed ${processedInBatch} session requests`,
-        );
       } catch (error) {
         this.logger.error(`Session batch transaction failed: ${String(error)}`);
         return 0;

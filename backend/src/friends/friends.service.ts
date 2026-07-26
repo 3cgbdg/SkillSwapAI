@@ -53,6 +53,7 @@ export class FriendsService {
         user1: { select: { id: true, name: true, imageUrl: true } },
         user2: { select: { id: true, name: true, imageUrl: true } },
       },
+      take: 200,
     });
 
     const data: IFriendItem[] = friendships.map((f) =>

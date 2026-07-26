@@ -6,27 +6,26 @@ from logger import logger
 from api.match import router as match_router
 from api.profile import router as profile_router
 from mangum import Mangum
+
 load_dotenv()
 
 app = FastAPI(description="Python AI microservice")
 handler = Mangum(app)
 
-# health check endpoint
-@app.get('/health')
+
+@app.get("/health")
 async def health_check():
-    logger.info(f"Server started on {getenv('PORT',8000)}")
+    logger.info(f"Server started on {getenv('PORT', 8000)}")
     return {"status": "ok"}
 
-# cors
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[f'{getenv("CORS_ORIGIN")}'],
+    allow_origins=[f"{getenv('CORS_ORIGIN')}"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
-
-# including all routers
 
 app.include_router(match_router)
 app.include_router(profile_router)

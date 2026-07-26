@@ -10,7 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
-import { Inject } from '@nestjs/common';
+import { Inject, OnApplicationShutdown } from '@nestjs/common';
 import type { JwtPayload } from '../../types/auth';
 import type { SocketData } from '../../types/general';
 @WebSocketGateway({
@@ -20,7 +20,7 @@ import type { SocketData } from '../../types/general';
   },
 })
 export class RequestGateway
-  implements OnGatewayConnection, OnGatewayDisconnect
+  implements OnGatewayConnection, OnGatewayDisconnect, OnApplicationShutdown
 {
   constructor(
     private readonly jwtService: JwtService,
@@ -62,6 +62,17 @@ export class RequestGateway
             .emit('aiSuggestionsReady', pendingData);
           await this.cacheManager.del(pendingKey);
         }
+
+        for (const [key, event] of [
+          [`pending_match_ready:${payload.userId}`, 'matchReady'],
+          [`pending_match_failed:${payload.userId}`, 'matchFailed'],
+        ] as const) {
+          const pending = await this.cacheManager.get(key);
+          if (pending) {
+            this.server.to(`user:${payload.userId}`).emit(event, pending);
+            await this.cacheManager.del(key);
+          }
+        }
       } catch (err: unknown) {
         console.error(
           '[RequestGateway] Connection auth failed:',
@@ -90,6 +101,10 @@ export class RequestGateway
     if (client.data.userId) {
       void client.leave(`user:${client.data.userId}`);
     }
+  }
+
+  onApplicationShutdown() {
+    this.server?.disconnectSockets(true);
   }
 
   notifyUser(toId: string, payload: unknown) {
@@ -121,6 +136,45 @@ export class RequestGateway
       }
     } catch (err) {
       console.error('[RequestGateway] Failed to notify AI suggestions:', err);
+    }
+  }
+
+  async notifyMatchReady(toId: string, payload: unknown) {
+    await this.emitOrCachePending(
+      toId,
+      'matchReady',
+      `pending_match_ready:${toId}`,
+      payload,
+    );
+  }
+
+  async notifyMatchFailed(toId: string, payload: unknown) {
+    await this.emitOrCachePending(
+      toId,
+      'matchFailed',
+      `pending_match_failed:${toId}`,
+      payload,
+    );
+  }
+
+  private async emitOrCachePending(
+    toId: string,
+    event: string,
+    pendingKey: string,
+    payload: unknown,
+  ) {
+    try {
+      const roomName = `user:${toId}`;
+      const sockets = this.server.sockets.adapter.rooms.get(roomName);
+      const count = sockets ? sockets.size : 0;
+
+      if (count > 0) {
+        this.server.to(roomName).emit(event, payload);
+      } else {
+        await this.cacheManager.set(pendingKey, payload, 3600 * 1000);
+      }
+    } catch (err) {
+      console.error(`[RequestGateway] Failed to notify ${event}:`, err);
     }
   }
 }

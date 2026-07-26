@@ -1,31 +1,30 @@
 import {
   ForbiddenException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { randomUUID } from 'crypto';
 import { PrismaService } from 'prisma/prisma.service';
-import { AiService } from 'src/ai/ai.service';
-import { PlansService } from 'src/plans/plans.service';
 import { ReturnDataType } from 'types/general';
 import { IMatchResponse, IAvailableMatchItem } from 'types/matches';
-import { IGeneratedActiveMatch } from 'src/ai/ai.interface';
 import { MATCHES_CONSTANTS } from 'src/constants/matches';
 import { MatchesUtils } from 'src/utils/matches.utils';
-
 import { UserUtils } from 'src/utils/user.utils';
+import { JOB_GENERATE_MATCH, QUEUE_AI } from 'src/queues/queue.constants';
 
 @Injectable()
 export class MatchesService {
   constructor(
-    private readonly plansService: PlansService,
     private readonly prisma: PrismaService,
-    private readonly aiService: AiService,
+    @InjectQueue(QUEUE_AI) private readonly aiQueue: Queue,
   ) {}
-  async generateActiveMatch(
+
+  async enqueueActiveMatch(
     myId: string,
     otherId: string,
-  ): Promise<ReturnDataType<IMatchResponse>> {
+  ): Promise<{ jobId: string; message: string }> {
     const matchExists = await this.doesMatchesExistsForUser(myId, otherId);
 
     if (matchExists) {
@@ -33,35 +32,23 @@ export class MatchesService {
         'You have already created active match with this person',
       );
     }
-    const result = await this.aiService.generateBodyForActiveMatch(
-      myId,
-      otherId,
-    );
-    if (!result?.generatedData) throw new InternalServerErrorException();
-    const activeMatchId = await this.createMatch(myId, otherId, result);
-    await this.plansService.createPlan(
-      activeMatchId,
-      result.generatedData.modules,
-    );
 
-    const matchDb = await this.prisma.match.findUnique({
-      where: { id: activeMatchId },
-      include: {
-        initiator: MatchesUtils.userSelect(),
-        other: MatchesUtils.userSelect(),
+    const jobId = randomUUID();
+    const job = await this.aiQueue.add(
+      JOB_GENERATE_MATCH,
+      { myId, otherId, jobId },
+      {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 2000 },
+        removeOnComplete: true,
+        removeOnFail: 50,
       },
-    });
-
-    if (!matchDb) throw new InternalServerErrorException('Match not found');
-
-    const mappedMatch = {
-      ...matchDb,
-      other: UserUtils.getOtherUser(myId, matchDb.initiator, matchDb.other),
-    };
+    );
 
     return {
-      data: mappedMatch as unknown as IMatchResponse,
-      message: 'Active match has been successfully generated',
+      jobId: String(job.id ?? jobId),
+      message:
+        'Match generation started. You will be notified when it is ready.',
     };
   }
 
@@ -75,6 +62,7 @@ export class MatchesService {
         other: MatchesUtils.userSelect(),
       },
       orderBy: { createdAt: 'desc' },
+      take: 100,
     });
 
     const data = matches.map((match) => {
@@ -125,26 +113,6 @@ export class MatchesService {
 
     const data = users.map((u) => MatchesUtils.mapToAvailableMatch(u));
     return { data };
-  }
-
-  private async createMatch(
-    myId: string,
-    otherId: string,
-    result: { generatedData: IGeneratedActiveMatch },
-  ): Promise<string> {
-    const activeMatch = await this.prisma.match.create({
-      data: {
-        compatibility: Math.round(Number(result.generatedData.compatibility)),
-        aiExplanation: result.generatedData.aiExplanation,
-        keyBenefits: result.generatedData.keyBenefits,
-        other: { connect: { id: otherId } },
-        initiator: { connect: { id: myId } },
-      },
-    });
-
-    if (!activeMatch)
-      throw new InternalServerErrorException('Cannot create active match');
-    return activeMatch.id;
   }
 
   private async doesMatchesExistsForUser(

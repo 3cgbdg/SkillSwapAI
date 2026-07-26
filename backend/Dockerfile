@@ -40,14 +40,13 @@ RUN chown nestjs:nodejs /app/prisma.config.ts && \
 
 USER nestjs
 
-EXPOSE 3000
+ENV PORT=5200
+EXPOSE 5200
 
 # health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3000/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+    CMD node -e "const p=process.env.PORT||5200;require('http').get('http://127.0.0.1:'+p+'/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
 
-# using dumb-init to run the application - ВИПРАВЛЕНО ТУТ!
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
-# Run the application
-CMD ["sh", "-c", "./node_modules/.bin/prisma migrate deploy && node dist/src/main.js"]
+CMD ["node", "dist/src/main.js"]

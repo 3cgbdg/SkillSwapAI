@@ -1,10 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List
 
-# models for bodys
+
 class User(BaseModel):
-    name:str
-    id:str
-    knownSkills:List[str]
-    skillsToLearn:List[str]
-    
+    name: str = Field(max_length=120)
+    id: str = Field(max_length=64)
+    knownSkills: List[str] = Field(max_length=30)
+    skillsToLearn: List[str] = Field(max_length=30)

@@ -7,6 +7,7 @@ import {
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
+import { circuitBreaker, ConsecutiveBreaker, handleAll, wrap } from 'cockatiel';
 import { IGeneratedActiveMatch } from './ai.interface';
 import { PrismaService } from 'prisma/prisma.service';
 import { ReturnDataType } from 'types/general';
@@ -21,6 +22,13 @@ interface FastApiResponse {
 
 @Injectable()
 export class AiService {
+  private readonly fastApiPolicy = wrap(
+    circuitBreaker(handleAll, {
+      halfOpenAfter: 30_000,
+      breaker: new ConsecutiveBreaker(5),
+    }),
+  );
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly httpService: HttpService,
@@ -29,7 +37,28 @@ export class AiService {
   ) {}
 
   private get fastApiUrl(): string {
-    return this.configService.get<string>('FASTAPI_URL', '').replace(/\/$/, '');
+    return this.configService
+      .getOrThrow<string>('FASTAPI_URL')
+      .replace(/\/$/, '');
+  }
+
+  private get fastApiHeaders(): Record<string, string> {
+    return {
+      'Content-Type': 'application/json',
+      'X-Service-Token': this.configService.getOrThrow<string>(
+        'FASTAPI_SERVICE_TOKEN',
+      ),
+    };
+  }
+
+  private postFastApi<T>(path: string, body: unknown) {
+    return this.fastApiPolicy.execute(() =>
+      firstValueFrom(
+        this.httpService.post<T>(`${this.fastApiUrl}${path}`, body, {
+          headers: this.fastApiHeaders,
+        }),
+      ),
+    );
   }
 
   async generateBodyForActiveMatch(
@@ -53,16 +82,10 @@ export class AiService {
     const u2 = users.find((u) => u.id !== myId)!;
 
     const fastApiResponse: AxiosResponse<FastApiResponse> =
-      await firstValueFrom(
-        this.httpService.post<FastApiResponse>(
-          `${this.fastApiUrl}/match/active`,
-          {
-            user1: AiUtils.formatUserForAi(u1),
-            user2: AiUtils.formatUserForAi(u2),
-          },
-          { headers: { 'Content-Type': 'application/json' } },
-        ),
-      );
+      await this.postFastApi('/match/active', {
+        user1: AiUtils.formatUserForAi(u1),
+        user2: AiUtils.formatUserForAi(u2),
+      });
 
     const readyAiArray = AiUtils.parseAiResponse<IGeneratedActiveMatch>(
       fastApiResponse.data.AIReport,
@@ -86,16 +109,10 @@ export class AiService {
     this.validateRegenerationDate(user.lastSkillsGenerationDate);
 
     const fastApiResponse: AxiosResponse<FastApiResponse> =
-      await firstValueFrom(
-        this.httpService.post<FastApiResponse>(
-          `${this.fastApiUrl}/profile/skills`,
-          {
-            skillsToLearn: user.skillsToLearn.map((s) => s.title),
-            knownSkills: user.knownSkills.map((s) => s.title),
-          },
-          { headers: { 'Content-Type': 'application/json' } },
-        ),
-      );
+      await this.postFastApi('/profile/skills', {
+        skillsToLearn: user.skillsToLearn.map((s) => s.title),
+        knownSkills: user.knownSkills.map((s) => s.title),
+      });
 
     const readyAiArray = AiUtils.parseAiResponse<string[]>(
       fastApiResponse.data.AIReport,
@@ -122,15 +139,10 @@ export class AiService {
   }
 
   private async saveAiSuggestions(userId: string, skills: string[]) {
-    await Promise.all(
-      skills.map((skill) =>
-        this.prisma.skill.upsert({
-          where: { title: skill },
-          update: {},
-          create: { title: skill },
-        }),
-      ),
-    );
+    await this.prisma.skill.createMany({
+      data: skills.map((title) => ({ title })),
+      skipDuplicates: true,
+    });
 
     await this.prisma.user.update({
       where: { id: userId },
