@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from 'prisma/prisma.service';
 import { OPTIMIZATION_CONSTANTS } from 'src/constants/optimization';
+import type { RequestType } from 'types/requests';
 
 interface RequestWithUsers {
   id: string;
@@ -93,12 +94,12 @@ export class AutoAcceptTasks {
 
   private async fetchPendingBotRequestsBatch(
     lastId: string | null,
-    type: string,
+    type: RequestType,
   ): Promise<RequestWithUsers[]> {
     return (await this.prisma.request.findMany({
       where: {
         status: 'pending',
-        type: type as any,
+        type,
         to: {
           isBot: true,
         },
@@ -118,9 +119,7 @@ export class AutoAcceptTasks {
   private async processBotFriendRequestsBatch(
     requests: RequestWithUsers[],
   ): Promise<number> {
-    this.logger.log(
-      `Processing batch of ${requests.length} friend requests`,
-    );
+    this.logger.log(`Processing batch of ${requests.length} friend requests`);
 
     const senderIds = requests.map((r) => r.fromId);
     const receiverIds = requests.map((r) => r.toId);
@@ -136,9 +135,7 @@ export class AutoAcceptTasks {
     });
 
     const friendshipSet = new Set(
-      existingFriendships.map((f) =>
-        [f.user1Id, f.user2Id].sort().join('-'),
-      ),
+      existingFriendships.map((f) => [f.user1Id, f.user2Id].sort().join('-')),
     );
 
     let processedInBatch = 0;
@@ -192,9 +189,7 @@ export class AutoAcceptTasks {
   private async processBotSessionRequestsBatch(
     requests: RequestWithUsers[],
   ): Promise<number> {
-    this.logger.log(
-      `Processing batch of ${requests.length} session requests`,
-    );
+    this.logger.log(`Processing batch of ${requests.length} session requests`);
 
     let processedInBatch = 0;
     const operations: any[] = [];
@@ -242,9 +237,7 @@ export class AutoAcceptTasks {
           `Transaction successful: processed ${processedInBatch} session requests`,
         );
       } catch (error) {
-        this.logger.error(
-          `Session batch transaction failed: ${String(error)}`,
-        );
+        this.logger.error(`Session batch transaction failed: ${String(error)}`);
         return 0;
       }
     }

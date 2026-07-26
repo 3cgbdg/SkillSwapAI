@@ -49,8 +49,7 @@ const NotificationsList = ({
                   </h2>
                   <div className="     rounded-xl transition-all mb-4">
                     {" "}
-                    <span className="font-semibold">From:</span>{" "}
-                    {req.from.name}
+                    <span className="font-semibold">From:</span> {req.from.name}
                   </div>
                   <div className="grid grid-cols-2 items-center gap-2 ">
                     <button
@@ -81,8 +80,7 @@ const NotificationsList = ({
                   </h2>
                   <div className="     rounded-xl transition-all ">
                     {" "}
-                    <span className="font-semibold">From:</span>{" "}
-                    {req.from.name}
+                    <span className="font-semibold">From:</span> {req.from.name}
                   </div>
                   {req.session.date && (
                     <div className="flex  flex-col  mb-4">

@@ -12,10 +12,7 @@ export default function ChatLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const {
-    isError,
-    error,
-  } = useQuery({
+  const { isError, error } = useQuery({
     queryKey: ["chats"],
     queryFn: async () => ChatsService.getChats(),
   });

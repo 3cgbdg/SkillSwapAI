@@ -115,7 +115,7 @@ const Page = () => {
                   <div className="basis-full">
                     <div className="flex gap-2 flex-wrap mb-6 overflow-y-auto   max-h-[170px] ">
                       {profile?.knownSkills &&
-                        profile?.knownSkills?.length > 0 ? (
+                      profile?.knownSkills?.length > 0 ? (
                         profile.knownSkills.map((skill, idx) => (
                           <div
                             key={idx}
@@ -141,7 +141,7 @@ const Page = () => {
                   <div className="basis-full">
                     <div className="flex gap-2  flex-wrap mb-6 overflow-y-auto max-h-[170px] ">
                       {profile?.skillsToLearn &&
-                        profile?.skillsToLearn?.length > 0 ? (
+                      profile?.skillsToLearn?.length > 0 ? (
                         profile.skillsToLearn.map((skill, idx) => (
                           <div
                             key={idx}
@@ -196,7 +196,7 @@ const Page = () => {
               <div className="basis-full">
                 <div className="flex gap-2  flex-wrap mb-6 overflow-y-auto max-h-[170px] ">
                   {profile?.skillsToLearn &&
-                    profile?.skillsToLearn?.length > 0 ? (
+                  profile?.skillsToLearn?.length > 0 ? (
                     profile.skillsToLearn.map((skill, idx) => (
                       <div
                         key={idx}
@@ -214,7 +214,7 @@ const Page = () => {
               </div>
             </div>
           </div>
-        </div >
+        </div>
       )}
     </>
   );

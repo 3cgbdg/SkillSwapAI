@@ -44,7 +44,6 @@ export default function RootLayout({
             <div className="">{children}</div>
             {/* for toast position */}
             <ToastContainer position="top-right" />
-
           </SocketProvider>
         </QueryProvider>
       </body>

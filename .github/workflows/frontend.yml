@@ -61,6 +61,9 @@ jobs:
       - name: TypeScript type check
         run: pnpm exec tsc --noEmit
 
+      - name: Run unit tests
+        run: pnpm test:ci
+
   # ─── 2. BUILD & PUSH TO ECR ────────────────────────────────────────────────
   build-and-push:
     name: Build & Push to ECR

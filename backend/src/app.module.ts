@@ -42,6 +42,7 @@ import { TasksModule } from './tasks/tasks.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       isGlobal: true,
+      // eslint-disable-next-line @typescript-eslint/require-await
       useFactory: async (configService: ConfigService) => {
         const host = configService.get<string>('REDIS_HOST');
         if (!host) {
@@ -51,6 +52,8 @@ import { TasksModule } from './tasks/tasks.module';
           };
         }
         return {
+          // cache-manager-ioredis default export is untyped for ESLint
+
           store: redisStore,
           ttl: 3600,
           tls: true,

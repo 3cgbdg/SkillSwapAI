@@ -1,0 +1,65 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": ["lint-staged.config.mjs"],
+      "project": [".husky/**"]
+    },
+    "frontend": {
+      "entry": [
+        "next.config.ts",
+        "src/app/**/*.{ts,tsx}",
+        "src/**/route.ts",
+        "vitest.config.ts"
+      ],
+      "project": ["src/**/*.{ts,tsx}", "vitest.setup.ts", "src/**/*.test.ts"]
+    },
+    "backend": {
+      "entry": ["src/main.ts"],
+      "project": ["src/**/*.ts", "test/**/*.ts"]
+    }
+  },
+  "ignore": ["**/*.spec.ts", "src/generated/**"],
+  "ignoreBinaries": ["tsc", "prisma"],
+  "ignoreDependencies": [
+    "shadcn",
+    "@fullcalendar/core",
+    "@fullcalendar/daygrid",
+    "@fullcalendar/interaction",
+    "@fullcalendar/react",
+    "@fullcalendar/timegrid",
+    "@reduxjs/toolkit",
+    "react-redux",
+    "react-easy-crop",
+    "@nestjs/mapped-types",
+    "@prisma/client",
+    "cache-manager-redis-store",
+    "ioredis",
+    "passport-github2",
+    "text-transformer",
+    "text-validator",
+    "@svgr/webpack",
+    "autoprefixer",
+    "eslint-config-next",
+    "eslint-plugin-prettier",
+    "eslint-plugin-react",
+    "eslint-plugin-react-hooks",
+    "tailwindcss",
+    "@eslint/eslintrc",
+    "@types/cron",
+    "@types/multer",
+    "@types/passport-github2",
+    "@types/supertest",
+    "source-map-support",
+    "supertest",
+    "ts-loader",
+    "@testing-library/react",
+    "@testing-library/jest-dom"
+  ],
+  "ignoreIssues": {
+    "backend/src/friends/dto/get-friend.dto.ts": ["files"],
+    "backend/src/utils/matches.utils.ts": ["types"],
+    "frontend/src/hooks/**": ["exports", "duplicates"],
+    ".husky/pre-push": ["binaries"]
+  }
+}

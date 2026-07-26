@@ -37,10 +37,10 @@ export class RequestsService {
   ): Promise<ReturnDataType<IRequestWithSession>> {
     await this.ensureRequestDoesNotExist(senderId, recipientId);
 
-    const request = (await this.prisma.request.create({
+    const request = await this.prisma.request.create({
       data: { toId: recipientId, fromId: senderId, type: 'FRIEND' },
       include: this.getBasicRequestInclude(),
-    })) as unknown as IRequestWithSession;
+    });
 
     this.notifyRecipient(recipientId, request);
 
@@ -70,10 +70,10 @@ export class RequestsService {
 
     await this.ensureRequestDoesNotExist(senderId, recipient.id);
 
-    const request = (await this.prisma.request.create({
+    const request = await this.prisma.request.create({
       data: { toId: recipient.id, fromId: senderId, type: 'FRIEND' },
       include: this.getBasicRequestInclude(),
-    })) as unknown as IRequestWithSession;
+    });
 
     this.notifyRecipient(recipient.id, request);
 
@@ -128,7 +128,7 @@ export class RequestsService {
     senderId: string,
     recipientId: string,
   ): Promise<IRequestWithSession> {
-    return (await this.prisma.request.create({
+    return await this.prisma.request.create({
       data: {
         from: { connect: { id: senderId } },
         to: { connect: { id: recipientId } },
@@ -136,7 +136,7 @@ export class RequestsService {
         type: 'SESSIONCREATED',
       },
       include: this.getBasicRequestInclude(),
-    })) as unknown as IRequestWithSession;
+    });
   }
 
   async createSessionStatusRequest(
@@ -146,7 +146,7 @@ export class RequestsService {
     option: 'REJECTED' | 'ACCEPTED',
   ): Promise<IRequestWithSession> {
     const type = option === 'ACCEPTED' ? 'SESSIONACCEPTED' : 'SESSIONREJECTED';
-    return (await this.prisma.request.create({
+    return await this.prisma.request.create({
       data: {
         from: { connect: { id: senderId } },
         to: { connect: { id: recipientId } },
@@ -154,7 +154,7 @@ export class RequestsService {
         type,
       },
       include: this.getBasicRequestInclude(),
-    })) as unknown as IRequestWithSession;
+    });
   }
 
   async deleteOne(requestId: string): Promise<IReturnMessage> {

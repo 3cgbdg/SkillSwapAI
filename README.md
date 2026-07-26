@@ -61,7 +61,33 @@ The project follows a **microservices-based architecture**, ensuring separation 
 
 ## 🚀 How to Run Locally
 
-To run the entire system locally using Docker Compose:
+### Development (Node / pnpm)
+
+Requires **Node.js 20+** and **pnpm 10.21+** (`corepack enable` or `npm install -g pnpm@10.21.0`).
+
+```bash
+# Root tooling (Husky hooks, lint-staged)
+pnpm install
+
+# App packages
+pnpm --dir frontend install
+pnpm --dir backend install
+```
+
+Quality checks from the repo root:
+
+```bash
+pnpm check          # format:check + lint + types + tests
+pnpm format         # Prettier write (frontend + backend)
+pnpm lint
+pnpm check:types
+pnpm test
+pnpm knip           # unused exports / dependencies
+```
+
+Git hooks: **pre-commit** runs lint-staged (Prettier + ESLint on staged files); **pre-push** runs typecheck and backend unit tests.
+
+### Docker Compose (full stack)
 
 1.  **Clone the repository:**
     ```bash

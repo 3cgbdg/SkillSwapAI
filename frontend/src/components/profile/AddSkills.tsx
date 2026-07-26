@@ -97,7 +97,9 @@ const AddSkills = () => {
         if (!old) return old;
         return {
           ...old,
-          skillsToLearn: old.skillsToLearn?.filter((s: any) => s.title !== title),
+          skillsToLearn: old.skillsToLearn?.filter(
+            (s: any) => s.title !== title
+          ),
         };
       });
     },

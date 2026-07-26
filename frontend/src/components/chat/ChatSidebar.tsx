@@ -186,9 +186,9 @@ const ChatSidebar = () => {
                 <span className="text-xs leading-4 text-gray">
                   {chat._max
                     ? new Date(chat._max.createdAt).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
                     : null}
                 </span>
                 {chat._count && chat._count.id > 0 && (

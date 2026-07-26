@@ -3,12 +3,7 @@
 import { useSocket } from "@/context/SocketContext";
 import { IChat, IMessage } from "@/types/types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  CheckCheck,
-  EllipsisVertical,
-  Send,
-  UserRound,
-} from "lucide-react";
+import { CheckCheck, EllipsisVertical, Send, UserRound } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import ChatsService from "@/services/ChatsService";
@@ -71,19 +66,22 @@ const Page = () => {
                 if (socket?.connected) {
                   socket.emit("updateSeen", { messageId: msg.id });
                 }
-                queryClient.setQueryData(["chats"], (oldChats: IChat[] = []) => {
-                  return oldChats.map((c) =>
-                    c.chatId === id
-                      ? {
-                        ...c,
-                        _count: {
-                          ...c._count,
-                          id: Math.max(0, c._count.id - 1),
-                        },
-                      }
-                      : c
-                  );
-                });
+                queryClient.setQueryData(
+                  ["chats"],
+                  (oldChats: IChat[] = []) => {
+                    return oldChats.map((c) =>
+                      c.chatId === id
+                        ? {
+                            ...c,
+                            _count: {
+                              ...c._count,
+                              id: Math.max(0, c._count.id - 1),
+                            },
+                          }
+                        : c
+                    );
+                  }
+                );
               }
               observer.unobserve(entry.target);
             }

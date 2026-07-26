@@ -33,7 +33,7 @@ export class SessionsService {
       throw new BadRequestException('Friend not found in your list');
     }
 
-    const session = (await this.prisma.session.create({
+    const session = await this.prisma.session.create({
       data: {
         title: dto.title,
         description: dto.description,
@@ -49,7 +49,7 @@ export class SessionsService {
       include: {
         users: { select: { id: true, name: true, imageUrl: true } },
       },
-    })) as unknown as ISessionPrismaResult;
+    });
 
     const request = await this.requests.createSessionRequest(
       session.id,

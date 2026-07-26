@@ -13,8 +13,13 @@ class ProfilesService {
     return res.data;
   }
 
-  async uploadAvatarImage(form: FormData): Promise<{ url: string; message: string }> {
-    const res = await api.post<{ url: string; message: string }>("profiles/me/avatar/upload", form);
+  async uploadAvatarImage(
+    form: FormData
+  ): Promise<{ url: string; message: string }> {
+    const res = await api.post<{ url: string; message: string }>(
+      "profiles/me/avatar/upload",
+      form
+    );
     return res.data;
   }
 
@@ -25,7 +30,6 @@ class ProfilesService {
     const res = await api.patch(`profiles/${id}`, data);
     return res.data;
   }
-
 
   async deleteAvatarImage(): Promise<ApiResponse<null>> {
     const res = await api.delete("profiles/me/avatar/delete");

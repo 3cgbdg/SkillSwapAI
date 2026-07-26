@@ -7,7 +7,11 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "format": "prettier --write \"src/**/*.{js,jsx,mjs,cjs,ts,tsx,json,css,md}\"",
+    "format:check": "prettier --check \"src/**/*.{js,jsx,mjs,cjs,ts,tsx,json,css,md}\"",
+    "test": "vitest run",
+    "test:ci": "vitest run"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.19",
@@ -51,6 +55,11 @@
     "prettier": "^3.8.1",
     "shadcn": "^4.2.0",
     "tailwindcss": "^4.1.13",
-    "typescript": "^5"
+    "typescript": "^5",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@vitejs/plugin-react": "^5.0.4",
+    "jsdom": "^27.0.0",
+    "vitest": "^3.2.4"
   }
 }

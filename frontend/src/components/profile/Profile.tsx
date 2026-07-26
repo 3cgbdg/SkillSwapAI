@@ -33,8 +33,13 @@ const Profile = ({
         if (!old) return old;
         return {
           ...old,
-          skillsToLearn: [...(old.skillsToLearn || []), { id: "temporary-id", title }],
-          aiSuggestionSkills: old.aiSuggestionSkills?.filter((s: string) => s !== title),
+          skillsToLearn: [
+            ...(old.skillsToLearn || []),
+            { id: "temporary-id", title },
+          ],
+          aiSuggestionSkills: old.aiSuggestionSkills?.filter(
+            (s: string) => s !== title
+          ),
         };
       });
     },
@@ -70,16 +75,18 @@ const Profile = ({
   const cantGenerateSkills = useMemo(() => {
     if (!user?.lastSkillsGenerationDate) return false;
     return (
-      differenceInHours(new Date(), new Date(user.lastSkillsGenerationDate)) <= 24
+      differenceInHours(new Date(), new Date(user.lastSkillsGenerationDate)) <=
+      24
     );
   }, [user?.lastSkillsGenerationDate]);
-
 
   const updateCountdown = useCallback(() => {
     if (!user?.lastSkillsGenerationDate) return;
 
     const lastDate = new Date(user.lastSkillsGenerationDate);
-    const nextAvailableDate = new Date(lastDate.getTime() + 24 * 60 * 60 * 1000);
+    const nextAvailableDate = new Date(
+      lastDate.getTime() + 24 * 60 * 60 * 1000
+    );
     const now = new Date();
 
     if (now >= nextAvailableDate) {
@@ -106,11 +113,13 @@ const Profile = ({
     }
   }, [cantGenerateSkills, updateCountdown]);
 
-
   const buttonText = useMemo(() => {
     if (isPending) return "Generating suggestions...";
-    if (cantGenerateSkills) return `Wait ${timeLeft || "24h"} for next generation`;
-    return (!user?.aiSuggestionSkills || user.aiSuggestionSkills.length === 0) ? "Generate AI Suggestions" : "Regenerate";
+    if (cantGenerateSkills)
+      return `Wait ${timeLeft || "24h"} for next generation`;
+    return !user?.aiSuggestionSkills || user.aiSuggestionSkills.length === 0
+      ? "Generate AI Suggestions"
+      : "Regenerate";
   }, [isPending, cantGenerateSkills, user?.aiSuggestionSkills, timeLeft]);
 
   return (
@@ -152,8 +161,9 @@ const Profile = ({
               <button
                 disabled={cantGenerateSkills || isPending}
                 onClick={() => getNewAiSuggestionSkills()}
-                className={`button-blue min-w-[260px] ${(cantGenerateSkills || isPending) ? "bg-gray! cursor-auto!" : ""
-                  }`}
+                className={`button-blue min-w-[260px] ${
+                  cantGenerateSkills || isPending ? "bg-gray! cursor-auto!" : ""
+                }`}
               >
                 {buttonText}
               </button>
@@ -161,32 +171,35 @@ const Profile = ({
             <div className="flex flex-col gap-4">
               {isPending ? (
                 <Spinner color="blue" size={32} />
-              ) : (user.aiSuggestionSkills && user.aiSuggestionSkills.length > 0) ? (
-                (user.aiSuggestionSkills || []).map((skill: string, idx: number) => (
-                  <div
-                    key={idx}
-                    className="not-last:border-b py-3 border-b-neutral-300"
-                  >
-                    <div className="flex items-start md:items-center flex-col md:flex-row  justify-between gap-4">
-                      <div className="flex gap-4 items-center">
-                        <div className="size-10 overflow-hidden rounded-full bg-[#3A7AE933] flex items-center justify-center">
-                          <GraduationCap className="text-blue " size={20} />
+              ) : user.aiSuggestionSkills &&
+                user.aiSuggestionSkills.length > 0 ? (
+                (user.aiSuggestionSkills || []).map(
+                  (skill: string, idx: number) => (
+                    <div
+                      key={idx}
+                      className="not-last:border-b py-3 border-b-neutral-300"
+                    >
+                      <div className="flex items-start md:items-center flex-col md:flex-row  justify-between gap-4">
+                        <div className="flex gap-4 items-center">
+                          <div className="size-10 overflow-hidden rounded-full bg-[#3A7AE933] flex items-center justify-center">
+                            <GraduationCap className="text-blue " size={20} />
+                          </div>
+                          <div className="">
+                            <h3 className="leading-7 text-lg font-semibold">
+                              {skill}
+                            </h3>
+                          </div>
                         </div>
-                        <div className="">
-                          <h3 className="leading-7 text-lg font-semibold">
-                            {skill}
-                          </h3>
-                        </div>
+                        <button
+                          onClick={() => addNewSkillToLearn(skill)}
+                          className="link hover:underline rounded-2xl!"
+                        >
+                          Add to Learn
+                        </button>
                       </div>
-                      <button
-                        onClick={() => addNewSkillToLearn(skill)}
-                        className="link hover:underline rounded-2xl!"
-                      >
-                        Add to Learn
-                      </button>
                     </div>
-                  </div>
-                ))
+                  )
+                )
               ) : (
                 <span className="text-center text-gray italic py-8">
                   {cantGenerateSkills

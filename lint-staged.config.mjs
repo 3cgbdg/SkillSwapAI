@@ -32,15 +32,55 @@ function eslintCommand(pkg, filenames) {
     shellArg(eslintBin),
     "--config",
     shellArg(eslintConfig),
-    "--max-warnings",
-    "0",
     "--fix",
     ...relFiles.map(shellArg),
   ].join(" ");
 }
 
+/**
+ * Run package-local Prettier via the current Node binary (no pnpm/npx on PATH).
+ */
+function prettierCommand(pkg, filenames) {
+  if (!filenames.length) return [];
+  const repoRoot = process.cwd();
+  const pkgRoot = path.join(repoRoot, pkg);
+  const prettierBin = path.join(
+    pkgRoot,
+    "node_modules",
+    "prettier",
+    "bin",
+    "prettier.cjs",
+  );
+  const relFiles = filenames.map((f) =>
+    path.relative(repoRoot, path.resolve(f)).split(path.sep).join("/"),
+  );
+  return [
+    shellArg(process.execPath),
+    shellArg(prettierBin),
+    "--write",
+    ...relFiles.map(shellArg),
+  ].join(" ");
+}
+
+function eslintFilenames(filenames) {
+  return filenames.filter((f) => /\.(js|jsx|mjs|cjs|ts|tsx)$/i.test(f));
+}
+
 export default {
-  "frontend/**/*.{js,jsx,mjs,cjs,ts,tsx}": (filenames) =>
-    eslintCommand("frontend", filenames),
-  "backend/**/*.ts": (filenames) => eslintCommand("backend", filenames),
+  "frontend/**/*.{js,jsx,mjs,cjs,ts,tsx,json,css,md}": (filenames) => {
+    const prettier = prettierCommand("frontend", filenames);
+    const eslint = eslintCommand("frontend", eslintFilenames(filenames));
+    const cmds = [];
+    if (prettier) cmds.push(prettier);
+    if (eslint) cmds.push(eslint);
+    return cmds;
+  },
+  "backend/**/*.{ts,json,md}": (filenames) => {
+    const prettier = prettierCommand("backend", filenames);
+    const eslint = eslintCommand("backend", eslintFilenames(filenames));
+    const cmds = [];
+    if (prettier) cmds.push(prettier);
+    if (eslint) cmds.push(eslint);
+    return cmds;
+  },
 };

@@ -10,20 +10,12 @@ import useSessions from "@/hooks/useSessions";
 const AuthClientUpload = () => {
   const router = useRouter();
 
-  const {
-    isLoading: isProfileLoading,
-    isError: isProfileError
-  } = useProfile();
+  const { isLoading: isProfileLoading, isError: isProfileError } = useProfile();
 
-  const {
-    isLoading: isMatchesLoading,
-    isError: isMatchesError
-  } = useMatches();
+  const { isLoading: isMatchesLoading, isError: isMatchesError } = useMatches();
 
-  const {
-    isLoading: isSessionsLoading,
-    isError: isSessionsError
-  } = useSessions();
+  const { isLoading: isSessionsLoading, isError: isSessionsError } =
+    useSessions();
 
   const isLoading = isProfileLoading || isMatchesLoading || isSessionsLoading;
   const isError = isProfileError || isMatchesError || isSessionsError;

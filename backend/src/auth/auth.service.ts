@@ -4,8 +4,6 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
-  HttpException,
-  HttpStatus,
   UnauthorizedException,
 } from '@nestjs/common';
 import { CreateAuthDto } from './dto/create-auth.dto';

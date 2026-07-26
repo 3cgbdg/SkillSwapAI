@@ -1,14 +1,27 @@
 {
   "private": true,
   "packageManager": "pnpm@10.21.0",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=10.21.0"
+  },
   "devDependencies": {
     "husky": "^9.1.7",
+    "knip": "^5.64.0",
     "lint-staged": "^16.4.0",
+    "only-allow": "^1.2.1",
     "shadcn": "^4.2.0"
   },
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "prepare": "husky",
     "lint-staged": "lint-staged",
-    "check:types": "pnpm --dir frontend exec tsc --noEmit && pnpm --dir backend exec prisma generate && pnpm --dir backend exec tsc --noEmit"
+    "lint": "pnpm --dir frontend lint && pnpm --dir backend lint",
+    "format": "pnpm --dir frontend format && pnpm --dir backend format",
+    "format:check": "pnpm --dir frontend format:check && pnpm --dir backend format:check",
+    "test": "pnpm --dir backend test && pnpm --dir frontend test",
+    "check:types": "pnpm --dir frontend exec tsc --noEmit && pnpm --dir backend exec prisma generate && pnpm --dir backend exec tsc --noEmit",
+    "check": "pnpm format:check && pnpm lint && pnpm check:types && pnpm test",
+    "knip": "knip"
   }
 }

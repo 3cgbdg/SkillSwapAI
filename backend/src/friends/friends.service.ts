@@ -55,8 +55,8 @@ export class FriendsService {
       },
     });
 
-    const data: IFriendItem[] = friendships.map(
-      (f) => UserUtils.getOtherUser(id, f.user1, f.user2) as IFriendItem,
+    const data: IFriendItem[] = friendships.map((f) =>
+      UserUtils.getOtherUser(id, f.user1, f.user2),
     );
 
     return { data };
