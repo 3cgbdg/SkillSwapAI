@@ -1,16 +1,15 @@
 "use client";
 
 import Matches from "@/components/matches/Matches";
-import Spinner from "@/components/Spinner";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Spinner } from "@/components/ui/spinner";
 import MatchesService from "@/services/MatchesService";
-import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { showErrorToast } from "@/utils/toast";
-import useMatches from "@/hooks/useMatches";
+import { Users } from "lucide-react";
 
 const Page = () => {
-  //get and maintain available matches
   const {
     data: matches,
     isLoading,
@@ -24,28 +23,31 @@ const Page = () => {
     },
   });
 
-  // handling api error
   useEffect(() => {
     if (isError) {
       showErrorToast(error?.message || "An error occurred");
     }
   }, [isError, error]);
 
-  if (!isLoading) {
-    if (matches && matches.length > 0) {
-      return (
-        <>
-          <Matches matches={matches ?? []} option="available" />
-        </>
-      );
-    } else {
-      return (
-        <h1 className="section-title text-center">No available matches yet</h1>
-      );
-    }
-  } else {
-    return <Spinner color="blue" size={34} />;
+  if (isLoading) {
+    return (
+      <div className="flex h-100 items-center justify-center">
+        <Spinner size="xl" />
+      </div>
+    );
   }
+
+  if (matches && matches.length > 0) {
+    return <Matches matches={matches} option="available" />;
+  }
+
+  return (
+    <EmptyState
+      icon={Users}
+      title="No available matches yet"
+      description="Check back later as more learners join SkillSwap."
+    />
+  );
 };
 
 export default Page;

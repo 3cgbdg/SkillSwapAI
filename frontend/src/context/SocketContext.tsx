@@ -37,7 +37,18 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     console.log("[SocketContext] Initiating socket connection");
-    const sock = io(`${process.env.NEXT_PUBLIC_API_URL}`, {
+    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}`;
+    // Socket.IO treats any path in the connection URL as a namespace, not a
+    // REST path. NEXT_PUBLIC_API_URL includes "/api" for axios's baseURL, so
+    // strip it down to the origin here to stay on the gateways' default "/"
+    // namespace.
+    let socketUrl = apiUrl;
+    try {
+      socketUrl = new URL(apiUrl).origin;
+    } catch {
+      // leave socketUrl as-is if apiUrl isn't a valid absolute URL
+    }
+    const sock = io(socketUrl, {
       withCredentials: true,
       transports: ["websocket", "polling"], // Ensure multiple transports are tried
     });

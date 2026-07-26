@@ -1,24 +1,43 @@
 "use client";
 
-import FullSreenLoader from "@/components/FullSreenLoader";
 import ModuleAccordion from "@/components/matches/ModuleAccordion";
-import Spinner from "@/components/Spinner";
+import { Spinner } from "@/components/ui/spinner";
 import ChatsService from "@/services/ChatsService";
 import PlansService from "@/services/PlansService";
 import { IChat, IGeneratedModule, IMatch } from "@/types/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, MessageSquareMore, UserRound } from "lucide-react";
-import Image from "next/image";
+import { Calendar, MessageSquareMore } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { showErrorToast } from "@/utils/toast";
 import useMatches from "@/hooks/useMatches";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { UserAvatar } from "@/components/ui/user-avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Progress,
+  ProgressIndicator,
+  ProgressTrack,
+} from "@/components/ui/progress";
+import { Accordion } from "@/components/ui/accordion";
 
 const Page = () => {
   const { id } = useParams() as { id: string };
   const { data: matches = [] } = useMatches();
   const [currentMatch, setCurrentMatch] = useState<IMatch | null>(null);
-  const [isActive, setIsActive] = useState<null | number>(null);
+  const [openModule, setOpenModule] = useState<string[]>([]);
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -31,7 +50,6 @@ const Page = () => {
     }
   }, [matches, id, router]);
 
-  // for getting to chat or creating it
   const { mutate: createChat } = useMutation({
     mutationFn: async ({
       payload,
@@ -61,144 +79,161 @@ const Page = () => {
     enabled: !!currentMatch,
   });
 
-  // handling api error
-
   useEffect(() => {
     if (isError) {
       showErrorToast(error?.message || "An error occurred");
     }
   }, [isError, error]);
 
+  const progressPercent = useMemo(() => {
+    if (!plan?.modules.length) return 0;
+    const completed = plan.modules.reduce(
+      (acc: number, cur: IGeneratedModule) =>
+        acc + (cur.status == "INPROGRESS" ? 0 : 1),
+      0
+    );
+    return Math.round((completed / plan.modules.length) * 100);
+  }, [plan]);
+
+  if (!currentMatch) {
+    return (
+      <div className="flex h-100 items-center justify-center">
+        <Spinner size="xl" />
+      </div>
+    );
+  }
+
   return (
-    <>
-      {currentMatch ? (
-        <div className="flex flex-col gap-8">
-          {/* loading screen */}
+    <div className="flex flex-col gap-8">
+      <Dialog open={isLoading}>
+        <DialogContent showCloseButton={false} className="sm:max-w-sm">
+          <DialogTitle className="sr-only">Loading plan</DialogTitle>
+          <DialogDescription className="flex justify-center py-4">
+            <Spinner size="xl" />
+          </DialogDescription>
+        </DialogContent>
+      </Dialog>
 
-          {isLoading && <FullSreenLoader />}
-
-          {/*  */}
-          <div className="grid gap-8 grid-cols-3">
-            <div className="_border rounded-[10px] col-span-3 xl:col-span-2 banner_gradient flex flex-col gap-4  p-8">
+      <div className="grid gap-8 grid-cols-3">
+        <Card className="col-span-3 gap-4 bg-gradient-to-br from-surface-raised to-accent/15 p-8 xl:col-span-2">
+          <CardHeader className="p-0">
+            <CardTitle className="text-3xl font-bold leading-9">
+              Your AI-Powered Training Plan with {currentMatch.other.name}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4 p-0">
+            <p>{currentMatch.aiExplanation}</p>
+            {currentMatch.keyBenefits?.length ? (
               <div className="flex flex-col gap-2">
-                <h1 className="page-title">
-                  Your AI-Powered Training Plan with {currentMatch.other.name}
-                </h1>
-              </div>
-              <div className="">{currentMatch.aiExplanation}</div>
-              {currentMatch.keyBenefits && (
-                <div className="flex flex-col gap-2">
-                  <h3 className="text-xl leading-7 font-semibold">Benefits:</h3>
-                  <ol className="list-disc">
-                    <li>{currentMatch.keyBenefits[0]}</li>
-                    <li>{currentMatch.keyBenefits[1]}</li>
-                    <li>{currentMatch.keyBenefits[2]}</li>
-                    <li>{currentMatch.keyBenefits[3]}</li>
-                  </ol>
-                </div>
-              )}
-            </div>
-            <div className="_border rounded-[10px] col-span-3 sm:col-span-2  h-fit  xl:col-span-1 p-6">
-              <div className="flex md:flex-col gap-7 md:gap-4 md:items-center">
-                <div className="flex flex-col gap-4 items-center basis-full">
-                  <div className=" _border size-24 relative  flex items-center justify-center rounded-full overflow-hidden">
-                    {!currentMatch.other.imageUrl ? (
-                      <UserRound size={24} />
-                    ) : (
-                      <Image
-                        className="object-cover"
-                        src={currentMatch.other.imageUrl}
-                        fill
-                        alt="user image"
-                      />
-                    )}
-                  </div>
-                  <h2 className="section-title">{currentMatch.other.name}</h2>
-                </div>
-                <div className="flex flex-col gap-3 mt-4 w-full">
-                  <button
-                    onClick={() =>
-                      createChat({
-                        payload: {
-                          friendId: currentMatch.other.id,
-                          friendName: currentMatch.other.name,
-                        },
-                      })
-                    }
-                    className="button-blue flex items-center gap-5"
-                  >
-                    <MessageSquareMore size={20} />
-                    <span>Message {currentMatch.other.name}</span>
-                  </button>
-                  <button
-                    onClick={() =>
-                      router.push(
-                        `/calendar?schedule=true&name=${encodeURIComponent(currentMatch.other.name)}`
-                      )
-                    }
-                    className="button-transparent rounded-md! flex items-center gap-5"
-                  >
-                    <Calendar size={20} />
-                    <span>Schedule Session</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-            {/* todo touch screen optimization */}
-            <div className="_border col-span-3 sm:col-span-1   xl:col-span-2 rounded-[10px]  p-6 h-[254px] flex items-center justify-center text-center">
-              <div className="flex flex-col gap-4 items-center">
-                {plan && (
-                  <div className="flex flex-col  gap-1.5">
-                    <h2 className="section-title">Overall Progress</h2>
-                    <p className="tex-sm leading-5 text-gray">
-                      Your AI-generated training journey
-                    </p>
-                    <h3 className="page-title mt-4 text-blue!">
-                      {(plan.modules.reduce(
-                        (acc: number, cur: IGeneratedModule) =>
-                          acc + (cur.status == "INPROGRESS" ? 0 : 1),
-                        0
-                      ) /
-                        plan.modules.length) *
-                        100}
-                      %
-                    </h3>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {plan && (
-            <div className="w-full _border rounded-[10px] p-6">
-              <div className="flex flex-col gap-2 mb-6">
-                <h2 className="page-title">Training Modules</h2>
-                <p className="text-sm leading-5 text-gray">
-                  Breakdown of your skill exchange journey
-                </p>
-              </div>
-              <div className="flex flex-col gap-4">
-                {plan &&
-                  plan.modules.map((module: IGeneratedModule, idx: number) => (
-                    <ModuleAccordion
-                      planId={plan.id}
-                      idx={idx}
-                      key={module.id}
-                      module={module}
-                      isActive={isActive}
-                      setIsActive={setIsActive}
-                    />
+                <h3 className="text-xl leading-7 font-semibold">Benefits:</h3>
+                <ol className="list-disc pl-5">
+                  {currentMatch.keyBenefits.map((benefit) => (
+                    <li key={benefit}>{benefit}</li>
                   ))}
+                </ol>
               </div>
+            ) : null}
+          </CardContent>
+        </Card>
+
+        <Card className="col-span-3 h-fit p-6 sm:col-span-2 xl:col-span-1">
+          <CardContent className="flex flex-col gap-7 p-0 md:flex-col md:items-center md:gap-4">
+            <div className="flex basis-full flex-col items-center gap-4">
+              <UserAvatar
+                name={currentMatch.other.name}
+                imageUrl={currentMatch.other.imageUrl}
+                size="xl"
+              />
+              <h2 className="text-2xl font-bold leading-8">
+                {currentMatch.other.name}
+              </h2>
             </div>
-          )}
-        </div>
-      ) : (
-        <div className="h-100 flex items-center justify-center">
-          <Spinner color="blue" size={44} />
-        </div>
-      )}
-    </>
+            <div className="mt-4 flex w-full flex-col gap-3">
+              <Button
+                className="justify-start gap-5"
+                onClick={() =>
+                  createChat({
+                    payload: {
+                      friendId: currentMatch.other.id,
+                      friendName: currentMatch.other.name,
+                    },
+                  })
+                }
+              >
+                <MessageSquareMore size={20} />
+                Message {currentMatch.other.name}
+              </Button>
+              <Button
+                variant="outline"
+                className="justify-start gap-5"
+                onClick={() =>
+                  router.push(
+                    `/calendar?schedule=true&name=${encodeURIComponent(currentMatch.other.name)}`
+                  )
+                }
+              >
+                <Calendar size={20} />
+                Schedule Session
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="col-span-3 flex h-[254px] items-center justify-center p-6 text-center sm:col-span-1 xl:col-span-2">
+          <CardContent className="flex flex-col items-center gap-4 p-0">
+            {plan ? (
+              <div className="flex w-full max-w-sm flex-col gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <h2 className="text-2xl font-bold leading-8">
+                    Overall Progress
+                  </h2>
+                  <p className="text-sm leading-5 text-muted-foreground">
+                    Your AI-generated training journey
+                  </p>
+                  <p className="mt-4 text-3xl font-bold text-primary">
+                    {progressPercent}%
+                  </p>
+                </div>
+                <Progress value={progressPercent}>
+                  <ProgressTrack className="h-2">
+                    <ProgressIndicator />
+                  </ProgressTrack>
+                </Progress>
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+      </div>
+
+      {plan ? (
+        <Card className="w-full p-6">
+          <CardHeader className="mb-6 p-0">
+            <CardTitle className="text-3xl font-bold leading-9">
+              Training Modules
+            </CardTitle>
+            <CardDescription>
+              Breakdown of your skill exchange journey
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4 p-0">
+            <Accordion
+              value={openModule}
+              onValueChange={setOpenModule}
+              className="gap-4"
+            >
+              {plan.modules.map((module: IGeneratedModule, idx: number) => (
+                <ModuleAccordion
+                  planId={plan.id}
+                  key={module.id}
+                  module={module}
+                  itemValue={String(idx)}
+                />
+              ))}
+            </Accordion>
+          </CardContent>
+        </Card>
+      ) : null}
+    </div>
   );
 };
 

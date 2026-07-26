@@ -1,12 +1,16 @@
 "use client";
 
+import { Card, CardContent } from "@/components/ui/card";
+
 const Page = () => {
   return (
-    <div className="_border h-[400px] rounded-2xl flex items-center justify-center">
-      <h1 className="font-bold text-6xl  text-blue text-center ">
-        Not found 404
-      </h1>
-    </div>
+    <Card className="flex h-[400px] items-center justify-center rounded-2xl">
+      <CardContent>
+        <h1 className="text-center text-6xl font-bold text-primary">
+          Not found 404
+        </h1>
+      </CardContent>
+    </Card>
   );
 };
 

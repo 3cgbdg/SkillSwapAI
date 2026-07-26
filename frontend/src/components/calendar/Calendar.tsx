@@ -1,176 +1,167 @@
 "use client";
-import { ISession } from "@/types/session";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import CalendarPopup from "./CalendarPopup";
-import SessionsService from "@/services/SessionsService";
-import { useSearchParams } from "next/navigation";
-import {
-  addDays,
-  format,
-  getMonth,
-  getYear,
-  isSameDay,
-  startOfWeek,
-} from "date-fns";
-import DesktopGridCalendar from "./DesktopGridCalendar";
-import TouchScreenCalendar from "./TouchScreenCalendar";
-import { showErrorToast } from "@/utils/toast";
-import Spinner from "../Spinner";
 
-export type TableCellType = {
-  sessions: ISession[];
-  date: Date;
+import CalendarPopup from "@/components/calendar/CalendarPopup";
+import DesktopGridCalendar from "@/components/calendar/DesktopGridCalendar";
+import TouchScreenCalendar from "@/components/calendar/TouchScreenCalendar";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
+import SessionsService from "@/services/SessionsService";
+import { ISession } from "@/types/session";
+import { useQuery } from "@tanstack/react-query";
+import { addDays, endOfWeek, format, isSameDay, startOfWeek } from "date-fns";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { showErrorToast } from "@/utils/toast";
+
+export type CalendarSession = {
+  id: string;
+  title: string;
+  start: number;
+  end: number;
+  description?: string;
+  color: string;
+  status: ISession["status"];
+  meetingLink: string | null;
 };
 
-const fetchSessions = async (month: number) => {
-  return SessionsService.getSessions(month);
+export type TableCellType = {
+  date: Date;
+  sessions: CalendarSession[];
 };
 
 const Calendar = () => {
   const searchParams = useSearchParams();
-  const queryClient = useQueryClient();
-  const [addSessionPopup, setAddSessionPopup] = useState<boolean>(false);
-  const [otherName, setOtherName] = useState<string | null>(null);
-  const [weekStartDate, setWeekStartDate] = useState(
-    startOfWeek(new Date(), { weekStartsOn: 1 })
-  );
-  const currentMonth = getMonth(weekStartDate);
+  const scheduleName = searchParams.get("name");
+  const shouldOpenSchedule = searchParams.get("schedule") === "true";
 
-  useEffect(() => {
-    const schedule = searchParams.get("schedule");
-    const name = searchParams.get("name");
-    if (schedule !== "true" || !name) return;
-    setAddSessionPopup(true);
-    setOtherName(name);
-  }, [searchParams]);
+  const [weekAnchor, setWeekAnchor] = useState(() => new Date());
+  const [addSessionPopup, setAddSessionPopup] = useState(false);
+  const [schedulePartner, setSchedulePartner] = useState<string | null>(null);
 
-  // fetching sessions
+  const weekStart = startOfWeek(weekAnchor, { weekStartsOn: 0 });
+  const weekEnd = endOfWeek(weekAnchor, { weekStartsOn: 0 });
+  const month = weekAnchor.getMonth();
+
   const {
-    data: monthSessions,
-    error,
-    isError,
+    data: sessions = [],
     isLoading,
+    isError,
+    error,
   } = useQuery({
-    queryKey: ["sessions", currentMonth],
-    queryFn: () => fetchSessions(currentMonth),
-    refetchInterval: 60 * 60 * 1000,
+    queryKey: ["sessions", month],
+    queryFn: () => SessionsService.getSessions(month),
   });
-
-  // handling api error
 
   useEffect(() => {
     if (isError) {
-      showErrorToast(error?.message || "An error occurred");
+      showErrorToast(error?.message || "Failed to load sessions");
     }
-  }, [error, isError]);
+  }, [isError, error]);
 
-  // getting todays upcoming sessions
   useEffect(() => {
-    if (monthSessions) {
-      const today = new Date();
-      const currentSessions = monthSessions.filter((session) =>
-        isSameDay(new Date(session.date), today)
-      );
-      queryClient.setQueryData(["sessions-today"], currentSessions);
+    if (shouldOpenSchedule && scheduleName) {
+      setSchedulePartner(scheduleName);
+      setAddSessionPopup(true);
     }
-  }, [monthSessions, queryClient]);
+  }, [shouldOpenSchedule, scheduleName]);
 
-  // nav buttons
-  const handlePrevWeek = () => {
-    setWeekStartDate((prevDate) => addDays(prevDate, -7));
-  };
-
-  const handleNextWeek = () => {
-    setWeekStartDate((prevDate) => addDays(prevDate, 7));
-  };
-
-  // creating days dates for the week
-  const visibleDays = useMemo(() => {
-    const days: Date[] = [];
-    for (let i = 0; i < 7; i++) {
-      days.push(addDays(weekStartDate, i));
-    }
-    return days;
-  }, [weekStartDate]);
-  // creating cells
-  const tableCells = useMemo((): TableCellType[] => {
-    if (!monthSessions) {
-      return visibleDays.map((date) => ({ date, sessions: [] }));
-    }
-
-    return visibleDays.map((dayDate) => ({
-      date: dayDate,
-      sessions: monthSessions
-        .filter((session) => isSameDay(new Date(session.date), dayDate))
-        .sort((a, b) => a.start - b.start),
+  const normalizedSessions = useMemo(() => {
+    return sessions.map((session) => ({
+      ...session,
+      date: new Date(session.date),
     }));
-  }, [visibleDays, monthSessions]);
+  }, [sessions]);
 
-  useEffect(() => {
-    document.body.style.overflowY = addSessionPopup ? "hidden" : "auto";
-  }, [addSessionPopup]);
+  const tableCells: TableCellType[] = useMemo(() => {
+    return Array.from({ length: 7 }, (_, i) => {
+      const date = addDays(weekStart, i);
+      const daySessions = normalizedSessions
+        .filter((session) => isSameDay(session.date, date))
+        .map((session) => ({
+          id: session.id,
+          title: session.title,
+          start: session.start,
+          end: session.end,
+          description: session.description,
+          color: session.color,
+          status: session.status,
+          meetingLink: session.meetingLink,
+        }));
+      return { date, sessions: daySessions };
+    });
+  }, [normalizedSessions, weekStart]);
 
   return (
-    <div className="">
-      {/* header */}
-      <div className="bg-neutral-200 px-4 py-4.5 flex md:flex-row flex-col gap-6 md:justify-between md:items-center border-b-1 border-neutral-300">
-        <h2 className="text-xl leading-7 font-semibold">
-          {format(weekStartDate, "MMMM yyyy")}
-        </h2>
-
-        <div className="flex items-center gap-4">
-          <button
-            onClick={handlePrevWeek}
-            className="button-transparent bg-white! flex gap-2"
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold leading-9 text-foreground">
+            Calendar
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            {format(weekStart, "MMM d")} – {format(weekEnd, "MMM d, yyyy")}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => setWeekAnchor((d) => addDays(d, -7))}
+            aria-label="Previous week"
           >
-            <ArrowLeft size={16} />
-            <span>Previous 7 days</span>
-          </button>
-          <button
-            onClick={handleNextWeek}
-            className="button-transparent bg-white! flex gap-2"
+            <ChevronLeft />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => setWeekAnchor((d) => addDays(d, 7))}
+            aria-label="Next week"
           >
-            <span>Next 7 days</span>
-            <ArrowRight size={16} />
-          </button>
-          <button
+            <ChevronRight />
+          </Button>
+          <Button
+            type="button"
+            className="gap-2"
             onClick={() => {
+              setSchedulePartner(null);
               setAddSessionPopup(true);
             }}
-            className="button-blue flex gap-2 rounded-2xl!"
           >
-            Add Session
-          </button>
+            <Plus size={16} />
+            New session
+          </Button>
         </div>
       </div>
 
-      <div className="mt-6 w-full">
+      <Card className="overflow-hidden p-0">
         {isLoading ? (
-          <div className="my-6">
-            <Spinner color="blue" size={30} />
+          <div className="flex h-[440px] items-center justify-center">
+            <Spinner size="xl" />
           </div>
         ) : (
           <>
-            <div className="md:block hidden">
+            <div className="hidden md:block">
               <DesktopGridCalendar tableCells={tableCells} />
             </div>
-            <div className="md:hidden block">
+            <div className="md:hidden">
               <TouchScreenCalendar tableCells={tableCells} />
             </div>
           </>
         )}
-      </div>
+      </Card>
 
-      {addSessionPopup && (
+      {addSessionPopup ? (
         <CalendarPopup
-          otherName={otherName}
-          year={getYear(new Date())}
-          month={currentMonth}
+          year={weekAnchor.getFullYear()}
+          month={weekAnchor.getMonth()}
+          otherName={schedulePartner}
           setAddSessionPopup={setAddSessionPopup}
         />
-      )}
+      ) : null}
     </div>
   );
 };

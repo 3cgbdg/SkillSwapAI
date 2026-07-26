@@ -6,27 +6,29 @@ import { useState } from "react";
 import FriendsPopup from "./FriendsPopup";
 
 import useFriends from "@/hooks/useFriends";
+import { Button } from "@/components/ui/button";
 
-// button + fixed friend list
 const FriendList = () => {
   const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
   const { isFetching, friends } = useFriends();
   return (
     <>
-      {/* button */}
-      <button
+      <Button
+        type="button"
+        variant="outline"
+        className="fixed bottom-[5%] right-6 z-[var(--z-dropdown)] gap-2 bg-background"
         onClick={() => setIsPopupOpen(!isPopupOpen)}
-        className="button-transparent z-110 gap-2 text-base! leading-7! font-semibold!  bg-white! w-fit  fixed right-6 bottom-1/20"
+        aria-label={isPopupOpen ? "Close friends" : "Open friends"}
       >
         {!isPopupOpen ? (
           <>
             <Users />
-            <span>Friends</span>{" "}
+            <span>Friends</span>
           </>
         ) : (
           <X />
         )}
-      </button>
+      </Button>
       {isPopupOpen && (
         <FriendsPopup
           isLoading={isFetching}
@@ -34,7 +36,6 @@ const FriendList = () => {
           friends={friends}
         />
       )}
-      {/* list */}
     </>
   );
 };

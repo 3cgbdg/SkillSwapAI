@@ -1,57 +1,53 @@
-import { Hamburger } from "lucide-react";
+"use client";
+
+import { Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { navLinks } from "@/constants/navLinks";
-import { Dispatch, SetStateAction } from "react";
+import { cn } from "@/lib/utils";
 
 interface NavigationMenuProps {
-  panel: string | null;
-  onPanelChange: Dispatch<
-    SetStateAction<"avatarMenu" | "search" | "notifs" | "navMenu" | null>
-  >;
   onLogOut: () => void;
 }
 
-const NavigationMenu = ({
-  panel,
-  onPanelChange,
-  onLogOut,
-}: NavigationMenuProps) => {
+const NavigationMenu = ({ onLogOut }: NavigationMenuProps) => {
   const path = usePathname();
 
   return (
-    <>
-      <div className="md:hidden">
-        <button
-          className={`cursor-pointer transition-all hover:text-primary ${panel === "navMenu" ? "text-primary" : ""}`}
-          onClick={() => {
-            onPanelChange(panel === "navMenu" ? null : "navMenu");
-          }}
-        >
-          <Hamburger className="" size={30} />
-        </button>
-      </div>
-      {panel === "navMenu" && (
-        <div className="w-full flex bg-white z-50  flex-col top-full panel  right-0 absolute  _border min-w-[250px]    p-3  ">
-          <nav className="flex flex-col   ">
-            {navLinks.map((item) => (
-              <Link
-                key={item.link}
-                href={item.link}
-                className={`p-2   flex items-center gap-2 text-sm leading-5.5 font-medium text-neutral-600 rounded-lg  ${item.link === path ? "text-neutral-900 font-semibold bg-blue-300" : " "} `}
-              >
-                {item.icon} {item.title}
-              </Link>
-            ))}
-            <div className="flex flex-col gap-4 items-start border-t-1 mt-1 pt-1">
-              <button className="link" onClick={() => onLogOut()}>
-                Log out
-              </button>
-            </div>
-          </nav>
-        </div>
-      )}
-    </>
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className="text-foreground hover:text-primary rounded-md p-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:hidden"
+        aria-label="Open navigation menu"
+      >
+        <Menu size={28} />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-56">
+        {navLinks.map((item) => (
+          <DropdownMenuItem key={item.link} className="p-0">
+            <Link
+              href={item.link}
+              className={cn(
+                "flex w-full items-center gap-2 px-2 py-1.5",
+                item.link === path && "bg-muted font-semibold"
+              )}
+            >
+              {item.icon}
+              {item.title}
+            </Link>
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={onLogOut}>Log out</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 

@@ -34,32 +34,35 @@ const ComingSessionWarning = () => {
   return (
     <>
       {upComingSession && upComingSession.status !== "PENDING" && (
-        <div className="fixed z-50 top-4 left-1/2 -translate-x-1/2 max-w-[500px] w-full">
-          <div className="bg-lightBlue border border-blue rounded-2xl p-3 flex items-center gap-4 shadow-lg max-w-md">
-            <div className="text-blue font-bold text-xl">
+        <div
+          className="fixed left-1/2 top-4 z-[var(--z-toast)] w-full max-w-[500px] -translate-x-1/2 px-4"
+          style={{ zIndex: "var(--z-toast)" }}
+        >
+          <div className="flex max-w-md items-center gap-4 rounded-2xl border border-border bg-surface-raised p-3 shadow-lg">
+            <div className="text-xl font-bold text-primary">
               <TriangleAlert />
             </div>
-            <div className="flex flex-col w-full">
-              <div className="flex items-center gap-2 justify-between">
-                <span className="font-semibold text-lg">
+            <div className="flex w-full flex-col">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-lg font-semibold">
                   {upComingSession.title}
                 </span>
-                <span className="text-sm text-gray">
+                <span className="text-sm text-muted-foreground">
                   {new Date(upComingSession.date).toLocaleDateString()} |{" "}
                   {upComingSession.start}:00 - {upComingSession.end}:00
                 </span>
               </div>
               {upComingSession.friend && (
-                <span className="text-sm text-gray">
+                <span className="text-sm text-muted-foreground">
                   With: {upComingSession.friend.name}
                 </span>
               )}
               {upComingSession.meetingLink && (
                 <div className="flex items-center gap-1">
-                  <span className="text-gray">Link: </span>
+                  <span className="text-muted-foreground">Link: </span>
                   <Link
                     href={upComingSession.meetingLink}
-                    className="text-sm mt-1 hover:underline"
+                    className="mt-1 text-sm hover:underline"
                   >
                     {upComingSession.meetingLink}
                   </Link>

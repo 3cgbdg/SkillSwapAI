@@ -1,14 +1,17 @@
 "use client";
 
-import FullSreenLoader from "@/components/FullSreenLoader";
 import ChatsService from "@/services/ChatsService";
 import ProfilesService from "@/services/ProfilesService";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, MessageSquareMore, UserRound } from "lucide-react";
-import Image from "next/image";
+import { Calendar, MessageSquareMore } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { showErrorToast } from "@/utils/toast";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { UserAvatar } from "@/components/ui/user-avatar";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Page = () => {
   const { id } = useParams() as { id: string };
@@ -24,15 +27,12 @@ const Page = () => {
     queryFn: async () => ProfilesService.getProfileById(id),
   });
 
-  // handling api error
-
   useEffect(() => {
     if (isError) {
       showErrorToast(error?.message || "An error occurred");
     }
   }, [error, isError]);
 
-  // for getting to chat or creating it
   const { mutate: createChat } = useMutation({
     mutationFn: async ({
       payload,
@@ -48,175 +48,119 @@ const Page = () => {
     },
   });
 
-  return (
+  if (isLoading || !profile) {
+    return (
+      <div className="grid grid-cols-5 gap-6 md:grid">
+        <Card className="col-span-3 p-6">
+          <div className="flex flex-col items-center gap-4">
+            <Skeleton className="size-24 rounded-full" />
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-full max-w-md" />
+            <Skeleton className="h-10 w-64" />
+          </div>
+        </Card>
+        <div className="col-span-2 hidden flex-col gap-8 md:flex">
+          <Skeleton className="h-48 w-full rounded-2xl" />
+          <Skeleton className="h-48 w-full rounded-2xl" />
+        </div>
+      </div>
+    );
+  }
+
+  const skillBadge = (title: string, key: string) => (
+    <Badge key={key} variant="teach" className="py-2">
+      {title}
+    </Badge>
+  );
+
+  const skillsSection = (
     <>
-      {profile && (
-        <div className="md:grid grid-cols-5 flex  justify-center items-start   gap-6">
-          {/* loading screen */}
+      <Card className="flex flex-col p-6 pt-[21px]">
+        <CardHeader className="mb-4 p-0">
+          <CardTitle className="text-2xl leading-6">Skills I Know</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-2 p-0">
+          {profile.knownSkills?.length ? (
+            profile.knownSkills.map((skill) =>
+              skillBadge(skill.title, skill.id)
+            )
+          ) : (
+            <span className="font-medium leading-5">No skills yet</span>
+          )}
+        </CardContent>
+      </Card>
+      <Card className="flex flex-col p-6 pt-[21px]">
+        <CardHeader className="mb-4 p-0">
+          <CardTitle className="text-2xl leading-6">
+            Skills I Want to Learn
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-2 p-0">
+          {profile.skillsToLearn?.length ? (
+            profile.skillsToLearn.map((skill) =>
+              skillBadge(skill.title, skill.id)
+            )
+          ) : (
+            <span className="font-medium leading-5">No skills yet</span>
+          )}
+        </CardContent>
+      </Card>
+    </>
+  );
 
-          {isLoading && <FullSreenLoader />}
-
-          {/*  */}
-          <div className="_border col-span-3 rounded-[10px] p-6">
-            <div className="flex flex-col gap-4 items-center">
-              <div className=" _border size-24 relative flex items-center justify-center rounded-full overflow-hidden">
-                {!profile?.imageUrl ? (
-                  <UserRound size={48} />
-                ) : (
-                  <Image
-                    className="object-cover"
-                    src={profile.imageUrl}
-                    fill
-                    alt="profile image"
-                  />
-                )}
-              </div>
-              <h1 className="page-title">{profile.name}</h1>
-              {profile.bio !== null && profile.bio.length > 0 && (
-                <div className="w-full ">
-                  <h3 className="text-lg leading-7 ">Bio:</h3>
-                  <p className="text-gray text-sm">{profile.bio}</p>
-                </div>
-              )}
-              <div className="flex flex-col gap-2 w-full">
-                <h3 className="text-lg leading-7 ">Actions:</h3>
-                <div className="flex items-center gap-3 mt-1">
-                  <button
-                    onClick={() =>
-                      createChat({
-                        payload: { friendId: id, friendName: profile.name },
-                      })
-                    }
-                    className="button-blue flex items-center gap-5"
-                  >
-                    <MessageSquareMore size={20} />
-                    <span>Message {profile.name}</span>
-                  </button>
-                  <button
-                    onClick={() =>
-                      router.push(
-                        `/calendar?schedule=true&name=${encodeURIComponent(profile.name)}`
-                      )
-                    }
-                    className="button-transparent rounded-md! flex items-center gap-5"
-                  >
-                    <Calendar size={20} />
-                    <span>Schedule Session</span>
-                  </button>
-                </div>
-              </div>
-              {/* for 768< */}
-              <div className="flex md:hidden flex-col gap-8">
-                {/* for known skills */}
-                <div className="_border p-6 pt-[21px] rounded-2xl flex flex-col">
-                  <h2 className="text-2xl leading-6 font-bold mb-4">
-                    Skills I Know
-                  </h2>
-                  <div className="basis-full">
-                    <div className="flex gap-2 flex-wrap mb-6 overflow-y-auto   max-h-[170px] ">
-                      {profile?.knownSkills &&
-                      profile?.knownSkills?.length > 0 ? (
-                        profile.knownSkills.map((skill, idx) => (
-                          <div
-                            key={idx}
-                            className="bg-blue text-sm leading-5 font-medium h-fit flex w-fit gap-2 px-3.5 text-white py-2 items-center rounded-2xl"
-                          >
-                            {skill.title}
-                          </div>
-                        ))
-                      ) : (
-                        <span className="font-medium  leading-5 ">
-                          No skills yet
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* for want-to-learn skills */}
-                <div className="_border p-6 pt-[21px] rounded-2xl flex flex-col">
-                  <h2 className="text-2xl leading-6 font-bold mb-4">
-                    Skills I Want to Learn
-                  </h2>
-                  <div className="basis-full">
-                    <div className="flex gap-2  flex-wrap mb-6 overflow-y-auto max-h-[170px] ">
-                      {profile?.skillsToLearn &&
-                      profile?.skillsToLearn?.length > 0 ? (
-                        profile.skillsToLearn.map((skill, idx) => (
-                          <div
-                            key={idx}
-                            className="bg-blue text-sm leading-5 font-medium h-fit flex w-fit gap-2 px-3.5 text-white py-2 items-center rounded-2xl"
-                          >
-                            {skill.title}
-                          </div>
-                        ))
-                      ) : (
-                        <span className="font-medium  leading-5 ">
-                          No skills yet
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
+  return (
+    <div className="flex items-start justify-center gap-6 md:grid md:grid-cols-5">
+      <Card className="col-span-3 p-6">
+        <div className="flex flex-col items-center gap-4">
+          <UserAvatar
+            name={profile.name}
+            imageUrl={profile.imageUrl}
+            size="xl"
+          />
+          <h1 className="text-3xl font-bold leading-9">{profile.name}</h1>
+          {profile.bio ? (
+            <div className="w-full">
+              <h3 className="text-lg leading-7">Bio:</h3>
+              <p className="text-sm text-muted-foreground">{profile.bio}</p>
+            </div>
+          ) : null}
+          <div className="flex w-full flex-col gap-2">
+            <h3 className="text-lg leading-7">Actions:</h3>
+            <div className="mt-1 flex flex-wrap items-center gap-3">
+              <Button
+                className="gap-5"
+                onClick={() =>
+                  createChat({
+                    payload: { friendId: id, friendName: profile.name },
+                  })
+                }
+              >
+                <MessageSquareMore size={20} />
+                Message {profile.name}
+              </Button>
+              <Button
+                variant="outline"
+                className="gap-5"
+                onClick={() =>
+                  router.push(
+                    `/calendar?schedule=true&name=${encodeURIComponent(profile.name)}`
+                  )
+                }
+              >
+                <Calendar size={20} />
+                Schedule Session
+              </Button>
             </div>
           </div>
-          {/* for 768> */}
-          <div className=" md:flex hidden col-span-2 flex-col gap-8">
-            {/* for known skills */}
-            <div className="_border p-6 pt-[21px] rounded-2xl flex flex-col">
-              <h2 className="text-2xl leading-6 font-bold mb-4">
-                Skills I Know
-              </h2>
-              <div className="basis-full">
-                <div className="flex gap-2 flex-wrap mb-6 overflow-y-auto   max-h-[170px] ">
-                  {profile?.knownSkills && profile?.knownSkills?.length > 0 ? (
-                    profile.knownSkills.map((skill, idx) => (
-                      <div
-                        key={idx}
-                        className="bg-blue text-sm leading-5 font-medium h-fit flex w-fit gap-2 px-3.5 text-white py-2 items-center rounded-2xl"
-                      >
-                        {skill.title}
-                      </div>
-                    ))
-                  ) : (
-                    <span className="font-medium  leading-5 ">
-                      No skills yet
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* for want-to-learn skills */}
-            <div className="_border p-6 pt-[21px] rounded-2xl flex flex-col">
-              <h2 className="text-2xl leading-6 font-bold mb-4">
-                Skills I Want to Learn
-              </h2>
-              <div className="basis-full">
-                <div className="flex gap-2  flex-wrap mb-6 overflow-y-auto max-h-[170px] ">
-                  {profile?.skillsToLearn &&
-                  profile?.skillsToLearn?.length > 0 ? (
-                    profile.skillsToLearn.map((skill, idx) => (
-                      <div
-                        key={idx}
-                        className="bg-blue text-sm leading-5 font-medium h-fit flex w-fit gap-2 px-3.5 text-white py-2 items-center rounded-2xl"
-                      >
-                        {skill.title}
-                      </div>
-                    ))
-                  ) : (
-                    <span className="font-medium  leading-5 ">
-                      No skills yet
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
+          <div className="flex w-full flex-col gap-8 md:hidden">
+            {skillsSection}
           </div>
         </div>
-      )}
-    </>
+      </Card>
+      <div className="col-span-2 hidden flex-col gap-8 md:flex">
+        {skillsSection}
+      </div>
+    </div>
   );
 };
 

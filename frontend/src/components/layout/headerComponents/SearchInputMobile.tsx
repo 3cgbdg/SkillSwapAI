@@ -1,13 +1,16 @@
+"use client";
+
 import { Search, X } from "lucide-react";
+import { useState } from "react";
+
 import SearchResults from "./SearchResults";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { FoundSkills, FoundUsers } from "@/types/common";
-import Spinner from "@/components/Spinner";
-import { Dispatch, SetStateAction } from "react";
 
 interface SearchInputMobileProps {
   word: string;
-  panel: string | null;
-  isSearchOpen: boolean;
   foundUsers: FoundUsers[];
   foundSkills: FoundSkills[];
   onWordChange: (value: string) => void;
@@ -15,18 +18,12 @@ interface SearchInputMobileProps {
   onAddLearn: (skill: string, skillId: string) => void;
   onCreateFriendRequest: (userId: string) => void;
   onRemoveSkill: (skillId: string) => void;
-  onPanelChange: Dispatch<
-    SetStateAction<"avatarMenu" | "search" | "notifs" | "navMenu" | null>
-  >;
-  onSearchOpenChange: (isOpen: boolean) => void;
   isPending: boolean;
 }
 
 const SearchInputMobile = ({
   word,
   isPending,
-  panel,
-  isSearchOpen,
   foundUsers,
   foundSkills,
   onWordChange,
@@ -34,78 +31,72 @@ const SearchInputMobile = ({
   onAddLearn,
   onCreateFriendRequest,
   onRemoveSkill,
-  onPanelChange,
-  onSearchOpenChange,
 }: SearchInputMobileProps) => {
+  const [open, setOpen] = useState(false);
+
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     onWordChange(value);
     if (value.length >= 2) {
       await onSearch(value);
-      onPanelChange("search");
     }
   };
 
-  return (
-    <>
-      {/* search input for sm< */}
-      <div
-        className={`absolute panel _border top-full bg-white ${isSearchOpen && panel == "search" ? "" : "hidden"} md:hidden p-4 left-0 z-100  w-full`}
-      >
-        <input
-          value={word}
-          onChange={handleChange}
-          type="text"
-          className="outline-0 w-full"
-          placeholder="Search for skills or users..."
-        />
-        {panel === "search" && (
-          <div className=" w-full flex flex-col h-fit max-h-[265px] overflow-auto top-full panel bg-white z-10  left-0 absolute _border bg-primary p-3 rounded-b-[6px]">
-            {isPending ? (
-              <Spinner color="blue" size={24} />
-            ) : (
-              <SearchResults
-                foundSkills={foundSkills}
-                foundUsers={foundUsers}
-                onAddLearn={onAddLearn}
-                onCreateFriendRequest={onCreateFriendRequest}
-                onRemoveSkill={onRemoveSkill}
-              />
-            )}
-          </div>
-        )}
-      </div>
+  const close = () => {
+    setOpen(false);
+    onWordChange("");
+  };
 
-      {/* search button for sm< */}
-      <div className="md:hidden mx-4">
-        {panel === "search" && isSearchOpen ? (
-          <button
-            className={`cursor-pointer flex items-center  ${panel === "search" ? "text-primary" : ""}  `}
-            onClick={() => {
-              onPanelChange(null);
-              onWordChange("");
-              onSearchOpenChange(false);
-            }}
-          >
-            <X size={26} className="" />
-          </button>
-        ) : (
-          <button
-            className="cursor-pointer flex items-center "
-            onClick={() => {}}
-          >
-            <Search
-              size={28}
-              className=""
-              onClick={() => {
-                onSearchOpenChange(true);
-                onPanelChange("search");
-              }}
-            />
-          </button>
-        )}
-      </div>
-    </>
+  return (
+    <div className="relative md:hidden">
+      {open ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label="Close search"
+          onClick={close}
+        >
+          <X className="size-6" />
+        </Button>
+      ) : (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label="Open search"
+          onClick={() => setOpen(true)}
+        >
+          <Search className="size-6" />
+        </Button>
+      )}
+      {open ? (
+        <div className="border-border bg-background absolute top-full right-0 left-0 z-[var(--z-dropdown)] mt-2 flex flex-col gap-3 border p-4 shadow-lg">
+          <Input
+            value={word}
+            onChange={handleChange}
+            placeholder="Search for skills or users..."
+            aria-label="Search for skills or users"
+            autoFocus
+          />
+          {word.length >= 2 ? (
+            <div className="max-h-64 overflow-auto">
+              {isPending ? (
+                <Spinner size="md" className="mx-auto" />
+              ) : (
+                <SearchResults
+                  foundSkills={foundSkills}
+                  foundUsers={foundUsers}
+                  onAddLearn={onAddLearn}
+                  onCreateFriendRequest={onCreateFriendRequest}
+                  onRemoveSkill={onRemoveSkill}
+                />
+              )}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
   );
 };
 

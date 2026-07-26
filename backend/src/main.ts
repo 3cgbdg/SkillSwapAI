@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import { ConfigService } from '@nestjs/config';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { LoggerInterceptor } from './common/interceptors/logger.interceptor';
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
@@ -18,15 +19,12 @@ async function bootstrap() {
     }),
   );
 
-  // global filter
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  // Set global /api prefix for all routes (except health)
   app.setGlobalPrefix('api', {
     exclude: ['health'],
   });
 
-  // global interceptors
   app.useGlobalInterceptors(new LoggerInterceptor());
 
   app.enableCors({
@@ -37,4 +35,7 @@ async function bootstrap() {
 
   await app.listen(configService.get<string>('PORT') ?? 5200, '0.0.0.0');
 }
-void bootstrap();
+
+void bootstrap().catch(() => {
+  process.exit(1);
+});

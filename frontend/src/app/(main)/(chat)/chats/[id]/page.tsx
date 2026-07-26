@@ -3,17 +3,24 @@
 import { useSocket } from "@/context/SocketContext";
 import { IChat, IMessage } from "@/types/types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCheck, EllipsisVertical, Send, UserRound } from "lucide-react";
+import { CheckCheck, EllipsisVertical, Send } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import ChatsService from "@/services/ChatsService";
 import useProfile from "@/hooks/useProfile";
 import useChats from "@/hooks/useChats";
 import useOnlineUsers from "@/hooks/useOnlineUsers";
-import Image from "next/image";
 import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { showErrorToast } from "@/utils/toast";
-import Spinner from "@/components/Spinner";
+import { Spinner } from "@/components/ui/spinner";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Textarea } from "@/components/ui/textarea";
+import { UserAvatar } from "@/components/ui/user-avatar";
+import { MessageSquare } from "lucide-react";
 
 const Page = () => {
   const onlineUsers = useOnlineUsers();
@@ -30,7 +37,6 @@ const Page = () => {
   const refs = useRef<HTMLDivElement[]>([]);
   const lastMessageRef = useRef<string>("");
 
-  // useQuery for getting all messages from db
   const {
     data: messages,
     error,
@@ -42,19 +48,16 @@ const Page = () => {
     enabled: !!currentChat,
   });
 
-  // handling messages error
   useEffect(() => {
     if (isError) {
       showErrorToast(error?.message || "An error occurred");
     }
   }, [error, isError]);
 
-  // tracking new messages for seeing it
   useEffect(() => {
     if (!messages || !socket || !user) return;
     const elements = refs.current.filter(Boolean);
     if (!elements.length) return;
-    // getting obserrver to define new message to mark it seen
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -98,11 +101,9 @@ const Page = () => {
     };
   }, [messages, socket, user, id, queryClient]);
 
-  // listening to socket events
   useEffect(() => {
     if (!socket || !user || !currentChat) return;
 
-    // Handler for receiving messages
     const handleReceiveMessage = ({
       from,
       id: msgId,
@@ -115,7 +116,6 @@ const Page = () => {
       queryClient.setQueryData(
         ["messages", currentChat.friend.id],
         (old: IMessage[] = []) => {
-          // Only add message if it's from the other person in this chat
           if (from === currentChat.friend.id) {
             queryClient.setQueryData(["chats"], (oldChats: IChat[] = []) => {
               return oldChats.map((c) =>
@@ -139,7 +139,6 @@ const Page = () => {
       );
     };
 
-    // Handler for message sent confirmation
     const handleMessageSent = (data: {
       id: string;
       createdAt: string | Date;
@@ -168,7 +167,6 @@ const Page = () => {
       );
     };
 
-    // Handler for message seen update
     const handleUpdateSeen = ({ messageId }: { messageId: string }) => {
       queryClient.setQueryData(
         ["messages", currentChat.friend.id],
@@ -177,20 +175,17 @@ const Page = () => {
           return old.map((item) => {
             if (item.id == messageId) {
               return { ...item, isSeen: true };
-            } else {
-              return item;
             }
+            return item;
           });
         }
       );
     };
 
-    // Register handlers
     socket.on("receiveMessage", handleReceiveMessage);
     socket.on("messageSent", handleMessageSent);
     socket.on("updateSeen", handleUpdateSeen);
 
-    // Cleanup: remove handlers only for this specific chat
     return () => {
       socket.off("receiveMessage", handleReceiveMessage);
       socket.off("messageSent", handleMessageSent);
@@ -198,7 +193,6 @@ const Page = () => {
     };
   }, [socket, user, currentChat, queryClient]);
 
-  // func for  sending new message
   const handleSend = () => {
     if (socket && currentChat && user && messageInput.trim() !== "") {
       lastMessageRef.current = messageInput;
@@ -208,12 +202,10 @@ const Page = () => {
           message: messageInput,
         });
       }
-
       setMessageInput("");
     }
   };
 
-  // getting down to the latest messages with scroll
   useEffect(() => {
     if (refs.current && messages) {
       endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -223,30 +215,27 @@ const Page = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <Link href={"/chats"} className="md:hidden! button-blue ">
+      <Link href="/chats" className={cn(buttonVariants(), "md:hidden w-fit")}>
         Go to chats
       </Link>
-      <div className="_border rounded-[10px] flex flex-col grow ">
-        {/* header */}
-        <div className="border-b border-neutral-300 ">
-          <div className="py-5.5 px-6 flex justify-between items-center gap-2">
-            <div className="items-center flex gap-3">
-              <div className="size-12  flex items-center justify-center relative rounded-full border-2 _border ">
-                {currentChat?.friend.imageUrl ? (
-                  <Image
-                    className="object-cover rounded-full"
-                    src={currentChat?.friend.imageUrl}
-                    fill
-                    alt="user image"
-                  />
-                ) : (
-                  <UserRound size={24} />
-                )}
-              </div>
-              <div className="">
-                {currentChat && currentChat.friend.name}
+      <Card className="flex grow flex-col overflow-hidden rounded-[10px] p-0">
+        <div className="border-b border-border">
+          <div className="flex items-center justify-between gap-2 px-6 py-5.5">
+            <div className="flex items-center gap-3">
+              <UserAvatar
+                name={currentChat?.friend.name}
+                imageUrl={currentChat?.friend.imageUrl}
+                size="md"
+              />
+              <div>
+                {currentChat?.friend.name}
                 <span
-                  className={`text-sm leading-5  ${currentChat && onlineUsers.includes(currentChat.friend.id) ? "text-green-300" : "text-gray"}`}
+                  className={cn(
+                    "block text-sm leading-5",
+                    currentChat && onlineUsers.includes(currentChat.friend.id)
+                      ? "text-success"
+                      : "text-muted-foreground"
+                  )}
                 >
                   {currentChat && onlineUsers.includes(currentChat.friend.id)
                     ? "Online"
@@ -254,16 +243,20 @@ const Page = () => {
                 </span>
               </div>
             </div>
-            <button className="cursor-pointer p-1 rounded-md transition-all hover:bg-neutral-50">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Chat options"
+            >
               <EllipsisVertical />
-            </button>
+            </Button>
           </div>
         </div>
 
-        {/* content */}
         <div
           ref={containerRef}
-          className="flex gap-4 flex-col p-4 w-full h-[502px]   overflow-y-scroll"
+          className="flex h-[502px] w-full flex-col gap-4 overflow-y-scroll p-4"
         >
           {!isLoading ? (
             messages && messages.length > 0 ? (
@@ -273,20 +266,28 @@ const Page = () => {
                     refs.current[idx] = el!;
                   }}
                   key={msg.id ?? idx}
-                  className={`w-fit rounded-[10px] text-gray  p-3  ${msg.fromId === user?.id ? "bg-lightBlue self-end" : "bg-neutral-200"}`}
+                  className={cn(
+                    "w-fit max-w-[85%] rounded-[10px] p-3 text-sm",
+                    msg.fromId === user?.id
+                      ? "ml-auto bg-secondary text-foreground"
+                      : "bg-muted text-muted-foreground"
+                  )}
                 >
                   <p
-                    className={`wrap-anywhere mb-1   leading-5 text-sm ${msg.fromId === user?.id ? "text-neutral-900" : ""}`}
+                    className={cn(
+                      "wrap-anywhere mb-1 leading-5",
+                      msg.fromId === user?.id && "text-foreground"
+                    )}
                   >
                     {msg.content}
                   </p>
-                  <div className="flex justify-between items-center flex-row-reverse gap-2">
+                  <div className="flex flex-row-reverse items-center justify-between gap-2">
                     {msg.fromId == user?.id && (
-                      <div className={`${msg.isSeen ? "text-blue" : ""}`}>
+                      <div className={cn(msg.isSeen && "text-primary")}>
                         <CheckCheck size={16} />
                       </div>
                     )}
-                    <div className=" text-xs leading-4 ">
+                    <div className="text-xs leading-4">
                       {new Date(msg.createdAt).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
@@ -296,43 +297,48 @@ const Page = () => {
                 </div>
               ))
             ) : (
-              <span className="flex mt-40 justify-center w-full">
-                Start conversation
-              </span>
+              <EmptyState
+                icon={MessageSquare}
+                title="Start the conversation"
+                description="Send a message to begin chatting."
+                className="mt-20 border-none bg-transparent"
+              />
             )
           ) : (
-            <div className="h-100 flex items-center justify-center">
-              <Spinner color="blue" size={44} />
+            <div className="flex h-full items-center justify-center">
+              <Spinner size="xl" />
             </div>
           )}
-
-          <div ref={endRef}></div>
+          <div ref={endRef} />
         </div>
 
-        {/* input */}
-        <div className="border-t border-neutral-300 w-full">
-          <div className="p-4 flex gap-4 items-center px-10 ">
-            <textarea
+        <div className="sticky bottom-0 border-t border-border bg-card">
+          <div className="flex items-center gap-4 p-4 px-6 md:px-10">
+            <Textarea
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
+                if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   handleSend();
                 }
               }}
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
-              className="input resize-none text-sm leading-5.5  w-full"
+              className="min-h-10 w-full resize-none text-sm leading-5.5"
               placeholder="Type your message here..."
-            ></textarea>
-            <button
+              rows={1}
+            />
+            <Button
+              type="button"
+              size="icon"
+              className="size-10 shrink-0"
               onClick={() => handleSend()}
-              className="button-blue h-10 aspect-square"
+              aria-label="Send message"
             >
               <Send size={16} />
-            </button>
+            </Button>
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };

@@ -1,40 +1,53 @@
 "use client";
 
-import { navLinks } from "@/constants/navLinks";
-import { Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import type { ReactNode } from "react";
+
+import { navLinks } from "@/constants/navLinks";
+import { cn } from "@/lib/utils";
 
 const Sidebar = () => {
-  const path = usePathname();
-  const [active, setActive] = useState<boolean>(false);
-
   return (
-    <div
-      className={`lg:basis-[254px] hidden md:block ${active ? "basis-[254px] " : ""} shrink-0 relative overflow-hidden  _border border-t-0! h-full bg-white`}
-    >
-      <button
-        onClick={() => setActive(!active)}
-        className={`p-3 cursor-pointer w-full  hover:text-green ${active && "bg-blue text-green"} transition-colors flex justify-center hover:bg-blue border-b-[1px] border-b-neutral-600 lg:hidden!`}
-      >
-        <Menu />
-      </button>
-      <div
-        className={`p-2 ${active ? " left-0 " : " -left-[500px]"} transition-all absolute lg:left-0 flex flex-col gap-1  w-[254px] lg:w-full lg:relative`}
-      >
+    <aside className="border-border hidden w-full max-w-xs flex-col border-r bg-card lg:flex">
+      <nav className="flex flex-col gap-1 p-4">
         {navLinks.map((item) => (
-          <Link
+          <NavItem
             key={item.link}
             href={item.link}
-            className={`p-2   flex items-center gap-2 text-sm leading-5.5 font-medium text-neutral-600 rounded-lg  ${item.link === path ? "text-neutral-900 font-semibold bg-blue-300" : " "} `}
-          >
-            {item.icon} {item.title}
-          </Link>
+            icon={item.icon}
+            title={item.title}
+          />
         ))}
-      </div>
-    </div>
+      </nav>
+    </aside>
   );
 };
+
+function NavItem({
+  href,
+  icon,
+  title,
+}: {
+  href: string;
+  icon: ReactNode;
+  title: string;
+}) {
+  const path = usePathname();
+  const active = path === href;
+
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+        active && "bg-primary/10 text-primary font-semibold"
+      )}
+    >
+      {icon}
+      {title}
+    </Link>
+  );
+}
 
 export default Sidebar;

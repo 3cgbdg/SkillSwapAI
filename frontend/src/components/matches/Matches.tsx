@@ -9,6 +9,21 @@ import MatchesService from "@/services/MatchesService";
 import { showErrorToast, showSuccessToast } from "@/utils/toast";
 import useMatches from "@/hooks/useMatches";
 import ChatsService from "@/services/ChatsService";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Matches = ({
   matches,
@@ -17,15 +32,33 @@ const Matches = ({
   matches: IMatch[];
   option: "available" | "active";
 }) => {
-  //array for checking if the item is in the active matches so we wont be able to generate new plan again
   const { data: activeMatches = [] } = useMatches();
   const [filteredMatch, setFilteredMatch] = useState<IMatch[]>(matches);
+  const [skillFilter, setSkillFilter] = useState("");
 
   useEffect(() => {
     setFilteredMatch(matches);
   }, [matches]);
 
-  const [panel, setPanel] = useState<"skill" | "compatibility" | null>(null);
+  useEffect(() => {
+    const value = skillFilter.toLowerCase().trim();
+    if (!value) {
+      setFilteredMatch(matches);
+      return;
+    }
+    setFilteredMatch(
+      matches.filter(
+        (match) =>
+          match.other.knownSkills.some((item) =>
+            item.title.toLowerCase().includes(value)
+          ) ||
+          match.other.skillsToLearn.some((item) =>
+            item.title.toLowerCase().includes(value)
+          )
+      )
+    );
+  }, [skillFilter, matches]);
+
   const queryClient = useQueryClient();
   const router = useRouter();
   const { isPending, mutate: generateActiveMatch } = useMutation({
@@ -46,32 +79,6 @@ const Matches = ({
     },
   });
 
-  useEffect(() => {
-    if (isPending) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
-  }, [isPending]);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-
-      if (!target.closest(".panel")) {
-        setPanel(null);
-      }
-    };
-
-    if (panel) {
-      document.addEventListener("click", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("click", handleClickOutside);
-    };
-  }, [panel]);
-
   const { mutate: createChat } = useMutation({
     mutationFn: async ({
       payload,
@@ -89,46 +96,43 @@ const Matches = ({
       showErrorToast(err.message);
     },
   });
+
   return (
     <>
-      {/* loading screen while waiting for ai generating active match */}
-      {isPending && (
-        <div className="  bg-gray/40  fixed z-200 top-0 left-0 size-full flex items-center justify-center">
-          <div className="flex flex-col gap-4">
-            <div className="flex gap-1 page-title">
-              Loading
-              <span className="animate-blink">.</span>
-              <span className="animate-blink [animation-delay:0.2s]">.</span>
-              <span className="animate-blink [animation-delay:0.4s]">.</span>
-            </div>
-          </div>
-        </div>
-      )}
+      <Dialog open={isPending}>
+        <DialogContent showCloseButton={false} className="sm:max-w-md">
+          <DialogTitle className="text-center text-2xl font-bold">
+            Loading
+            <span className="animate-blink">.</span>
+            <span className="animate-blink [animation-delay:0.2s]">.</span>
+            <span className="animate-blink [animation-delay:0.4s]">.</span>
+          </DialogTitle>
+          <DialogDescription className="text-center">
+            Generating your AI-powered training plan…
+          </DialogDescription>
+        </DialogContent>
+      </Dialog>
+
       <div className="flex flex-col gap-7.5">
         <div className="flex flex-col gap-6">
           <div className="flex items-center gap-6 flex-wrap justify-between">
-            <h1 className="page-title">
+            <h1 className="text-3xl leading-9 font-bold text-foreground">
               {option == "active" ? "Your" : "Available"} Matches
             </h1>
-            <div className="flex gap-3 relative flex-wrap">
-              <div className="relative">
-                {option == "active" && (
-                  <button
-                    onClick={() =>
-                      setPanel((prev) =>
-                        prev == "compatibility" ? null : "compatibility"
-                      )
-                    }
-                    className={`button-transparent bg-white ${panel == "compatibility" ? "rounded-b-none! " : ""} flex h-full items-center gap-2 rounded-md!`}
+            <div className="flex gap-3 flex-wrap">
+              {option == "active" && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    className={cn(
+                      buttonVariants({ variant: "outline" }),
+                      "gap-2 bg-background"
+                    )}
                   >
                     <Users size={16} />
                     Sort by Compatibility
-                  </button>
-                )}
-
-                {panel == "compatibility" && option == "active" && (
-                  <div className="w-full  panel absolute top-full flex z-10 _border flex-col gap-1 rounded-b-md p-1 bg-white">
-                    <button
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="min-w-[220px]">
+                    <DropdownMenuItem
                       onClick={() =>
                         setFilteredMatch((prev) =>
                           [...prev].sort(
@@ -136,11 +140,10 @@ const Matches = ({
                           )
                         )
                       }
-                      className="button-transparent p-2!"
                     >
                       From lowest to highest
-                    </button>
-                    <button
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
                       onClick={() =>
                         setFilteredMatch((prev) =>
                           [...prev].sort(
@@ -148,55 +151,40 @@ const Matches = ({
                           )
                         )
                       }
-                      className="button-transparent p-2!"
                     >
                       From highest to lowest
-                    </button>
-                  </div>
-                )}
-              </div>
-              <div className="relative">
-                <button
-                  onClick={() =>
-                    setPanel((prev) => (prev == "skill" ? null : "skill"))
-                  }
-                  className={`button-transparent h-full bg-white min-w-[200px]  flex items-center gap-2 rounded-md! ${panel == "skill" ? "rounded-b-none! " : ""}`}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className={cn(
+                    buttonVariants({ variant: "outline" }),
+                    "min-w-[200px] gap-2 bg-background"
+                  )}
                 >
                   <Search size={16} />
                   Filter by Skill
-                </button>
-                {panel == "skill" && (
-                  <div className="p-1 absolute panel top-full rounded-b-md  _border bg-white">
-                    <input
-                      onChange={(e) => {
-                        const value = e.target.value.toLowerCase().trim();
-                        setFilteredMatch(
-                          matches.filter(
-                            (match) =>
-                              match.other.knownSkills.some((item) =>
-                                item.title.toLowerCase().includes(value)
-                              ) ||
-                              match.other.skillsToLearn.some((item) =>
-                                item.title.toLowerCase().includes(value)
-                              )
-                          )
-                        );
-                      }}
-                      placeholder="Type in a skill"
-                      className="input rounded-md! w-full"
-                    />
-                  </div>
-                )}
-              </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[240px] p-2">
+                  <Input
+                    value={skillFilter}
+                    onChange={(e) => setSkillFilter(e.target.value)}
+                    placeholder="Type in a skill"
+                    onKeyDown={(e) => e.stopPropagation()}
+                  />
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
-          <p className="text-gray">
+          <p className="text-muted-foreground">
             Explore potential skill exchange partners based on your teaching and
             learning goals. Connect to swap knowledge!
           </p>
         </div>
-        <div className="grid max-w-[450px] md:max-w-full mx-auto md:mx-0 md:w-fit  md:grid-cols-2 xl:grid-cols-3 gap-6 ">
-          {filteredMatch.map((match, idx) => (
+        <div className="grid max-w-[450px] md:max-w-full mx-auto md:mx-0 md:w-fit md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filteredMatch.map((match) => (
             <MatchCard
               option={option}
               isInActiveMatches={
@@ -207,7 +195,7 @@ const Matches = ({
                   : true
               }
               generateActiveMatch={generateActiveMatch}
-              key={option == "active" ? match.id : idx}
+              key={match.id ?? match.other.id}
               match={match}
               getOrCreateChat={createChat}
             />

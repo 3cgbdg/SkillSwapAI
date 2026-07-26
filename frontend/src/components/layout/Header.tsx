@@ -4,35 +4,30 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSocket } from "@/context/SocketContext";
-import { IUser } from "@/types/auth";
 import { Found, FoundSkills, FoundUsers } from "@/types/common";
 import { IRequest } from "@/types/session";
 import AuthService from "@/services/AuthService";
 import RequestsService from "@/services/RequestsService";
 import SearchService from "@/services/SearchService";
 import SkillsService from "@/services/SkillsService";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
-// Import sub-components
 import HeaderLogo from "./headerComponents/HeaderLogo";
 import SearchInput from "./headerComponents/SearchInput";
 import SearchInputMobile from "./headerComponents/SearchInputMobile";
 import NotificationsBell from "./headerComponents/NotificationsBell";
 import AvatarMenu from "./headerComponents/AvatarMenu";
 import NavigationMenu from "./headerComponents/NavigationMenu";
-import { showErrorToast, showSuccessToast } from "@/utils/toast";
+import { showErrorToast } from "@/utils/toast";
 import useFriends from "@/hooks/useFriends";
 
 const Header = () => {
-  const [panel, setPanel] = useState<
-    "avatarMenu" | "search" | "notifs" | "navMenu" | null
-  >(null);
   const router = useRouter();
   const [word, setWord] = useState<string>("");
   const [foundUsers, setFoundUsers] = useState<FoundUsers[]>([]);
   const [foundSkills, setFoundSkills] = useState<FoundSkills[]>([]);
   const queryClient = useQueryClient();
   const { socket } = useSocket();
-  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
   const { addFriend, createFriendRequest } = useFriends();
   // log out
   const mutation = useMutation({
@@ -42,25 +37,6 @@ const Header = () => {
       router.push("/auth/login");
     },
   });
-
-  // event for tracking mouse clicking in order to close unnecessary panels
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-
-      if (!target.closest(".panel")) {
-        setPanel(null);
-      }
-    };
-
-    if (panel) {
-      document.addEventListener("click", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("click", handleClickOutside);
-    };
-  }, [panel]);
 
   // get requests
   const {
@@ -203,16 +179,13 @@ const Header = () => {
   }, [socket, queryClient]);
 
   return (
-    <div className="flex items-center justify-between bg-white py-[14px] px-2 md:px-6 relative ">
-      <div className="flex items-center gap-6 grow">
+    <header className="border-border bg-card relative flex items-center justify-between border-b px-2 py-3 md:px-6">
+      <div className="flex grow items-center gap-6">
         <HeaderLogo />
       </div>
 
-      {/* Mobile Search Input */}
       <SearchInputMobile
         word={word}
-        panel={panel}
-        isSearchOpen={isSearchOpen}
         foundUsers={foundUsers}
         foundSkills={foundSkills}
         onWordChange={setWord}
@@ -238,15 +211,11 @@ const Header = () => {
         onRemoveSkill={(skillId) =>
           setFoundSkills((prev) => prev.filter((item) => item.id !== skillId))
         }
-        onPanelChange={setPanel}
-        onSearchOpenChange={setIsSearchOpen}
       />
 
-      <div className="relative flex items-center gap-4">
-        {/* Desktop Search Input */}
+      <div className="relative flex items-center gap-2 md:gap-4">
         <SearchInput
           word={word}
-          panel={panel}
           foundUsers={foundUsers}
           isPending={mutationSearch.isPending}
           foundSkills={foundSkills}
@@ -274,36 +243,24 @@ const Header = () => {
           onRemoveSkill={(skillId) =>
             setFoundSkills((prev) => prev.filter((item) => item.id !== skillId))
           }
-          onPanelChange={setPanel}
         />
 
-        {/* Notifications Bell */}
         <NotificationsBell
           reqs={reqs}
           isLoading={isLoading}
-          panel={panel}
-          onPanelChange={setPanel}
           onAcceptSession={(data) => mutationAcceptSession.mutate(data)}
           onRejectSession={(data) => mutationRejectSession.mutate(data)}
           onAddFriend={(data) => addFriend(data)}
           onDeleteRequest={(data) => mutationRequestDelete.mutate(data)}
         />
 
-        {/* Avatar Menu */}
-        <AvatarMenu
-          panel={panel}
-          onPanelChange={setPanel}
-          onLogOut={() => mutation.mutate()}
-        />
+        <ThemeToggle />
 
-        {/* Navigation Menu */}
-        <NavigationMenu
-          panel={panel}
-          onPanelChange={setPanel}
-          onLogOut={() => mutation.mutate()}
-        />
+        <AvatarMenu onLogOut={() => mutation.mutate()} />
+
+        <NavigationMenu onLogOut={() => mutation.mutate()} />
       </div>
-    </div>
+    </header>
   );
 };
 

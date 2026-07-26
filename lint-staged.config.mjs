@@ -71,16 +71,16 @@ export default {
     const prettier = prettierCommand("frontend", filenames);
     const eslint = eslintCommand("frontend", eslintFilenames(filenames));
     const cmds = [];
-    if (prettier) cmds.push(prettier);
-    if (eslint) cmds.push(eslint);
+    if (typeof prettier === "string" && prettier.length > 0) cmds.push(prettier);
+    if (typeof eslint === "string" && eslint.length > 0) cmds.push(eslint);
     return cmds;
   },
   "backend/**/*.{ts,json,md}": (filenames) => {
     const prettier = prettierCommand("backend", filenames);
     const eslint = eslintCommand("backend", eslintFilenames(filenames));
     const cmds = [];
-    if (prettier) cmds.push(prettier);
-    if (eslint) cmds.push(eslint);
+    if (typeof prettier === "string" && prettier.length > 0) cmds.push(prettier);
+    if (typeof eslint === "string" && eslint.length > 0) cmds.push(eslint);
     return cmds;
   },
 };

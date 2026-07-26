@@ -55,7 +55,7 @@ export class AuthService {
 
     if (!user) throw new InternalServerErrorException('Error creating user');
 
-    void this.aiService.getAiSuggestionSkills(user.id);
+    void this.aiService.getAiSuggestionSkills(user.id).catch(() => {});
 
     return AuthUtils.generateTokens(
       user.id,

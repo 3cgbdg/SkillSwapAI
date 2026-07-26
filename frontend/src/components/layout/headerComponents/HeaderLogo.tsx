@@ -4,19 +4,19 @@ import Link from "next/link";
 const HeaderLogo = () => {
   return (
     <Link
-      href={"/dashboard"}
-      className="flex items-center group  gap-2 w-fit text-green"
+      href="/dashboard"
+      className="group flex w-fit items-center gap-2 transition-colors"
     >
       <Image
-        className="stroke-darkBlue transition-transform group-hover:-rotate-45"
+        className="transition-transform group-hover:-rotate-45"
         width={32}
         height={32}
         src="/logo.png"
-        alt="logo"
+        alt="SkillSwap AI logo"
       />
-      <span className="transiiton-colors relative  group-hover:text-violet  font-oswald text-2xl leading-none font-bold">
-        <span className="text-cyan-300">Skill</span>
-        <span className="text-yellow-300">Swap</span>
+      <span className="font-oswald relative text-2xl leading-none font-bold transition-colors group-hover:text-primary">
+        <span className="text-primary">Skill</span>
+        <span className="text-accent">Swap</span>
         AI
       </span>
     </Link>

@@ -1,116 +1,107 @@
 "use client";
 
-import { IFriend, IChat } from "@/types/types";
-import Image from "next/image";
-import { BookUser, MessageSquareMore, UserRound } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Dispatch, SetStateAction, useEffect } from "react";
+import { IFriend } from "@/types/chat";
 import ChatsService from "@/services/ChatsService";
-import Spinner from "../Spinner";
-import { showErrorToast } from "@/utils/toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { BookUser, MessageSquareMore } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Dispatch, SetStateAction } from "react";
+
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Spinner } from "@/components/ui/spinner";
+import { UserAvatar } from "@/components/ui/user-avatar";
+import { cn } from "@/lib/utils";
 
 const FriendsPopup = ({
-  friends,
   isLoading,
   setIsPopupOpen,
+  friends,
 }: {
-  friends: IFriend[] | undefined;
   isLoading: boolean;
+  friends: IFriend[];
   setIsPopupOpen: Dispatch<SetStateAction<boolean>>;
 }) => {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  // for getting to chat or creating it
   const { mutate: createChat } = useMutation({
-    mutationFn: async ({
-      payload,
-    }: {
-      payload: { friendId: string; friendName: string };
-    }) => ChatsService.createChat(payload),
+    mutationFn: async (friend: IFriend) =>
+      ChatsService.createChat({
+        friendId: friend.id,
+        friendName: friend.name || "",
+      }),
     onSuccess: (data) => {
+      queryClient.setQueryData(["chats"], (old: unknown) => {
+        if (!Array.isArray(old)) return [data];
+        return [data, ...old];
+      });
       setIsPopupOpen(false);
       router.push(`/chats/${data.chatId}`);
-      queryClient.invalidateQueries({ queryKey: ["chats"] });
-    },
-    onError: (err: Error) => {
-      showErrorToast(err.message);
     },
   });
 
-  useEffect(() => {
-    document.body.style.overflowY = "hidden";
-    return () => {
-      document.body.style.overflowY = "auto";
-    };
-  }, []);
   return (
-    <div className="size-full fixed inset-0 bg-gray/40 flex items-center justify-center ">
-      <div className="max-w-[700px] flex flex-col gap-6 w-full  _border rounded-2xl  bg-white z-110 p-6">
-        <h1 className="section-title">Friends</h1>
+    <Dialog open onOpenChange={(open) => !open && setIsPopupOpen(false)}>
+      <DialogContent className="fixed right-6 bottom-24 left-auto top-auto max-h-[70vh] w-[min(100vw-3rem,380px)] translate-x-0 translate-y-0 sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Your friends</DialogTitle>
+        </DialogHeader>
         {isLoading ? (
-          <Spinner size={24} color="blue" />
-        ) : (
-          <div className="overflow-y-auto flex flex-col max-h-[600px] gap-2">
-            {friends &&
-              (friends.length > 0 ? (
-                friends.map((friend) => (
-                  <div
-                    key={friend.id}
-                    className="_border flex items-center p-3 justify-between gap-4 rounded-2xl"
-                  >
-                    <div className="flex  gap-4">
-                      <div className=" _border w-[48px] relative h-[48px] flex items-center justify-center rounded-full overflow-hidden">
-                        {!friend?.imageUrl ? (
-                          <UserRound size={24} />
-                        ) : (
-                          <Image
-                            className="object-cover"
-                            src={friend.imageUrl}
-                            fill
-                            alt="user image"
-                          />
-                        )}
-                      </div>
-                      <span className="text-lg leading-7 font-semibold ">
-                        {friend.name}
-                      </span>
-                    </div>
-                    <div className="flex gap-4">
-                      <button
-                        onClick={() => {
-                          router.push(`/profiles/${friend.id}`);
-                          setIsPopupOpen(false);
-                        }}
-                        className="button-blue"
-                      >
-                        <BookUser size={20} />
-                      </button>
-
-                      <button
-                        onClick={() =>
-                          createChat({
-                            payload: {
-                              friendId: friend.id,
-                              friendName: friend.name || "",
-                            },
-                          })
-                        }
-                        className="button-blue flex items-center gap-5"
-                      >
-                        <MessageSquareMore size={20} />
-                      </button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <span className="text-center">No friends yet</span>
-              ))}
+          <div className="flex justify-center py-8">
+            <Spinner size="lg" />
           </div>
+        ) : friends.length > 0 ? (
+          <ul className="flex max-h-[50vh] flex-col gap-2 overflow-y-auto">
+            {friends.map((friend) => (
+              <li
+                key={friend.id}
+                className="flex items-center justify-between gap-2 rounded-lg border border-border p-2"
+              >
+                <div className="flex min-w-0 items-center gap-2">
+                  <UserAvatar
+                    name={friend.name}
+                    imageUrl={friend.imageUrl}
+                    size="sm"
+                  />
+                  <span className="truncate font-medium">{friend.name}</span>
+                </div>
+                <div className="flex shrink-0 gap-1">
+                  <Link
+                    href={`/profiles/${friend.id}`}
+                    className={cn(
+                      buttonVariants({ variant: "outline", size: "icon-sm" })
+                    )}
+                    aria-label={`View ${friend.name}'s profile`}
+                  >
+                    <BookUser size={16} />
+                  </Link>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-sm"
+                    aria-label={`Message ${friend.name}`}
+                    onClick={() => createChat(friend)}
+                  >
+                    <MessageSquareMore size={16} />
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="py-6 text-center text-sm text-muted-foreground">
+            No friends yet. Add people from search or matches.
+          </p>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

@@ -3,8 +3,9 @@
 import { memo, useState } from "react";
 import { format } from "date-fns";
 import { TableCellType } from "./Calendar";
-import { ReceiptText, X } from "lucide-react";
-import Link from "next/link";
+import { ReceiptText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { SessionDetails } from "./SessionDetails";
 
 const DesktopGridCalendar = ({
   tableCells,
@@ -19,69 +20,45 @@ const DesktopGridCalendar = ({
   return (
     <div className="relative">
       {details !== null && (
-        <div className="absolute -top-20 max-h-[250px] overflow-auto left-10 p-2 min-w-[150px] max-w-[300px]   _border rounded-md z-150 bg-white">
-          {details.descr && (
-            <div className="border-b-1 border-gray-300 pb-1 mb-1">
-              <div className="flex items-center justify-between">
-                <h3 className="text-black font-medium">Description</h3>
-                <button
-                  onClick={() => setDetails(null)}
-                  className="button-transparent"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-              <p className="text-gray text-xs leading-4">{details.descr}</p>
-            </div>
-          )}
-          {details.meetingLink && (
-            <>
-              <p className="text-gray text-xs leading-4">
-                Meeting Link:{" "}
-                <Link
-                  href={details.meetingLink}
-                  className="font-medium hover:underline text-black"
-                >
-                  {details.meetingLink}
-                </Link>{" "}
-              </p>
-            </>
-          )}
-        </div>
+        <SessionDetails
+          details={details}
+          onClose={() => setDetails(null)}
+          className="absolute -top-20 left-10 z-50 max-h-[250px] min-w-[150px] max-w-[300px] overflow-auto p-2"
+        />
       )}
-      <div className="grid grid-cols-8 border-b-1 border-neutral-300 pr-[15px]">
-        <div className="flex flex-col gap-0.5 not-last:border-r-1 items-center border-neutral-300"></div>
+      <div className="grid grid-cols-8 border-b border-border pr-[15px]">
+        <div className="flex flex-col items-center gap-0.5 border-neutral-300 not-last:border-r" />
         {tableCells.map((cell, idx) => (
-          <div className="flex flex-col gap-0.5 items-center " key={idx}>
+          <div className="flex flex-col items-center gap-0.5" key={idx}>
             <span className="text-sm leading-5 font-medium">
               {format(cell.date, "E")}
             </span>
-            <span className="leading-7 text-lg font-bold ">
+            <span className="text-lg leading-7 font-bold">
               {format(cell.date, "d")}
             </span>
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-8 overflow-y-auto relative h-[440px] ">
-        <div className="border-r-1 border-neutral-300 ">
+      <div className="relative grid h-[440px] grid-cols-8 overflow-y-auto">
+        <div className="border-r border-border">
           {Array.from(
             { length: 24 },
             (_, i) => `${i.toString().padStart(2, "0")}:00`
           ).map((value, idx) => (
             <div
               key={idx}
-              className="min-h-[100px] flex text-sm leading-4 text-gray items-center justify-center"
+              className="flex min-h-[100px] items-center justify-center text-sm leading-4 text-muted-foreground"
             >
               {value}
             </div>
           ))}
         </div>
 
-        <div className="col-span-7 grid grid-cols-7 relative">
+        <div className="relative col-span-7 grid grid-cols-7">
           {tableCells.map((cell) => (
             <div
               key={cell.date.toISOString()}
-              className="_border p-1 grid "
+              className="grid border border-border p-1"
               style={{ gridTemplateRows: "repeat(24, 100px)" }}
             >
               {cell.sessions.map((session) => (
@@ -92,28 +69,32 @@ const DesktopGridCalendar = ({
                     gridRowStart: session.start + 1,
                     gridRowEnd: session.end === 0 ? 25 : session.end + 1,
                   }}
-                  className="text-xs text-white rounded relative _border p-2 flex flex-col gap-1 w-full font-semibold"
+                  className="relative flex w-full flex-col gap-1 rounded border border-border/50 p-2 text-xs font-semibold text-white"
                 >
                   <div className="flex items-center justify-between">
                     <span className="wrap-anywhere">{session.title}</span>
                     {session.description != null && (
-                      <button
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-xs"
+                        className="text-white hover:bg-white/20"
                         onClick={() =>
                           setDetails({
                             descr: session.description,
                             meetingLink: session.meetingLink,
                           })
                         }
-                        className="hover:text-blue cursor-pointer underline text-lightBlue"
+                        aria-label="View session description"
                       >
                         <ReceiptText size={16} />
-                      </button>
+                      </Button>
                     )}
                   </div>
                   <span>
                     ({session.start} - {session.end})
                   </span>
-                  <span className="">
+                  <span>
                     Status: {session.status == "PENDING" ? "Pending" : "Agreed"}
                   </span>
                 </div>

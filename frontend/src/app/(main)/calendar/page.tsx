@@ -1,63 +1,78 @@
 "use client";
+
+import { Suspense } from "react";
+
 import Calendar from "@/components/calendar/Calendar";
-import Spinner from "@/components/Spinner";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import useSessions from "@/hooks/useSessions";
+import { ISession } from "@/types/session";
+import { format, isToday } from "date-fns";
+import { CalendarDays } from "lucide-react";
+
+function sessionStartsAt(session: ISession) {
+  const start = new Date(session.date);
+  start.setHours(session.start, 0, 0, 0);
+  return start;
+}
 
 const Page = () => {
-  const [now, setNow] = useState(new Date());
+  const { data: sessions = [], isLoading } = useSessions();
+  const now = new Date();
 
-  const { data: sessions = [] } = useSessions();
+  const upcoming = sessions
+    .filter((session) => sessionStartsAt(session) >= now)
+    .sort(
+      (a, b) => sessionStartsAt(a).getTime() - sessionStartsAt(b).getTime()
+    );
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setNow(new Date());
-    }, 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const upcoming = useMemo(() => {
-    if (!sessions) return [];
-    return sessions
-      .filter((s) => s.start > now.getHours())
-      .sort((a, b) => a.start - b.start);
-  }, [sessions, now]);
   return (
-    <div className="grid grid-cols-3 gap-8 items-start">
-      <div className="_border overflow-hidden rounded-[10px] col-span-3 xl:col-span-2">
-        <Suspense fallback={<Spinner size={30} color="blue" />}>
-          <Calendar />
-        </Suspense>
-      </div>
-      <div className="_border overflow-hidden  rounded-[10px] col-span-3 xl:col-span-1">
-        {/* header */}
-        <div className="border-b border-neutral-300">
-          <div className=" gap-2 p-6 ">
-            <h2 className="text-xl leading-7 font-bold">Upcoming Sessions</h2>
+    <div className="flex flex-col gap-10">
+      <Suspense fallback={<Skeleton className="h-[520px] w-full rounded-xl" />}>
+        <Calendar />
+      </Suspense>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="text-2xl font-bold leading-8">Upcoming sessions</h2>
+        {isLoading ? (
+          <Skeleton className="h-24 rounded-xl" />
+        ) : upcoming.length > 0 ? (
+          <div className="flex flex-col gap-3">
+            {upcoming.map((session) => {
+              const start = sessionStartsAt(session);
+              const dayLabel = isToday(start)
+                ? "Today"
+                : format(start, "EEEE, MMM d");
+              return (
+                <Card key={session.id}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">{session.title}</CardTitle>
+                    <CardDescription>
+                      {dayLabel} · {session.start}:00 – {session.end}:00
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="text-muted-foreground text-sm">
+                    With {session.friend.name}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
-        </div>
-        <div className="flex flex-col gap-4 p-2">
-          {upcoming && upcoming.length > 0 ? (
-            upcoming.slice(0, 6).map((item) => (
-              <div
-                style={{ backgroundColor: item.color }}
-                key={item.id}
-                className="flex flex-col gap-2 w-full _border rounded-xl  p-4"
-              >
-                <div className="flex justify-between  items-center ">
-                  <span className="text-sm font-semibold">Today</span>
-                  <span className=" text-xs leading-4 ">{item.start}:00</span>
-                </div>
-                <h3 className="leading-5 font-semibold">
-                  {item.title} with {item.friend.name}
-                </h3>
-              </div>
-            ))
-          ) : (
-            <h3 className="p-10 text-center ">There are no upcoming events</h3>
-          )}
-        </div>
-      </div>
+        ) : (
+          <EmptyState
+            icon={CalendarDays}
+            title="No upcoming sessions today"
+            description="Create a session on the calendar or schedule one with a match."
+          />
+        )}
+      </section>
     </div>
   );
 };

@@ -14,135 +14,185 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 
+import { buttonVariants } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
+
 const Page = () => {
-  const { data: user } = useProfile();
-  const { data: matches = [] } = useMatches();
-  const { data: sessions = [] } = useSessions();
+  const { data: user, isLoading: profileLoading } = useProfile();
+  const { data: matches = [], isLoading: matchesLoading } = useMatches();
+  const { data: sessions = [], isLoading: sessionsLoading } = useSessions();
   const now = new Date();
+  const loading = profileLoading || matchesLoading;
+
+  const upcoming = sessions.filter((s) => {
+    const startDate = new Date();
+    startDate.setHours(s.start, 0, 0, 0);
+    return now <= startDate;
+  });
+
   return (
-    <div className="flex flex-col gap-[33px]">
-      <div className="p-8! flex items-center justify-between bg-[#F2F6FDFF] gap-2 _border rounded-[10px] border-0! shadow-xs!">
-        <div className="flex flex-col gap-5 basis-[450px] w-full">
-          <div className="flex flex-col gap-1">
-            <h1 className="page-title">Welcome back, {user?.name}!</h1>
-            <h1 className="text-4xl leading-10 font-extrabold ">
-              Welcome to SkillSwap AI
-            </h1>
-          </div>
-          <p className="text-sm leading-5 text-gray">
-            Your journey to mastering new skills and sharing your expertise
-            starts here. Explore your dashboard for an overview of your progress
-            and matches.
-          </p>
-          <Link href={"/profile"} className="mt-1 button-blue w-fit">
-            View My Profile
-          </Link>
-        </div>
-        <div className="w-64 hidden md:block aspect-square relative bg-black">
-          <Image
-            src={"/dashboardImage.png"}
-            fill
-            sizes="(max-width: 768px) 100vw, 50vw"
-            alt="dashboard preview image"
-          />
-        </div>
-      </div>
-      <div className="flex flex-col gap-6 ">
-        <h2 className="section-title ">Your Stats</h2>
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="h-42  _border rounded-[10px] bg-white py-6! flex items-center flex-col gap-[5px]">
-            <Award size={40} className="text-blue mb-[5px]" />
-            <span className="text-4xl leading-10 font-bold text-blue">
-              {user?.knownSkills ? user?.knownSkills.length : 0}
-            </span>
-            <span className="text-gray leading-7 text-lg">Skills Learned</span>
-          </div>
-          <div className="h-42  _border rounded-[10px] bg-white py-6! flex items-center flex-col gap-[5px]">
-            <Star size={40} className="text-blue mb-[5px]" />
-            <span className="text-4xl leading-10 font-bold text-blue">
-              {user?.completedSessionsCount ?? 0}
-            </span>
-            <span className="text-gray leading-7 text-lg">
-              Sessions Completed
-            </span>
-          </div>
-          <div className="h-42  _border rounded-[10px] bg-white py-6! flex items-center flex-col gap-[5px]">
-            <Users size={40} className="text-blue mb-[5px]" />
-            <span className="text-4xl leading-10 font-bold text-blue">
-              {matches.length}
-            </span>
-            <span className="text-gray leading-7 text-lg">Active Matches</span>
-          </div>
-        </div>
-      </div>
-      <div className="flex flex-col gap-6">
-        <h2 className="section-title ">Quick Access</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-          <Link
-            href={"/profile"}
-            className="h-33 _border rounded-[10px] bg-white py-6! transition-all hover:opacity-80  flex items-center flex-col gap-5"
-          >
-            <User size={40} className="text-orange " />
-            <span className=" leading-7 text-lg font-semibold">My Profile</span>
-          </Link>
-          <Link
-            href={"/matches"}
-            className="h-33 _border rounded-[10px] bg-white py-6! transition-all hover:opacity-80  flex items-center flex-col gap-5"
-          >
-            <Users size={40} className="text-orange " />
-            <span className=" leading-7 text-lg font-semibold">Matches</span>
-          </Link>
-          <Link
-            href={"/chats"}
-            className="h-33 _border rounded-[10px] bg-white py-6! transition-all hover:opacity-80  flex items-center flex-col gap-5"
-          >
-            <MessageSquare size={40} className="text-orange " />
-            <span className=" leading-7 text-lg font-semibold">Chat</span>
-          </Link>
-          <Link
-            href={"/calendar"}
-            className="h-33 _border rounded-[10px] bg-white py-6! transition-all hover:opacity-80  flex items-center flex-col gap-5"
-          >
-            <Calendar size={40} className="text-orange " />
-            <span className=" leading-7 text-lg font-semibold">Calendar</span>
-          </Link>
-        </div>
-      </div>
-      <div className="flex flex-col gap-6">
-        <h2 className="section-title">Upcoming Sessions</h2>
-        {sessions &&
-          (sessions.length > 0 ? (
-            sessions
-              .filter((s) => {
-                const startDate = new Date();
-                startDate.setHours(s.start, 0, 0, 0);
-                return now <= startDate;
-              })
-              .map((item) => (
-                <div
-                  key={item.id}
-                  className="_border rounded-xl overflow-hidden flex flex-col"
-                >
-                  <div className="not-last:border-b border-neutral-300 flex justify-between items-center p-4 pt-5">
-                    <div className="">
-                      <h3 className="text-lg leading-7 font-semibold ">
-                        {item.title}
-                      </h3>
-                      <p className="text-sm leading-5 text-gray">
-                        {item.start}:00 - {item.end}:00
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))
-          ) : (
-            <div className="not-last:border-b _border flex justify-between items-center p-4 pt-5 rounded-md mx-auto px-10">
-              No upcoming sessions
+    <div className="flex flex-col gap-8">
+      <Card className="border-0 bg-surface-raised shadow-sm">
+        <CardContent className="flex flex-col items-center justify-between gap-6 p-8 md:flex-row">
+          {loading ? (
+            <div className="flex w-full flex-col gap-4">
+              <Skeleton className="h-10 w-2/3" />
+              <Skeleton className="h-6 w-full" />
+              <Skeleton className="h-10 w-32" />
             </div>
-          ))}
-      </div>
+          ) : (
+            <div className="flex max-w-xl flex-col gap-4">
+              <div>
+                <p className="text-muted-foreground text-sm">Welcome back</p>
+                <h1 className="text-foreground text-3xl font-bold">
+                  {user?.name ?? "there"}
+                </h1>
+              </div>
+              <p className="text-muted-foreground text-sm">
+                Your journey to mastering new skills and sharing your expertise
+                starts here.
+              </p>
+              <Link
+                href="/profile"
+                className={buttonVariants({ className: "w-fit" })}
+              >
+                View My Profile
+              </Link>
+            </div>
+          )}
+          <div className="relative hidden aspect-square w-64 md:block">
+            <Image
+              src="/dashboardImage.png"
+              fill
+              sizes="(max-width: 768px) 100vw, 50vw"
+              alt="Dashboard preview"
+              className="rounded-lg object-cover"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="text-2xl font-bold">Your Stats</h2>
+        <div className="grid gap-4 md:grid-cols-3">
+          {loading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-36 rounded-xl" />
+            ))
+          ) : (
+            <>
+              <StatCard
+                icon={Award}
+                value={user?.knownSkills?.length ?? 0}
+                label="Skills Learned"
+              />
+              <StatCard
+                icon={Star}
+                value={user?.completedSessionsCount ?? 0}
+                label="Sessions Completed"
+              />
+              <StatCard
+                icon={Users}
+                value={matches.length}
+                label="Active Matches"
+              />
+            </>
+          )}
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="text-2xl font-bold">Quick Access</h2>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <QuickLink href="/profile" icon={User} label="My Profile" />
+          <QuickLink href="/matches" icon={Users} label="Matches" />
+          <QuickLink href="/chats" icon={MessageSquare} label="Chat" />
+          <QuickLink href="/calendar" icon={Calendar} label="Calendar" />
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="text-2xl font-bold">Upcoming Sessions</h2>
+        {sessionsLoading ? (
+          <Skeleton className="h-24 rounded-xl" />
+        ) : upcoming.length > 0 ? (
+          upcoming.map((item) => (
+            <Card key={item.id}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">{item.title}</CardTitle>
+                <CardDescription>
+                  {item.start}:00 – {item.end}:00
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          ))
+        ) : (
+          <EmptyState
+            icon={Calendar}
+            title="No upcoming sessions"
+            description="Schedule a session with a match to see it here."
+            action={
+              <Link
+                href="/calendar"
+                className={buttonVariants({ variant: "outline" })}
+              >
+                Open calendar
+              </Link>
+            }
+          />
+        )}
+      </section>
     </div>
   );
 };
+
+function StatCard({
+  icon: Icon,
+  value,
+  label,
+}: {
+  icon: typeof Award;
+  value: number;
+  label: string;
+}) {
+  return (
+    <Card>
+      <CardContent className="flex flex-col items-center gap-2 py-6">
+        <Icon className="text-primary size-10" />
+        <span className="text-primary text-3xl font-bold">{value}</span>
+        <span className="text-muted-foreground">{label}</span>
+      </CardContent>
+    </Card>
+  );
+}
+
+function QuickLink({
+  href,
+  icon: Icon,
+  label,
+}: {
+  href: string;
+  icon: typeof User;
+  label: string;
+}) {
+  return (
+    <Link href={href}>
+      <Card className="transition-colors hover:bg-muted/50">
+        <CardContent className="flex flex-col items-center gap-3 py-6">
+          <Icon className="text-accent size-10" />
+          <span className="font-semibold">{label}</span>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
 
 export default Page;

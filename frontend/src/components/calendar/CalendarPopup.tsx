@@ -1,16 +1,27 @@
 "use client";
 import { formatDate } from "@/app/utils/calendar";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Users, X } from "lucide-react";
+import { Users } from "lucide-react";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useSocket } from "@/context/SocketContext";
 import useFriends from "@/hooks/useFriends";
 import SessionsService from "@/services/SessionsService";
 import { createSessionFormData } from "@/validation/createSession";
-import { showErrorToast, showSuccessToast } from "@/utils/toast";
-import Spinner from "../Spinner";
+import { showSuccessToast } from "@/utils/toast";
+import { Spinner } from "@/components/ui/spinner";
 import { AxiosError } from "axios";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
 
 const CalendarPopup = ({
   year,
@@ -38,9 +49,7 @@ const CalendarPopup = ({
   const [badRequestErrorMessage, setBadRequestErrorMessage] = useState<
     string | null
   >(null);
-  // friends provided by useFriends(); call refetch() when needed
 
-  // mutation for creating session request
   const createSessionMutation = useMutation({
     mutationKey: ["session"],
     mutationFn: async (data: Omit<createSessionFormData, "friendName">) =>
@@ -59,6 +68,7 @@ const CalendarPopup = ({
       setBadRequestErrorMessage(err.response?.data?.message || err.message);
     },
   });
+
   const createSession: SubmitHandler<createSessionFormData> = async (data) => {
     const { friendName, ...newData } = data;
     if (friends) {
@@ -71,7 +81,6 @@ const CalendarPopup = ({
           "There`s no such friend in your list. Firstly add Friend!"
         );
         setAddFriendButton(true);
-        return;
       }
     }
   };
@@ -84,229 +93,196 @@ const CalendarPopup = ({
   }, [otherName, setValue, refetch]);
 
   return (
-    <div className=" absolute   top-0 left-0 size-full bg-[#6B72808C] flex items-center justify-center">
-      <div className="_border rounded-md p-4  bg-white! max-w-[500px]  w-full">
-        <div className="flex w-full mb-2  items-center justify-between">
-          <h2 className="text-lg leadiing-7 font-semibold">
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) setAddSessionPopup(false);
+      }}
+    >
+      <DialogContent className="max-w-[500px] sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle className="text-lg leading-7 font-semibold">
             Create a new Session
-          </h2>
-
-          <button
-            onClick={() => setAddSessionPopup(false)}
-            className=" button-transparent"
-          >
-            <X size={20} className="" />
-          </button>
-        </div>
+          </DialogTitle>
+        </DialogHeader>
         <form
           onSubmit={handleSubmit(createSession)}
-          className="flex px-4  flex-col gap-4 w-full"
+          className="flex w-full flex-col gap-4 px-1"
         >
           <div className="flex flex-col gap-1">
-            <label
-              className="text-sm leading-[22px] font-medium"
-              htmlFor="title"
-            >
-              Title
-            </label>
-            <div className="relative input flex items-center gap-2 text-gray text-sm leading-[22px] ">
-              <input
-                {...register("title")}
-                className="w-full outline-none"
-                placeholder="Enter title"
-                type="text"
-                id="title"
-              />
-            </div>
+            <Label htmlFor="title">Title</Label>
+            <Input
+              {...register("title")}
+              placeholder="Enter title"
+              type="text"
+              id="title"
+            />
             {errors.title && (
-              <span data-testid="error" className="text-red-500 font-medium ">
+              <span
+                data-testid="error"
+                className="font-medium text-destructive"
+              >
                 {errors.title.message}
               </span>
             )}
           </div>
           <div className="flex flex-col gap-1">
-            <label
-              className="text-sm leading-[22px] font-medium"
-              htmlFor="description"
-            >
-              Description <span className="text-gray">(Optional)</span>
-            </label>
-            <div className="relative input flex items-center gap-2 text-gray text-sm leading-[22px] ">
-              <textarea
-                maxLength={50}
-                {...register("description")}
-                className="w-full outline-none min-h-10"
-                placeholder="Enter title"
-                id="description"
-              />
-            </div>
+            <Label htmlFor="description">
+              Description{" "}
+              <span className="text-muted-foreground">(Optional)</span>
+            </Label>
+            <Textarea
+              maxLength={50}
+              {...register("description")}
+              className="min-h-10"
+              placeholder="Enter description"
+              id="description"
+            />
           </div>
           <div className="flex flex-col gap-1">
-            <label
-              className="text-sm leading-[22px] font-medium"
-              htmlFor="description"
-            >
-              Meeting Link <span className="text-gray">(Optional)</span>
-            </label>
-            <div className="relative input flex items-center gap-2 text-gray text-sm leading-[22px] ">
-              <input
-                {...register("meetingLink")}
-                className="w-full outline-none"
-                placeholder="Enter title"
-                type="text"
-                id="meetingLink"
-              />
-            </div>
+            <Label htmlFor="meetingLink">
+              Meeting Link{" "}
+              <span className="text-muted-foreground">(Optional)</span>
+            </Label>
+            <Input
+              {...register("meetingLink")}
+              placeholder="Enter meeting link"
+              type="text"
+              id="meetingLink"
+            />
           </div>
-          <div className="flex items-start gap-2 justify-between">
-            <div className="flex flex-col gap-1">
-              <label
-                className="text-sm leading-[22px] font-medium"
-                htmlFor="start"
-              >
-                Start Hour
-              </label>
-              <div className="relative input flex items-center gap-2 text-gray text-sm leading-[22px] ">
-                <input
-                  {...register("start")}
-                  className="w-full outline-none"
-                  placeholder="Enter start hour"
-                  type="text"
-                  id="start"
-                />
-              </div>
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex flex-1 flex-col gap-1">
+              <Label htmlFor="start">Start Hour</Label>
+              <Input
+                {...register("start")}
+                placeholder="Enter start hour"
+                type="text"
+                id="start"
+              />
               {errors.start && (
-                <span data-testid="error" className="text-red-500 font-medium ">
+                <span
+                  data-testid="error"
+                  className="font-medium text-destructive"
+                >
                   {errors.start.message}
                 </span>
               )}
             </div>
-            <div className="flex flex-col gap-1">
-              <label
-                className="text-sm leading-[22px] font-medium"
-                htmlFor="end"
-              >
-                End Hour
-              </label>
-              <div className="relative input flex items-center gap-2 text-gray text-sm leading-[22px] ">
-                <input
-                  {...register("end")}
-                  className="w-full outline-none"
-                  placeholder="Enter end hour"
-                  type="text"
-                  id="end"
-                />
-              </div>
+            <div className="flex flex-1 flex-col gap-1">
+              <Label htmlFor="end">End Hour</Label>
+              <Input
+                {...register("end")}
+                placeholder="Enter end hour"
+                type="text"
+                id="end"
+              />
               {errors.end && (
-                <span data-testid="error" className="text-red-500 font-medium ">
+                <span
+                  data-testid="error"
+                  className="font-medium text-destructive"
+                >
                   {errors.end.message}
                 </span>
               )}
             </div>
           </div>
           <div className="flex flex-col gap-1">
-            <label
-              className="text-sm leading-[22px] font-medium"
-              htmlFor="date"
-            >
-              Date
-            </label>
-            <div className="relative input flex items-center gap-2 text-gray text-sm leading-[22px] ">
-              <input
-                min={formatDate(firstDay)}
-                {...register("date", { required: "Field is required" })}
-                className="w-full outline-none "
-                type="date"
-                placeholder="Enter title"
-                id="date"
-              />
-            </div>
+            <Label htmlFor="date">Date</Label>
+            <Input
+              min={formatDate(firstDay)}
+              {...register("date", { required: "Field is required" })}
+              type="date"
+              id="date"
+            />
             {errors.date && (
-              <span data-testid="error" className="text-red-500 font-medium ">
+              <span
+                data-testid="error"
+                className="font-medium text-destructive"
+              >
                 {errors.date.message}
               </span>
             )}
           </div>
-          <div className="flex flex-col gap-1 relative">
-            <label
-              className="text-sm leading-[22px] font-medium"
-              htmlFor="friendName"
-            >
-              Choose partner:
-            </label>
-            <div className=" input flex items-center gap-2 text-gray text-sm leading-[22px] ">
-              <input
-                type="text"
-                placeholder="Find by name"
-                id="friendName"
-                {...register("friendName")}
-                className="w-full outline-none "
-                onChange={async (e) => {
-                  setChars(e.target.value);
-                  if (e.target.value.length === 1 && !friends) {
-                    await refetch();
-                  }
-                }}
-              />
-              {!isFetching ? (
-                friends &&
-                chars.length > 0 && (
-                  <div className="left-0 top-full absolute z-10 min-w-[250px] max-h-[300px] overflow-y-auto">
-                    <div className="flex flex-col gap-2 mt-2 p-2  _border bg-white rounded-md ">
-                      <div className="flex flex-col  gap-1 max-h-[500px]  border-neutral-300">
-                        {friends
-                          .filter((friend) =>
-                            (friend.name || "")
-                              .toLowerCase()
-                              .includes(chars.toLocaleLowerCase())
-                          )
-                          .map((friend, idx) => {
-                            return (
-                              <button
-                                className="cursor-pointer hover:opacity-75"
-                                key={idx}
-                                onClick={() => {
-                                  setValue("friendName", friend.name || "");
-                                  setChars("");
-                                }}
-                              >
-                                {friend.name}
-                              </button>
-                            );
-                          })}
-                      </div>
+          <div className="relative flex flex-col gap-1">
+            <Label htmlFor="friendName">Choose partner:</Label>
+            <Input
+              type="text"
+              placeholder="Find by name"
+              id="friendName"
+              {...register("friendName")}
+              onChange={async (e) => {
+                setChars(e.target.value);
+                if (e.target.value.length === 1 && !friends) {
+                  await refetch();
+                }
+              }}
+            />
+            {!isFetching ? (
+              friends &&
+              chars.length > 0 && (
+                <div className="absolute left-0 top-full z-50 max-h-[300px] min-w-[250px] overflow-y-auto">
+                  <Card className="mt-2 gap-1 p-2">
+                    <div className="flex max-h-[500px] flex-col gap-1">
+                      {friends
+                        .filter((friend) =>
+                          (friend.name || "")
+                            .toLowerCase()
+                            .includes(chars.toLocaleLowerCase())
+                        )
+                        .map((friend) => (
+                          <Button
+                            type="button"
+                            key={friend.id}
+                            variant="ghost"
+                            className="justify-start"
+                            onClick={() => {
+                              setValue("friendName", friend.name || "");
+                              setChars("");
+                            }}
+                          >
+                            {friend.name}
+                          </Button>
+                        ))}
                     </div>
-                  </div>
-                )
-              ) : (
-                <Spinner color="blue" size={24} />
-              )}
-            </div>
+                  </Card>
+                </div>
+              )
+            ) : (
+              <Spinner size="md" />
+            )}
             {errors.friendName && (
-              <span data-testid="error" className="text-red-500 font-medium ">
+              <span
+                data-testid="error"
+                className="font-medium text-destructive"
+              >
                 {errors.friendName.message}
               </span>
             )}
           </div>
           {badRequestErrorMessage && (
-            <span data-testid="error" className="text-red-500 font-medium ">
+            <span data-testid="error" className="font-medium text-destructive">
               {badRequestErrorMessage}
             </span>
           )}
-          <div className="flex w-full gap-4 items-center">
-            <button className="button-blue w-full">Create</button>
+          <div className="flex w-full items-center gap-4">
+            <Button type="submit" className="w-full">
+              Create
+            </Button>
             {addFriendButton && otherName && (
-              <button
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full gap-2"
                 onClick={() => createFriendRequest({ name: otherName })}
-                className="button-transparent w-full rounded-md! flex items-center gap-2"
               >
                 Add friend <Users size={16} />
-              </button>
+              </Button>
             )}
           </div>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

@@ -1,44 +1,32 @@
-"use client";
-
-import { Github, Linkedin } from "lucide-react";
 import Link from "next/link";
 
 const Footer = () => {
   return (
-    <footer className="sm:px-30 px-4 flex gap-6 items-center flex-wrap justify-between py-3  bg-neutral-100">
-      <div className="flex items-center gap-6">
-        <Link
-          className="text-sm leading-5 font-medium transition-colors hover:text-blue"
-          href={"#"}
-        >
-          Company
-        </Link>
-        <Link
-          className="text-sm leading-5 font-medium transition-colors hover:text-blue"
-          href={"#"}
-        >
-          Resources
-        </Link>
-        <Link
-          className="text-sm leading-5 font-medium transition-colors hover:text-blue"
-          href={"#"}
-        >
-          Legal
-        </Link>
-      </div>
-      <div className="flex items-center gap-6">
-        <Link
-          className=" transition-colors hover:text-blue"
-          href={"https://www.linkedin.com/in/bogdan-tytysh-0b76b1290/"}
-        >
-          <Linkedin size={20} />
-        </Link>
-        <Link
-          className=" transition-colors hover:text-blue"
-          href={"https://github.com/3cgbdg"}
-        >
-          <Github size={20} />
-        </Link>
+    <footer className="border-border bg-muted/40 mt-auto border-t">
+      <div className="_container flex flex-wrap items-center justify-between gap-4 py-6 text-sm">
+        <p className="text-muted-foreground">
+          © {new Date().getFullYear()} SkillSwap AI
+        </p>
+        <div className="flex flex-wrap gap-4">
+          <Link
+            href="/dashboard"
+            className="text-muted-foreground hover:text-primary"
+          >
+            Dashboard
+          </Link>
+          <Link
+            href="/matches"
+            className="text-muted-foreground hover:text-primary"
+          >
+            Matches
+          </Link>
+          <Link
+            href="/profile"
+            className="text-muted-foreground hover:text-primary"
+          >
+            Profile
+          </Link>
+        </div>
       </div>
     </footer>
   );
