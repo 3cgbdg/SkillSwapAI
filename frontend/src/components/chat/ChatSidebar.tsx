@@ -15,7 +15,9 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { Badge } from "@/components/ui/badge";
+import { UserRow } from "@/components/composites";
 import { cn } from "@/lib/utils";
+import { withViewTransition } from "@/lib/viewTransition";
 
 const ChatSidebar = () => {
   const router = useRouter();
@@ -38,7 +40,7 @@ const ChatSidebar = () => {
         if (!old) return [data];
         return [data, ...old];
       });
-      router.push(`/chats/${data.chatId}`);
+      router.push(`/inbox/${data.chatId}`);
     },
     onError: (err: Error) => {
       showErrorToast(err.message);
@@ -138,72 +140,69 @@ const ChatSidebar = () => {
       )}
 
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
-        {chats?.map((chat) => (
-          <button
-            type="button"
-            key={chat.chatId}
-            onClick={() => router.push(`/chats/${chat.chatId}`)}
-            className={cn(
-              "group flex cursor-pointer justify-between gap-4 rounded-lg p-3 transition-all hover:bg-muted",
-              path === `/chats/${chat.chatId}` && "bg-muted"
-            )}
-          >
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <UserAvatar
-                  name={chat.friend.name}
-                  imageUrl={chat.friend.imageUrl}
-                  size="md"
-                />
-                <span
-                  className={cn(
-                    "absolute bottom-0 right-0 size-3 rounded-full border-2 border-background",
-                    onlineUsers.includes(chat.friend.id)
-                      ? "bg-success"
-                      : "bg-muted-foreground"
-                  )}
-                  aria-hidden
-                />
-              </div>
-
-              {isFullyOpen && (
-                <div className="text-left">
-                  <h3 className="max-w-[160px] truncate font-medium">
-                    {chat.friend.name}
-                  </h3>
-                  <div className="relative max-w-[150px]">
-                    <p className="truncate text-sm leading-5 text-muted-foreground">
-                      {chat.lastMessageContent}
-                    </p>
-                    <div
-                      className={cn(
-                        "pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l to-transparent",
-                        path === `/chats/${chat.chatId}`
-                          ? "from-secondary"
-                          : "from-card group-hover:from-secondary"
-                      )}
-                    />
-                  </div>
-                </div>
+        {chats?.map((chat) =>
+          isFullyOpen ? (
+            <UserRow
+              key={chat.chatId}
+              className={cn(
+                "border-0 bg-transparent shadow-none",
+                path === `/inbox/${chat.chatId}` && "bg-muted"
               )}
-            </div>
-            {isFullyOpen && (
-              <div className="flex flex-col items-end gap-1">
-                <span className="text-xs leading-4 text-muted-foreground">
-                  {chat._max
-                    ? new Date(chat._max.createdAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
-                    : null}
-                </span>
-                {chat._count && chat._count.id > 0 && (
-                  <Badge className="px-2 py-0.5">{chat._count.id}</Badge>
-                )}
-              </div>
-            )}
-          </button>
-        ))}
+              onClick={() =>
+                withViewTransition(() => router.push(`/inbox/${chat.chatId}`))
+              }
+              media={
+                <div className="relative">
+                  <UserAvatar
+                    name={chat.friend.name}
+                    imageUrl={chat.friend.imageUrl}
+                    size="md"
+                  />
+                  <span
+                    className={cn(
+                      "absolute bottom-0 right-0 size-3 rounded-full border-2 border-background",
+                      onlineUsers.includes(chat.friend.id)
+                        ? "bg-success"
+                        : "bg-muted-foreground"
+                    )}
+                    aria-hidden
+                  />
+                </div>
+              }
+              title={chat.friend.name}
+              description={chat.lastMessageContent}
+              actions={
+                <div className="flex flex-col items-end gap-1">
+                  <span className="text-xs leading-4 text-muted-foreground">
+                    {chat._max
+                      ? new Date(chat._max.createdAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : null}
+                  </span>
+                  {chat._count && chat._count.id > 0 ? (
+                    <Badge className="px-2 py-0.5">{chat._count.id}</Badge>
+                  ) : null}
+                </div>
+              }
+            />
+          ) : (
+            <button
+              type="button"
+              key={chat.chatId}
+              onClick={() => router.push(`/inbox/${chat.chatId}`)}
+              className="flex justify-center rounded-lg p-2 hover:bg-muted"
+              aria-label={chat.friend.name}
+            >
+              <UserAvatar
+                name={chat.friend.name}
+                imageUrl={chat.friend.imageUrl}
+                size="md"
+              />
+            </button>
+          )
+        )}
       </div>
     </Card>
   );

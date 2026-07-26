@@ -4,6 +4,7 @@ import { Search, X } from "lucide-react";
 import { useState } from "react";
 
 import SearchResults from "./SearchResults";
+import { FloatingPanelSurface } from "@/components/composites/FloatingPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
@@ -71,7 +72,7 @@ const SearchInputMobile = ({
         </Button>
       )}
       {open ? (
-        <div className="border-border bg-background absolute top-full right-0 left-0 z-[var(--z-dropdown)] mt-2 flex flex-col gap-3 border p-4 shadow-lg">
+        <FloatingPanelSurface className="absolute top-full right-0 left-0 mt-2 gap-3 p-4">
           <Input
             value={word}
             onChange={handleChange}
@@ -94,7 +95,7 @@ const SearchInputMobile = ({
               )}
             </div>
           ) : null}
-        </div>
+        </FloatingPanelSurface>
       ) : null}
     </div>
   );

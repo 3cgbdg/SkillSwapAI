@@ -38,6 +38,23 @@ const ModuleAccordion = ({
       );
       return res;
     },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["plans", id] });
+      const previous = queryClient.getQueryData(["plans", id]);
+      queryClient.setQueryData(
+        ["plans", id],
+        (old: { modules?: IGeneratedModule[] } | undefined) => {
+          if (!old?.modules) return old;
+          return {
+            ...old,
+            modules: old.modules.map((m) =>
+              m.id === module.id ? { ...m, status: "COMPLETED" as const } : m
+            ),
+          };
+        }
+      );
+      return { previous };
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["plans", id] });
       queryClient.invalidateQueries({ queryKey: ["matches", id] });
@@ -45,7 +62,10 @@ const ModuleAccordion = ({
         data.message || "Module complete — nice work on your skill swap!"
       );
     },
-    onError: (err: Error) => {
+    onError: (err: Error, _v, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["plans", id], context.previous);
+      }
       showErrorToast(err.message);
     },
   });

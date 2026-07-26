@@ -11,7 +11,10 @@ import {
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-dvh items-center justify-center p-4">
+    <div
+      id="main-content"
+      className="flex min-h-dvh items-center justify-center p-4"
+    >
       <Card elevation="raised" className="w-full max-w-md text-center">
         <CardHeader>
           <CardTitle className="font-heading text-h1">Page not found</CardTitle>

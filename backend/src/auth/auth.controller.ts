@@ -109,6 +109,28 @@ export class AuthController {
     const data = await this.usersService.findUniqueUserWithSkills(
       request.user.id,
     );
+    // #region agent log
+    fetch('http://127.0.0.1:7877/ingest/c055a23c-4c84-4eb5-84c0-8abae4e46ddd', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Debug-Session-Id': 'ee6149',
+      },
+      body: JSON.stringify({
+        sessionId: 'ee6149',
+        hypothesisId: 'H3',
+        location: 'auth.controller.ts:profile',
+        message: 'profile payload from DB',
+        data: {
+          userId: request.user.id,
+          completedSessionsCount: data.completedSessionsCount,
+          knownSkillsLen: data.knownSkills?.length,
+          learnSkillsLen: data.skillsToLearn?.length,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
     return { data };
   }
 

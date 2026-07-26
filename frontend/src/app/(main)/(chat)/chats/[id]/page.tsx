@@ -1,39 +1,17 @@
-"use client";
+﻿"use client";
 
 import { useSocket } from "@/context/SocketContext";
 import { IChat, IMessage } from "@/types/types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  Calendar,
-  EllipsisVertical,
-  Send,
-  UserRound,
-  VolumeX,
-} from "lucide-react";
-import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ChatsService from "@/services/ChatsService";
 import useProfile from "@/hooks/useProfile";
 import useChats from "@/hooks/useChats";
 import useOnlineUsers from "@/hooks/useOnlineUsers";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { showErrorToast } from "@/utils/toast";
-import { Spinner } from "@/components/ui/spinner";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { EmptyState } from "@/components/ui/empty-state";
-import { Textarea } from "@/components/ui/textarea";
-import { UserAvatar } from "@/components/ui/user-avatar";
-import { MessageSquare } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ChatMessageList } from "@/components/chat/ChatMessageList";
+import { AsyncBoundary } from "@/components/composites";
+import { ChatComposer } from "@/components/chat/ChatComposer";
+import { ChatThread } from "@/components/chat/ChatThread";
 import { groupChatMessages, TEMP_MESSAGE_PREFIX } from "@/utils/chatMessages";
 
 type ExtendedMessage = IMessage & { pending?: boolean; failed?: boolean };
@@ -42,7 +20,6 @@ const Page = () => {
   const onlineUsers = useOnlineUsers();
   const { socket } = useSocket();
   const queryClient = useQueryClient();
-  const router = useRouter();
   const { data: user } = useProfile();
   const [messageInput, setMessageInput] = useState<string>("");
   const [isTyping, setIsTyping] = useState(false);
@@ -52,7 +29,8 @@ const Page = () => {
   const currentChat = chats.find((chat) => chat.chatId === id) ?? null;
   const endRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const refs = useRef<HTMLDivElement[]>([]);
+  const refs = useRef<(HTMLDivElement | null)[]>([]);
+  const [refsVersion, setRefsVersion] = useState(0);
   const lastMessageRef = useRef<string>("");
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -69,16 +47,25 @@ const Page = () => {
     enabled: !!friendId,
   });
 
-  useEffect(() => {
-    if (isError) {
-      showErrorToast(error?.message || "An error occurred");
-    }
-  }, [error, isError]);
+  const flatMessages = useMemo(
+    () => (messages as ExtendedMessage[]) ?? [],
+    [messages]
+  );
+
+  const registerMessageRef = useCallback(
+    (index: number, el: HTMLDivElement | null) => {
+      if (refs.current[index] === el) return;
+      refs.current[index] = el;
+      setRefsVersion((v) => v + 1);
+    },
+    []
+  );
 
   useEffect(() => {
     if (!messages || !socket || !user) return;
-    const elements = refs.current.filter(Boolean);
+    const elements = refs.current.filter(Boolean) as HTMLDivElement[];
     if (!elements.length) return;
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -116,10 +103,9 @@ const Page = () => {
       { threshold: 0.5, root: containerRef.current }
     );
 
-    elements.forEach((el) => el && observer.observe(el));
-
+    elements.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, [messages, socket, user, id, queryClient]);
+  }, [messages, socket, user, id, queryClient, refsVersion]);
 
   useEffect(() => {
     if (!socket || !user || !currentChat) return;
@@ -237,8 +223,7 @@ const Page = () => {
     }, 2000);
   }, [socket, friendId]);
 
-  const handleSend = () => {
-    const trimmed = messageInput.trim();
+  const sendMessage = (trimmed: string) => {
     if (!currentChat || !user || trimmed === "") return;
 
     if (!socket?.connected) {
@@ -257,7 +242,6 @@ const Page = () => {
           },
         ]
       );
-      setMessageInput("");
       return;
     }
 
@@ -284,147 +268,64 @@ const Page = () => {
       message: trimmed,
     });
     socket.emit("stopTyping", { to: currentChat.friend.id });
+  };
+
+  const handleSend = () => {
+    const trimmed = messageInput.trim();
+    if (!trimmed) return;
+    sendMessage(trimmed);
     setMessageInput("");
   };
 
+  const handleRetry = (msg: ExtendedMessage) => {
+    if (!currentChat || !user) return;
+    queryClient.setQueryData(
+      ["messages", currentChat.friend.id],
+      (old: ExtendedMessage[] = []) => old.filter((m) => m.id !== msg.id)
+    );
+    sendMessage(msg.content);
+  };
+
   const grouped = useMemo(
-    () => groupChatMessages((messages as ExtendedMessage[]) ?? [], user?.id),
-    [messages, user?.id]
+    () => groupChatMessages(flatMessages, user?.id),
+    [flatMessages, user?.id]
   );
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
-    if (messages) {
-      refs.current = Array(messages.length).fill(null);
-    }
-  }, [messages]);
+    refs.current = Array(flatMessages.length).fill(null);
+    setRefsVersion((v) => v + 1);
+  }, [flatMessages]);
+
+  const isOnline = Boolean(
+    currentChat && onlineUsers.includes(currentChat.friend.id)
+  );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <Link href="/chats" className={cn(buttonVariants(), "md:hidden w-fit")}>
-        Go to chats
-      </Link>
-      <Card className="flex min-h-[min(70dvh,720px)] flex-1 flex-col overflow-hidden rounded-xl p-0">
-        <div className="border-b border-border shrink-0">
-          <div className="flex items-center justify-between gap-2 px-4 py-4 md:px-6">
-            <div className="flex items-center gap-3">
-              <UserAvatar
-                name={currentChat?.friend.name}
-                imageUrl={currentChat?.friend.imageUrl}
-                size="md"
-              />
-              <div>
-                <p className="font-heading font-semibold">
-                  {currentChat?.friend.name}
-                </p>
-                <span
-                  className={cn(
-                    "block text-sm",
-                    currentChat && onlineUsers.includes(currentChat.friend.id)
-                      ? "text-success"
-                      : "text-muted-foreground"
-                  )}
-                >
-                  {isTyping
-                    ? "Typing…"
-                    : currentChat && onlineUsers.includes(currentChat.friend.id)
-                      ? "Online"
-                      : "Offline"}
-                </span>
-              </div>
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                className="hover:bg-muted inline-flex size-8 items-center justify-center rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-                aria-label="Chat options"
-              >
-                <EllipsisVertical className="size-5" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() =>
-                    currentChat?.friend.id &&
-                    router.push(`/profiles/${currentChat.friend.id}`)
-                  }
-                >
-                  <UserRound className="size-4" />
-                  View profile
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() =>
-                    router.push(
-                      `/calendar?schedule=true&name=${encodeURIComponent(currentChat?.friend.name || "")}`
-                    )
-                  }
-                >
-                  <Calendar className="size-4" />
-                  Schedule session
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => showErrorToast("Mute coming soon")}
-                >
-                  <VolumeX className="size-4" />
-                  Mute
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-
-        <div
-          ref={containerRef}
-          className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4 md:p-6"
-        >
-          {!isLoading ? (
-            messages && messages.length > 0 ? (
-              <ChatMessageList items={grouped} />
-            ) : (
-              <EmptyState
-                icon={MessageSquare}
-                title="Start the conversation"
-                description="Send a message to begin chatting."
-                className="mt-12 border-none bg-transparent"
-              />
-            )
-          ) : (
-            <div className="flex flex-1 items-center justify-center">
-              <Spinner size="xl" />
-            </div>
-          )}
-          <div ref={endRef} />
-        </div>
-
-        <div className="border-t border-border bg-card shrink-0">
-          <div className="flex items-end gap-3 p-4 md:px-6">
-            <Textarea
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-              onChange={(e) => {
-                setMessageInput(e.target.value);
-                emitTyping();
-              }}
+    <AsyncBoundary isError={isError} error={error}>
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
+        <ChatThread
+          currentChat={currentChat}
+          isTyping={isTyping}
+          isOnline={isOnline}
+          isLoading={isLoading}
+          grouped={grouped}
+          flatMessages={flatMessages}
+          registerMessageRef={registerMessageRef}
+          onRetryMessage={handleRetry}
+          containerRef={containerRef}
+          endRef={endRef}
+          footer={
+            <ChatComposer
               value={messageInput}
-              className="min-h-10 w-full resize-none text-sm"
-              placeholder="Type your message…"
-              rows={1}
+              onChange={setMessageInput}
+              onSend={handleSend}
+              onTyping={emitTyping}
             />
-            <Button
-              type="button"
-              size="icon"
-              className="size-10 shrink-0"
-              onClick={handleSend}
-              aria-label="Send message"
-            >
-              <Send size={16} />
-            </Button>
-          </div>
-        </div>
-      </Card>
-    </div>
+          }
+        />
+      </div>
+    </AsyncBoundary>
   );
 };
 

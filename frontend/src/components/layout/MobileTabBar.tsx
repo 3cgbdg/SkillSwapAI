@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { mobileNavLinks } from "@/constants/navLinks";
+import { navLinks, isNavActive } from "@/constants/navLinks";
 import { cn } from "@/lib/utils";
 
 const MobileTabBar = () => {
@@ -15,10 +15,8 @@ const MobileTabBar = () => {
       className="border-border bg-card/95 supports-[backdrop-filter]:bg-card/80 fixed inset-x-0 bottom-0 z-[var(--z-dropdown)] border-t backdrop-blur md:hidden"
     >
       <ul className="mx-auto flex max-w-lg items-stretch justify-around px-1 pb-[env(safe-area-inset-bottom)]">
-        {mobileNavLinks.map((item) => {
-          const active =
-            path === item.link ||
-            (item.link !== "/dashboard" && path.startsWith(item.link));
+        {navLinks.map((item) => {
+          const active = isNavActive(path, item.link);
           return (
             <li key={item.link} className="flex-1">
               <Link

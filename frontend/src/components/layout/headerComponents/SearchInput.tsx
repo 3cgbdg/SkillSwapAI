@@ -4,10 +4,10 @@ import { Search, X } from "lucide-react";
 import { useState } from "react";
 
 import SearchResults from "./SearchResults";
+import { FloatingPanelSurface } from "@/components/composites/FloatingPanel";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { FoundSkills, FoundUsers } from "@/types/common";
-import { cn } from "@/lib/utils";
 
 interface SearchInputProps {
   word: string;
@@ -72,11 +72,7 @@ const SearchInput = ({
         </button>
       ) : null}
       {showResults ? (
-        <div
-          className={cn(
-            "border-border bg-popover absolute top-full left-0 z-[var(--z-dropdown)] mt-2 flex max-h-64 min-w-[280px] flex-col overflow-auto rounded-lg border p-3 shadow-md"
-          )}
-        >
+        <FloatingPanelSurface className="absolute top-full left-0 mt-2 max-h-64 min-w-[280px] rounded-lg p-3">
           {isPending ? (
             <Spinner size="md" className="mx-auto" />
           ) : (
@@ -88,7 +84,7 @@ const SearchInput = ({
               onRemoveSkill={onRemoveSkill}
             />
           )}
-        </div>
+        </FloatingPanelSurface>
       ) : null}
     </div>
   );

@@ -1,34 +1,30 @@
 "use client";
 
 import Matches from "@/components/matches/Matches";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyState, SegmentedControl } from "@/components/composites";
 import { Spinner } from "@/components/ui/spinner";
-import { Button } from "@/components/ui/button";
 import { WarmScholarEmptyArt } from "@/components/illustrations/WarmScholarEmptyArt";
 import useMatches from "@/hooks/useMatches";
 import MatchesService from "@/services/MatchesService";
 import { useQuery } from "@tanstack/react-query";
 import { Users } from "lucide-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
-import { showErrorToast } from "@/utils/toast";
-import { cn } from "@/lib/utils";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { AsyncBoundary } from "@/components/composites";
 
 export default function MatchesPageContent() {
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const router = useRouter();
-  const tab = searchParams.get("tab") === "active" ? "active" : "available";
+  const tabFromPath = pathname.startsWith("/learning") ? "active" : "available";
+  const tab = searchParams.get("tab") === "active" ? "active" : tabFromPath;
 
   const setTab = (value: "available" | "active") => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value === "available") {
-      params.delete("tab");
-    } else {
-      params.set("tab", "active");
+    if (value === "active") {
+      router.replace("/learning");
+      return;
     }
-    const qs = params.toString();
-    router.replace(qs ? `/matches?${qs}` : "/matches");
+    router.replace("/discover");
   };
 
   const {
@@ -49,72 +45,56 @@ export default function MatchesPageContent() {
     error: activeErr,
   } = useMatches();
 
-  useEffect(() => {
-    if (availableError) {
-      showErrorToast(availableErr?.message || "An error occurred");
-    }
-    if (activeError) {
-      showErrorToast(activeErr?.message || "An error occurred");
-    }
-  }, [availableError, availableErr, activeError, activeErr]);
-
   const isLoading = tab === "available" ? availableLoading : activeLoading;
   const matches = tab === "available" ? availableMatches : activeMatches;
+  const queryError = availableError || activeError;
+  const queryErr = availableErr || activeErr;
 
   return (
-    <div className="flex flex-col gap-6">
-      <div
-        className="bg-muted inline-flex w-fit rounded-lg border border-border p-1"
-        role="tablist"
-        aria-label="Match type"
-      >
-        {(["available", "active"] as const).map((value) => (
-          <Button
-            key={value}
-            type="button"
-            role="tab"
-            aria-selected={tab === value}
-            variant={tab === value ? "default" : "ghost"}
-            size="sm"
-            className={cn(tab !== value && "text-muted-foreground")}
-            onClick={() => setTab(value)}
-          >
-            {value === "available" ? "Available" : "Active"}
-          </Button>
-        ))}
-      </div>
+    <AsyncBoundary isError={queryError} error={queryErr} loadingFallback={null}>
+      <div className="flex flex-col gap-6">
+        <SegmentedControl
+          aria-label="Match type"
+          value={tab}
+          onValueChange={setTab}
+          options={[
+            { value: "available", label: "Available" },
+            { value: "active", label: "Active" },
+          ]}
+        />
 
-      {isLoading ? (
-        <div className="flex h-100 items-center justify-center">
-          <Spinner size="xl" />
-        </div>
-      ) : matches && matches.length > 0 ? (
-        <Matches matches={matches} option={tab} />
-      ) : (
-        <EmptyState
-          icon={Users}
-          title={
-            tab === "active"
-              ? "No active matches yet"
-              : "No available matches yet"
-          }
-          description={
-            tab === "active" ? (
-              <>
-                Start a match from{" "}
-                <Link href="/matches" className="text-primary underline">
-                  available partners
-                </Link>{" "}
-                to begin your training plan.
-              </>
-            ) : (
-              "Check back later as more learners join SkillSwap."
-            )
-          }
-        >
-          <WarmScholarEmptyArt className="text-primary h-16 w-24" />
-        </EmptyState>
-      )}
-    </div>
+        {isLoading ? (
+          <div className="flex h-100 items-center justify-center">
+            <Spinner size="xl" />
+          </div>
+        ) : matches && matches.length > 0 ? (
+          <Matches matches={matches} option={tab} />
+        ) : (
+          <EmptyState
+            icon={Users}
+            title={
+              tab === "active"
+                ? "No active matches yet"
+                : "No available matches yet"
+            }
+            description={
+              tab === "active" ? (
+                <>
+                  Start a match from{" "}
+                  <Link href="/discover" className="text-primary underline">
+                    available partners
+                  </Link>{" "}
+                  to begin your training plan.
+                </>
+              ) : (
+                "Check back later as more learners join SkillSwap."
+              )
+            }
+          >
+            <WarmScholarEmptyArt className="text-primary h-16 w-24" />
+          </EmptyState>
+        )}
+      </div>
+    </AsyncBoundary>
   );
 }

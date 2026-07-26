@@ -6,7 +6,6 @@ import useSessions from "@/hooks/useSessions";
 import {
   Award,
   Calendar,
-  CheckCircle2,
   MessageSquare,
   Sparkles,
   Star,
@@ -14,8 +13,16 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
+import { useEffect } from "react";
 
+import {
+  DataEmpty,
+  SkeletonKit,
+  StatTile,
+  TaskChecklistLink,
+} from "@/components/composites";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
+import { PageBody, PageSection } from "@/components/layouts";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -24,11 +31,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { EmptyState } from "@/components/ui/empty-state";
 import { Progress } from "@/components/ui/progress";
-import { Skeleton } from "@/components/ui/skeleton";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { cn } from "@/lib/utils";
 import { formatSessionTimeRange } from "@/utils/sessionTime";
 
 const Page = () => {
@@ -60,18 +64,59 @@ const Page = () => {
     knownCount > 0 ||
     matches.length > 0;
 
+  useEffect(() => {
+    // #region agent log
+    fetch("http://127.0.0.1:7877/ingest/c055a23c-4c84-4eb5-84c0-8abae4e46ddd", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "ee6149",
+      },
+      body: JSON.stringify({
+        sessionId: "ee6149",
+        hypothesisId: "H4",
+        location: "dashboard/page.tsx",
+        message: "dashboard aggregate state",
+        data: {
+          profileLoading,
+          matchesLoading,
+          sessionsLoading,
+          hasUser: Boolean(user),
+          knownCount,
+          learnCount,
+          completedSessionsCount: user?.completedSessionsCount ?? null,
+          matchesLen: matches.length,
+          sessionsLen: sessions.length,
+          showStats,
+          apiBase:
+            typeof process.env.NEXT_PUBLIC_API_URL === "string"
+              ? process.env.NEXT_PUBLIC_API_URL.slice(0, 40)
+              : "missing",
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+  }, [
+    profileLoading,
+    matchesLoading,
+    sessionsLoading,
+    user,
+    knownCount,
+    learnCount,
+    matches.length,
+    sessions.length,
+    showStats,
+  ]);
+
   return (
-    <div className="flex flex-col gap-8 animate-fade-up">
+    <PageBody>
       {needsOnboarding ? <OnboardingWizard /> : null}
 
       <Card elevation="raised" className="border-0 bg-surface-raised">
         <CardContent className="flex flex-col gap-6 p-6 md:flex-row md:items-center md:justify-between md:p-8">
           {loading ? (
-            <div className="flex w-full flex-col gap-4">
-              <Skeleton className="h-10 w-2/3" />
-              <Skeleton className="h-6 w-full" />
-              <Skeleton className="h-10 w-32" />
-            </div>
+            <SkeletonKit.PageHeader />
           ) : (
             <>
               <div className="flex max-w-xl flex-col gap-3">
@@ -88,23 +133,23 @@ const Page = () => {
               <div className="flex w-full max-w-xs flex-col gap-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">Profile completeness</span>
-                  <span className="text-primary font-semibold">
+                  <span className="text-primary font-semibold tabular-nums">
                     {completeness}%
                   </span>
                 </div>
                 <Progress value={completeness} />
                 <ul className="mt-1 flex flex-col gap-1.5 text-sm">
-                  <TaskRow
+                  <TaskChecklistLink
                     done={knownCount > 0}
                     label="Add a skill you can teach"
                     href="/profile"
                   />
-                  <TaskRow
+                  <TaskChecklistLink
                     done={learnCount > 0}
                     label="Add a skill you want to learn"
                     href="/profile"
                   />
-                  <TaskRow
+                  <TaskChecklistLink
                     done={hasBio}
                     label="Write a short bio"
                     href="/profile"
@@ -116,22 +161,19 @@ const Page = () => {
         </CardContent>
       </Card>
 
-      <section className="flex flex-col gap-4">
-        <div className="flex items-end justify-between gap-4">
-          <h2 className="text-h2">Recommended matches</h2>
+      <PageSection
+        title="Recommended matches"
+        action={
           <Link
             href="/matches"
             className="text-primary text-sm font-medium hover:underline"
           >
             View all
           </Link>
-        </div>
+        }
+      >
         {loading ? (
-          <div className="grid gap-4 md:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-36 rounded-xl" />
-            ))}
-          </div>
+          <SkeletonKit.CardGrid />
         ) : topMatches.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-3">
             {topMatches.map((match, index) => (
@@ -156,7 +198,7 @@ const Page = () => {
                       <CardTitle className="truncate">
                         {match.other.name}
                       </CardTitle>
-                      <CardDescription>
+                      <CardDescription className="tabular-nums">
                         {match.compatibility ?? 0}% match
                       </CardDescription>
                     </div>
@@ -172,7 +214,7 @@ const Page = () => {
             ))}
           </div>
         ) : (
-          <EmptyState
+          <DataEmpty
             icon={Sparkles}
             title="No matches yet"
             description="Add skills you teach and want to learn — then we’ll find partners for you."
@@ -186,12 +228,11 @@ const Page = () => {
             }
           />
         )}
-      </section>
+      </PageSection>
 
-      <section className="flex flex-col gap-4">
-        <h2 className="text-h2">Today&apos;s sessions</h2>
+      <PageSection title="Today's sessions">
         {sessionsLoading ? (
-          <Skeleton className="h-24 rounded-xl" />
+          <SkeletonKit.Row />
         ) : upcoming.length > 0 ? (
           <div className="flex flex-col gap-3">
             {upcoming.map((item) => (
@@ -210,7 +251,7 @@ const Page = () => {
             ))}
           </div>
         ) : (
-          <EmptyState
+          <DataEmpty
             icon={Calendar}
             title="No upcoming sessions"
             description="Schedule a session with a match to see it on your timeline."
@@ -224,85 +265,33 @@ const Page = () => {
             }
           />
         )}
-      </section>
+      </PageSection>
 
       {showStats ? (
-        <section className="flex flex-col gap-3">
-          <h2 className="text-h2">Your progress</h2>
+        <PageSection title="Your progress">
           <div className="grid grid-cols-3 gap-3">
-            <StatPill icon={Award} value={knownCount} label="Skills" />
-            <StatPill
+            <StatTile icon={Award} value={knownCount} label="Skills" />
+            <StatTile
               icon={Star}
               value={user?.completedSessionsCount ?? 0}
               label="Sessions"
             />
-            <StatPill icon={Users} value={matches.length} label="Matches" />
+            <StatTile icon={Users} value={matches.length} label="Matches" />
           </div>
-        </section>
+        </PageSection>
       ) : null}
 
-      <section className="flex flex-col gap-4">
-        <h2 className="text-h2">Quick access</h2>
+      <PageSection title="Quick access">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <QuickLink href="/profile" icon={User} label="My Profile" />
           <QuickLink href="/matches" icon={Users} label="Matches" />
-          <QuickLink href="/chats" icon={MessageSquare} label="Chat" />
+          <QuickLink href="/inbox" icon={MessageSquare} label="Chat" />
           <QuickLink href="/calendar" icon={Calendar} label="Calendar" />
         </div>
-      </section>
-    </div>
+      </PageSection>
+    </PageBody>
   );
 };
-
-function TaskRow({
-  done,
-  label,
-  href,
-}: {
-  done: boolean;
-  label: string;
-  href: string;
-}) {
-  return (
-    <li>
-      <Link
-        href={href}
-        className={cn(
-          "flex items-center gap-2 rounded-md transition-colors hover:text-primary",
-          done ? "text-muted-foreground" : "text-foreground"
-        )}
-      >
-        <CheckCircle2
-          className={cn(
-            "size-4 shrink-0",
-            done ? "text-success" : "text-border"
-          )}
-        />
-        <span className={cn(done && "line-through")}>{label}</span>
-      </Link>
-    </li>
-  );
-}
-
-function StatPill({
-  icon: Icon,
-  value,
-  label,
-}: {
-  icon: typeof Award;
-  value: number;
-  label: string;
-}) {
-  return (
-    <div className="bg-muted/50 flex items-center gap-2 rounded-lg px-3 py-2">
-      <Icon className="text-primary size-4 shrink-0" />
-      <div className="min-w-0">
-        <div className="text-sm font-semibold leading-none">{value}</div>
-        <div className="text-muted-foreground text-xs">{label}</div>
-      </div>
-    </div>
-  );
-}
 
 function QuickLink({
   href,

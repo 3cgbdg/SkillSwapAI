@@ -8,12 +8,12 @@ import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import SessionsService from "@/services/SessionsService";
 import { ISession } from "@/types/session";
+import { AsyncBoundary } from "@/components/composites";
 import { useQuery } from "@tanstack/react-query";
 import { addDays, endOfWeek, format, isSameDay, startOfWeek } from "date-fns";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { showErrorToast } from "@/utils/toast";
 import { sessionStartDate } from "@/utils/sessionTime";
 
 export type CalendarSession = {
@@ -63,12 +63,6 @@ const Calendar = () => {
   });
 
   useEffect(() => {
-    if (isError) {
-      showErrorToast(error?.message || "Failed to load sessions");
-    }
-  }, [isError, error]);
-
-  useEffect(() => {
     if (shouldOpenSchedule && scheduleName) {
       setSchedulePartner(scheduleName);
       setAddSessionPopup(true);
@@ -95,84 +89,93 @@ const Calendar = () => {
   }, [sessions, weekStart]);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="font-heading text-h1 text-foreground">Calendar</h1>
-          <p className="text-muted-foreground text-sm">
-            {format(weekStart, "MMM d")} – {format(weekEnd, "MMM d, yyyy")}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => setWeekAnchor((d) => addDays(d, -7))}
-            aria-label="Previous week"
-          >
-            <ChevronLeft />
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => setWeekAnchor((d) => addDays(d, 7))}
-            aria-label="Next week"
-          >
-            <ChevronRight />
-          </Button>
-          <Button
-            type="button"
-            className="gap-2"
-            onClick={() => {
-              setSchedulePartner(null);
-              setPopupPrefill(null);
-              setAddSessionPopup(true);
-            }}
-          >
-            <Plus size={16} />
-            New session
-          </Button>
-        </div>
-      </div>
-
-      <Card className="overflow-hidden p-0" elevation="raised">
-        {isLoading ? (
-          <div className="flex h-[440px] items-center justify-center">
-            <Spinner size="xl" />
+    <AsyncBoundary isError={isError} error={error}>
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="font-heading text-h1 text-foreground">Calendar</h1>
+            <p className="text-muted-foreground text-sm">
+              {format(weekStart, "MMM d")} – {format(weekEnd, "MMM d, yyyy")}
+            </p>
           </div>
-        ) : (
-          <>
-            <div className="hidden md:block">
-              <DesktopGridCalendar
-                tableCells={tableCells}
-                onCreateSlot={(startsAt, endsAt) => {
-                  setPopupPrefill({ startsAt, endsAt });
-                  setAddSessionPopup(true);
-                }}
-              />
-            </div>
-            <div className="md:hidden">
-              <TouchScreenCalendar tableCells={tableCells} />
-            </div>
-          </>
-        )}
-      </Card>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => setWeekAnchor((d) => addDays(d, -7))}
+              aria-label="Previous week"
+            >
+              <ChevronLeft />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => setWeekAnchor((d) => addDays(d, 7))}
+              aria-label="Next week"
+            >
+              <ChevronRight />
+            </Button>
+            <Button
+              type="button"
+              className="gap-2"
+              onClick={() => {
+                setSchedulePartner(null);
+                setPopupPrefill(null);
+                setAddSessionPopup(true);
+              }}
+            >
+              <Plus size={16} />
+              New session
+            </Button>
+          </div>
+        </div>
 
-      {addSessionPopup ? (
-        <CalendarPopup
-          weekAnchor={weekAnchor}
-          prefill={popupPrefill}
-          otherName={schedulePartner}
-          setAddSessionPopup={setAddSessionPopup}
-          onClose={() => {
-            setPopupPrefill(null);
-            setAddSessionPopup(false);
-          }}
-        />
-      ) : null}
-    </div>
+        <Card className="overflow-hidden p-0" elevation="raised">
+          {isLoading ? (
+            <div className="flex h-[440px] items-center justify-center">
+              <Spinner size="xl" />
+            </div>
+          ) : (
+            <>
+              <div className="hidden md:block">
+                <DesktopGridCalendar
+                  tableCells={tableCells}
+                  onCreateSlot={(startsAt, endsAt) => {
+                    setPopupPrefill({ startsAt, endsAt });
+                    setAddSessionPopup(true);
+                  }}
+                />
+              </div>
+              <div className="md:hidden">
+                <TouchScreenCalendar
+                  tableCells={tableCells}
+                  onCreateSession={() => {
+                    setSchedulePartner(null);
+                    setPopupPrefill(null);
+                    setAddSessionPopup(true);
+                  }}
+                />
+              </div>
+            </>
+          )}
+        </Card>
+
+        {addSessionPopup ? (
+          <CalendarPopup
+            weekAnchor={weekAnchor}
+            prefill={popupPrefill}
+            otherName={schedulePartner}
+            setAddSessionPopup={setAddSessionPopup}
+            onClose={() => {
+              setPopupPrefill(null);
+              setAddSessionPopup(false);
+            }}
+          />
+        ) : null}
+      </div>
+    </AsyncBoundary>
   );
 };
 

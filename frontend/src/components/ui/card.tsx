@@ -9,9 +9,9 @@ const cardVariants = cva(
     variants: {
       elevation: {
         flat: "ring-1 ring-foreground/10",
-        raised: "shadow-[var(--shadow-sm)] ring-1 ring-foreground/5",
+        raised: "shadow-sm ring-1 ring-foreground/5",
         interactive:
-          "shadow-[var(--shadow-sm)] ring-1 ring-foreground/5 transition-[transform,box-shadow] duration-[var(--duration-fast)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] active:scale-[0.99]",
+          "shadow-sm ring-1 ring-foreground/5 transition-[transform,box-shadow] duration-[var(--duration-fast)] hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99]",
       },
       size: {
         default: "",

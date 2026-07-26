@@ -16,7 +16,7 @@ const FriendList = () => {
       <Button
         type="button"
         variant="outline"
-        className="fixed right-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-[var(--z-dropdown)] gap-2 bg-background md:right-6 md:bottom-[5%]"
+        className="fixed right-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-[var(--z-fab)] gap-2 bg-background md:right-6 md:bottom-[5%]"
         onClick={() => setIsPopupOpen(!isPopupOpen)}
         aria-label={isPopupOpen ? "Close friends" : "Open friends"}
       >

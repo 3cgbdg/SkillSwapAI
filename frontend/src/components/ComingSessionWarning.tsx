@@ -61,8 +61,8 @@ const ComingSessionWarning = () => {
   }
 
   return (
-    <div className="fixed top-16 left-1/2 z-[var(--z-overlay)] w-full max-w-[500px] -translate-x-1/2 px-4 md:top-4">
-      <div className="border-border bg-surface-raised animate-fade-up flex max-w-md items-start gap-3 rounded-2xl border p-3 shadow-[var(--shadow-lg)]">
+    <div className="fixed top-(--header-h) left-1/2 z-[var(--z-overlay)] w-full max-w-[500px] -translate-x-1/2 px-4 md:top-4">
+      <div className="border-border bg-surface-raised animate-fade-up flex max-w-md items-start gap-3 rounded-2xl border p-3 shadow-lg">
         <div className="text-primary mt-0.5 shrink-0">
           <TriangleAlert aria-hidden />
         </div>

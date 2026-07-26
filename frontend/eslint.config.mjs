@@ -50,6 +50,29 @@ const eslintConfig = [
       ],
     },
   },
+  {
+    files: [
+      "src/app/**/*.{js,jsx,ts,tsx}",
+      "src/features/**/*.{js,jsx,ts,tsx}",
+    ],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "JSXAttribute[name.name='className'] Literal[value=/(?:^|\\s)(?:rounded-|shadow-|border(?:$|-[trblxy]?$)|[hwp]-\\[|text-\\[|gap-\\[|top-\\[)/]",
+          message:
+            "Feature code cannot set radius, elevation, borders, or arbitrary sizes. Add a composite in components/composites/ instead.",
+        },
+        {
+          selector:
+            "JSXAttribute[name.name='className'] TemplateLiteral TemplateElement[value=/(?:^|\\s)(?:rounded-|shadow-|border(?:$|-[trblxy]?$)|[hwp]-\\[|text-\\[|gap-\\[|top-\\[)/]",
+          message:
+            "Feature code cannot set radius, elevation, borders, or arbitrary sizes. Add a composite in components/composites/ instead.",
+        },
+      ],
+    },
+  },
 ];
 
 export default eslintConfig;

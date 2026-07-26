@@ -1,3 +1,4 @@
+import Link from "next/link";
 import useFriends from "@/hooks/useFriends";
 import { IChat, IMatch } from "@/types/types";
 import { UseMutateFunction } from "@tanstack/react-query";
@@ -10,9 +11,9 @@ import {
   UsersRound,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 
-import { Badge } from "@/components/ui/badge";
+import { MetricRing, SkillPillList } from "@/components/composites";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,6 +28,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { cn } from "@/lib/utils";
 
@@ -37,19 +43,7 @@ function SkillBadges({
   skills: { title: string }[];
   variant: "teach" | "learn";
 }) {
-  const visible = skills.slice(0, 3);
-  const overflow = skills.length - visible.length;
-
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {visible.map((skill) => (
-        <Badge key={skill.title} variant={variant}>
-          {skill.title}
-        </Badge>
-      ))}
-      {overflow > 0 ? <Badge variant="outline">+{overflow}</Badge> : null}
-    </div>
-  );
+  return <SkillPillList skills={skills} variant={variant} />;
 }
 
 const MatchCard = ({
@@ -86,11 +80,24 @@ const MatchCard = ({
       return;
     }
     if (option === "active") {
-      router.push(`/matches/${match.id}`);
+      if (
+        typeof document !== "undefined" &&
+        "startViewTransition" in document
+      ) {
+        (
+          document as Document & {
+            startViewTransition: (cb: () => void) => void;
+          }
+        ).startViewTransition(() => {
+          router.push(`/matches/${match.id}`);
+        });
+      } else {
+        router.push(`/matches/${match.id}`);
+      }
       return;
     }
     if (isInActiveMatches) {
-      router.push("/matches/active");
+      router.push("/learning");
       return;
     }
     generateActiveMatch(match.other.id);
@@ -105,13 +112,39 @@ const MatchCard = ({
         : "Generate plan";
 
   return (
-    <Card elevation="interactive" className="@container flex h-full flex-col">
+    <Card
+      elevation="interactive"
+      className="@container flex h-full flex-col"
+      style={
+        option === "active"
+          ? ({ viewTransitionName: `match-${match.id}` } as CSSProperties)
+          : undefined
+      }
+    >
       <CardHeader className="relative flex flex-row items-start gap-3 text-left">
-        <UserAvatar
-          name={match.other.name}
-          imageUrl={match.other.imageUrl}
-          size="lg"
-        />
+        <HoverCard>
+          <HoverCardTrigger className="rounded-full">
+            <UserAvatar
+              name={match.other.name}
+              imageUrl={match.other.imageUrl}
+              size="lg"
+            />
+          </HoverCardTrigger>
+          <HoverCardContent className="w-56">
+            <p className="font-semibold">{match.other.name}</p>
+            <p className="text-muted-foreground text-xs">
+              {typeof match.compatibility === "number"
+                ? `${match.compatibility}% compatibility`
+                : "Skill swap partner"}
+            </p>
+            <Link
+              href={`/profiles/${match.other.id}`}
+              className="text-primary mt-2 inline-block text-xs font-medium"
+            >
+              View profile
+            </Link>
+          </HoverCardContent>
+        </HoverCard>
         <div className="min-w-0 flex-1 pr-12">
           <CardTitle className="truncate text-lg">{match.other.name}</CardTitle>
           {match.aiExplanation ? (
@@ -131,12 +164,11 @@ const MatchCard = ({
           ) : null}
         </div>
         {typeof match.compatibility === "number" ? (
-          <div
-            className="border-primary/30 bg-primary/10 text-primary absolute top-4 right-4 flex size-11 items-center justify-center rounded-full border text-xs font-bold"
-            aria-label={`${match.compatibility}% compatibility`}
-          >
-            {match.compatibility}%
-          </div>
+          <MetricRing
+            value={match.compatibility}
+            label={`${match.compatibility}% compatibility`}
+            className="absolute top-4 right-4"
+          />
         ) : null}
       </CardHeader>
       <CardContent className="flex grow flex-col gap-4">
@@ -200,7 +232,7 @@ const MatchCard = ({
               <DropdownMenuItem
                 onClick={() =>
                   router.push(
-                    `/calendar?schedule=true&name=${encodeURIComponent(match.other.name)}`
+                    `/schedule?schedule=true&name=${encodeURIComponent(match.other.name)}`
                   )
                 }
               >

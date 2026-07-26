@@ -1,6 +1,8 @@
 import { FoundSkills, FoundUsers } from "@/types/common";
 
+import { UserRow } from "@/components/composites";
 import { Button } from "@/components/ui/button";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 interface SearchResultsProps {
   foundSkills: FoundSkills[];
@@ -31,20 +33,22 @@ const SearchResults = ({
         <div className="flex flex-col gap-2">
           <h4 className="text-sm font-semibold">Users</h4>
           {foundUsers.map((user) => (
-            <div
+            <UserRow
               key={user.id}
-              className="flex items-center justify-between gap-2"
-            >
-              <span className="truncate text-sm">{user.name}</span>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => onCreateFriendRequest(user.id)}
-              >
-                Add friend
-              </Button>
-            </div>
+              className="p-1"
+              media={<UserAvatar name={user.name} size="sm" />}
+              title={user.name}
+              actions={
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onCreateFriendRequest(user.id)}
+                >
+                  Add friend
+                </Button>
+              }
+            />
           ))}
         </div>
       ) : null}
@@ -52,30 +56,36 @@ const SearchResults = ({
         <div className="flex flex-col gap-2">
           <h4 className="text-sm font-semibold">Skills</h4>
           {foundSkills.map((skill) => (
-            <div
+            <UserRow
               key={skill.id}
-              className="flex items-center justify-between gap-2"
-            >
-              <span className="truncate text-sm">{skill.title}</span>
-              <div className="flex shrink-0 gap-1">
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={() => onAddLearn(skill.title, skill.id)}
-                >
-                  Add to learn
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  aria-label={`Dismiss ${skill.title}`}
-                  onClick={() => onRemoveSkill(skill.id)}
-                >
-                  ×
-                </Button>
-              </div>
-            </div>
+              className="p-1"
+              media={
+                <span className="text-lg" aria-hidden>
+                  📚
+                </span>
+              }
+              title={skill.title}
+              actions={
+                <div className="flex shrink-0 gap-1">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => onAddLearn(skill.title, skill.id)}
+                  >
+                    Add to learn
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    aria-label={`Dismiss ${skill.title}`}
+                    onClick={() => onRemoveSkill(skill.id)}
+                  >
+                    ×
+                  </Button>
+                </div>
+              }
+            />
           ))}
         </div>
       ) : null}

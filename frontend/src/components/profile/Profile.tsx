@@ -7,25 +7,14 @@ import { showErrorToast, showSuccessToast } from "@/utils/toast";
 import useProfile from "@/hooks/useProfile";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { differenceInHours, intervalToDuration } from "date-fns";
-import { GraduationCap, Pencil } from "lucide-react";
-import {
-  Dispatch,
-  SetStateAction,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { BookOpen, GraduationCap } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { SectionPanel, StatTile } from "@/components/composites";
+import { ProfileView } from "@/components/profile/ProfileView";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
-import { UserAvatar } from "@/components/ui/user-avatar";
 
-const Profile = ({
-  setIsEditing,
-}: {
-  setIsEditing: Dispatch<SetStateAction<boolean>>;
-}) => {
+const Profile = () => {
   const { data: user } = useProfile();
   const queryClient = useQueryClient();
   const [timeLeft, setTimeLeft] = useState<string | null>(null);
@@ -132,89 +121,25 @@ const Profile = ({
 
   return (
     <div className="flex flex-col gap-8">
-      <Card className="p-8" elevation="raised">
-        <div className="flex flex-col items-start gap-6 md:flex-row">
-          <UserAvatar
-            name={user.name}
-            imageUrl={user.imageUrl}
-            size="xl"
-            className="size-24"
-          />
-          <div className="flex w-full flex-col gap-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <h1 className="font-heading text-h1 text-foreground">
-                {user.name}
-              </h1>
-              <Button
-                type="button"
-                variant="outline"
-                className="gap-2"
-                onClick={() => setIsEditing(true)}
-              >
-                <Pencil size={18} />
-                Edit profile
-              </Button>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="bg-surface-raised rounded-lg border border-border p-4">
-                <p className="text-muted-foreground mb-2 text-xs font-semibold uppercase tracking-wide">
-                  I teach
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {(user.knownSkills ?? []).length > 0 ? (
-                    user.knownSkills!.map((s) => (
-                      <span
-                        key={s.id}
-                        className="bg-primary/10 text-primary rounded-full px-3 py-1 text-sm font-medium"
-                      >
-                        {s.title}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-muted-foreground text-sm">
-                      Add skills you can share
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="bg-surface-raised rounded-lg border border-border p-4">
-                <p className="text-muted-foreground mb-2 text-xs font-semibold uppercase tracking-wide">
-                  I want to learn
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {(user.skillsToLearn ?? []).length > 0 ? (
-                    user.skillsToLearn!.map((s) => (
-                      <span
-                        key={s.id}
-                        className="bg-brand-accent/20 text-foreground rounded-full px-3 py-1 text-sm font-medium"
-                      >
-                        {s.title}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-muted-foreground text-sm">
-                      Add skills you&apos;re exploring
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-            {user.bio ? (
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                {user.bio}
-              </p>
-            ) : null}
-          </div>
-        </div>
-      </Card>
+      <ProfileView profile={user} editHref="/profile/edit" />
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <StatTile
+          icon={GraduationCap}
+          label="Skills I teach"
+          value={user.knownSkills?.length ?? 0}
+        />
+        <StatTile
+          icon={BookOpen}
+          label="Skills to learn"
+          value={user.skillsToLearn?.length ?? 0}
+        />
+      </div>
 
       <AddSkills />
 
-      <Card className="px-6 py-5">
-        <CardHeader className="flex flex-col gap-4 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle className="text-h2 leading-6">
-            AI Skill Suggestions
-          </CardTitle>
+      <SectionPanel title="AI Skill Suggestions">
+        <div className="mb-4 flex justify-end">
           <Button
             type="button"
             className="min-w-[260px]"
@@ -224,43 +149,41 @@ const Profile = ({
           >
             {buttonText}
           </Button>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4 pt-4">
-          {isPending ? (
-            <div className="flex justify-center py-8">
-              <Spinner size="lg" />
-            </div>
-          ) : user.aiSuggestionSkills && user.aiSuggestionSkills.length > 0 ? (
-            user.aiSuggestionSkills.map((skill) => (
-              <div
-                key={skill}
-                className="flex flex-col justify-between gap-4 border-b border-border py-3 last:border-0 md:flex-row md:items-center"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="flex size-10 items-center justify-center rounded-full bg-primary/20">
-                    <GraduationCap className="text-primary" size={20} />
-                  </div>
-                  <h3 className="text-lg font-semibold leading-7">{skill}</h3>
+        </div>
+        {isPending ? (
+          <div className="flex justify-center py-8">
+            <Spinner size="lg" />
+          </div>
+        ) : user.aiSuggestionSkills && user.aiSuggestionSkills.length > 0 ? (
+          user.aiSuggestionSkills.map((skill) => (
+            <div
+              key={skill}
+              className="flex flex-col justify-between gap-4 border-b border-border py-3 last:border-0 md:flex-row md:items-center"
+            >
+              <div className="flex items-center gap-4">
+                <div className="bg-primary/20 flex size-10 items-center justify-center rounded-full">
+                  <GraduationCap className="text-primary" size={20} />
                 </div>
-                <Button
-                  type="button"
-                  variant="link"
-                  className="h-auto p-0"
-                  onClick={() => addNewSkillToLearn(skill)}
-                >
-                  Add to Learn
-                </Button>
+                <h3 className="text-lg leading-7 font-semibold">{skill}</h3>
               </div>
-            ))
-          ) : (
-            <span className="py-8 text-center italic text-muted-foreground">
-              {cantGenerateSkills
-                ? "No skills to suggest right now. Come back once the timer runs out!"
-                : "No suggestions found. Try regenerating!"}
-            </span>
-          )}
-        </CardContent>
-      </Card>
+              <Button
+                type="button"
+                variant="link"
+                className="h-auto p-0"
+                onClick={() => addNewSkillToLearn(skill)}
+              >
+                Add to Learn
+              </Button>
+            </div>
+          ))
+        ) : (
+          <span className="text-muted-foreground py-8 text-center italic">
+            {cantGenerateSkills
+              ? "No skills to suggest right now. Come back once the timer runs out!"
+              : "No suggestions found. Try regenerating!"}
+          </span>
+        )}
+      </SectionPanel>
     </div>
   );
 };

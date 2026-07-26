@@ -20,9 +20,9 @@ const badgeVariants = cva(
           "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
         link: "text-primary underline-offset-4 hover:underline",
         teach:
-          "border-primary/30 bg-primary/10 text-foreground [a]:hover:bg-primary/15",
+          "border-accent-teach/40 bg-accent-teach-soft text-accent-teach [a]:hover:bg-accent-teach-soft/80",
         learn:
-          "border-border bg-muted text-muted-foreground [a]:hover:bg-muted/80",
+          "border-accent-learn/40 bg-accent-learn-soft text-accent-learn [a]:hover:bg-accent-learn-soft/80",
         status:
           "bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80",
       },

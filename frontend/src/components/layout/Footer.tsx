@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Container } from "@/components/layout/Container";
+import { navLinks } from "@/constants/navLinks";
 
 const Footer = () => {
   return (
@@ -10,24 +11,15 @@ const Footer = () => {
           © {new Date().getFullYear()} SkillSwap AI
         </p>
         <div className="flex flex-wrap gap-4">
-          <Link
-            href="/dashboard"
-            className="text-muted-foreground hover:text-primary focus-visible:ring-ring/50 rounded-sm focus-visible:ring-2 focus-visible:outline-none"
-          >
-            Dashboard
-          </Link>
-          <Link
-            href="/matches"
-            className="text-muted-foreground hover:text-primary focus-visible:ring-ring/50 rounded-sm focus-visible:ring-2 focus-visible:outline-none"
-          >
-            Matches
-          </Link>
-          <Link
-            href="/profile"
-            className="text-muted-foreground hover:text-primary focus-visible:ring-ring/50 rounded-sm focus-visible:ring-2 focus-visible:outline-none"
-          >
-            Profile
-          </Link>
+          {navLinks.slice(0, 4).map((item) => (
+            <Link
+              key={item.link}
+              href={item.link}
+              className="text-muted-foreground hover:text-primary focus-visible:ring-ring/50 rounded-sm focus-visible:ring-2 focus-visible:outline-none"
+            >
+              {item.title}
+            </Link>
+          ))}
         </div>
       </Container>
     </footer>

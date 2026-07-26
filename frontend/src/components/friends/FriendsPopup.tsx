@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction } from "react";
 
+import { UserRow } from "@/components/composites";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
@@ -43,7 +44,7 @@ const FriendsPopup = ({
         return [data, ...old];
       });
       setIsPopupOpen(false);
-      router.push(`/chats/${data.chatId}`);
+      router.push(`/inbox/${data.chatId}`);
     },
   });
 
@@ -60,38 +61,42 @@ const FriendsPopup = ({
         ) : friends.length > 0 ? (
           <ul className="flex max-h-[50vh] flex-col gap-2 overflow-y-auto">
             {friends.map((friend) => (
-              <li
-                key={friend.id}
-                className="flex items-center justify-between gap-2 rounded-lg border border-border p-2"
-              >
-                <div className="flex min-w-0 items-center gap-2">
-                  <UserAvatar
-                    name={friend.name}
-                    imageUrl={friend.imageUrl}
-                    size="sm"
-                  />
-                  <span className="truncate font-medium">{friend.name}</span>
-                </div>
-                <div className="flex shrink-0 gap-1">
-                  <Link
-                    href={`/profiles/${friend.id}`}
-                    className={cn(
-                      buttonVariants({ variant: "outline", size: "icon-sm" })
-                    )}
-                    aria-label={`View ${friend.name}'s profile`}
-                  >
-                    <BookUser size={16} />
-                  </Link>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon-sm"
-                    aria-label={`Message ${friend.name}`}
-                    onClick={() => createChat(friend)}
-                  >
-                    <MessageSquareMore size={16} />
-                  </Button>
-                </div>
+              <li key={friend.id}>
+                <UserRow
+                  media={
+                    <UserAvatar
+                      name={friend.name}
+                      imageUrl={friend.imageUrl}
+                      size="sm"
+                    />
+                  }
+                  title={friend.name}
+                  actions={
+                    <div className="flex shrink-0 gap-1">
+                      <Link
+                        href={`/profiles/${friend.id}`}
+                        className={cn(
+                          buttonVariants({
+                            variant: "outline",
+                            size: "icon-sm",
+                          })
+                        )}
+                        aria-label={`View ${friend.name}'s profile`}
+                      >
+                        <BookUser size={16} />
+                      </Link>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label={`Message ${friend.name}`}
+                        onClick={() => createChat(friend)}
+                      >
+                        <MessageSquareMore size={16} />
+                      </Button>
+                    </div>
+                  }
+                />
               </li>
             ))}
           </ul>

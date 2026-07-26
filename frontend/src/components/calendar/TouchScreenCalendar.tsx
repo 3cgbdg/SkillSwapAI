@@ -3,22 +3,45 @@
 import { memo } from "react";
 import { format } from "date-fns";
 import Link from "next/link";
+import { CalendarDays, Plus } from "lucide-react";
 
-import { TableCellType } from "./Calendar";
+import type { TableCellType } from "./Calendar";
+import { StatTile } from "@/components/composites";
+import { Button } from "@/components/ui/button";
 import { resolveSessionColor } from "@/utils/sessionColors";
 import { formatSessionTimeRange } from "@/utils/sessionTime";
 
 const TouchScreenCalendar = ({
   tableCells,
+  onCreateSession,
 }: {
   tableCells: TableCellType[];
+  onCreateSession?: () => void;
 }) => {
   return (
     <div className="flex flex-col gap-6 p-4">
+      {onCreateSession ? (
+        <Button
+          type="button"
+          className="w-full gap-2"
+          onClick={onCreateSession}
+        >
+          <Plus size={16} />
+          New session
+        </Button>
+      ) : null}
       {tableCells.map((cell) => (
         <div key={cell.date.toISOString()} className="flex flex-col gap-2">
-          <div className="text-muted-foreground text-xs font-semibold uppercase">
-            {format(cell.date, "EEEE, MMMM d")}
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-muted-foreground text-xs font-semibold uppercase">
+              {format(cell.date, "EEEE, MMMM d")}
+            </div>
+            <StatTile
+              icon={CalendarDays}
+              value={cell.sessions.length}
+              label="Sessions"
+              className="py-1"
+            />
           </div>
           <div className="flex flex-col gap-2">
             {cell.sessions.length !== 0 ? (

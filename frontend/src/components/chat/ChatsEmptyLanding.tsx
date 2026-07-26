@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MessageSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyState } from "@/components/composites";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import useFriends from "@/hooks/useFriends";
 import ChatsService from "@/services/ChatsService";
@@ -23,7 +23,7 @@ export function ChatsEmptyLanding() {
         if (!Array.isArray(old)) return [data];
         return [data, ...old];
       });
-      router.push(`/chats/${data.chatId}`);
+      router.push(`/inbox/${data.chatId}`);
     },
     onError: (err: Error) => showErrorToast(err.message),
   });
