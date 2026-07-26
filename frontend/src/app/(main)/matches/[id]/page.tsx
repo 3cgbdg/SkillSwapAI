@@ -115,9 +115,9 @@ const Page = () => {
       </Dialog>
 
       <div className="grid gap-8 grid-cols-3">
-        <Card className="col-span-3 gap-4 bg-gradient-to-br from-surface-raised to-accent/15 p-8 xl:col-span-2">
+        <Card className="col-span-3 gap-4 bg-gradient-to-br from-surface-raised to-brand-accent/15 p-8 xl:col-span-2">
           <CardHeader className="p-0">
-            <CardTitle className="text-3xl font-bold leading-9">
+            <CardTitle className="font-heading text-h1 leading-9">
               Your AI-Powered Training Plan with {currentMatch.other.name}
             </CardTitle>
           </CardHeader>

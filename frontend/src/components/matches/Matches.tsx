@@ -24,6 +24,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { EmptyState } from "@/components/ui/empty-state";
+import { InlineSkillPicker } from "@/components/matches/InlineSkillPicker";
 
 const Matches = ({
   matches,
@@ -116,7 +118,7 @@ const Matches = ({
       <div className="flex flex-col gap-7.5">
         <div className="flex flex-col gap-6">
           <div className="flex items-center gap-6 flex-wrap justify-between">
-            <h1 className="text-3xl leading-9 font-bold text-foreground">
+            <h1 className="font-heading text-h1 text-foreground">
               {option == "active" ? "Your" : "Available"} Matches
             </h1>
             <div className="flex gap-3 flex-wrap">
@@ -184,22 +186,44 @@ const Matches = ({
           </p>
         </div>
         <div className="grid max-w-[450px] md:max-w-full mx-auto md:mx-0 md:w-fit md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredMatch.map((match) => (
-            <MatchCard
-              option={option}
-              isInActiveMatches={
-                activeMatches.findIndex(
-                  (item) => item?.other?.id === match?.other?.id
-                ) === -1
-                  ? false
-                  : true
-              }
-              generateActiveMatch={generateActiveMatch}
-              key={match.id ?? match.other.id}
-              match={match}
-              getOrCreateChat={createChat}
-            />
-          ))}
+          {filteredMatch.length === 0 ? (
+            <div className="col-span-full">
+              <EmptyState
+                icon={Users}
+                title={
+                  option === "active"
+                    ? "No active matches yet"
+                    : "No matches found"
+                }
+                description={
+                  option === "active"
+                    ? "Generate a plan from an available match to see it here."
+                    : "Add a skill you want to learn so we can find better partners."
+                }
+              >
+                {option === "available" ? (
+                  <InlineSkillPicker mode="learn" />
+                ) : null}
+              </EmptyState>
+            </div>
+          ) : (
+            filteredMatch.map((match) => (
+              <MatchCard
+                option={option}
+                isInActiveMatches={
+                  activeMatches.findIndex(
+                    (item) => item?.other?.id === match?.other?.id
+                  ) === -1
+                    ? false
+                    : true
+                }
+                generateActiveMatch={generateActiveMatch}
+                key={match.id ?? match.other.id}
+                match={match}
+                getOrCreateChat={createChat}
+              />
+            ))
+          )}
         </div>
       </div>
     </>

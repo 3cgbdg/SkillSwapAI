@@ -67,17 +67,28 @@ function eslintFilenames(filenames) {
 }
 
 export default {
-  "frontend/**/*.{js,jsx,mjs,cjs,ts,tsx,json,css,md}": (filenames) => {
-    const prettier = prettierCommand("frontend", filenames);
-    const eslint = eslintCommand("frontend", eslintFilenames(filenames));
+  "backend/**/*.{ts,json,md}": (filenames) => {
+    const prettier = prettierCommand("backend", filenames);
+    const eslint = eslintCommand("backend", eslintFilenames(filenames));
     const cmds = [];
     if (typeof prettier === "string" && prettier.length > 0) cmds.push(prettier);
     if (typeof eslint === "string" && eslint.length > 0) cmds.push(eslint);
     return cmds;
   },
-  "backend/**/*.{ts,json,md}": (filenames) => {
-    const prettier = prettierCommand("backend", filenames);
-    const eslint = eslintCommand("backend", eslintFilenames(filenames));
+  "frontend/**/*.{js,jsx,mjs,cjs,ts,tsx,json,css,md}": (filenames) => {
+    const prettier = prettierCommand("frontend", filenames);
+    // Only lint source/config JS/TS — skip package.json / mcp.json / etc.
+    const eslintFiles = eslintFilenames(filenames).filter((f) => {
+      const normalized = f.replace(/\\/g, "/");
+      return (
+        normalized.includes("/src/") ||
+        normalized.endsWith("eslint.config.mjs") ||
+        normalized.endsWith("next.config.ts") ||
+        normalized.endsWith("next.config.mjs") ||
+        normalized.endsWith("next.config.js")
+      );
+    });
+    const eslint = eslintCommand("frontend", eslintFiles);
     const cmds = [];
     if (typeof prettier === "string" && prettier.length > 0) cmds.push(prettier);
     if (typeof eslint === "string" && eslint.length > 0) cmds.push(eslint);

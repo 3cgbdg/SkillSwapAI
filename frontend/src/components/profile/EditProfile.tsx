@@ -142,9 +142,7 @@ const EditProfile = ({
   return (
     <div className="flex flex-col gap-7.5">
       <div className="flex items-center gap-4 justify-between">
-        <h1 className="text-3xl font-bold leading-9 text-foreground">
-          Edit Profile
-        </h1>
+        <h1 className="font-heading text-h1 text-foreground">Edit Profile</h1>
         <Button type="button" onClick={() => setIsEditing(false)}>
           Finish editing
         </Button>

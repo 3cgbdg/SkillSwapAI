@@ -1,5 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
+
+import { Logo } from "@/components/brand/Logo";
 
 const HeaderLogo = () => {
   return (
@@ -7,16 +8,13 @@ const HeaderLogo = () => {
       href="/dashboard"
       className="group flex w-fit items-center gap-2 transition-colors"
     >
-      <Image
-        className="transition-transform group-hover:-rotate-45"
-        width={32}
-        height={32}
-        src="/logo.png"
-        alt="SkillSwap AI logo"
+      <Logo
+        size={32}
+        className="transition-transform duration-[var(--duration-base)] group-hover:-rotate-45"
       />
-      <span className="font-oswald relative text-2xl leading-none font-bold transition-colors group-hover:text-primary">
+      <span className="font-heading relative text-2xl leading-none font-bold transition-colors group-hover:text-primary">
         <span className="text-primary">Skill</span>
-        <span className="text-accent">Swap</span>
+        <span className="text-brand-accent">Swap</span>
         AI
       </span>
     </Link>

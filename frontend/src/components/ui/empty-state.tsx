@@ -8,18 +8,20 @@ export function EmptyState({
   title,
   description,
   action,
+  children,
   className,
 }: {
   icon?: LucideIcon;
   title: string;
   description?: string;
   action?: ReactNode;
+  children?: ReactNode;
   className?: string;
 }) {
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-muted/30 px-6 py-10 text-center",
+        "flex flex-col items-center justify-center gap-4 rounded-lg border border-dashed border-border bg-muted/30 px-6 py-10 text-center",
         className
       )}
     >
@@ -34,6 +36,7 @@ export function EmptyState({
           </p>
         ) : null}
       </div>
+      {children}
       {action}
     </div>
   );

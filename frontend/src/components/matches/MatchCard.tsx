@@ -6,6 +6,7 @@ import {
   Calendar,
   ChevronDown,
   MessageSquare,
+  MoreHorizontal,
   UsersRound,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -20,9 +21,36 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { cn } from "@/lib/utils";
+
+function SkillBadges({
+  skills,
+  variant,
+}: {
+  skills: { title: string }[];
+  variant: "teach" | "learn";
+}) {
+  const visible = skills.slice(0, 3);
+  const overflow = skills.length - visible.length;
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {visible.map((skill) => (
+        <Badge key={skill.title} variant={variant}>
+          {skill.title}
+        </Badge>
+      ))}
+      {overflow > 0 ? <Badge variant="outline">+{overflow}</Badge> : null}
+    </div>
+  );
+}
 
 const MatchCard = ({
   match,
@@ -50,137 +78,138 @@ const MatchCard = ({
   const router = useRouter();
   const { createFriendRequest, isPendingAddFriend } = useFriends();
   const [showAi, setShowAi] = useState(false);
+  const canAct = option === "active" || match.isFriend;
+
+  const primaryAction = () => {
+    if (!canAct) {
+      createFriendRequest({ id: match.other.id });
+      return;
+    }
+    if (option === "active") {
+      router.push(`/matches/${match.id}`);
+      return;
+    }
+    if (isInActiveMatches) {
+      router.push("/matches/active");
+      return;
+    }
+    generateActiveMatch(match.other.id);
+  };
+
+  const primaryLabel = !canAct
+    ? "Add friend"
+    : option === "active"
+      ? "Open plan"
+      : isInActiveMatches
+        ? "Go to active"
+        : "Generate plan";
 
   return (
-    <Card className="@container flex h-full flex-col overflow-hidden">
-      <CardHeader className="flex flex-col items-center gap-3 text-center">
+    <Card elevation="interactive" className="@container flex h-full flex-col">
+      <CardHeader className="relative flex flex-row items-start gap-3 text-left">
         <UserAvatar
           name={match.other.name}
           imageUrl={match.other.imageUrl}
           size="lg"
         />
-        <CardTitle>{match.other.name}</CardTitle>
-      </CardHeader>
-      <CardContent className="flex grow flex-col gap-4">
-        <div className="flex flex-col gap-2">
-          <h3 className="text-sm font-medium">Teaches</h3>
-          <div className="flex flex-wrap gap-2">
-            {match.other.knownSkills.map((skill) => (
-              <Badge key={skill.title} variant="teach">
-                {skill.title}
-              </Badge>
-            ))}
-          </div>
-        </div>
-        <div className="flex flex-col gap-2">
-          <h3 className="text-sm font-medium">Wants to learn</h3>
-          <div className="flex flex-wrap gap-2">
-            {match.other.skillsToLearn.map((skill) => (
-              <Badge key={skill.title} variant="learn">
-                {skill.title}
-              </Badge>
-            ))}
-          </div>
-        </div>
-        {match.aiExplanation ? (
-          <div className="flex flex-col gap-2">
+        <div className="min-w-0 flex-1 pr-12">
+          <CardTitle className="truncate text-lg">{match.other.name}</CardTitle>
+          {match.aiExplanation ? (
             <button
               type="button"
-              className="text-primary flex items-center gap-1 text-sm font-semibold"
+              className="text-primary mt-1 flex items-center gap-1 text-xs font-semibold"
               onClick={() => setShowAi((v) => !v)}
             >
               Why this match?
               <ChevronDown
                 className={cn(
-                  "size-4 transition-transform",
+                  "size-3.5 transition-transform duration-[var(--duration-fast)]",
                   showAi && "rotate-180"
                 )}
               />
             </button>
-            {showAi ? (
-              <p className="text-muted-foreground text-sm">
-                {match.aiExplanation}
-              </p>
-            ) : null}
+          ) : null}
+        </div>
+        {typeof match.compatibility === "number" ? (
+          <div
+            className="border-primary/30 bg-primary/10 text-primary absolute top-4 right-4 flex size-11 items-center justify-center rounded-full border text-xs font-bold"
+            aria-label={`${match.compatibility}% compatibility`}
+          >
+            {match.compatibility}%
           </div>
         ) : null}
-        {match.compatibility ? (
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium">
-              Compatibility: {match.compatibility}%
-            </p>
-            <Progress value={match.compatibility} />
-          </div>
+      </CardHeader>
+      <CardContent className="flex grow flex-col gap-4">
+        {showAi && match.aiExplanation ? (
+          <p className="text-muted-foreground animate-fade-in text-sm">
+            {match.aiExplanation}
+          </p>
         ) : null}
+        <div className="flex flex-col gap-1.5">
+          <h3 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+            Teaches
+          </h3>
+          <SkillBadges skills={match.other.knownSkills} variant="teach" />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <h3 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+            Wants to learn
+          </h3>
+          <SkillBadges skills={match.other.skillsToLearn} variant="learn" />
+        </div>
       </CardContent>
-      <CardFooter className="mt-auto flex flex-wrap justify-center gap-2 border-t pt-4">
-        {option === "active" || match.isFriend ? (
-          <>
-            <Button
-              size="sm"
-              onClick={() =>
-                getOrCreateChat({
-                  payload: {
-                    friendId: match.other.id,
-                    friendName: match.other.name,
-                  },
-                })
-              }
+      <CardFooter className="mt-auto flex items-center gap-2 border-t pt-4">
+        <Button
+          size="sm"
+          className="flex-1"
+          disabled={!canAct && isPendingAddFriend}
+          loading={!canAct && isPendingAddFriend}
+          onClick={primaryAction}
+        >
+          {!canAct ? (
+            <UsersRound className="size-4" />
+          ) : (
+            <Book className="size-4" />
+          )}
+          {primaryLabel}
+        </Button>
+        {canAct ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className={cn(
+                "border-border inline-flex size-7 items-center justify-center rounded-lg border outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              )}
+              aria-label="More actions"
             >
-              <MessageSquare className="size-4" />
-              Chat
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() =>
-                router.push(
-                  `/calendar?schedule=true&name=${encodeURIComponent(match.other.name)}`
-                )
-              }
-            >
-              <Calendar className="size-4" />
-              Schedule
-            </Button>
-            {option === "available" ? (
-              <Button
-                size="sm"
-                variant="outline"
+              <MoreHorizontal className="size-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
                 onClick={() =>
-                  !isInActiveMatches
-                    ? generateActiveMatch(match.other.id)
-                    : router.push("/matches/active")
+                  getOrCreateChat({
+                    payload: {
+                      friendId: match.other.id,
+                      friendName: match.other.name,
+                    },
+                  })
                 }
               >
-                <Book className="size-4" />
-                {isInActiveMatches ? "Go to active matches" : "Generate plan"}
-              </Button>
-            ) : (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => router.push(`/matches/${match.id}`)}
+                <MessageSquare className="size-4" />
+                Chat
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  router.push(
+                    `/calendar?schedule=true&name=${encodeURIComponent(match.other.name)}`
+                  )
+                }
               >
-                <Book className="size-4" />
-                Go to your plan
-              </Button>
-            )}
-          </>
-        ) : (
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-muted-foreground text-sm">To continue:</span>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={isPendingAddFriend}
-              loading={isPendingAddFriend}
-              onClick={() => createFriendRequest({ id: match.other.id })}
-            >
-              <UsersRound className="size-4" />
-              Add to friends
-            </Button>
-          </div>
-        )}
+                <Calendar className="size-4" />
+                Schedule
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : null}
       </CardFooter>
     </Card>
   );

@@ -16,14 +16,14 @@ const FriendList = () => {
       <Button
         type="button"
         variant="outline"
-        className="fixed bottom-[5%] right-6 z-[var(--z-dropdown)] gap-2 bg-background"
+        className="fixed right-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-[var(--z-dropdown)] gap-2 bg-background md:right-6 md:bottom-[5%]"
         onClick={() => setIsPopupOpen(!isPopupOpen)}
         aria-label={isPopupOpen ? "Close friends" : "Open friends"}
       >
         {!isPopupOpen ? (
           <>
             <Users />
-            <span>Friends</span>
+            <span className="hidden sm:inline">Friends</span>
           </>
         ) : (
           <X />

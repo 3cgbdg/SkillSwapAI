@@ -1,4 +1,4 @@
-import { toast, ToastOptions } from "react-toastify";
+import { toast } from "sonner";
 
 export const showErrorToast = (message: string, id?: string | number) => {
   let toastId = id;
@@ -16,9 +16,7 @@ export const showErrorToast = (message: string, id?: string | number) => {
     }
   }
 
-  toast.error(message, {
-    toastId,
-  } as ToastOptions);
+  toast.error(message, { id: toastId });
 };
 
 export const showSuccessToast = (
@@ -27,7 +25,5 @@ export const showSuccessToast = (
 ) => {
   const msg = message || "Success";
   const toastId = id || msg;
-  toast.success(msg, {
-    toastId,
-  } as ToastOptions);
+  toast.success(msg, { id: toastId });
 };

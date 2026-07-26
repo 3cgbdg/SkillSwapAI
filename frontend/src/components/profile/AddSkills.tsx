@@ -108,7 +108,7 @@ const AddSkills = () => {
     <div className="grid gap-8 md:grid-cols-2">
       <Card className="flex flex-col p-6 pt-[21px]">
         <CardHeader className="mb-4 p-0">
-          <CardTitle className="text-2xl leading-6">Skills I Know</CardTitle>
+          <CardTitle className="text-h2 leading-6">Skills I Know</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-1 flex-col p-0">
           <div className="mb-6 flex max-h-[170px] flex-wrap gap-2 overflow-y-auto">
@@ -194,7 +194,7 @@ const AddSkills = () => {
 
       <Card className="flex flex-col p-6 pt-[21px]">
         <CardHeader className="mb-4 p-0">
-          <CardTitle className="text-2xl leading-6">
+          <CardTitle className="text-h2 leading-6">
             Skills I Want to Learn
           </CardTitle>
         </CardHeader>

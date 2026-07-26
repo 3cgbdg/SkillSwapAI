@@ -141,7 +141,7 @@ const Profile = ({
             className="size-24"
           />
           <div className="flex w-full flex-col gap-3 md:max-w-xl">
-            <h1 className="text-3xl font-bold leading-9 text-foreground">
+            <h1 className="font-heading text-h1 text-foreground">
               {user.name}
             </h1>
             {user.bio ? (
@@ -164,7 +164,7 @@ const Profile = ({
 
       <Card className="px-6 py-5">
         <CardHeader className="flex flex-col gap-4 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle className="text-2xl leading-6">
+          <CardTitle className="text-h2 leading-6">
             AI Skill Suggestions
           </CardTitle>
           <Button
