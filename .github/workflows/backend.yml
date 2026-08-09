@@ -29,9 +29,9 @@ env:
   ECS_TASK_DEFINITION: skillswap-backend-task
 
 jobs:
-  # ─── 1. LINT & TEST ────────────────────────────────────────────────────────
+  # ─── 1. FORMAT, LINT, TYPES & TEST ─────────────────────────────────────────
   lint-and-test:
-    name: Lint & Test
+    name: Format, Lint, Type Check & Test
     runs-on: ubuntu-latest
     timeout-minutes: 10  # Change 4: Prevent runaway jobs
     defaults:
@@ -58,8 +58,14 @@ jobs:
       - name: Generate Prisma Client
         run: pnpm exec prisma generate
 
+      - name: Check formatting
+        run: pnpm format:check
+
       - name: Run ESLint
         run: pnpm lint
+
+      - name: TypeScript type check
+        run: pnpm exec tsc --noEmit
 
       - name: Run unit tests
         run: pnpm test:ci

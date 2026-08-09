@@ -29,9 +29,9 @@ env:
   NEXT_PUBLIC_API_URL: http://skillswap-alb-496974982.eu-central-1.elb.amazonaws.com/api
 
 jobs:
-  # ─── 1. LINT & TYPE CHECK ──────────────────────────────────────────────────
+  # ─── 1. FORMAT, LINT & TYPE CHECK ──────────────────────────────────────────
   lint-and-test:
-    name: Lint & Type Check
+    name: Format, Lint & Type Check
     runs-on: ubuntu-latest
     timeout-minutes: 10  # Change 4: Prevent runaway jobs
     defaults:
@@ -54,6 +54,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Check formatting
+        run: pnpm format:check
 
       - name: Run ESLint
         run: pnpm lint
