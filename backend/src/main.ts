@@ -71,6 +71,7 @@ async function bootstrap() {
   // #endregion
 }
 
-void bootstrap().catch(() => {
+void bootstrap().catch((err) => {
+  console.error(err);
   process.exit(1);
 });

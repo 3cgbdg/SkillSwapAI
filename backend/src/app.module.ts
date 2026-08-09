@@ -43,7 +43,6 @@ import { envValidationSchema } from './config/env.validation';
       validationSchema: envValidationSchema,
     }),
     TerminusModule,
-    QueuesModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -53,6 +52,7 @@ import { envValidationSchema } from './config/env.validation';
         signOptions: { expiresIn: '15m' },
       }),
     }),
+    QueuesModule,
     CacheModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
