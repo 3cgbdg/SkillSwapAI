@@ -20,9 +20,6 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.84.1
         version: 5.100.9(react@19.1.0)
-      '@tanstack/react-query-devtools':
-        specifier: ^5.91.3
-        version: 5.100.9(@tanstack/react-query@5.100.9(react@19.1.0))(react@19.1.0)
       axios:
         specifier: ^1.11.0
         version: 1.16.0
@@ -93,6 +90,9 @@ importers:
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.2.4
+      '@tanstack/react-query-devtools':
+        specifier: ^5.91.3
+        version: 5.100.9(@tanstack/react-query@5.100.9(react@19.1.0))(react@19.1.0)
       '@testing-library/jest-dom':
         specifier: 6.9.1
         version: 6.9.1
