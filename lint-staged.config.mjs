@@ -5,7 +5,7 @@ import process from "node:process";
 function shellArg(arg) {
   const s = String(arg);
   if (!/[ \t"]/g.test(s)) return s;
-  return `"${s.replace(/"/g, '\\"')}"`;
+  return `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 }
 
 /**

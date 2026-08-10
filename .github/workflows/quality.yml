@@ -24,6 +24,8 @@ jobs:
     name: Knip
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      DATABASE_URL: postgresql://postgres:password@localhost:5432/testdb
 
     steps:
       - name: Checkout code

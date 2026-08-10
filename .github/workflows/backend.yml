@@ -37,6 +37,18 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    env:
+      DATABASE_URL: postgresql://postgres:password@localhost:5432/testdb
+      JWT_SECRET: test-secret
+      JWT_REFRESH_SECRET: test-refresh-secret
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      PORT: 5200
+      CORS_ORIGIN: http://localhost:3000
+      AWS_S3_BUCKET_NAME: test-bucket
+      AWS_ACCESS_KEY_ID: test-key
+      AWS_SECRET_ACCESS_KEY: test-secret-key
+      AWS_REGION: eu-north-1
 
     steps:
       - name: Checkout code
@@ -69,18 +81,6 @@ jobs:
 
       - name: Run unit tests
         run: pnpm test:ci
-        env:
-          DATABASE_URL: postgresql://postgres:password@localhost:5432/testdb
-          JWT_SECRET: test-secret
-          JWT_REFRESH_SECRET: test-refresh-secret
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
-          PORT: 5200
-          CORS_ORIGIN: http://localhost:3000
-          AWS_S3_BUCKET_NAME: test-bucket
-          AWS_ACCESS_KEY_ID: test-key
-          AWS_SECRET_ACCESS_KEY: test-secret-key
-          AWS_REGION: eu-north-1
 
   # ─── 2. BUILD & PUSH TO ECR ────────────────────────────────────────────────
   build-and-push:
