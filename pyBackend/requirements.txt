@@ -1,9 +1,0 @@
-fastapi==0.115.5
-uvicorn[standard]==0.32.1
-openai==1.54.4
-httpx==0.27.2
-pydantic
-pydantic-settings
-python-dotenv==1.0.1
-python-multipart==0.0.20
-mangum==0.17.0

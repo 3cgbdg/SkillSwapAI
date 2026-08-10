@@ -99,10 +99,9 @@ echo "== logout invalidates the session =="
 curl -s -b "$COOKIES" -c "$COOKIES" -X DELETE "http://localhost:$PORT/api/auth/logout" > /dev/null
 check "GET /api/auth/profile after logout -> 401" 401 "$(curl -s -o /dev/null -w '%{http_code}' -b "$COOKIES" http://localhost:$PORT/api/auth/profile)"
 
-echo "== composite /health (db + pyBackend reachability) =="
+echo "== composite /health (db reachability) =="
 health_body=$(curl -s "http://localhost:$PORT/health")
 echo "response: $health_body"
-echo "(pyBackend not running here is expected to show fastapi:down -- see pyBackend's own run-pybackend skill to bring it up too)"
 
 if [ "$fail" -ne 0 ]; then
   echo "== SMOKE TEST: FAIL =="

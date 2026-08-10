@@ -24,8 +24,10 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.917.0",
+    "@langchain/core": "^1.2.5",
+    "@langchain/langgraph": "^1.4.9",
+    "@langchain/openai": "^1.5.6",
     "@nest-lab/throttler-storage-redis": "^1.2.0",
-    "@nestjs/axios": "^4.0.1",
     "@nestjs/bullmq": "^11.0.4",
     "@nestjs/cache-manager": "^3.0.1",
     "@nestjs/common": "^11.0.1",
@@ -70,7 +72,8 @@
     "rxjs": "^7.8.1",
     "socket.io": "^4.8.1",
     "text-transformer": "^1.0.3",
-    "text-validator": "^0.0.3"
+    "text-validator": "^0.0.3",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -116,6 +119,9 @@
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
+    "transformIgnorePatterns": [
+      "node_modules/(?!.*cockatiel)"
+    ],
     "moduleNameMapper": {
       "^.*prisma/prisma-exports\\.js$": "<rootDir>/prisma/prisma-exports.jest.ts",
       "^.*prisma/prisma-exports$": "<rootDir>/prisma/prisma-exports.jest.ts",

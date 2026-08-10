@@ -34,8 +34,7 @@ for the full Joi schema — required vs optional). At minimum:
 DATABASE_URL=postgresql://postgres:root@localhost:5432/skillswap?schema=public
 JWT_SECRET=...
 JWT_REFRESH_SECRET=...
-FASTAPI_URL=http://127.0.0.1:8000
-FASTAPI_SERVICE_TOKEN=...            # min 16 chars, must match pyBackend's own .env
+OPENAI_API_KEY=...                   # used in-process by backend/src/ai (LangGraph.js)
 AWS_REGION=... / AWS_S3_BUCKET_NAME=... / AWS_ACCESS_KEY_ID=... / AWS_SECRET_ACCESS_KEY=...
 REDIS_HOST=localhost                 # optional -- omitting it degrades to single-instance in-memory mode
 PORT=5200                            # optional, defaults to 5200
@@ -71,8 +70,7 @@ This script:
    confirms the returned cookies authenticate `GET /api/auth/profile` and
    `GET /api/matches/active` (both 401 without cookies, 200 with), logs in
    separately, logs out, confirms the session is dead afterward.
-5. Hits the composite `GET /health`, which also checks pyBackend
-   reachability (see below).
+5. Hits the composite `GET /health`, which checks database reachability.
 6. Prints `PASS`/`FAIL` per check, kills the backend process on exit via
    a port-based `trap ... EXIT` (see Gotchas), and exits non-zero on any
    failure. **Leaves Postgres/Redis containers running** — they're shared
@@ -95,9 +93,6 @@ curl -s -b /tmp/c.txt http://localhost:5200/api/auth/profile
 # stop it (Windows/Git-Bash): bash's $! is not the real Windows PID here -- kill by port instead:
 taskkill //F //PID $(netstat -ano | grep ':5200 ' | grep LISTENING | awk '{print $NF}' | head -1)
 ```
-
-To see the full green `/health` (db **and** pyBackend both up), also run
-pyBackend's own driver first — see `pyBackend/.claude/skills/run-pybackend/`.
 
 ## Run (human path)
 
@@ -144,11 +139,6 @@ start --watch` first runs a full TS compile ("Found 0 errors, Watching
   controller method has an `@HttpCode` override, so they fall through to
   Nest's default status for `@Post()` handlers (201), even though they
   don't return a created resource.
-- **The composite `GET /health` legitimately reports `503` whenever
-  pyBackend isn't also running** — it pings `${FASTAPI_URL}/health` as
-  part of the check (`app.controller.ts`). That's correct behavior, not a
-  backend bug; use `GET /health/live` if you only want to confirm the
-  Nest process itself is up, independent of pyBackend.
 - **Docker Desktop must be started explicitly and polled, not assumed
   running.** `docker compose up` fails instantly with a `npipe` connection
   error if the Docker engine isn't up yet; starting `Docker Desktop.exe`

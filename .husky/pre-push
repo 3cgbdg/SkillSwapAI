@@ -3,4 +3,4 @@ set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 pnpm check:types
-pnpm --dir backend test
+pnpm test

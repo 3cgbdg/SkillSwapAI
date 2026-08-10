@@ -11,12 +11,10 @@ export const envValidationSchema = Joi.object({
   JWT_SECRET: Joi.string().required(),
   JWT_REFRESH_SECRET: Joi.string().required(),
   CORS_ORIGIN: Joi.string().default('http://localhost:3000'),
-  FASTAPI_URL: isTest
-    ? Joi.string().default('http://localhost:8000')
-    : Joi.string().uri().required(),
-  FASTAPI_SERVICE_TOKEN: isTest
-    ? Joi.string().default('test-service-token-16chars')
-    : Joi.string().min(16).required(),
+  OPENAI_API_KEY: isTest
+    ? Joi.string().default('test-openai-key')
+    : Joi.string().required(),
+  OPENAI_MODEL: Joi.string().default('gpt-4o-mini'),
   REDIS_HOST: Joi.string().optional().allow(''),
   REDIS_PORT: Joi.number().default(6379),
   REDIS_PASSWORD: Joi.string().optional().allow(''),

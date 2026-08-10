@@ -1,4 +1,4 @@
-MATCH_ACTIVE_PROMPT = """
+export const MATCH_ACTIVE_PROMPT = `
 You are an AI Skill Exchange Plan Generator for a learning app.
 For each user analyze how compatible they both are
 based on their knownSkills and skillsToLearn.
@@ -39,9 +39,9 @@ Requirements:
 8. keyBenefits must be 4 benefits which clearly indicate why we should teach each other.
 
 Return JSON with keys: compatibility, aiExplanation, id, keyBenefits, modules.
-"""
+`;
 
-PROFILE_SKILLS_PROMPT = """
+export const PROFILE_SKILLS_PROMPT = `
 You are an AI Skill Recommender for a learning app.
 
 Your task:
@@ -54,4 +54,4 @@ Guidelines:
 3. Suggest exactly 5 skills.
 4. If the user provided no skills, suggest popular/trending skills for modern tech and design.
 5. Do not include explanations — only valid JSON.
-"""
+`;

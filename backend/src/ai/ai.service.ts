@@ -4,61 +4,45 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
 import { circuitBreaker, ConsecutiveBreaker, handleAll, wrap } from 'cockatiel';
+import { ChatOpenAI } from '@langchain/openai';
 import { IGeneratedActiveMatch } from './ai.interface';
 import { PrismaService } from 'prisma/prisma.service';
 import { ReturnDataType } from 'types/general';
 import { User } from '../prisma/prisma-exports.js';
-import { AxiosResponse } from 'axios';
 import { RequestGateway } from 'src/webSockets/request.gateway';
 import { AiUtils } from 'src/utils/ai.utils';
-
-interface FastApiResponse {
-  AIReport: string | object;
-}
+import { buildMatchGraph } from './graphs/match.graph';
+import { buildSkillsGraph } from './graphs/skills.graph';
 
 @Injectable()
 export class AiService {
-  private readonly fastApiPolicy = wrap(
+  private readonly aiPolicy = wrap(
     circuitBreaker(handleAll, {
       halfOpenAfter: 30_000,
       breaker: new ConsecutiveBreaker(5),
     }),
   );
 
+  private readonly matchGraph: ReturnType<typeof buildMatchGraph>;
+  private readonly skillsGraph: ReturnType<typeof buildSkillsGraph>;
+
   constructor(
     private readonly prisma: PrismaService,
-    private readonly httpService: HttpService,
     private readonly configService: ConfigService,
     private readonly requestGateway: RequestGateway,
-  ) {}
+  ) {
+    const model = new ChatOpenAI({
+      model: this.configService.get<string>('OPENAI_MODEL') ?? 'gpt-4o-mini',
+      temperature: 0.7,
+      timeout: 25_000,
+      maxRetries: 2,
+      apiKey: this.configService.getOrThrow<string>('OPENAI_API_KEY'),
+    });
 
-  private get fastApiUrl(): string {
-    return this.configService
-      .getOrThrow<string>('FASTAPI_URL')
-      .replace(/\/$/, '');
-  }
-
-  private get fastApiHeaders(): Record<string, string> {
-    return {
-      'Content-Type': 'application/json',
-      'X-Service-Token': this.configService.getOrThrow<string>(
-        'FASTAPI_SERVICE_TOKEN',
-      ),
-    };
-  }
-
-  private postFastApi<T>(path: string, body: unknown) {
-    return this.fastApiPolicy.execute(() =>
-      firstValueFrom(
-        this.httpService.post<T>(`${this.fastApiUrl}${path}`, body, {
-          headers: this.fastApiHeaders,
-        }),
-      ),
-    );
+    this.matchGraph = buildMatchGraph(model);
+    this.skillsGraph = buildSkillsGraph(model);
   }
 
   async generateBodyForActiveMatch(
@@ -81,17 +65,14 @@ export class AiService {
     const u1 = users.find((u) => u.id === myId)!;
     const u2 = users.find((u) => u.id !== myId)!;
 
-    const fastApiResponse: AxiosResponse<FastApiResponse> =
-      await this.postFastApi('/match/active', {
+    const { result } = await this.aiPolicy.execute(() =>
+      this.matchGraph.invoke({
         user1: AiUtils.formatUserForAi(u1),
         user2: AiUtils.formatUserForAi(u2),
-      });
-
-    const readyAiArray = AiUtils.parseAiResponse<IGeneratedActiveMatch>(
-      fastApiResponse.data.AIReport,
+      }),
     );
 
-    return readyAiArray ? { generatedData: readyAiArray, other: u2 } : null;
+    return result ? { generatedData: result, other: u2 } : null;
   }
 
   async getAiSuggestionSkills(
@@ -108,15 +89,14 @@ export class AiService {
 
     this.validateRegenerationDate(user.lastSkillsGenerationDate);
 
-    const fastApiResponse: AxiosResponse<FastApiResponse> =
-      await this.postFastApi('/profile/skills', {
+    const { result } = await this.aiPolicy.execute(() =>
+      this.skillsGraph.invoke({
         skillsToLearn: user.skillsToLearn.map((s) => s.title),
         knownSkills: user.knownSkills.map((s) => s.title),
-      });
-
-    const readyAiArray = AiUtils.parseAiResponse<string[]>(
-      fastApiResponse.data.AIReport,
+      }),
     );
+
+    const readyAiArray = result?.skills ?? null;
 
     if (readyAiArray && readyAiArray.length > 0) {
       await this.saveAiSuggestions(myId, readyAiArray);

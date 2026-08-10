@@ -19,8 +19,7 @@ The project follows a **microservices-based architecture**, ensuring separation 
 
 
 * **Frontend (Client):** Next.js application for user interaction.
-* **Core Backend (NestJS):** NestJS server handling users, chats, sessions, and core business logic.
-* **AI Service (Microservice):** A dedicated Python (FastAPI) service responsible for ML logic, OpenAI API integration, and recommendation algorithms.
+* **Core Backend (NestJS):** NestJS server handling users, chats, sessions, core business logic, and AI matchmaking/recommendations (via an in-process LangGraph.js + OpenAI integration).
 * **External Services:** PostgreSQL (Neon.tech), AWS S3 (Storage), OpenAI API.
 
 ## 🛠 Tech Stack
@@ -37,11 +36,7 @@ The project follows a **microservices-based architecture**, ensuring separation 
 * **Language:** TypeScript
 * **Database ORM:** Prisma
 * **Real-time:** Socket.io Gateway
-
-### AI Engine
-* **Framework:** FastAPI
-* **Language:** Python
-* **AI/ML:** OpenAI API integration (LLM)
+* **AI/ML:** LangGraph.js + OpenAI API integration (LLM), in-process
 
 ### Infrastructure & DevOps
 * **Containerization:** Docker (for services), Docker Compose (for local orchestration).
@@ -105,7 +100,6 @@ Git hooks: **pre-commit** runs lint-staged (Prettier + ESLint on staged files); 
 4.  **Access the application:**
     * Frontend: `http://localhost:3000`
     * Backend API: `http://localhost:4000`
-    * AI Service: `http://localhost:8000`
 
 ## 🐛 Known Issues & Roadmap
 
@@ -115,7 +109,7 @@ This project is currently in the **Active MVP Phase**.
 ## 👨‍💻 Author
 
 **Bogdan Tytysh**
-* Full-Stack Engineer (NestJS, Python, AWS)
+* Full-Stack Engineer (NestJS, TypeScript, AWS)
 * [LinkedIn](https://www.linkedin.com/in/bogdan-tytysh-0b76b1290)
 * [GitHub](https://github.com/3cgbdg)
 

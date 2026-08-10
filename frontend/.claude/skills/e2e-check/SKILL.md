@@ -17,9 +17,8 @@ verified in a browser before being reported done.
   shells out to `npx @playwright/mcp@latest`, which downloads a browser
   on first run if one isn't cached — that first run will be slow.
 - The frontend dev server must be running and reachable. This skill does
-  not manage backend/pyBackend — bring those up first (see
-  `backend/.claude/skills/run-backend` and
-  `pyBackend/.claude/skills/run-pybackend`) if the flow you're testing
+  not manage the backend — bring it up first (see
+  `backend/.claude/skills/run-backend`) if the flow you're testing
   needs real API responses rather than a mocked/loading state.
 
 ## Steps

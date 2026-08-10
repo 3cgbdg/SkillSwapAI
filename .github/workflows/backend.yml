@@ -81,8 +81,6 @@ jobs:
           AWS_ACCESS_KEY_ID: test-key
           AWS_SECRET_ACCESS_KEY: test-secret-key
           AWS_REGION: eu-north-1
-          FASTAPI_URL: http://localhost:8000
-          FASTAPI_SERVICE_TOKEN: test-service-token-16chars
 
   # ─── 2. BUILD & PUSH TO ECR ────────────────────────────────────────────────
   build-and-push:

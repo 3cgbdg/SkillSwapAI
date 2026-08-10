@@ -3,8 +3,8 @@ name: gh-ci-status
 description: Report CI/CodeQL/review status for the current branch or a PR via the `github` MCP server, as a short punch list. Use when asked what's blocking a PR, whether CI is green, or whether it's safe to merge.
 ---
 
-This repo has 5 GitHub Actions workflows (`.github/workflows/backend.yml`,
-`frontend.yml`, `pybackend.yml`, `quality.yml`, `codeql.yml`). This skill
+This repo has 4 GitHub Actions workflows (`.github/workflows/backend.yml`,
+`frontend.yml`, `quality.yml`, `codeql.yml`). This skill
 gives a single consolidated status view across all of them via the
 `github` MCP server, instead of checking each with separate ad hoc `gh`
 CLI calls.

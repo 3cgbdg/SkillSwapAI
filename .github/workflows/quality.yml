@@ -3,8 +3,14 @@ name: Quality
 on:
   pull_request:
     branches: [main, dev]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
   push:
     branches: [main, dev]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
 
 concurrency:
   group: quality-${{ github.ref }}
