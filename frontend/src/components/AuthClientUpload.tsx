@@ -1,52 +1,14 @@
 "use client";
-import { useRouter } from "next/navigation";
+
 import { useEffect } from "react";
-import FullSreenLoader from "./FullSreenLoader";
-import useProfile from "@/hooks/useProfile";
-import useMatches from "@/hooks/useMatches";
-import useSessions from "@/hooks/useSessions";
 
-// fetching data component every reload
-const AuthClientUpload = () => {
-  const router = useRouter();
+import { api } from "@/services/axiosInstance";
 
-  const {
-    isLoading: isProfileLoading,
-    isError: isProfileError
-  } = useProfile();
-
-  const {
-    isLoading: isMatchesLoading,
-    isError: isMatchesError
-  } = useMatches();
-
-  const {
-    isLoading: isSessionsLoading,
-    isError: isSessionsError
-  } = useSessions();
-
-  const isLoading = isProfileLoading || isMatchesLoading || isSessionsLoading;
-  const isError = isProfileError || isMatchesError || isSessionsError;
-
+/** Keeps the httpOnly session fresh on authenticated routes. */
+export default function AuthClientUpload() {
   useEffect(() => {
-    if (isError) {
-      router.push("/auth/login");
-    }
-  }, [isError, router]);
-
-  useEffect(() => {
-    if (isLoading) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-  }, [isLoading]);
-
-  if (isLoading) {
-    return <FullSreenLoader />;
-  }
+    void api.post("/auth/refresh").catch(() => {});
+  }, []);
 
   return null;
-};
-
-export default AuthClientUpload;
+}

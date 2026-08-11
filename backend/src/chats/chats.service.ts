@@ -3,7 +3,7 @@ import { PrismaService } from 'prisma/prisma.service';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { ReturnDataType } from 'types/general';
 import { IChatListItem, IChatResponse } from 'types/chats';
-import { Message } from '@prisma/client';
+import { Message } from '../prisma/prisma-exports.js';
 import { ChatsUtils } from 'src/utils/chats.utils';
 
 @Injectable()
@@ -19,11 +19,14 @@ export class ChatsService {
         users: { every: { id: { in: [myId, friendId] } } },
       },
       include: {
-        messages: { orderBy: { createdAt: 'asc' } },
+        messages: { orderBy: { createdAt: 'desc' }, take: 200 },
       },
     });
 
-    return { data: chat?.messages ?? [] };
+    const messages = chat?.messages ?? [];
+    messages.reverse();
+
+    return { data: messages };
   }
 
   async findAll(myId: string): Promise<ReturnDataType<IChatListItem[]>> {
@@ -48,6 +51,7 @@ export class ChatsService {
           },
         },
       },
+      take: 100,
     });
 
     return {

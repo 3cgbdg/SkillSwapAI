@@ -2,67 +2,90 @@
 
 import { memo } from "react";
 import { format } from "date-fns";
-import { TableCellType } from "./Calendar";
 import Link from "next/link";
+import { CalendarDays, Plus } from "lucide-react";
+
+import type { TableCellType } from "./Calendar";
+import { StatTile } from "@/components/composites";
+import { Button } from "@/components/ui/button";
+import { resolveSessionColor } from "@/utils/sessionColors";
+import { formatSessionTimeRange } from "@/utils/sessionTime";
 
 const TouchScreenCalendar = ({
   tableCells,
+  onCreateSession,
 }: {
   tableCells: TableCellType[];
+  onCreateSession?: () => void;
 }) => {
   return (
     <div className="flex flex-col gap-6 p-4">
+      {onCreateSession ? (
+        <Button
+          type="button"
+          className="w-full gap-2"
+          onClick={onCreateSession}
+        >
+          <Plus size={16} />
+          New session
+        </Button>
+      ) : null}
       {tableCells.map((cell) => (
         <div key={cell.date.toISOString()} className="flex flex-col gap-2">
-          <div className="text-xs leading-4 font-semibold text-gray uppercase">
-            {format(cell.date, "EEEE")}, {format(cell.date, "MMMM")}{" "}
-            {format(cell.date, "d")}
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-muted-foreground text-xs font-semibold uppercase">
+              {format(cell.date, "EEEE, MMMM d")}
+            </div>
+            <StatTile
+              icon={CalendarDays}
+              value={cell.sessions.length}
+              label="Sessions"
+              className="py-1"
+            />
           </div>
           <div className="flex flex-col gap-2">
             {cell.sessions.length !== 0 ? (
-              cell.sessions.map((session) => (
-                <div
-                  key={session.id}
-                  style={{ borderColor: session.color }}
-                  className="rounded-[10px] p-2 _border gap-1 flex flex-col "
-                >
-                  <p className="text-xs leading-4 font-medium text-blue">
-                    {session.start}:00 - {session.end}:00
-                  </p>
-                  <h2 className="font-medium text-sm leading-5">
-                    {session.title}
-                  </h2>
-                  <div className="">
-                    {session.description && (
-                      <div className="border-y-1  border-gray-300 p-1 my-1">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-black font-medium">
-                            Description
-                          </h3>
+              cell.sessions.map((session) => {
+                const colors = resolveSessionColor(session.color);
+                return (
+                  <div
+                    key={session.id}
+                    className="flex flex-col gap-1 rounded-lg border border-border p-3"
+                    style={{
+                      backgroundColor: colors.backgroundColor,
+                      color: colors.color,
+                    }}
+                  >
+                    <p className="text-xs font-medium">
+                      {formatSessionTimeRange(session.startsAt, session.endsAt)}
+                    </p>
+                    <h2 className="text-foreground text-sm font-semibold">
+                      {session.title}
+                    </h2>
+                    <div>
+                      {session.description ? (
+                        <div className="border-border/60 my-1 border-y py-1">
+                          <p className="text-xs leading-4 opacity-90">
+                            {session.description}
+                          </p>
                         </div>
-                        <p className="text-gray text-xs leading-4">
-                          {session.description}
-                        </p>
-                      </div>
-                    )}
-                    {session.meetingLink && (
-                      <>
-                        <p className="text-gray text-xs leading-4">
-                          Meeting Link:{" "}
+                      ) : null}
+                      {session.meetingLink ? (
+                        <p className="text-xs leading-4">
                           <Link
                             href={session.meetingLink}
-                            className="font-medium hover:underline text-black"
+                            className="font-medium underline-offset-2 hover:underline"
                           >
-                            {session.meetingLink}
-                          </Link>{" "}
+                            Join meeting
+                          </Link>
                         </p>
-                      </>
-                    )}
+                      ) : null}
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
-              <div className="p-2 _border rounded-md bg-neutral-200 text-sx leading-4 text-gray">
+              <div className="bg-muted text-muted-foreground rounded-md border border-border p-2 text-xs">
                 No events scheduled for this day.
               </div>
             )}

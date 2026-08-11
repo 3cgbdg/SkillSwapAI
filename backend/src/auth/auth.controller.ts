@@ -19,12 +19,14 @@ import type { Request, Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
-import { User } from '@prisma/client';
+import { User } from '../prisma/prisma-exports.js';
 import type { RequestWithUser, JwtPayload } from 'types/auth';
 import type { IReturnMessage, ReturnDataType } from 'types/general';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import { CookiesService } from './cookies.service';
 import { UsersService } from 'src/users/users.service';
+
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('auth')
 export class AuthController {
@@ -70,6 +72,7 @@ export class AuthController {
   }
 
   @Post('signup')
+  @Throttle({ short: { limit: 5, ttl: 60_000 } })
   async signup(
     @Body() createAuthDto: CreateAuthDto,
     @Res() res: Response,
@@ -84,6 +87,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @Throttle({ short: { limit: 10, ttl: 60_000 } })
   async login(
     @Body() LoginAuthDto: LoginAuthDto,
     @Res() res: Response,
@@ -105,6 +109,28 @@ export class AuthController {
     const data = await this.usersService.findUniqueUserWithSkills(
       request.user.id,
     );
+    // #region agent log
+    fetch('http://127.0.0.1:7877/ingest/c055a23c-4c84-4eb5-84c0-8abae4e46ddd', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Debug-Session-Id': 'ee6149',
+      },
+      body: JSON.stringify({
+        sessionId: 'ee6149',
+        hypothesisId: 'H3',
+        location: 'auth.controller.ts:profile',
+        message: 'profile payload from DB',
+        data: {
+          userId: request.user.id,
+          completedSessionsCount: data.completedSessionsCount,
+          knownSkillsLen: data.knownSkills?.length,
+          learnSkillsLen: data.skillsToLearn?.length,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
     return { data };
   }
 

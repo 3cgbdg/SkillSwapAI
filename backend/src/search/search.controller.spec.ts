@@ -9,7 +9,9 @@ describe('SearchController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [SearchController],
       providers: [SearchService],
-    }).compile();
+    })
+      .useMocker(() => ({}))
+      .compile();
 
     controller = module.get<SearchController>(SearchController);
   });

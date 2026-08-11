@@ -1,4 +1,4 @@
-import { ModuleStatus } from '@prisma/client';
+import { ModuleStatus } from '../prisma/prisma-exports.js';
 
 export interface IGeneratedActiveMatch {
   compatibility: number;

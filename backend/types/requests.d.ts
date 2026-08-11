@@ -1,4 +1,4 @@
-import { Request as PrismaRequest } from '@prisma/client';
+import { Request as PrismaRequest } from '../src/prisma/prisma-exports.js';
 
 export type RequestType =
   | 'FRIEND'

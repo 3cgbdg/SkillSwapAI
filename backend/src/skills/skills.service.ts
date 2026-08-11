@@ -2,7 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { GetSkillsDto } from './dto/GetSkillsDto';
 import { SkillDto } from './dto/skills.dto';
-import { User } from '@prisma/client';
+import { User } from '../prisma/prisma-exports.js';
 import { IReturnMessage, ReturnDataType } from 'types/general';
 
 @Injectable()
@@ -12,6 +12,7 @@ export class SkillsService {
   async findAll(dto: GetSkillsDto): Promise<ReturnDataType<any[]>> {
     const skills = await this.prisma.skill.findMany({
       where: { title: { contains: dto.chars, mode: 'insensitive' } },
+      take: 50,
     });
     return { data: skills };
   }

@@ -1,17 +1,50 @@
+import Link from "next/link";
 import useFriends from "@/hooks/useFriends";
 import { IChat, IMatch } from "@/types/types";
 import { UseMutateFunction } from "@tanstack/react-query";
 import {
   Book,
   Calendar,
+  ChevronDown,
   MessageSquare,
-  UserRound,
+  MoreHorizontal,
   UsersRound,
 } from "lucide-react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import React from "react";
+import { useState, type CSSProperties } from "react";
+
+import { MetricRing, SkillPillList } from "@/components/composites";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import { UserAvatar } from "@/components/ui/user-avatar";
+import { cn } from "@/lib/utils";
+
+function SkillBadges({
+  skills,
+  variant,
+}: {
+  skills: { title: string }[];
+  variant: "teach" | "learn";
+}) {
+  return <SkillPillList skills={skills} variant={variant} />;
+}
 
 const MatchCard = ({
   match,
@@ -23,7 +56,7 @@ const MatchCard = ({
   isInActiveMatches: boolean;
   option: "available" | "active";
   generateActiveMatch: UseMutateFunction<
-    { match: IMatch; message: string },
+    { jobId: string; message: string },
     Error,
     string,
     unknown
@@ -38,75 +71,152 @@ const MatchCard = ({
 }) => {
   const router = useRouter();
   const { createFriendRequest, isPendingAddFriend } = useFriends();
+  const [showAi, setShowAi] = useState(false);
+  const canAct = option === "active" || match.isFriend;
+
+  const primaryAction = () => {
+    if (!canAct) {
+      createFriendRequest({ id: match.other.id });
+      return;
+    }
+    if (option === "active") {
+      if (
+        typeof document !== "undefined" &&
+        "startViewTransition" in document
+      ) {
+        (
+          document as Document & {
+            startViewTransition: (cb: () => void) => void;
+          }
+        ).startViewTransition(() => {
+          router.push(`/matches/${match.id}`);
+        });
+      } else {
+        router.push(`/matches/${match.id}`);
+      }
+      return;
+    }
+    if (isInActiveMatches) {
+      router.push("/learning");
+      return;
+    }
+    generateActiveMatch(match.other.id);
+  };
+
+  const primaryLabel = !canAct
+    ? "Add friend"
+    : option === "active"
+      ? "Open plan"
+      : isInActiveMatches
+        ? "Go to active"
+        : "Generate plan";
+
   return (
-    <div className="_border rounded-2xl p-6 overflow-hidden flex flex-col">
-      <div className="flex flex-col gap-3 mb-3.5 items-center">
-        <div className=" _border  relative size-16 flex items-center justify-center rounded-full overflow-hidden">
-          {!match?.other.imageUrl ? (
-            <UserRound size={24} />
-          ) : (
-            <Image
-              className="object-cover"
-              src={match.other.imageUrl}
-              fill
-              alt="user image"
+    <Card
+      elevation="interactive"
+      className="@container flex h-full flex-col"
+      style={
+        option === "active"
+          ? ({ viewTransitionName: `match-${match.id}` } as CSSProperties)
+          : undefined
+      }
+    >
+      <CardHeader className="relative flex flex-row items-start gap-3 text-left">
+        <HoverCard>
+          <HoverCardTrigger className="rounded-full">
+            <UserAvatar
+              name={match.other.name}
+              imageUrl={match.other.imageUrl}
+              size="lg"
             />
+          </HoverCardTrigger>
+          <HoverCardContent className="w-56">
+            <p className="font-semibold">{match.other.name}</p>
+            <p className="text-muted-foreground text-xs">
+              {typeof match.compatibility === "number"
+                ? `${match.compatibility}% compatibility`
+                : "Skill swap partner"}
+            </p>
+            <Link
+              href={`/profiles/${match.other.id}`}
+              className="text-primary mt-2 inline-block text-xs font-medium"
+            >
+              View profile
+            </Link>
+          </HoverCardContent>
+        </HoverCard>
+        <div className="min-w-0 flex-1 pr-12">
+          <CardTitle className="truncate text-lg">{match.other.name}</CardTitle>
+          {match.aiExplanation ? (
+            <button
+              type="button"
+              className="text-primary mt-1 flex items-center gap-1 text-xs font-semibold"
+              onClick={() => setShowAi((v) => !v)}
+            >
+              Why this match?
+              <ChevronDown
+                className={cn(
+                  "size-3.5 transition-transform duration-[var(--duration-fast)]",
+                  showAi && "rotate-180"
+                )}
+              />
+            </button>
+          ) : null}
+        </div>
+        {typeof match.compatibility === "number" ? (
+          <MetricRing
+            value={match.compatibility}
+            label={`${match.compatibility}% compatibility`}
+            className="absolute top-4 right-4"
+          />
+        ) : null}
+      </CardHeader>
+      <CardContent className="flex grow flex-col gap-4">
+        {showAi && match.aiExplanation ? (
+          <p className="text-muted-foreground animate-fade-in text-sm">
+            {match.aiExplanation}
+          </p>
+        ) : null}
+        <div className="flex flex-col gap-1.5">
+          <h3 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+            Teaches
+          </h3>
+          <SkillBadges skills={match.other.knownSkills} variant="teach" />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <h3 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+            Wants to learn
+          </h3>
+          <SkillBadges skills={match.other.skillsToLearn} variant="learn" />
+        </div>
+      </CardContent>
+      <CardFooter className="mt-auto flex items-center gap-2 border-t pt-4">
+        <Button
+          size="sm"
+          className="flex-1"
+          disabled={!canAct && isPendingAddFriend}
+          loading={!canAct && isPendingAddFriend}
+          onClick={primaryAction}
+        >
+          {!canAct ? (
+            <UsersRound className="size-4" />
+          ) : (
+            <Book className="size-4" />
           )}
-        </div>
-        <h2 className="section-title">{match.other.name}</h2>
-      </div>
-      <div className="flex flex-col gap-4 mb-6 grow ">
-        <div className="flex flex-col gap-2">
-          <h3 className="text-sm leading-5 font-medium">Teaches:</h3>
-          <div className="flex flex-wrap gap-2">
-            {match.other.knownSkills.map((skill, idx) => (
-              <span
-                key={idx}
-                className="text-xs leading-5 text-neutral-600 px-1.5 bg-lightBlue border-blue border font-semibold rounded-xl"
-              >
-                {skill.title}
-              </span>
-            ))}
-          </div>
-        </div>
-        <div className="flex flex-col gap-2">
-          <h3 className="text-sm leading-5 font-medium">Wants to learn:</h3>
-          <div className="flex flex-wrap gap-2">
-            {match.other.skillsToLearn.map((skill, idx) => (
-              <span
-                key={idx}
-                className="text-xs leading-5 text-neutral-600 px-1.5 border-neutral-600  border font-semibold rounded-xl"
-              >
-                {skill.title}
-              </span>
-            ))}
-          </div>
-        </div>
-        {match.aiExplanation && (
-          <div className="flex flex-col gap-2">
-            <h3 className="text-sm leading-5 font-semibold">
-              AI Match Explanation:
-            </h3>
-            <p className="text-sm leading-5 text-gray">{match.aiExplanation}</p>
-          </div>
-        )}
-      </div>
-      <div className="">
-        {match.compatibility && (
-          <div className="text-sm leading-5 font-medium flex flex-col gap-1">
-            <h2>Compatibility: {match.compatibility}%</h2>
-            <div className="relative w-full rounded-md bg-neutral-300 h-1.5 overflow-hidden">
-              <div
-                style={{ width: `${match.compatibility}%` }}
-                className="absolute top-0 left-0  bg-blue h-full"
-              ></div>
-            </div>
-          </div>
-        )}
-        <div className=" mx-auto mt-6 place-self-end basis-full">
-          {option == "active" || match.isFriend ? (
-            <div className="flex gap-3   flex-wrap justify-center">
-              <button
+          {primaryLabel}
+        </Button>
+        {canAct ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className={cn(
+                "border-border inline-flex size-7 items-center justify-center rounded-lg border outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              )}
+              aria-label="More actions"
+            >
+              <MoreHorizontal className="size-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
                 onClick={() =>
                   getOrCreateChat({
                     payload: {
@@ -115,60 +225,25 @@ const MatchCard = ({
                     },
                   })
                 }
-                className="button-blue flex gap-2 items-center  font-medium!"
               >
-                <MessageSquare size={16} />
+                <MessageSquare className="size-4" />
                 Chat
-              </button>
-              <button
+              </DropdownMenuItem>
+              <DropdownMenuItem
                 onClick={() =>
                   router.push(
-                    `/calendar?schedule=true&name=${encodeURIComponent(match.other.name)}`
+                    `/schedule?schedule=true&name=${encodeURIComponent(match.other.name)}`
                   )
                 }
-                className="button-transparent rounded-md! flex gap-1 items-center  font-medium!"
               >
-                <Calendar size={16} />
+                <Calendar className="size-4" />
                 Schedule
-              </button>
-              {option == "available" ? (
-                <button
-                  onClick={() =>
-                    !isInActiveMatches
-                      ? generateActiveMatch(match.other.id)
-                      : router.push("/matches/active")
-                  }
-                  className="button-transparent rounded-md!  flex gap-1 items-center  font-medium!"
-                >
-                  <Book size={16} />
-                  {isInActiveMatches ? "Go to active matches" : "Generate plan"}
-                </button>
-              ) : (
-                <button
-                  onClick={() => router.push(`/matches/${match.id}`)}
-                  className="button-transparent rounded-md!  flex gap-1 items-center  font-medium!"
-                >
-                  <Book size={16} />
-                  Go to your plan
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center gap-4">
-              <span>To continue:</span>
-              <button
-                disabled={isPendingAddFriend}
-                onClick={() => createFriendRequest({ id: match.other.id })}
-                className="button-transparent rounded-md! flex gap-1 items-center  font-medium!"
-              >
-                <UsersRound size={16} />
-                Add to friends
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : null}
+      </CardFooter>
+    </Card>
   );
 };
 

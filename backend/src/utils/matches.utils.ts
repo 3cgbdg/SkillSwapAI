@@ -4,7 +4,7 @@ import {
   User as PrismaUser,
   Skill as PrismaSkill,
   Friendship,
-} from '@prisma/client';
+} from '../prisma/prisma-exports.js';
 import { UserUtils } from './user.utils';
 
 export interface IMatchPrismaResult extends PrismaMatch {

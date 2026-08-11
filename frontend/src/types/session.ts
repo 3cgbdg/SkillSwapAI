@@ -1,33 +1,41 @@
 export type SessionStatusType = "PENDING" | "AGREED";
 
+export type SessionColorKey =
+  | "plum"
+  | "amber"
+  | "sage"
+  | "coral"
+  | "slate"
+  | "violet";
+
 export interface ISession {
+  id: string;
+  title: string;
+  startsAt: string | Date;
+  endsAt: string | Date;
+  timeZone: string;
+  description?: string;
+  color: SessionColorKey | string;
+  friend: {
     id: string;
-    title: string;
-    start: number;
-    end: number;
-    description?: string;
-    color: string;
-    date: Date;
-    friend: {
-        id: string;
-        name: string;
-    };
-    status: SessionStatusType;
-    meetingLink: string | null;
+    name: string;
+  } | null;
+  status: SessionStatusType;
+  meetingLink: string | null;
 }
 
 export interface IRequest {
-    id: string;
-    fromId: string;
-    toId: string;
-    from: { name: string };
-    to: { name: string };
-    type: "FRIEND" | "SESSIONCREATED" | "SESSIONACCEPTED" | "SESSIONREJECTED";
-    sessionId: string;
-    session: {
-        date?: string;
-        start?: number;
-        end?: number;
-        title?: string;
-    }; //if request type is session
+  id: string;
+  fromId: string;
+  toId: string;
+  from: { name: string };
+  to: { name: string };
+  type: "FRIEND" | "SESSIONCREATED" | "SESSIONACCEPTED" | "SESSIONREJECTED";
+  sessionId: string;
+  session: {
+    startsAt?: string;
+    endsAt?: string;
+    title?: string;
+    timeZone?: string;
+  };
 }

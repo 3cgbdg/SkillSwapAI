@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
-import { Dancing_Script, Inter, Oswald } from "next/font/google";
+import { Fraunces, Inter } from "next/font/google";
 import "@/styles/globals.css";
 import QueryProvider from "@/providers/QueryProvider";
+import { ThemeProvider } from "@/providers/ThemeProvider";
 import { SocketProvider } from "@/context/SocketContext";
 import CheckEmptyPath from "@/components/CheckEmptyPath";
-import { ToastContainer } from "react-toastify";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
-const OswaldFont = Oswald({
-  variable: "--font-oswald",
+const FrauncesFont = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
 });
 
@@ -16,37 +19,40 @@ const InterFont = Inter({
   subsets: ["latin"],
 });
 
-const DancingScript = Dancing_Script({
-  variable: "--font-dancing_script",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
   title: "SkillSwapAI",
   description: "SkillSwap AI is a skills exchange platform",
-  icons: {
-    icon: "/logo.png",
-  },
 };
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${InterFont.variable} ${DancingScript.variable} ${OswaldFont.variable} relative  antialiased`}
-      >
-        <QueryProvider>
-          <SocketProvider>
-            <CheckEmptyPath />
-            <div className="">{children}</div>
-            {/* for toast position */}
-            <ToastContainer position="top-right" />
-
-          </SocketProvider>
-        </QueryProvider>
+    <html
+      lang="en"
+      className={cn(InterFont.variable, FrauncesFont.variable)}
+      suppressHydrationWarning
+    >
+      <body className="relative font-sans antialiased">
+        <a
+          href="#main-content"
+          className="bg-primary text-primary-foreground focus:ring-ring sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[var(--z-toast)] focus:rounded-md focus:px-3 focus:py-2 focus:ring-2"
+        >
+          Skip to content
+        </a>
+        <ThemeProvider>
+          <QueryProvider>
+            <SocketProvider>
+              <TooltipProvider>
+                <CheckEmptyPath />
+                {children}
+                <Toaster />
+              </TooltipProvider>
+            </SocketProvider>
+          </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

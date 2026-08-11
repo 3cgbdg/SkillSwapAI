@@ -1,49 +1,43 @@
 "use client";
 
 import ChatSidebar from "@/components/chat/ChatSidebar";
+import { AsyncBoundary } from "@/components/composites";
 import { useQuery } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
 import ChatsService from "@/services/ChatsService";
 import { useParams } from "next/navigation";
-import { showErrorToast } from "@/utils/toast";
+
+import { MOBILE_MEDIA_QUERY } from "@/constants/breakpoints";
 
 export default function ChatLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const {
-    isError,
-    error,
-  } = useQuery({
+  const { isError, error, isLoading } = useQuery({
     queryKey: ["chats"],
     queryFn: async () => ChatsService.getChats(),
   });
 
-  // handling error
-  useEffect(() => {
-    if (isError) showErrorToast(error?.message || "An error occurred");
-  }, [isError, error]);
-
-  const { id } = useParams() as { id: string };
+  const { id } = useParams() as { id?: string };
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 767px)");
+    const mq = window.matchMedia(MOBILE_MEDIA_QUERY);
     const handler = () => setIsMobile(mq.matches);
-
     handler();
     mq.addEventListener("change", handler);
-
     return () => mq.removeEventListener("change", handler);
   }, []);
 
-  if (isMobile === null) return null;
+  const showSidebar = isMobile === null ? true : !isMobile || !id;
+
   return (
-    <div className="flex gap-8 max-h-[800px] md:max-h-[705px]">
-      {((window.matchMedia("(max-width: 767px)").matches && !id) ||
-        window.matchMedia("(min-width: 769px)").matches) && <ChatSidebar />}
-      <div className="w-full">{children}</div>
-    </div>
+    <AsyncBoundary isLoading={isLoading} isError={isError} error={error}>
+      <div className="flex min-h-[min(75dvh,800px)] gap-4 md:gap-6">
+        {showSidebar ? <ChatSidebar /> : null}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
+      </div>
+    </AsyncBoundary>
   );
 }

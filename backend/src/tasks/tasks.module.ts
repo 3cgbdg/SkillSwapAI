@@ -1,7 +1,4 @@
 import { Module } from '@nestjs/common';
-import { AutoAcceptTasks } from './auto-accept.tasks';
 
-@Module({
-  providers: [AutoAcceptTasks],
-})
+@Module({})
 export class TasksModule {}

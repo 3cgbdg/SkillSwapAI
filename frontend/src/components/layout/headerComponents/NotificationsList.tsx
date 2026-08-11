@@ -1,5 +1,10 @@
 import { Check, X } from "lucide-react";
 import { IRequest } from "@/types/session";
+import { formatSessionDay, formatSessionTimeRange } from "@/utils/sessionTime";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { UserRow } from "@/components/composites";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 interface NotificationsListProps {
   reqs: IRequest[];
@@ -33,154 +38,155 @@ const NotificationsList = ({
   onDeleteRequest,
 }: NotificationsListProps) => {
   return (
-    <div className="flex flex-col gap-2 pb-4 not-last:border-b border-neutral-300 w-full">
-      <h3 className="text-lg leading-7 font-medium">Latest requests</h3>
-      <div className="flex flex-col gap-1  border-neutral-300 max-h-[450px] overflow-x-auto">
-        {reqs &&
-          reqs.map((req) => {
-            return req.type == "FRIEND" ? (
-              <div
-                key={req.id}
-                className="flex gap-2 w-full _border p-2 flex-col"
-              >
-                <div className="flex flex-col  ">
-                  <h2 className="text-lg leading-7 font-semibold">
-                    Friends Request 🧑‍🦰
-                  </h2>
-                  <div className="     rounded-xl transition-all mb-4">
-                    {" "}
-                    <span className="font-semibold">From:</span>{" "}
-                    {req.from.name}
-                  </div>
-                  <div className="grid grid-cols-2 items-center gap-2 ">
-                    <button
-                      onClick={() =>
-                        onAddFriend({ fromId: req.fromId, id: req.id })
+    <div className="flex w-full flex-col gap-2 pb-4 not-last:border-b border-border">
+      <h3 className="text-lg font-medium leading-7">Latest requests</h3>
+      <div className="flex max-h-[450px] flex-col gap-1 overflow-x-auto">
+        {reqs?.map((req) => {
+          return req.type == "FRIEND" ? (
+            <Card key={req.id} className="p-2">
+              <CardContent className="p-0">
+                <UserRow
+                  media={
+                    <UserAvatar
+                      name={req.from.name}
+                      imageUrl={
+                        "imageUrl" in req.from
+                          ? (req.from as { imageUrl?: string }).imageUrl
+                          : undefined
                       }
-                      className="button-transparent"
-                    >
-                      <Check size={16} />
-                    </button>
-                    <button
-                      onClick={() => onDeleteRequest({ requestId: req.id })}
-                      className="button-transparent"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : req.type == "SESSIONCREATED" ? (
-              <div
-                key={req.id}
-                className="flex gap-2 w-full _border p-2 flex-col"
-              >
-                <div className="flex flex-col  ">
-                  <h2 className="text-lg leading-7 font-semibold">
-                    Session Request 🗓️
-                  </h2>
-                  <div className="     rounded-xl transition-all ">
-                    {" "}
-                    <span className="font-semibold">From:</span>{" "}
-                    {req.from.name}
-                  </div>
-                  {req.session.date && (
-                    <div className="flex  flex-col  mb-4">
-                      <div className="     rounded-xl transition-all  font-medium">
-                        {" "}
-                        <span className="font-semibold">Date:</span>
-                        {new Date(req.session.date).toLocaleDateString(
-                          "en-US",
-                          { month: "short", day: "numeric" }
-                        )}
-                      </div>
-                      <div className="     rounded-xl transition-all  font-medium">
-                        {" "}
-                        <span className="font-semibold">Time range:</span>{" "}
-                        {req.session.start}:00 - {req.session.end}:00
-                      </div>
+                      size="sm"
+                    />
+                  }
+                  title={req.from.name}
+                  description="Friend request"
+                  actions={
+                    <div className="flex gap-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label="Accept friend request"
+                        onClick={() =>
+                          onAddFriend({ fromId: req.fromId, id: req.id })
+                        }
+                      >
+                        <Check size={16} />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label="Decline friend request"
+                        onClick={() => onDeleteRequest({ requestId: req.id })}
+                      >
+                        <X size={16} />
+                      </Button>
                     </div>
-                  )}
-                  <div className="grid grid-cols-2 items-center gap-2 ">
-                    <button
-                      onClick={() =>
-                        onAcceptSession({
-                          sessionId: req.sessionId,
-                          requestId: req.id,
-                          friendId: req.fromId,
-                        })
-                      }
-                      className="button-transparent"
-                    >
-                      <Check size={16} />
-                    </button>
-                    <button
-                      onClick={() =>
-                        onRejectSession({
-                          sessionId: req.sessionId,
-                          requestId: req.id,
-                          friendId: req.fromId,
-                        })
-                      }
-                      className="button-transparent"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : req.type == "SESSIONACCEPTED" ? (
-              <div key={req.id} className="flex flex-col  ">
-                <h2 className="text-lg leading-7 font-semibold">
+                  }
+                />
+              </CardContent>
+            </Card>
+          ) : req.type == "SESSIONCREATED" ? (
+            <Card key={req.id} className="p-2">
+              <CardContent className="flex flex-col gap-2 p-0">
+                <h2 className="text-lg font-semibold leading-7">
                   Session Request 🗓️
                 </h2>
-                <span className="font-semibold">From:</span> {req.from.name}
-                {req.session.title && (
-                  <div className="flex  flex-col  mb-4">
-                    <div className="rounded-xl transition-all  font-medium">
-                      {" "}
-                      <span className="font-semibold">Accepted</span> session:
-                      &quot;
-                      {req.session.title}&quot;
-                    </div>
+                <p>
+                  <span className="font-semibold">From:</span> {req.from.name}
+                </p>
+                {req.session.startsAt && req.session.endsAt ? (
+                  <div className="mb-4 flex flex-col">
+                    <p className="font-medium">
+                      <span className="font-semibold">When:</span>{" "}
+                      {formatSessionDay(req.session.startsAt)}{" "}
+                      {formatSessionTimeRange(
+                        req.session.startsAt,
+                        req.session.endsAt
+                      )}
+                    </p>
                   </div>
-                )}
-                <div className="grid grid-cols-2 items-center gap-2 ">
-                  <button
-                    onClick={() => onDeleteRequest({ requestId: req.id })}
-                    className="button-transparent"
+                ) : null}
+                <div className="grid grid-cols-2 items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-sm"
+                    aria-label="Accept session request"
+                    onClick={() =>
+                      onAcceptSession({
+                        sessionId: req.sessionId,
+                        requestId: req.id,
+                        friendId: req.fromId,
+                      })
+                    }
                   >
-                    OK
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div key={req.id} className="flex flex-col  ">
-                <h2 className="text-lg leading-7 font-semibold">
-                  Session Request 🗓️
-                </h2>
-                <span className="font-semibold">From:</span> {req.from.name}
-                {req.session.title && (
-                  <div className="flex  flex-col  mb-4">
-                    <div className="rounded-xl transition-all  font-medium">
-                      {" "}
-                      <span className="font-semibold">Rejected</span> session:
-                      &quot;
-                      {req.session.title}&quot;
-                    </div>
-                  </div>
-                )}
-                <div className="grid grid-cols-2 items-center gap-2 ">
-                  <button
-                    onClick={() => onDeleteRequest({ requestId: req.id })}
-                    className="button-transparent"
+                    <Check size={16} />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-sm"
+                    aria-label="Decline session request"
+                    onClick={() =>
+                      onRejectSession({
+                        sessionId: req.sessionId,
+                        requestId: req.id,
+                        friendId: req.fromId,
+                      })
+                    }
                   >
-                    OK
-                  </button>
+                    <X size={16} />
+                  </Button>
                 </div>
-              </div>
-            );
-          })}
+              </CardContent>
+            </Card>
+          ) : req.type == "SESSIONACCEPTED" ? (
+            <div key={req.id} className="flex flex-col">
+              <h2 className="text-lg font-semibold leading-7">
+                Session Request 🗓️
+              </h2>
+              <span className="font-semibold">From:</span> {req.from.name}
+              {req.session.title && (
+                <div className="mb-4 flex flex-col">
+                  <p className="font-medium">
+                    <span className="font-semibold">Accepted</span> session:
+                    &quot;{req.session.title}&quot;
+                  </p>
+                </div>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onDeleteRequest({ requestId: req.id })}
+              >
+                OK
+              </Button>
+            </div>
+          ) : (
+            <div key={req.id} className="flex flex-col">
+              <h2 className="text-lg font-semibold leading-7">
+                Session Request 🗓️
+              </h2>
+              <span className="font-semibold">From:</span> {req.from.name}
+              {req.session.title && (
+                <div className="mb-4 flex flex-col">
+                  <p className="font-medium">
+                    <span className="font-semibold">Rejected</span> session:
+                    &quot;{req.session.title}&quot;
+                  </p>
+                </div>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onDeleteRequest({ requestId: req.id })}
+              >
+                OK
+              </Button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

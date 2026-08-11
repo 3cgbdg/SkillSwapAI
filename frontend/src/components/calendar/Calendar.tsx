@@ -1,177 +1,181 @@
 "use client";
-import { ISession } from "@/types/session";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import CalendarPopup from "./CalendarPopup";
+
+import CalendarPopup from "@/components/calendar/CalendarPopup";
+import DesktopGridCalendar from "@/components/calendar/DesktopGridCalendar";
+import TouchScreenCalendar from "@/components/calendar/TouchScreenCalendar";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
 import SessionsService from "@/services/SessionsService";
+import { ISession } from "@/types/session";
+import { AsyncBoundary } from "@/components/composites";
+import { useQuery } from "@tanstack/react-query";
+import { addDays, endOfWeek, format, isSameDay, startOfWeek } from "date-fns";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import {
-  addDays,
-  format,
-  getMonth,
-  getYear,
-  isSameDay,
-  startOfWeek,
-} from "date-fns";
-import DesktopGridCalendar from "./DesktopGridCalendar";
-import TouchScreenCalendar from "./TouchScreenCalendar";
-import { showErrorToast } from "@/utils/toast";
-import Spinner from "../Spinner";
+import { useEffect, useMemo, useState } from "react";
+import { sessionStartDate } from "@/utils/sessionTime";
+
+export type CalendarSession = {
+  id: string;
+  title: string;
+  startsAt: string | Date;
+  endsAt: string | Date;
+  description?: string;
+  color: string;
+  status: ISession["status"];
+  meetingLink: string | null;
+};
 
 export type TableCellType = {
-  sessions: ISession[];
   date: Date;
+  sessions: CalendarSession[];
 };
 
-const fetchSessions = async (month: number) => {
-  return SessionsService.getSessions(month);
-};
+export type CalendarPopupPrefill = {
+  startsAt: string;
+  endsAt: string;
+} | null;
 
 const Calendar = () => {
   const searchParams = useSearchParams();
-  const queryClient = useQueryClient();
-  const [addSessionPopup, setAddSessionPopup] = useState<boolean>(false);
-  const [otherName, setOtherName] = useState<string | null>(null);
-  const [weekStartDate, setWeekStartDate] = useState(
-    startOfWeek(new Date(), { weekStartsOn: 1 })
-  );
-  const currentMonth = getMonth(weekStartDate);
+  const scheduleName = searchParams.get("name");
+  const shouldOpenSchedule = searchParams.get("schedule") === "true";
 
-  useEffect(() => {
-    const schedule = searchParams.get("schedule");
-    const name = searchParams.get("name");
-    if (schedule !== "true" || !name) return;
-    setAddSessionPopup(true);
-    setOtherName(name);
-  }, [searchParams]);
+  const [weekAnchor, setWeekAnchor] = useState(() => new Date());
+  const [addSessionPopup, setAddSessionPopup] = useState(false);
+  const [schedulePartner, setSchedulePartner] = useState<string | null>(null);
+  const [popupPrefill, setPopupPrefill] = useState<CalendarPopupPrefill>(null);
 
-  // fetching sessions
+  const weekStart = startOfWeek(weekAnchor, { weekStartsOn: 0 });
+  const weekEnd = endOfWeek(weekAnchor, { weekStartsOn: 0 });
+  const rangeFrom = weekStart.toISOString();
+  const rangeTo = weekEnd.toISOString();
+
   const {
-    data: monthSessions,
-    error,
-    isError,
+    data: sessions = [],
     isLoading,
+    isError,
+    error,
   } = useQuery({
-    queryKey: ["sessions", currentMonth],
-    queryFn: () => fetchSessions(currentMonth),
-    refetchInterval: 60 * 60 * 1000,
+    queryKey: ["sessions", rangeFrom, rangeTo],
+    queryFn: () => SessionsService.getSessionsRange(rangeFrom, rangeTo),
   });
 
-  // handling api error
-
   useEffect(() => {
-    if (isError) {
-      showErrorToast(error?.message || "An error occurred");
+    if (shouldOpenSchedule && scheduleName) {
+      setSchedulePartner(scheduleName);
+      setAddSessionPopup(true);
     }
-  }, [error, isError]);
+  }, [shouldOpenSchedule, scheduleName]);
 
-  // getting todays upcoming sessions
-  useEffect(() => {
-    if (monthSessions) {
-      const today = new Date();
-      const currentSessions = monthSessions.filter((session) =>
-        isSameDay(new Date(session.date), today)
-      );
-      queryClient.setQueryData(["sessions-today"], currentSessions);
-    }
-  }, [monthSessions, queryClient]);
-
-  // nav buttons
-  const handlePrevWeek = () => {
-    setWeekStartDate((prevDate) => addDays(prevDate, -7));
-  };
-
-  const handleNextWeek = () => {
-    setWeekStartDate((prevDate) => addDays(prevDate, 7));
-  };
-
-  // creating days dates for the week
-  const visibleDays = useMemo(() => {
-    const days: Date[] = [];
-    for (let i = 0; i < 7; i++) {
-      days.push(addDays(weekStartDate, i));
-    }
-    return days;
-  }, [weekStartDate]);
-  // creating cells
-  const tableCells = useMemo((): TableCellType[] => {
-    if (!monthSessions) {
-      return visibleDays.map((date) => ({ date, sessions: [] }));
-    }
-
-    return visibleDays.map((dayDate) => ({
-      date: dayDate,
-      sessions: monthSessions
-        .filter((session) => isSameDay(new Date(session.date), dayDate))
-        .sort((a, b) => a.start - b.start),
-    }));
-  }, [visibleDays, monthSessions]);
-
-  useEffect(() => {
-    document.body.style.overflowY = addSessionPopup ? "hidden" : "auto";
-  }, [addSessionPopup]);
+  const tableCells: TableCellType[] = useMemo(() => {
+    return Array.from({ length: 7 }, (_, i) => {
+      const date = addDays(weekStart, i);
+      const daySessions = sessions
+        .filter((session) => isSameDay(sessionStartDate(session), date))
+        .map((session) => ({
+          id: session.id,
+          title: session.title,
+          startsAt: session.startsAt,
+          endsAt: session.endsAt,
+          description: session.description,
+          color: session.color,
+          status: session.status,
+          meetingLink: session.meetingLink,
+        }));
+      return { date, sessions: daySessions };
+    });
+  }, [sessions, weekStart]);
 
   return (
-    <div className="">
-      {/* header */}
-      <div className="bg-neutral-200 px-4 py-4.5 flex md:flex-row flex-col gap-6 md:justify-between md:items-center border-b-1 border-neutral-300">
-        <h2 className="text-xl leading-7 font-semibold">
-          {format(weekStartDate, "MMMM yyyy")}
-        </h2>
-
-        <div className="flex items-center gap-4">
-          <button
-            onClick={handlePrevWeek}
-            className="button-transparent bg-white! flex gap-2"
-          >
-            <ArrowLeft size={16} />
-            <span>Previous 7 days</span>
-          </button>
-          <button
-            onClick={handleNextWeek}
-            className="button-transparent bg-white! flex gap-2"
-          >
-            <span>Next 7 days</span>
-            <ArrowRight size={16} />
-          </button>
-          <button
-            onClick={() => {
-              setAddSessionPopup(true);
-            }}
-            className="button-blue flex gap-2 rounded-2xl!"
-          >
-            Add Session
-          </button>
-        </div>
-      </div>
-
-      <div className="mt-6 w-full">
-        {isLoading ? (
-          <div className="my-6">
-            <Spinner color="blue" size={30} />
+    <AsyncBoundary isError={isError} error={error}>
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="font-heading text-h1 text-foreground">Calendar</h1>
+            <p className="text-muted-foreground text-sm">
+              {format(weekStart, "MMM d")} – {format(weekEnd, "MMM d, yyyy")}
+            </p>
           </div>
-        ) : (
-          <>
-            <div className="md:block hidden">
-              <DesktopGridCalendar tableCells={tableCells} />
-            </div>
-            <div className="md:hidden block">
-              <TouchScreenCalendar tableCells={tableCells} />
-            </div>
-          </>
-        )}
-      </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => setWeekAnchor((d) => addDays(d, -7))}
+              aria-label="Previous week"
+            >
+              <ChevronLeft />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => setWeekAnchor((d) => addDays(d, 7))}
+              aria-label="Next week"
+            >
+              <ChevronRight />
+            </Button>
+            <Button
+              type="button"
+              className="gap-2"
+              onClick={() => {
+                setSchedulePartner(null);
+                setPopupPrefill(null);
+                setAddSessionPopup(true);
+              }}
+            >
+              <Plus size={16} />
+              New session
+            </Button>
+          </div>
+        </div>
 
-      {addSessionPopup && (
-        <CalendarPopup
-          otherName={otherName}
-          year={getYear(new Date())}
-          month={currentMonth}
-          setAddSessionPopup={setAddSessionPopup}
-        />
-      )}
-    </div>
+        <Card className="overflow-hidden p-0" elevation="raised">
+          {isLoading ? (
+            <div className="flex h-[440px] items-center justify-center">
+              <Spinner size="xl" />
+            </div>
+          ) : (
+            <>
+              <div className="hidden md:block">
+                <DesktopGridCalendar
+                  tableCells={tableCells}
+                  onCreateSlot={(startsAt, endsAt) => {
+                    setPopupPrefill({ startsAt, endsAt });
+                    setAddSessionPopup(true);
+                  }}
+                />
+              </div>
+              <div className="md:hidden">
+                <TouchScreenCalendar
+                  tableCells={tableCells}
+                  onCreateSession={() => {
+                    setSchedulePartner(null);
+                    setPopupPrefill(null);
+                    setAddSessionPopup(true);
+                  }}
+                />
+              </div>
+            </>
+          )}
+        </Card>
+
+        {addSessionPopup ? (
+          <CalendarPopup
+            weekAnchor={weekAnchor}
+            prefill={popupPrefill}
+            otherName={schedulePartner}
+            setAddSessionPopup={setAddSessionPopup}
+            onClose={() => {
+              setPopupPrefill(null);
+              setAddSessionPopup(false);
+            }}
+          />
+        ) : null}
+      </div>
+    </AsyncBoundary>
   );
 };
 

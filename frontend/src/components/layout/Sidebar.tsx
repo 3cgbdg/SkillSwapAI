@@ -1,40 +1,64 @@
 "use client";
 
-import { navLinks } from "@/constants/navLinks";
-import { Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 
-const Sidebar = () => {
-  const path = usePathname();
-  const [active, setActive] = useState<boolean>(false);
+import { Logo } from "@/components/brand/Logo";
+import { isNavLinkActive, navLinks } from "@/constants/navLinks";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarRail,
+} from "@/components/ui/sidebar";
+
+export default function AppSidebar() {
+  const pathname = usePathname();
 
   return (
-    <div
-      className={`lg:basis-[254px] hidden md:block ${active ? "basis-[254px] " : ""} shrink-0 relative overflow-hidden  _border border-t-0! h-full bg-white`}
-    >
-      <button
-        onClick={() => setActive(!active)}
-        className={`p-3 cursor-pointer w-full  hover:text-green ${active && "bg-blue text-green"} transition-colors flex justify-center hover:bg-blue border-b-[1px] border-b-neutral-600 lg:hidden!`}
-      >
-        <Menu />
-      </button>
-      <div
-        className={`p-2 ${active ? " left-0 " : " -left-[500px]"} transition-all absolute lg:left-0 flex flex-col gap-1  w-[254px] lg:w-full lg:relative`}
-      >
-        {navLinks.map((item) => (
-          <Link
-            key={item.link}
-            href={item.link}
-            className={`p-2   flex items-center gap-2 text-sm leading-5.5 font-medium text-neutral-600 rounded-lg  ${item.link === path ? "text-neutral-900 font-semibold bg-blue-300" : " "} `}
-          >
-            {item.icon} {item.title}
-          </Link>
-        ))}
-      </div>
-    </div>
+    <Sidebar collapsible="icon" variant="sidebar">
+      <SidebarHeader className="border-border border-b px-2 py-3">
+        <Link href="/dashboard" className="flex items-center gap-2 px-2">
+          <Logo size={32} className="shrink-0" />
+          <span className="truncate font-heading text-sm font-semibold group-data-[collapsible=icon]:hidden">
+            SkillSwap
+          </span>
+        </Link>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {navLinks.map((item) => {
+                const active = isNavLinkActive(pathname, item.link);
+                return (
+                  <SidebarMenuItem key={item.link}>
+                    <SidebarMenuButton
+                      isActive={active}
+                      tooltip={item.title}
+                      render={
+                        <Link
+                          href={item.link}
+                          aria-current={active ? "page" : undefined}
+                        />
+                      }
+                    >
+                      {item.icon}
+                      <span>{item.title}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      <SidebarRail />
+    </Sidebar>
   );
-};
-
-export default Sidebar;
+}

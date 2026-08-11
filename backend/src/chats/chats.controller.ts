@@ -14,7 +14,7 @@ import { CreateChatDto } from './dto/create-chat.dto';
 import type { RequestWithUser } from 'types/auth';
 import { ReturnDataType } from 'types/general';
 import { IChatListItem, IChatResponse } from 'types/chats';
-import { Message } from '@prisma/client';
+import { Message } from '../prisma/prisma-exports.js';
 
 @Controller('chats')
 @UseGuards(AuthGuard('jwt'))

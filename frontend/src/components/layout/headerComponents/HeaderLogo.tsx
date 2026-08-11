@@ -1,22 +1,20 @@
-import Image from "next/image";
 import Link from "next/link";
+
+import { Logo } from "@/components/brand/Logo";
 
 const HeaderLogo = () => {
   return (
     <Link
-      href={"/dashboard"}
-      className="flex items-center group  gap-2 w-fit text-green"
+      href="/dashboard"
+      className="group flex w-fit items-center gap-2 transition-colors"
     >
-      <Image
-        className="stroke-darkBlue transition-transform group-hover:-rotate-45"
-        width={32}
-        height={32}
-        src="/logo.png"
-        alt="logo"
+      <Logo
+        size={32}
+        className="transition-transform duration-[var(--duration-base)] group-hover:-rotate-45"
       />
-      <span className="transiiton-colors relative  group-hover:text-violet  font-oswald text-2xl leading-none font-bold">
-        <span className="text-cyan-300">Skill</span>
-        <span className="text-yellow-300">Swap</span>
+      <span className="font-heading relative text-2xl leading-none font-bold transition-colors group-hover:text-primary">
+        <span className="text-primary">Skill</span>
+        <span className="text-brand-accent">Swap</span>
         AI
       </span>
     </Link>

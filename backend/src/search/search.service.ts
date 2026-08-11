@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Skill } from '@prisma/client';
+import { Skill } from '../prisma/prisma-exports.js';
 import { GetSearchDto } from './dto/GetSearchDto';
 import { PrismaService } from 'prisma/prisma.service';
 import { ReturnDataType } from 'types/general';
@@ -20,6 +20,7 @@ export class SearchService {
           knownBy: { select: { id: true } },
           learnedBy: { select: { id: true } },
         },
+        take: 50,
       }),
       this.prisma.user.findMany({
         where: {
@@ -32,6 +33,8 @@ export class SearchService {
             ],
           },
         },
+        select: { id: true, name: true },
+        take: 50,
       }),
     ]);
 

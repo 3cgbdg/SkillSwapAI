@@ -7,6 +7,7 @@ import {
   Query,
   UseGuards,
   Req,
+  BadRequestException,
 } from '@nestjs/common';
 import { SessionsService } from './sessions.service';
 import { CreateSessionDto } from './dto/create-session.dto';
@@ -24,22 +25,37 @@ export class SessionsController {
   async create(
     @Body() createSessionDto: CreateSessionDto,
     @Req() req: RequestWithUser,
-  ): Promise<ReturnDataType<any>> {
+  ): Promise<ReturnDataType<unknown>> {
     return this.sessionService.create(createSessionDto, req.user.id);
   }
 
   @Get()
   async findAll(
-    @Query('month') month: string,
+    @Query('from') from: string,
+    @Query('to') to: string,
+    @Query('month') month: string | undefined,
     @Req() req: RequestWithUser,
-  ): Promise<ReturnDataType<any[]>> {
-    return this.sessionService.findAll(Number(month), req.user.id);
+  ): Promise<ReturnDataType<unknown[]>> {
+    if (from && to) {
+      return this.sessionService.findAll(from, to, req.user.id);
+    }
+    if (month !== undefined && month !== '') {
+      const m = Number(month);
+      if (Number.isNaN(m) || m < 0 || m > 11) {
+        throw new BadRequestException('Invalid month');
+      }
+      const year = new Date().getFullYear();
+      const fromLegacy = new Date(year, m, 1).toISOString();
+      const toLegacy = new Date(year, m + 1, 0, 23, 59, 59, 999).toISOString();
+      return this.sessionService.findAll(fromLegacy, toLegacy, req.user.id);
+    }
+    throw new BadRequestException('from and to query params are required');
   }
 
   @Get('today')
   async findTodaysSessions(
     @Req() req: RequestWithUser,
-  ): Promise<ReturnDataType<any[]>> {
+  ): Promise<ReturnDataType<unknown[]>> {
     return this.sessionService.findTodaysSessions(req.user.id);
   }
   @Post(':id/accepted')

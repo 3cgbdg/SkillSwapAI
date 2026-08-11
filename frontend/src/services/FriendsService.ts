@@ -21,8 +21,6 @@ class FriendsService {
     const res = await api.get("/friends/online-status");
     return res.data;
   }
-
-
 }
 
 const friendsService = new FriendsService();

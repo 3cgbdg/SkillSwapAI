@@ -1,87 +1,83 @@
+"use client";
+
 import { Bell } from "lucide-react";
-import { motion } from "framer-motion";
-import { IRequest } from "@/types/session";
+import { motion, useReducedMotion } from "framer-motion";
+
 import NotificationsList from "./NotificationsList";
-import Spinner from "@/components/Spinner";
-import { Dispatch, SetStateAction } from "react";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Spinner } from "@/components/ui/spinner";
+import { IRequest } from "@/types/session";
 
 interface NotificationsBellProps {
   reqs: IRequest[] | undefined;
-  panel: string | null;
-  onPanelChange: Dispatch<
-    SetStateAction<"avatarMenu" | "search" | "notifs" | "navMenu" | null>
-  >;
-  onAcceptSession: ({
-    sessionId,
-    requestId,
-    friendId,
-  }: {
+  onAcceptSession: (data: {
     sessionId: string;
     requestId: string;
     friendId: string;
   }) => void;
-  onRejectSession: ({
-    sessionId,
-    requestId,
-    friendId,
-  }: {
+  onRejectSession: (data: {
     sessionId: string;
     requestId: string;
     friendId: string;
   }) => void;
-  onAddFriend: ({ fromId, id }: { fromId: string; id: string }) => void;
-  onDeleteRequest: ({ requestId }: { requestId: string }) => void;
+  onAddFriend: (data: { fromId: string; id: string }) => void;
+  onDeleteRequest: (data: { requestId: string }) => void;
   isLoading: boolean;
 }
 
 const NotificationsBell = ({
   reqs,
-  panel,
-  onPanelChange,
   onAcceptSession,
   onRejectSession,
   onAddFriend,
   onDeleteRequest,
   isLoading,
 }: NotificationsBellProps) => {
-  return (
-    <div className="relative">
-      <motion.button
-        onClick={() => onPanelChange(panel !== "notifs" ? "notifs" : null)}
-        className="hover:text-blue relative transition-colors cursor-pointer"
-        whileHover={{ rotate: [0, 15, -10, 5, -5, 0] }}
-        transition={{ duration: 0.5 }}
-        animate={{ rotate: 0 }}
-      >
-        <Bell size={32} />
-        <span className="rounded-full p-1 px-2 text-white font-semibold text-xs bg-blue absolute -top-2 -right-2">
-          {reqs?.length || 0}
-        </span>
-      </motion.button>
+  const reduceMotion = useReducedMotion();
+  const count = reqs?.length ?? 0;
 
-      {/* notifs list */}
-      {panel == "notifs" && (
-        <div className="">
-          <div className="_border panel mt-2 rounded-md p-3 absolute z-10 top-full bg-white right-0 min-w-[250px] flex flex-col gap-2">
-            {!isLoading ? (
-              reqs && reqs.length > 0 ? (
-                <NotificationsList
-                  reqs={reqs}
-                  onAcceptSession={onAcceptSession}
-                  onRejectSession={onRejectSession}
-                  onAddFriend={onAddFriend}
-                  onDeleteRequest={onDeleteRequest}
-                />
-              ) : (
-                <span className="text-sm leading-5">No notifications</span>
-              )
-            ) : (
-              <Spinner size={24} color="blue" />
-            )}
-          </div>
-        </div>
-      )}
-    </div>
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className="text-foreground hover:text-primary relative rounded-md p-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        aria-label="Notifications"
+      >
+        <motion.span
+          whileHover={
+            reduceMotion ? undefined : { rotate: [0, 15, -10, 5, -5, 0] }
+          }
+          transition={{ duration: 0.5 }}
+          className="inline-flex"
+        >
+          <Bell size={28} />
+        </motion.span>
+        {count > 0 ? (
+          <Badge className="absolute -top-1 -right-1 min-w-5 justify-center px-1">
+            {count}
+          </Badge>
+        ) : null}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-[280px] p-3">
+        {isLoading ? (
+          <Spinner size="md" className="mx-auto" />
+        ) : reqs && reqs.length > 0 ? (
+          <NotificationsList
+            reqs={reqs}
+            onAcceptSession={onAcceptSession}
+            onRejectSession={onRejectSession}
+            onAddFriend={onAddFriend}
+            onDeleteRequest={onDeleteRequest}
+          />
+        ) : (
+          <p className="text-muted-foreground text-sm">No notifications</p>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 

@@ -1,6 +1,6 @@
-import { Message, User } from '@prisma/client';
+import { User } from '../src/prisma/prisma-exports.js';
 
-export interface IChatFriend extends Pick<User, 'id' | 'name' | 'imageUrl'> {}
+export type IChatFriend = Pick<User, 'id' | 'name' | 'imageUrl'>;
 
 export interface IChatListItem {
   chatId: string;

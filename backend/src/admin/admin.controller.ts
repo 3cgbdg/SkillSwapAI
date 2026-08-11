@@ -25,9 +25,7 @@ export class AdminController {
    * Protected by ADMIN_SECRET env var.
    */
   @Post('seed')
-  async seedBots(
-    @Headers('x-admin-key') adminKey: string,
-  ) {
+  async seedBots(@Headers('x-admin-key') adminKey: string) {
     const secret = this.configService.get<string>('ADMIN_SECRET');
     if (!secret || adminKey !== secret) {
       this.logger.warn('Unauthorized seed attempt');

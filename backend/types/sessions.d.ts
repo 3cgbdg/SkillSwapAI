@@ -1,4 +1,4 @@
-import { Session as PrismaSession } from '@prisma/client';
+import { Session as PrismaSession } from '../src/prisma/prisma-exports.js';
 
 export interface ISessionFriend {
   id: string;
@@ -6,8 +6,7 @@ export interface ISessionFriend {
   imageUrl?: string | null;
 }
 
-export interface ISessionWithFriend extends Omit<PrismaSession, 'date'> {
-  date: Date | string;
+export interface ISessionWithFriend extends PrismaSession {
   friend: ISessionFriend | null;
 }
 

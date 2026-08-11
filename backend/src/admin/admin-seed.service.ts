@@ -1,48 +1,129 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Skill } from '@prisma/client';
+import { Skill } from '../prisma/prisma-exports.js';
 import { PrismaService } from 'prisma/prisma.service';
 import { faker } from '@faker-js/faker';
 
 const TECHNICAL_SKILLS = [
-  'TypeScript', 'Node.js', 'React', 'Next.js', 'PostgreSQL', 'Prisma ORM',
-  'Docker', 'Kubernetes', 'AWS', 'GraphQL', 'Redis', 'NestJS',
-  'Tailwind CSS', 'Git', 'CI/CD', 'Python', 'Machine Learning',
-  'Unit Testing', 'System Design', 'Microservices', 'Security', 'API Design',
-  'WebSockets', 'Terraform', 'Elasticsearch', 'Vue.js', 'Angular', 'Rust',
-  'Go', 'Swift', 'Kotlin', 'Flutter', 'React Native', 'MongoDB', 'Firebase',
-  'Linux Administration', 'DevOps', 'Data Engineering', 'Computer Vision',
+  'TypeScript',
+  'Node.js',
+  'React',
+  'Next.js',
+  'PostgreSQL',
+  'Prisma ORM',
+  'Docker',
+  'Kubernetes',
+  'AWS',
+  'GraphQL',
+  'Redis',
+  'NestJS',
+  'Tailwind CSS',
+  'Git',
+  'CI/CD',
+  'Python',
+  'Machine Learning',
+  'Unit Testing',
+  'System Design',
+  'Microservices',
+  'Security',
+  'API Design',
+  'WebSockets',
+  'Terraform',
+  'Elasticsearch',
+  'Vue.js',
+  'Angular',
+  'Rust',
+  'Go',
+  'Swift',
+  'Kotlin',
+  'Flutter',
+  'React Native',
+  'MongoDB',
+  'Firebase',
+  'Linux Administration',
+  'DevOps',
+  'Data Engineering',
+  'Computer Vision',
   'Natural Language Processing',
 ];
 
 const GENERAL_SKILLS = [
-  'Public Speaking', 'Cooking', 'Photography', 'Graphic Design',
-  'Project Management', 'Foreign Languages', 'Writing', 'Yoga',
-  'Financial Literacy', 'Gardening', 'Chess', 'Painting', 'First Aid',
-  'Negotiation', 'Digital Marketing', 'Critical Thinking', 'Video Editing',
-  'Music Production', 'Carpentry', 'Meditation', 'Time Management',
-  'Illustration', 'Surfing', 'Baking', 'Car Maintenance',
+  'Public Speaking',
+  'Cooking',
+  'Photography',
+  'Graphic Design',
+  'Project Management',
+  'Foreign Languages',
+  'Writing',
+  'Yoga',
+  'Financial Literacy',
+  'Gardening',
+  'Chess',
+  'Painting',
+  'First Aid',
+  'Negotiation',
+  'Digital Marketing',
+  'Critical Thinking',
+  'Video Editing',
+  'Music Production',
+  'Carpentry',
+  'Meditation',
+  'Time Management',
+  'Illustration',
+  'Surfing',
+  'Baking',
+  'Car Maintenance',
 ];
 
 const CREATIVE_SKILLS = [
-  '3D Modeling', 'Animation', 'UX/UI Design', 'Calligraphy',
-  'Creative Writing', 'Podcasting', 'Film Making', 'Interior Design',
-  'Fashion Design', 'Song Writing',
+  '3D Modeling',
+  'Animation',
+  'UX/UI Design',
+  'Calligraphy',
+  'Creative Writing',
+  'Podcasting',
+  'Film Making',
+  'Interior Design',
+  'Fashion Design',
+  'Song Writing',
 ];
 
 const LANGUAGE_SKILLS = [
-  'Spanish', 'French', 'Mandarin Chinese', 'Japanese', 'German',
-  'Korean', 'Arabic', 'Portuguese', 'Italian', 'Sign Language',
+  'Spanish',
+  'French',
+  'Mandarin Chinese',
+  'Japanese',
+  'German',
+  'Korean',
+  'Arabic',
+  'Portuguese',
+  'Italian',
+  'Sign Language',
 ];
 
 const FITNESS_SKILLS = [
-  'Weight Training', 'Marathon Running', 'Rock Climbing', 'Swimming',
-  'Martial Arts', 'Dance', 'Pilates', 'Cycling', 'Boxing', 'Calisthenics',
+  'Weight Training',
+  'Marathon Running',
+  'Rock Climbing',
+  'Swimming',
+  'Martial Arts',
+  'Dance',
+  'Pilates',
+  'Cycling',
+  'Boxing',
+  'Calisthenics',
 ];
 
 const BUSINESS_SKILLS = [
-  'Entrepreneurship', 'Sales', 'SEO', 'Content Strategy',
-  'Product Management', 'Data Analysis', 'Accounting', 'Leadership',
-  'Public Relations', 'Supply Chain Management',
+  'Entrepreneurship',
+  'Sales',
+  'SEO',
+  'Content Strategy',
+  'Product Management',
+  'Data Analysis',
+  'Accounting',
+  'Leadership',
+  'Public Relations',
+  'Supply Chain Management',
 ];
 
 const BOT_BIOS = [
@@ -87,40 +168,28 @@ export class AdminSeedService {
       // Delete matches involving bots
       await this.prisma.match.deleteMany({
         where: {
-          OR: [
-            { initiatorId: { in: botIds } },
-            { otherId: { in: botIds } },
-          ],
+          OR: [{ initiatorId: { in: botIds } }, { otherId: { in: botIds } }],
         },
       });
 
       // Delete friendships involving bots
       await this.prisma.friendship.deleteMany({
         where: {
-          OR: [
-            { user1Id: { in: botIds } },
-            { user2Id: { in: botIds } },
-          ],
+          OR: [{ user1Id: { in: botIds } }, { user2Id: { in: botIds } }],
         },
       });
 
       // Delete requests involving bots
       await this.prisma.request.deleteMany({
         where: {
-          OR: [
-            { fromId: { in: botIds } },
-            { toId: { in: botIds } },
-          ],
+          OR: [{ fromId: { in: botIds } }, { toId: { in: botIds } }],
         },
       });
 
       // Delete messages involving bots
       await this.prisma.message.deleteMany({
         where: {
-          OR: [
-            { fromId: { in: botIds } },
-            { toId: { in: botIds } },
-          ],
+          OR: [{ fromId: { in: botIds } }, { toId: { in: botIds } }],
         },
       });
 

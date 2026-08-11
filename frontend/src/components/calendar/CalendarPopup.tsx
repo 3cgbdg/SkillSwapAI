@@ -1,36 +1,106 @@
 "use client";
-import { formatDate } from "@/app/utils/calendar";
+
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Users, X } from "lucide-react";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Users } from "lucide-react";
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
+import { AxiosError } from "axios";
+
+import type { CalendarPopupPrefill } from "@/components/calendar/Calendar";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
 import { useSocket } from "@/context/SocketContext";
 import useFriends from "@/hooks/useFriends";
 import SessionsService from "@/services/SessionsService";
-import { createSessionFormData } from "@/validation/createSession";
-import { showErrorToast, showSuccessToast } from "@/utils/toast";
-import Spinner from "../Spinner";
-import { AxiosError } from "axios";
+import {
+  SESSION_COLOR_KEYS,
+  SESSION_COLOR_STYLES,
+  resolveSessionColor,
+} from "@/utils/sessionColors";
+import { showSuccessToast } from "@/utils/toast";
+import {
+  createSessionFormData,
+  createSessionSchema,
+} from "@/validation/createSession";
+import type { SessionColorKey } from "@/types/session";
+import { cn } from "@/lib/utils";
+
+function toDatetimeLocalValue(date: Date): string {
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function fromDatetimeLocalValue(value: string): string {
+  return new Date(value).toISOString();
+}
+
+const DURATION_PRESETS = [
+  { label: "30 min", minutes: 30 },
+  { label: "1 hr", minutes: 60 },
+  { label: "1.5 hr", minutes: 90 },
+] as const;
 
 const CalendarPopup = ({
-  year,
-  month,
+  weekAnchor,
+  prefill,
   setAddSessionPopup,
   otherName,
+  onClose,
 }: {
   otherName: string | null;
-  year: number;
-  month: number;
+  weekAnchor: Date;
+  prefill: CalendarPopupPrefill;
   setAddSessionPopup: Dispatch<SetStateAction<boolean>>;
+  onClose?: () => void;
 }) => {
+  const defaultTz = useMemo(
+    () => Intl.DateTimeFormat().resolvedOptions().timeZone,
+    []
+  );
+  const defaultStart = useMemo(() => {
+    if (prefill?.startsAt) return new Date(prefill.startsAt);
+    const d = new Date(weekAnchor);
+    d.setHours(10, 0, 0, 0);
+    return d;
+  }, [prefill?.startsAt, weekAnchor]);
+  const defaultEnd = useMemo(() => {
+    if (prefill?.endsAt) return new Date(prefill.endsAt);
+    const d = new Date(defaultStart);
+    d.setHours(d.getHours() + 1);
+    return d;
+  }, [prefill?.endsAt, defaultStart]);
+
   const {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
-  } = useForm<createSessionFormData>();
+  } = useForm<createSessionFormData>({
+    resolver: zodResolver(createSessionSchema) as never,
+    defaultValues: {
+      friendName: otherName ?? "",
+      friendId: "",
+      title: "",
+      startsAt: defaultStart.toISOString(),
+      endsAt: defaultEnd.toISOString(),
+      timeZone: defaultTz,
+      color: "plum",
+    },
+  });
+
   const queryClient = useQueryClient();
-  const firstDay = new Date(year, month, 1);
   const { socket } = useSocket();
   const [chars, setChars] = useState<string>("");
   const [addFriendButton, setAddFriendButton] = useState<boolean>(false);
@@ -38,9 +108,11 @@ const CalendarPopup = ({
   const [badRequestErrorMessage, setBadRequestErrorMessage] = useState<
     string | null
   >(null);
-  // friends provided by useFriends(); call refetch() when needed
 
-  // mutation for creating session request
+  const startsAtIso = watch("startsAt");
+  const endsAtIso = watch("endsAt");
+  const selectedColor = watch("color") as SessionColorKey;
+
   const createSessionMutation = useMutation({
     mutationKey: ["session"],
     mutationFn: async (data: Omit<createSessionFormData, "friendName">) =>
@@ -48,10 +120,10 @@ const CalendarPopup = ({
     onSuccess: (data) => {
       showSuccessToast(data.message || "Session created");
       setAddSessionPopup(false);
+      onClose?.();
 
       if (socket?.connected)
         socket.emit("createSessionRequest", { id: data.session.id });
-      queryClient.invalidateQueries({ queryKey: ["sessions", month] });
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
     },
     onError: (error: unknown) => {
@@ -59,19 +131,21 @@ const CalendarPopup = ({
       setBadRequestErrorMessage(err.response?.data?.message || err.message);
     },
   });
+
   const createSession: SubmitHandler<createSessionFormData> = async (data) => {
     const { friendName, ...newData } = data;
     if (friends) {
       const realFriend = friends.find((item) => item.name === friendName);
       if (realFriend) {
-        newData.friendId = realFriend.id;
-        createSessionMutation.mutate(newData);
+        createSessionMutation.mutate({
+          ...newData,
+          friendId: realFriend.id,
+        });
       } else {
         setBadRequestErrorMessage(
           "There`s no such friend in your list. Firstly add Friend!"
         );
         setAddFriendButton(true);
-        return;
       }
     }
   };
@@ -83,231 +157,243 @@ const CalendarPopup = ({
     }
   }, [otherName, setValue, refetch]);
 
-  return (
-    <div className=" absolute   top-0 left-0 size-full bg-[#6B72808C] flex items-center justify-center">
-      <div className="_border rounded-md p-4  bg-white! max-w-[500px]  w-full">
-        <div className="flex w-full mb-2  items-center justify-between">
-          <h2 className="text-lg leadiing-7 font-semibold">
-            Create a new Session
-          </h2>
+  useEffect(() => {
+    setValue("startsAt", defaultStart.toISOString());
+    setValue("endsAt", defaultEnd.toISOString());
+  }, [defaultStart, defaultEnd, setValue]);
 
-          <button
-            onClick={() => setAddSessionPopup(false)}
-            className=" button-transparent"
-          >
-            <X size={20} className="" />
-          </button>
-        </div>
+  const applyDuration = (minutes: number) => {
+    const start = new Date(startsAtIso || defaultStart.toISOString());
+    const end = new Date(start.getTime() + minutes * 60_000);
+    setValue("endsAt", end.toISOString());
+  };
+
+  const close = () => {
+    setAddSessionPopup(false);
+    onClose?.();
+  };
+
+  return (
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) close();
+      }}
+    >
+      <DialogContent className="max-w-[500px] sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle className="font-heading text-h3">
+            Create a new session
+          </DialogTitle>
+        </DialogHeader>
         <form
           onSubmit={handleSubmit(createSession)}
-          className="flex px-4  flex-col gap-4 w-full"
+          className="flex w-full flex-col gap-4 px-1"
         >
           <div className="flex flex-col gap-1">
-            <label
-              className="text-sm leading-[22px] font-medium"
-              htmlFor="title"
-            >
-              Title
-            </label>
-            <div className="relative input flex items-center gap-2 text-gray text-sm leading-[22px] ">
-              <input
-                {...register("title")}
-                className="w-full outline-none"
-                placeholder="Enter title"
-                type="text"
-                id="title"
-              />
-            </div>
-            {errors.title && (
-
-              <span data-testid="error" className="text-red-500 font-medium ">
+            <Label htmlFor="title">Title</Label>
+            <Input
+              {...register("title")}
+              placeholder="Enter title"
+              type="text"
+              id="title"
+            />
+            {errors.title ? (
+              <span className="font-medium text-destructive">
                 {errors.title.message}
               </span>
-            )}
+            ) : null}
           </div>
           <div className="flex flex-col gap-1">
-            <label
-              className="text-sm leading-[22px] font-medium"
-              htmlFor="description"
-            >
-              Description <span className="text-gray">(Optional)</span>
-            </label>
-            <div className="relative input flex items-center gap-2 text-gray text-sm leading-[22px] ">
-              <textarea
-                maxLength={50}
-                {...register("description")}
-                className="w-full outline-none min-h-10"
-                placeholder="Enter title"
-                id="description"
-              />
-            </div>
+            <Label htmlFor="description">
+              Description{" "}
+              <span className="text-muted-foreground">(optional)</span>
+            </Label>
+            <Textarea
+              maxLength={50}
+              {...register("description")}
+              className="min-h-10"
+              placeholder="Enter description"
+              id="description"
+            />
           </div>
           <div className="flex flex-col gap-1">
-            <label
-              className="text-sm leading-[22px] font-medium"
-              htmlFor="description"
-            >
-              Meeting Link <span className="text-gray">(Optional)</span>
-            </label>
-            <div className="relative input flex items-center gap-2 text-gray text-sm leading-[22px] ">
-              <input
-                {...register("meetingLink")}
-                className="w-full outline-none"
-                placeholder="Enter title"
-                type="text"
-                id="meetingLink"
-              />
-            </div>
+            <Label htmlFor="meetingLink">
+              Meeting link{" "}
+              <span className="text-muted-foreground">(optional)</span>
+            </Label>
+            <Input
+              {...register("meetingLink")}
+              placeholder="https://"
+              type="url"
+              id="meetingLink"
+            />
           </div>
-          <div className="flex items-start gap-2 justify-between">
+
+          <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1">
-              <label
-                className="text-sm leading-[22px] font-medium"
-                htmlFor="start"
-              >
-                Start Hour
-              </label>
-              <div className="relative input flex items-center gap-2 text-gray text-sm leading-[22px] ">
-                <input
-                  {...register("start")}
-                  className="w-full outline-none"
-                  placeholder="Enter start hour"
-                  type="text"
-                  id="start"
-                />
-              </div>
-              {errors.start && (
-                <span data-testid="error" className="text-red-500 font-medium ">
-                  {errors.start.message}
+              <Label htmlFor="startsAtLocal">Starts</Label>
+              <Input
+                id="startsAtLocal"
+                type="datetime-local"
+                value={toDatetimeLocalValue(
+                  new Date(startsAtIso || defaultStart)
+                )}
+                onChange={(e) =>
+                  setValue("startsAt", fromDatetimeLocalValue(e.target.value))
+                }
+              />
+              {errors.startsAt ? (
+                <span className="font-medium text-destructive">
+                  {errors.startsAt.message}
                 </span>
-              )}
+              ) : null}
             </div>
             <div className="flex flex-col gap-1">
-              <label
-                className="text-sm leading-[22px] font-medium"
-                htmlFor="end"
-              >
-                End Hour
-              </label>
-              <div className="relative input flex items-center gap-2 text-gray text-sm leading-[22px] ">
-                <input
-                  {...register("end")}
-                  className="w-full outline-none"
-                  placeholder="Enter end hour"
-                  type="text"
-                  id="end"
-                />
-              </div>
-              {errors.end && (
-                <span data-testid="error" className="text-red-500 font-medium ">
-                  {errors.end.message}
+              <Label htmlFor="endsAtLocal">Ends</Label>
+              <Input
+                id="endsAtLocal"
+                type="datetime-local"
+                value={toDatetimeLocalValue(new Date(endsAtIso || defaultEnd))}
+                onChange={(e) =>
+                  setValue("endsAt", fromDatetimeLocalValue(e.target.value))
+                }
+              />
+              {errors.endsAt ? (
+                <span className="font-medium text-destructive">
+                  {errors.endsAt.message}
                 </span>
-              )}
+              ) : null}
             </div>
           </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-muted-foreground text-xs">Duration</span>
+            {DURATION_PRESETS.map((preset) => (
+              <Button
+                key={preset.minutes}
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => applyDuration(preset.minutes)}
+              >
+                {preset.label}
+              </Button>
+            ))}
+          </div>
+
           <div className="flex flex-col gap-1">
-            <label
-              className="text-sm leading-[22px] font-medium"
-              htmlFor="date"
-            >
-              Date
-            </label>
-            <div className="relative input flex items-center gap-2 text-gray text-sm leading-[22px] ">
-              <input
-                min={formatDate(firstDay)}
-                {...register("date", { required: "Field is required" })}
-                className="w-full outline-none "
-                type="date"
-                placeholder="Enter title"
-                id="date"
-              />
-            </div>
-            {errors.date && (
-              <span data-testid="error" className="text-red-500 font-medium ">
-                {errors.date.message}
-              </span>
-            )}
+            <Label htmlFor="timeZone">Timezone</Label>
+            <Input {...register("timeZone")} id="timeZone" readOnly />
           </div>
-          <div className="flex flex-col gap-1 relative">
-            <label
-              className="text-sm leading-[22px] font-medium"
-              htmlFor="friendName"
-            >
-              Choose partner:
-            </label>
-            <div className=" input flex items-center gap-2 text-gray text-sm leading-[22px] ">
-              <input
-                type="text"
-                placeholder="Find by name"
-                id="friendName"
-                {...register("friendName")}
-                className="w-full outline-none "
-                onChange={async (e) => {
-                  setChars(e.target.value);
-                  if (e.target.value.length === 1 && !friends) {
-                    await refetch();
-                  }
-                }}
-              />
-              {!isFetching ? (
-                friends &&
-                chars.length > 0 && (
-                  <div className="left-0 top-full absolute z-10 min-w-[250px] max-h-[300px] overflow-y-auto">
-                    <div className="flex flex-col gap-2 mt-2 p-2  _border bg-white rounded-md ">
-                      <div className="flex flex-col  gap-1 max-h-[500px]  border-neutral-300">
-                        {friends
-                          .filter((friend) =>
-                            (friend.name || "")
-                              .toLowerCase()
-                              .includes(chars.toLocaleLowerCase())
-                          )
-                          .map((friend, idx) => {
-                            return (
-                              <button
-                                className="cursor-pointer hover:opacity-75"
-                                key={idx}
-                                onClick={() => {
-                                  setValue("friendName", friend.name || "");
-                                  setChars("");
-                                }}
-                              >
-                                {friend.name}
-                              </button>
-                            );
-                          })}
-                      </div>
+
+          <div className="flex flex-col gap-2">
+            <Label>Color</Label>
+            <div className="flex flex-wrap gap-2">
+              {SESSION_COLOR_KEYS.map((key) => {
+                const style = resolveSessionColor(key);
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    className={cn(
+                      "h-8 w-8 rounded-full border-2 border-transparent ring-offset-background transition",
+                      selectedColor === key &&
+                        "border-primary ring-2 ring-primary"
+                    )}
+                    style={{
+                      backgroundColor: SESSION_COLOR_STYLES[key].bg,
+                      color: style.color,
+                    }}
+                    aria-label={`Color ${key}`}
+                    onClick={() => setValue("color", key)}
+                  />
+                );
+              })}
+            </div>
+          </div>
+
+          <input type="hidden" {...register("startsAt")} />
+          <input type="hidden" {...register("endsAt")} />
+          <input type="hidden" {...register("timeZone")} />
+          <input type="hidden" {...register("color")} />
+
+          <div className="relative flex flex-col gap-1">
+            <Label htmlFor="friendName">Partner</Label>
+            <Input
+              type="text"
+              placeholder="Find by name"
+              id="friendName"
+              {...register("friendName")}
+              onChange={async (e) => {
+                setChars(e.target.value);
+                if (e.target.value.length === 1 && !friends) {
+                  await refetch();
+                }
+              }}
+            />
+            {!isFetching ? (
+              friends &&
+              chars.length > 0 && (
+                <div className="absolute top-full left-0 z-50 max-h-[300px] min-w-[250px] overflow-y-auto">
+                  <Card className="mt-2 gap-1 p-2">
+                    <div className="flex max-h-[500px] flex-col gap-1">
+                      {friends
+                        .filter((friend) =>
+                          (friend.name || "")
+                            .toLowerCase()
+                            .includes(chars.toLocaleLowerCase())
+                        )
+                        .map((friend) => (
+                          <Button
+                            type="button"
+                            key={friend.id}
+                            variant="ghost"
+                            className="justify-start"
+                            onClick={() => {
+                              setValue("friendName", friend.name || "");
+                              setChars("");
+                            }}
+                          >
+                            {friend.name}
+                          </Button>
+                        ))}
                     </div>
-                  </div>
-                )
-              ) : (
-                <Spinner color="blue" size={24} />
-              )}
-            </div>
-            {errors.friendName && (
-              <span data-testid="error" className="text-red-500 font-medium ">
+                  </Card>
+                </div>
+              )
+            ) : (
+              <Spinner size="md" />
+            )}
+            {errors.friendName ? (
+              <span className="font-medium text-destructive">
                 {errors.friendName.message}
               </span>
-            )}
+            ) : null}
           </div>
-          {badRequestErrorMessage && (
-            <span data-testid="error" className="text-red-500 font-medium ">
+          {badRequestErrorMessage ? (
+            <span className="font-medium text-destructive">
               {badRequestErrorMessage}
             </span>
-          )}
-          <div className="flex w-full gap-4 items-center">
-            <button className="button-blue w-full">Create</button>
-            {addFriendButton && otherName && (
-              <button
+          ) : null}
+          <div className="flex w-full items-center gap-4">
+            <Button type="submit" className="w-full">
+              Create
+            </Button>
+            {addFriendButton && otherName ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full gap-2"
                 onClick={() => createFriendRequest({ name: otherName })}
-                className="button-transparent w-full rounded-md! flex items-center gap-2"
               >
                 Add friend <Users size={16} />
-              </button>
-            )}
+              </Button>
+            ) : null}
           </div>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

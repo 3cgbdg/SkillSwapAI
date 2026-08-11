@@ -1,6 +1,8 @@
-import { Plus, Handshake } from "lucide-react";
-import Link from "next/link";
 import { FoundSkills, FoundUsers } from "@/types/common";
+
+import { UserRow } from "@/components/composites";
+import { Button } from "@/components/ui/button";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 interface SearchResultsProps {
   foundSkills: FoundSkills[];
@@ -17,65 +19,76 @@ const SearchResults = ({
   onCreateFriendRequest,
   onRemoveSkill,
 }: SearchResultsProps) => {
+  if (foundUsers.length === 0 && foundSkills.length === 0) {
+    return (
+      <p className="text-muted-foreground text-sm">
+        No results for this search.
+      </p>
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-4 items-start text-sm font-semibold">
-      {foundSkills.length > 0 && (
-        <div className="flex flex-col gap-2 pb-4 not-last:border-b border-neutral-300 w-full">
-          <h3 className="text-xl md:text-lg leading-9 md:leading-7 font-semibold md:font-medium">
-            Skills
-          </h3>
-          <div className="flex flex-col gap-1  border-neutral-300">
-            {foundSkills.map((skill, index) => {
-              return (
-                <div key={index} className="flex gap-2 items-center">
-                  <div className="  w-fit _border p-1 rounded-xl transition-all text-lg md:text-sm">
-                    {skill.title}
-                  </div>
-                  <button
-                    onClick={() => {
-                      onAddLearn(skill.title, skill.id);
-                      onRemoveSkill(skill.id);
-                    }}
-                    className="btn  w-fit _border p-1 rounded-xl cursor-pointer transition-all hover:bg-green-400 outline-0"
-                  >
-                    <Plus size={20} />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-      {foundUsers.length > 0 && (
+    <div className="flex flex-col gap-4">
+      {foundUsers.length > 0 ? (
         <div className="flex flex-col gap-2">
-          <h3 className="text-xl md:text-lg leading-9 md:leading-7 font-semibold md:font-medium">
-            Users
-          </h3>
-          <div className="flex flex-col  gap-1  border-neutral-300">
-            {foundUsers.map((user, index) => {
-              return (
-                <div key={index} className="flex gap-2 items-center">
-                  <Link
-                    href={`/profiles/${user.id}`}
-                    className="btn  w-fit _border p-1 rounded-xl transition-all hover:bg-blue-200 outline-0 text-lg md:text-sm"
-                  >
-                    <h4 className="font-semibold">{user.name}</h4>
-                  </Link>
-                  <button
-                    onClick={() => onCreateFriendRequest(user.id)}
-                    className="btn cursor-pointer  w-fit _border p-1 rounded-xl transition-all hover:bg-green-400 outline-0"
-                  >
-                    <Handshake size={20} />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
+          <h4 className="text-sm font-semibold">Users</h4>
+          {foundUsers.map((user) => (
+            <UserRow
+              key={user.id}
+              className="p-1"
+              media={<UserAvatar name={user.name} size="sm" />}
+              title={user.name}
+              actions={
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onCreateFriendRequest(user.id)}
+                >
+                  Add friend
+                </Button>
+              }
+            />
+          ))}
         </div>
-      )}
-      {foundSkills.length == 0 && foundUsers.length == 0 && (
-        <span className="">Not found!</span>
-      )}
+      ) : null}
+      {foundSkills.length > 0 ? (
+        <div className="flex flex-col gap-2">
+          <h4 className="text-sm font-semibold">Skills</h4>
+          {foundSkills.map((skill) => (
+            <UserRow
+              key={skill.id}
+              className="p-1"
+              media={
+                <span className="text-lg" aria-hidden>
+                  📚
+                </span>
+              }
+              title={skill.title}
+              actions={
+                <div className="flex shrink-0 gap-1">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => onAddLearn(skill.title, skill.id)}
+                  >
+                    Add to learn
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    aria-label={`Dismiss ${skill.title}`}
+                    onClick={() => onRemoveSkill(skill.id)}
+                  >
+                    ×
+                  </Button>
+                </div>
+              }
+            />
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 };

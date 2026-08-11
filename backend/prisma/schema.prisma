@@ -1,10 +1,11 @@
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
 }
 
 enum SessionStatus {
@@ -47,7 +48,9 @@ model User {
   matchesReceived          Match[]      @relation("otherUser")
   friends                  Friendship[] @relation("UserFriends")
   friendOf                 Friendship[] @relation("UserFriendsInverse")
-  lastSkillsGenerationDate DateTime?     
+  lastSkillsGenerationDate DateTime?
+
+  @@index([isBot])
 }
 
 model Friendship {
@@ -77,6 +80,7 @@ model Request {
   @@index([toId])
   @@index([sessionId])
   @@index([type])
+  @@index([status, type])
 }
 
 model Skill {
@@ -105,6 +109,7 @@ model Message {
   isSeen    Boolean  @default(false)
 
   @@index([chatId])
+  @@index([chatId, createdAt])
   @@index([fromId])
   @@index([toId])
   @@index([createdAt])
@@ -112,18 +117,19 @@ model Message {
 
 model Session {
   id          String        @id @default(uuid())
-  title       String        @unique
-  start       Int
-  end         Int
+  title       String
   description String?
   status      SessionStatus @default(PENDING)
-  date        DateTime
+  startsAt    DateTime
+  endsAt      DateTime
+  timeZone    String        @default("UTC")
   color       String
   users       User[]        @relation("userSessions")
   request     Request[]     @relation("sessionRequest")
   meetingLink String?
 
-  @@index([date])
+  @@index([startsAt])
+  @@index([startsAt, endsAt])
   @@index([status])
 }
 
@@ -158,7 +164,7 @@ model Module {
   status     ModuleStatus @default(INPROGRESS)
   objectives String[]
   activities String[]
-  timeline   Int
+  timeline   Float
   resources  Resource[]
   planId     String
   plan       Plan         @relation(fields: [planId], references: [id], onDelete: Cascade)

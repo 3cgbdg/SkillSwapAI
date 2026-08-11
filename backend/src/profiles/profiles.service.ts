@@ -1,10 +1,10 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { User } from '@prisma/client';
+import { User } from '../prisma/prisma-exports.js';
 import { PrismaService } from 'prisma/prisma.service';
 import { S3Service } from 'src/s3/s3.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { IReturnMessage, ReturnDataType } from 'types/general';
-import { AiService } from 'src/ai/ai.service';
+import { AiJobsService } from 'src/queues/ai-jobs.service';
 import { GoogleProfile } from 'types/auth';
 import { UsersService } from 'src/users/users.service';
 
@@ -13,7 +13,7 @@ export class ProfilesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly s3Service: S3Service,
-    private readonly aiService: AiService,
+    private readonly aiJobsService: AiJobsService,
     private readonly usersService: UsersService,
   ) {}
 
@@ -30,7 +30,8 @@ export class ProfilesService {
       return { data: null };
     }
 
-    const { password, ...userWithoutPassword } = profile;
+    const { password: _password, ...userWithoutPassword } = profile;
+    void _password;
     return { data: userWithoutPassword };
   }
 
@@ -94,7 +95,7 @@ export class ProfilesService {
     const userId = await this.usersService.findOrCreateGoogleUser(profile);
 
     // generate ai suggestions for the new user
-    void this.aiService.getAiSuggestionSkills(userId);
+    this.aiJobsService.enqueueSkillSuggestions(userId);
 
     return userId;
   }

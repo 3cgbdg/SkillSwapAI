@@ -1,24 +1,20 @@
 "use client";
-import { showErrorToast, showSuccessToast } from "@/utils/toast";
+
 import AddSkills from "@/components/profile/AddSkills";
 import AiService from "@/services/AiService";
 import SkillsService from "@/services/SkillsService";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { GraduationCap, Pencil, UserRound } from "lucide-react";
-import Image from "next/image";
-import { Dispatch, SetStateAction, useMemo } from "react";
-import Spinner from "../Spinner";
-import { differenceInHours } from "date-fns";
-import ProfilesService from "@/services/ProfilesService";
+import { showErrorToast, showSuccessToast } from "@/utils/toast";
 import useProfile from "@/hooks/useProfile";
-import { useState, useEffect, useCallback } from "react";
-import { intervalToDuration, formatDuration } from "date-fns";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { differenceInHours, intervalToDuration } from "date-fns";
+import { BookOpen, GraduationCap } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { SectionPanel, StatTile } from "@/components/composites";
+import { ProfileView } from "@/components/profile/ProfileView";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
-const Profile = ({
-  setIsEditing,
-}: {
-  setIsEditing: Dispatch<SetStateAction<boolean>>;
-}) => {
+const Profile = () => {
   const { data: user } = useProfile();
   const queryClient = useQueryClient();
   const [timeLeft, setTimeLeft] = useState<string | null>(null);
@@ -33,8 +29,13 @@ const Profile = ({
         if (!old) return old;
         return {
           ...old,
-          skillsToLearn: [...(old.skillsToLearn || []), { id: "temporary-id", title }],
-          aiSuggestionSkills: old.aiSuggestionSkills?.filter((s: string) => s !== title),
+          skillsToLearn: [
+            ...(old.skillsToLearn || []),
+            { id: "temporary-id", title },
+          ],
+          aiSuggestionSkills: old.aiSuggestionSkills?.filter(
+            (s: string) => s !== title
+          ),
         };
       });
     },
@@ -70,16 +71,18 @@ const Profile = ({
   const cantGenerateSkills = useMemo(() => {
     if (!user?.lastSkillsGenerationDate) return false;
     return (
-      differenceInHours(new Date(), new Date(user.lastSkillsGenerationDate)) <= 24
+      differenceInHours(new Date(), new Date(user.lastSkillsGenerationDate)) <=
+      24
     );
   }, [user?.lastSkillsGenerationDate]);
-
 
   const updateCountdown = useCallback(() => {
     if (!user?.lastSkillsGenerationDate) return;
 
     const lastDate = new Date(user.lastSkillsGenerationDate);
-    const nextAvailableDate = new Date(lastDate.getTime() + 24 * 60 * 60 * 1000);
+    const nextAvailableDate = new Date(
+      lastDate.getTime() + 24 * 60 * 60 * 1000
+    );
     const now = new Date();
 
     if (now >= nextAvailableDate) {
@@ -88,11 +91,9 @@ const Profile = ({
     }
 
     const duration = intervalToDuration({ start: now, end: nextAvailableDate });
-
     const h = (duration.hours || 0).toString().padStart(2, "0");
     const m = (duration.minutes || 0).toString().padStart(2, "0");
     const s = (duration.seconds || 0).toString().padStart(2, "0");
-
     setTimeLeft(`${h}:${m}:${s}`);
   }, [user?.lastSkillsGenerationDate]);
 
@@ -101,104 +102,89 @@ const Profile = ({
       updateCountdown();
       const interval = setInterval(updateCountdown, 1000);
       return () => clearInterval(interval);
-    } else {
-      setTimeLeft(null);
     }
+    setTimeLeft(null);
   }, [cantGenerateSkills, updateCountdown]);
-
 
   const buttonText = useMemo(() => {
     if (isPending) return "Generating suggestions...";
-    if (cantGenerateSkills) return `Wait ${timeLeft || "24h"} for next generation`;
-    return (!user?.aiSuggestionSkills || user.aiSuggestionSkills.length === 0) ? "Generate AI Suggestions" : "Regenerate";
+    if (cantGenerateSkills)
+      return `Wait ${timeLeft || "24h"} for next generation`;
+    return !user?.aiSuggestionSkills || user.aiSuggestionSkills.length === 0
+      ? "Generate AI Suggestions"
+      : "Regenerate";
   }, [isPending, cantGenerateSkills, user?.aiSuggestionSkills, timeLeft]);
 
+  if (!user) {
+    return null;
+  }
+
   return (
-    <>
-      {user && (
-        <div className="flex flex-col gap-8">
-          <div className="_border p-8 flex md:flex-row flex-col items-start gap-6 rounded-2xl">
-            <div className="w-[96px] h-[96px] flex items-center justify-center _border rounded-full overflow-hidden relative">
-              {user.imageUrl ? (
-                <Image
-                  className=" object-cover"
-                  src={user.imageUrl}
-                  fill
-                  sizes="96px"
-                  alt="user image"
-                />
-              ) : (
-                <UserRound size={48} />
-              )}
-            </div>
-            <div className="flex flex-col gap-[10px] md:basis-[520px] w-full">
-              <h1 className="page-title">{user?.name}</h1>
-              {user.bio && <p className="text-gray">{user.bio}</p>}
-              <button
-                onClick={() => setIsEditing(true)}
-                className="button-transparent mt-1 rounded-md! w-fit items-center gap-3"
-              >
-                <Pencil size={18} />
-                Edit Profile
-              </button>
-            </div>
-          </div>
-          <AddSkills />
-          <div className="_border rounded-2xl px-6 py-5.5">
-            <div className="flex items-center justify-between gap-4 border-b mb-4 border-gray py-1">
-              <h2 className="text-2xl leading-6 font-bold mb-4">
-                AI Skill Suggestions
-              </h2>
-              <button
-                disabled={cantGenerateSkills || isPending}
-                onClick={() => getNewAiSuggestionSkills()}
-                className={`button-blue min-w-[260px] ${(cantGenerateSkills || isPending) ? "bg-gray! cursor-auto!" : ""
-                  }`}
-              >
-                {buttonText}
-              </button>
-            </div>
-            <div className="flex flex-col gap-4">
-              {isPending ? (
-                <Spinner color="blue" size={32} />
-              ) : (user.aiSuggestionSkills && user.aiSuggestionSkills.length > 0) ? (
-                (user.aiSuggestionSkills || []).map((skill: string, idx: number) => (
-                  <div
-                    key={idx}
-                    className="not-last:border-b py-3 border-b-neutral-300"
-                  >
-                    <div className="flex items-start md:items-center flex-col md:flex-row  justify-between gap-4">
-                      <div className="flex gap-4 items-center">
-                        <div className="size-10 overflow-hidden rounded-full bg-[#3A7AE933] flex items-center justify-center">
-                          <GraduationCap className="text-blue " size={20} />
-                        </div>
-                        <div className="">
-                          <h3 className="leading-7 text-lg font-semibold">
-                            {skill}
-                          </h3>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => addNewSkillToLearn(skill)}
-                        className="link hover:underline rounded-2xl!"
-                      >
-                        Add to Learn
-                      </button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <span className="text-center text-gray italic py-8">
-                  {cantGenerateSkills
-                    ? "No skills to suggest right now. Come back once the timer runs out! 💤"
-                    : "No suggestions found. Try regenerating!"}
-                </span>
-              )}
-            </div>
-          </div>
+    <div className="flex flex-col gap-8">
+      <ProfileView profile={user} editHref="/profile/edit" />
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <StatTile
+          icon={GraduationCap}
+          label="Skills I teach"
+          value={user.knownSkills?.length ?? 0}
+        />
+        <StatTile
+          icon={BookOpen}
+          label="Skills to learn"
+          value={user.skillsToLearn?.length ?? 0}
+        />
+      </div>
+
+      <AddSkills />
+
+      <SectionPanel title="AI Skill Suggestions">
+        <div className="mb-4 flex justify-end">
+          <Button
+            type="button"
+            className="min-w-[260px]"
+            disabled={cantGenerateSkills || isPending}
+            loading={isPending}
+            onClick={() => getNewAiSuggestionSkills()}
+          >
+            {buttonText}
+          </Button>
         </div>
-      )}
-    </>
+        {isPending ? (
+          <div className="flex justify-center py-8">
+            <Spinner size="lg" />
+          </div>
+        ) : user.aiSuggestionSkills && user.aiSuggestionSkills.length > 0 ? (
+          user.aiSuggestionSkills.map((skill) => (
+            <div
+              key={skill}
+              className="flex flex-col justify-between gap-4 border-b border-border py-3 last:border-0 md:flex-row md:items-center"
+            >
+              <div className="flex items-center gap-4">
+                <div className="bg-primary/20 flex size-10 items-center justify-center rounded-full">
+                  <GraduationCap className="text-primary" size={20} />
+                </div>
+                <h3 className="text-lg leading-7 font-semibold">{skill}</h3>
+              </div>
+              <Button
+                type="button"
+                variant="link"
+                className="h-auto p-0"
+                onClick={() => addNewSkillToLearn(skill)}
+              >
+                Add to Learn
+              </Button>
+            </div>
+          ))
+        ) : (
+          <span className="text-muted-foreground py-8 text-center italic">
+            {cantGenerateSkills
+              ? "No skills to suggest right now. Come back once the timer runs out!"
+              : "No suggestions found. Try regenerating!"}
+          </span>
+        )}
+      </SectionPanel>
+    </div>
   );
 };
 

@@ -4,7 +4,10 @@ import { showErrorToast } from "@/utils/toast";
 let isRefreshing = false;
 let failedQueue: any[] = [];
 
-const processQueue = (error: AxiosError | null, token: string | null = null) => {
+const processQueue = (
+  error: AxiosError | null,
+  token: string | null = null
+) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
@@ -66,9 +69,38 @@ api.interceptors.response.use(
       error.message = Array.isArray(msg) ? msg.join(", ") : msg;
     }
 
+    // #region agent log
+    if (typeof window !== "undefined") {
+      fetch(
+        "http://127.0.0.1:7877/ingest/c055a23c-4c84-4eb5-84c0-8abae4e46ddd",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Debug-Session-Id": "ee6149",
+          },
+          body: JSON.stringify({
+            sessionId: "ee6149",
+            hypothesisId: "H2",
+            location: "axiosInstance.ts:interceptor",
+            message: "API error",
+            data: {
+              status: error.response?.status,
+              url: originalReq?.url,
+              message: error.message,
+            },
+            timestamp: Date.now(),
+          }),
+        }
+      ).catch(() => {});
+    }
+    // #endregion
+
     // Standardize throttle/unauthorized toasts to avoid spamming
-    const isAuthPage = typeof window !== "undefined" &&
-      (window.location.pathname === "/auth/login" || window.location.pathname === "/auth/signup");
+    const isAuthPage =
+      typeof window !== "undefined" &&
+      (window.location.pathname === "/auth/login" ||
+        window.location.pathname === "/auth/signup");
 
     if (error.response?.status === 429) {
       showErrorToast(error.message, "throttle-error");

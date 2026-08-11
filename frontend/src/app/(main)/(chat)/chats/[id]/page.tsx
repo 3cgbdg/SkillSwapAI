@@ -1,24 +1,20 @@
-"use client";
+﻿"use client";
 
 import { useSocket } from "@/context/SocketContext";
 import { IChat, IMessage } from "@/types/types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  CheckCheck,
-  EllipsisVertical,
-  Send,
-  UserRound,
-} from "lucide-react";
 import { useParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ChatsService from "@/services/ChatsService";
 import useProfile from "@/hooks/useProfile";
 import useChats from "@/hooks/useChats";
 import useOnlineUsers from "@/hooks/useOnlineUsers";
-import Image from "next/image";
-import Link from "next/link";
-import { showErrorToast } from "@/utils/toast";
-import Spinner from "@/components/Spinner";
+import { AsyncBoundary } from "@/components/composites";
+import { ChatComposer } from "@/components/chat/ChatComposer";
+import { ChatThread } from "@/components/chat/ChatThread";
+import { groupChatMessages, TEMP_MESSAGE_PREFIX } from "@/utils/chatMessages";
+
+type ExtendedMessage = IMessage & { pending?: boolean; failed?: boolean };
 
 const Page = () => {
   const onlineUsers = useOnlineUsers();
@@ -26,40 +22,50 @@ const Page = () => {
   const queryClient = useQueryClient();
   const { data: user } = useProfile();
   const [messageInput, setMessageInput] = useState<string>("");
+  const [isTyping, setIsTyping] = useState(false);
   const { id } = useParams() as { id: string };
   const { data: chats = [] } = useChats();
 
   const currentChat = chats.find((chat) => chat.chatId === id) ?? null;
   const endRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const refs = useRef<HTMLDivElement[]>([]);
+  const refs = useRef<(HTMLDivElement | null)[]>([]);
+  const [refsVersion, setRefsVersion] = useState(0);
   const lastMessageRef = useRef<string>("");
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // useQuery for getting all messages from db
+  const friendId = currentChat?.friend.id;
+
   const {
     data: messages,
     error,
     isError,
     isLoading,
   } = useQuery({
-    queryKey: ["messages", currentChat?.friend.id],
-    queryFn: async () => ChatsService.getChat(currentChat?.friend.id),
-    enabled: !!currentChat,
+    queryKey: ["messages", friendId],
+    queryFn: async () => ChatsService.getChat(friendId!),
+    enabled: !!friendId,
   });
 
-  // handling messages error
-  useEffect(() => {
-    if (isError) {
-      showErrorToast(error?.message || "An error occurred");
-    }
-  }, [error, isError]);
+  const flatMessages = useMemo(
+    () => (messages as ExtendedMessage[]) ?? [],
+    [messages]
+  );
 
-  // tracking new messages for seeing it
+  const registerMessageRef = useCallback(
+    (index: number, el: HTMLDivElement | null) => {
+      if (refs.current[index] === el) return;
+      refs.current[index] = el;
+      setRefsVersion((v) => v + 1);
+    },
+    []
+  );
+
   useEffect(() => {
     if (!messages || !socket || !user) return;
-    const elements = refs.current.filter(Boolean);
+    const elements = refs.current.filter(Boolean) as HTMLDivElement[];
     if (!elements.length) return;
-    // getting obserrver to define new message to mark it seen
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -67,23 +73,27 @@ const Page = () => {
             const idx = refs.current.findIndex((el) => el === entry.target);
             if (idx !== -1) {
               const msg = messages[idx];
-              if (!msg.isSeen && msg.fromId !== user.id) {
+              if (
+                !msg.isSeen &&
+                msg.fromId !== user.id &&
+                !msg.id.startsWith(TEMP_MESSAGE_PREFIX)
+              ) {
                 if (socket?.connected) {
                   socket.emit("updateSeen", { messageId: msg.id });
                 }
-                queryClient.setQueryData(["chats"], (oldChats: IChat[] = []) => {
-                  return oldChats.map((c) =>
+                queryClient.setQueryData(["chats"], (oldChats: IChat[] = []) =>
+                  oldChats.map((c) =>
                     c.chatId === id
                       ? {
-                        ...c,
-                        _count: {
-                          ...c._count,
-                          id: Math.max(0, c._count.id - 1),
-                        },
-                      }
+                          ...c,
+                          _count: {
+                            ...c._count,
+                            id: Math.max(0, c._count.id - 1),
+                          },
+                        }
                       : c
-                  );
-                });
+                  )
+                );
               }
               observer.unobserve(entry.target);
             }
@@ -93,18 +103,13 @@ const Page = () => {
       { threshold: 0.5, root: containerRef.current }
     );
 
-    elements.forEach((el) => el && observer.observe(el));
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [messages, socket, user, id, queryClient, refsVersion]);
 
-    return () => {
-      observer.disconnect();
-    };
-  }, [messages, socket, user, id, queryClient]);
-
-  // listening to socket events
   useEffect(() => {
     if (!socket || !user || !currentChat) return;
 
-    // Handler for receiving messages
     const handleReceiveMessage = ({
       from,
       id: msgId,
@@ -116,23 +121,23 @@ const Page = () => {
     }) => {
       queryClient.setQueryData(
         ["messages", currentChat.friend.id],
-        (old: IMessage[] = []) => {
-          // Only add message if it's from the other person in this chat
+        (old: ExtendedMessage[] = []) => {
           if (from === currentChat.friend.id) {
-            queryClient.setQueryData(["chats"], (oldChats: IChat[] = []) => {
-              return oldChats.map((c) =>
+            queryClient.setQueryData(["chats"], (oldChats: IChat[] = []) =>
+              oldChats.map((c) =>
                 c.chatId === currentChat.chatId
                   ? { ...c, lastMessageContent: messageContent }
                   : c
-              );
-            });
+              )
+            );
             return [
-              ...old,
+              ...old.filter((m) => !m.id.startsWith(TEMP_MESSAGE_PREFIX)),
               {
                 fromId: from,
                 content: messageContent,
                 createdAt: new Date(),
                 id: msgId,
+                isSeen: false,
               },
             ];
           }
@@ -141,201 +146,186 @@ const Page = () => {
       );
     };
 
-    // Handler for message sent confirmation
     const handleMessageSent = (data: {
       id: string;
       createdAt: string | Date;
     }) => {
       queryClient.setQueryData(
         ["messages", currentChat.friend.id],
-        (old: IMessage[] = []) => {
-          queryClient.setQueryData(["chats"], (oldChats: IChat[] = []) => {
-            return oldChats.map((c) =>
+        (old: ExtendedMessage[] = []) => {
+          const withoutTemp = old.filter(
+            (m) =>
+              !m.id.startsWith(TEMP_MESSAGE_PREFIX) ||
+              m.content !== lastMessageRef.current
+          );
+          const hasReal = withoutTemp.some((m) => m.id === data.id);
+          if (hasReal) return withoutTemp;
+          queryClient.setQueryData(["chats"], (oldChats: IChat[] = []) =>
+            oldChats.map((c) =>
               c.chatId === currentChat.chatId
                 ? { ...c, lastMessageContent: lastMessageRef.current }
                 : c
-            );
-          });
+            )
+          );
           return [
-            ...old,
+            ...withoutTemp,
             {
-              fromId: user?.id ?? "",
+              fromId: user.id,
               content: lastMessageRef.current,
               createdAt: new Date(data.createdAt),
               isSeen: false,
               id: data.id,
+              pending: false,
             },
           ];
         }
       );
     };
 
-    // Handler for message seen update
     const handleUpdateSeen = ({ messageId }: { messageId: string }) => {
       queryClient.setQueryData(
         ["messages", currentChat.friend.id],
-        (old: IMessage[] = []) => {
-          if (!old) return old;
-          return old.map((item) => {
-            if (item.id == messageId) {
-              return { ...item, isSeen: true };
-            } else {
-              return item;
-            }
-          });
-        }
+        (old: ExtendedMessage[] = []) =>
+          old?.map((item) =>
+            item.id === messageId ? { ...item, isSeen: true } : item
+          ) ?? old
       );
     };
 
-    // Register handlers
+    const onTyping = ({ from }: { from: string }) => {
+      if (from === currentChat.friend.id) setIsTyping(true);
+    };
+    const onStopTyping = ({ from }: { from: string }) => {
+      if (from === currentChat.friend.id) setIsTyping(false);
+    };
+
     socket.on("receiveMessage", handleReceiveMessage);
     socket.on("messageSent", handleMessageSent);
     socket.on("updateSeen", handleUpdateSeen);
+    socket.on("typing", onTyping);
+    socket.on("stopTyping", onStopTyping);
 
-    // Cleanup: remove handlers only for this specific chat
     return () => {
       socket.off("receiveMessage", handleReceiveMessage);
       socket.off("messageSent", handleMessageSent);
       socket.off("updateSeen", handleUpdateSeen);
+      socket.off("typing", onTyping);
+      socket.off("stopTyping", onStopTyping);
     };
   }, [socket, user, currentChat, queryClient]);
 
-  // func for  sending new message
-  const handleSend = () => {
-    if (socket && currentChat && user && messageInput.trim() !== "") {
-      lastMessageRef.current = messageInput;
-      if (socket?.connected) {
-        socket.emit("sendMessage", {
-          to: currentChat.friend.id,
-          message: messageInput,
-        });
-      }
+  const emitTyping = useCallback(() => {
+    if (!socket?.connected || !friendId) return;
+    socket.emit("typing", { to: friendId });
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit("stopTyping", { to: friendId });
+    }, 2000);
+  }, [socket, friendId]);
 
-      setMessageInput("");
+  const sendMessage = (trimmed: string) => {
+    if (!currentChat || !user || trimmed === "") return;
+
+    if (!socket?.connected) {
+      const tempId = `${TEMP_MESSAGE_PREFIX}${Date.now()}`;
+      queryClient.setQueryData(
+        ["messages", currentChat.friend.id],
+        (old: ExtendedMessage[] = []) => [
+          ...old,
+          {
+            id: tempId,
+            content: trimmed,
+            fromId: user.id,
+            createdAt: new Date(),
+            isSeen: false,
+            failed: true,
+          },
+        ]
+      );
+      return;
     }
+
+    const tempId = `${TEMP_MESSAGE_PREFIX}${Date.now()}`;
+    lastMessageRef.current = trimmed;
+
+    queryClient.setQueryData(
+      ["messages", currentChat.friend.id],
+      (old: ExtendedMessage[] = []) => [
+        ...old,
+        {
+          id: tempId,
+          content: trimmed,
+          fromId: user.id,
+          createdAt: new Date(),
+          isSeen: false,
+          pending: true,
+        },
+      ]
+    );
+
+    socket.emit("sendMessage", {
+      to: currentChat.friend.id,
+      message: trimmed,
+    });
+    socket.emit("stopTyping", { to: currentChat.friend.id });
   };
 
-  // getting down to the latest messages with scroll
+  const handleSend = () => {
+    const trimmed = messageInput.trim();
+    if (!trimmed) return;
+    sendMessage(trimmed);
+    setMessageInput("");
+  };
+
+  const handleRetry = (msg: ExtendedMessage) => {
+    if (!currentChat || !user) return;
+    queryClient.setQueryData(
+      ["messages", currentChat.friend.id],
+      (old: ExtendedMessage[] = []) => old.filter((m) => m.id !== msg.id)
+    );
+    sendMessage(msg.content);
+  };
+
+  const grouped = useMemo(
+    () => groupChatMessages(flatMessages, user?.id),
+    [flatMessages, user?.id]
+  );
+
   useEffect(() => {
-    if (refs.current && messages) {
-      endRef.current?.scrollIntoView({ behavior: "smooth" });
-      refs.current = Array((messages as IMessage[]).length).fill(null);
-    }
-  }, [messages]);
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
+    refs.current = Array(flatMessages.length).fill(null);
+    setRefsVersion((v) => v + 1);
+  }, [flatMessages]);
+
+  const isOnline = Boolean(
+    currentChat && onlineUsers.includes(currentChat.friend.id)
+  );
 
   return (
-    <div className="flex flex-col gap-4">
-      <Link href={"/chats"} className="md:hidden! button-blue ">
-        Go to chats
-      </Link>
-      <div className="_border rounded-[10px] flex flex-col grow ">
-        {/* header */}
-        <div className="border-b border-neutral-300 ">
-          <div className="py-5.5 px-6 flex justify-between items-center gap-2">
-            <div className="items-center flex gap-3">
-              <div className="size-12  flex items-center justify-center relative rounded-full border-2 _border ">
-                {currentChat?.friend.imageUrl ? (
-                  <Image
-                    className="object-cover rounded-full"
-                    src={currentChat?.friend.imageUrl}
-                    fill
-                    alt="user image"
-                  />
-                ) : (
-                  <UserRound size={24} />
-                )}
-              </div>
-              <div className="">
-                {currentChat && currentChat.friend.name}
-                <span
-                  className={`text-sm leading-5  ${currentChat && onlineUsers.includes(currentChat.friend.id) ? "text-green-300" : "text-gray"}`}
-                >
-                  {currentChat && onlineUsers.includes(currentChat.friend.id)
-                    ? "Online"
-                    : "Offline"}
-                </span>
-              </div>
-            </div>
-            <button className="cursor-pointer p-1 rounded-md transition-all hover:bg-neutral-50">
-              <EllipsisVertical />
-            </button>
-          </div>
-        </div>
-
-        {/* content */}
-        <div
-          ref={containerRef}
-          className="flex gap-4 flex-col p-4 w-full h-[502px]   overflow-y-scroll"
-        >
-          {!isLoading ? (
-            messages && messages.length > 0 ? (
-              messages.map((msg, idx) => (
-                <div
-                  ref={(el) => {
-                    refs.current[idx] = el!;
-                  }}
-                  key={msg.id ?? idx}
-                  className={`w-fit rounded-[10px] text-gray  p-3  ${msg.fromId === user?.id ? "bg-lightBlue self-end" : "bg-neutral-200"}`}
-                >
-                  <p
-                    className={`wrap-anywhere mb-1   leading-5 text-sm ${msg.fromId === user?.id ? "text-neutral-900" : ""}`}
-                  >
-                    {msg.content}
-                  </p>
-                  <div className="flex justify-between items-center flex-row-reverse gap-2">
-                    {msg.fromId == user?.id && (
-                      <div className={`${msg.isSeen ? "text-blue" : ""}`}>
-                        <CheckCheck size={16} />
-                      </div>
-                    )}
-                    <div className=" text-xs leading-4 ">
-                      {new Date(msg.createdAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <span className="flex mt-40 justify-center w-full">
-                Start conversation
-              </span>
-            )
-          ) : (
-            <div className="h-100 flex items-center justify-center">
-              <Spinner color="blue" size={44} />
-            </div>
-          )}
-
-          <div ref={endRef}></div>
-        </div>
-
-        {/* input */}
-        <div className="border-t border-neutral-300 w-full">
-          <div className="p-4 flex gap-4 items-center px-10 ">
-            <textarea
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
+    <AsyncBoundary isError={isError} error={error}>
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
+        <ChatThread
+          currentChat={currentChat}
+          isTyping={isTyping}
+          isOnline={isOnline}
+          isLoading={isLoading}
+          grouped={grouped}
+          flatMessages={flatMessages}
+          registerMessageRef={registerMessageRef}
+          onRetryMessage={handleRetry}
+          containerRef={containerRef}
+          endRef={endRef}
+          footer={
+            <ChatComposer
               value={messageInput}
-              onChange={(e) => setMessageInput(e.target.value)}
-              className="input resize-none text-sm leading-5.5  w-full"
-              placeholder="Type your message here..."
-            ></textarea>
-            <button
-              onClick={() => handleSend()}
-              className="button-blue h-10 aspect-square"
-            >
-              <Send size={16} />
-            </button>
-          </div>
-        </div>
+              onChange={setMessageInput}
+              onSend={handleSend}
+              onTyping={emitTyping}
+            />
+          }
+        />
       </div>
-    </div>
+    </AsyncBoundary>
   );
 };
 

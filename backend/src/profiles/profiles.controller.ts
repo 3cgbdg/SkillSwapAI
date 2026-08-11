@@ -15,9 +15,10 @@ import {
 import { ProfilesService } from './profiles.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
-import { User } from '@prisma/client';
+import { User } from '../prisma/prisma-exports.js';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import type { RequestWithUser } from 'types/auth';
+import { Throttle } from '@nestjs/throttler';
 import type { IReturnMessage, ReturnDataType } from 'types/general';
 
 @Controller('profiles')
@@ -33,6 +34,7 @@ export class ProfilesController {
   }
 
   @Post('me/avatar/upload')
+  @Throttle({ short: { limit: 10, ttl: 60_000 } })
   @UseInterceptors(FileInterceptor('image'))
   async uploadAvatarImage(
     @UploadedFile() file: Express.Multer.File,

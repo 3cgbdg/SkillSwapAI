@@ -17,18 +17,32 @@ import { WebSocketsModule } from './webSockets/webSockets.module';
 import { AppController } from './app.controller';
 import { AdminModule } from './admin/admin.module';
 import { CacheModule } from '@nestjs/cache-manager';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import * as redisStore from 'cache-manager-ioredis';
+import { ThrottlerModule, ThrottlerGuard, seconds } from '@nestjs/throttler';
+import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
+import Redis from 'ioredis';
 import { APP_GUARD } from '@nestjs/core';
-import { ScheduleModule } from '@nestjs/schedule';
-import { TasksModule } from './tasks/tasks.module';
+import { TerminusModule } from '@nestjs/terminus';
+import { LoggerModule } from 'nestjs-pino';
+import { QueuesModule } from './queues/queues.module';
+import {
+  buildCacheManagerRedisConfig,
+  buildIoredisOptions,
+} from './config/redis.config';
+import { envValidationSchema } from './config/env.validation';
 
 @Module({
   imports: [
-    ScheduleModule.forRoot(),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        autoLogging: true,
+        quietReqLogger: true,
+      },
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
+      validationSchema: envValidationSchema,
     }),
+    TerminusModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -38,34 +52,41 @@ import { TasksModule } from './tasks/tasks.module';
         signOptions: { expiresIn: '15m' },
       }),
     }),
+    QueuesModule,
     CacheModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       isGlobal: true,
+      // eslint-disable-next-line @typescript-eslint/require-await
       useFactory: async (configService: ConfigService) => {
         const host = configService.get<string>('REDIS_HOST');
         if (!host) {
           console.log('[CacheModule] REDIS_HOST not found, using memory store');
-          return {
-            ttl: 3600,
-          };
         }
+        return buildCacheManagerRedisConfig(configService);
+      },
+    }),
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const throttlers = [
+          { name: 'short', ttl: seconds(10), limit: 3 },
+          { name: 'medium', ttl: seconds(60), limit: 25 },
+          { name: 'long', ttl: seconds(3600), limit: 100 },
+        ];
+
+        const redisOptions = buildIoredisOptions(configService);
+        if (!redisOptions) {
+          return { throttlers };
+        }
+
         return {
-          store: redisStore,
-          ttl: 3600,
-          tls: true,
-          host: host,
-          port: configService.get<number>('REDIS_PORT'),
-          password: configService.get<string>('REDIS_PASSWORD') || null,
+          throttlers,
+          storage: new ThrottlerStorageRedisService(new Redis(redisOptions)),
         };
       },
     }),
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60000,
-        limit: 25,
-      },
-    ]),
     AuthModule,
     S3Module,
     SkillsModule,
@@ -79,7 +100,6 @@ import { TasksModule } from './tasks/tasks.module';
     PlansModule,
     AiModule,
     WebSocketsModule,
-    TasksModule,
     AdminModule,
   ],
   controllers: [AppController],
