@@ -4,14 +4,14 @@ import * as redisStore from 'cache-manager-ioredis';
 
 const DEFAULT_REDIS_PORT = 6379;
 
-export function redisRetryStrategy(times: number): number | null {
+function redisRetryStrategy(times: number): number | null {
   if (times > 10) {
     return null;
   }
   return Math.min(times * 200, 2000);
 }
 
-export function getRedisHost(configService: ConfigService): string | undefined {
+function getRedisHost(configService: ConfigService): string | undefined {
   return configService.get<string>('REDIS_HOST');
 }
 

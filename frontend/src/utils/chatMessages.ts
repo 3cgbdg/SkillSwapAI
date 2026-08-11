@@ -13,7 +13,7 @@ export type ChatMessageItem =
       showTime: boolean;
     };
 
-export function formatDaySeparator(date: Date): string {
+function formatDaySeparator(date: Date): string {
   if (isToday(date)) return "Today";
   if (isYesterday(date)) return "Yesterday";
   return format(date, "EEEE, MMM d");

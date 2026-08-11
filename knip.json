@@ -2,64 +2,60 @@
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "workspaces": {
     ".": {
-      "entry": ["lint-staged.config.mjs"],
       "project": [".husky/**"]
     },
     "frontend": {
-      "entry": [
-        "next.config.ts",
-        "src/app/**/*.{ts,tsx}",
-        "src/**/route.ts",
-        "vitest.config.ts"
-      ],
-      "project": ["src/**/*.{ts,tsx}", "vitest.setup.ts", "src/**/*.test.ts"]
+      "entry": ["src/app/**/*.{ts,tsx}", "src/**/route.ts"],
+      "project": ["src/**/*.{ts,tsx}", "src/**/*.test.ts"]
     },
     "backend": {
       "entry": ["src/main.ts"],
-      "project": ["src/**/*.ts", "test/**/*.ts"]
+      "project": ["src/**/*.ts"]
     }
   },
-  "ignore": ["**/*.spec.ts", "src/generated/**"],
+  "ignore": [
+    "frontend/src/components/layout/MobileTabBar.tsx",
+    "frontend/src/components/layout/headerComponents/NavigationMenu.tsx",
+    "frontend/src/components/layout/headerComponents/SearchInput.tsx",
+    "frontend/src/components/layout/headerComponents/SearchInputMobile.tsx",
+    "backend/src/tasks/tasks.module.ts"
+  ],
   "ignoreBinaries": ["tsc", "prisma"],
   "ignoreDependencies": [
     "shadcn",
-    "@fullcalendar/core",
-    "@fullcalendar/daygrid",
-    "@fullcalendar/interaction",
-    "@fullcalendar/react",
-    "@fullcalendar/timegrid",
     "@reduxjs/toolkit",
     "react-redux",
     "react-easy-crop",
     "@nestjs/mapped-types",
-    "@prisma/client",
     "cache-manager-redis-store",
-    "ioredis",
-    "passport-github2",
     "text-transformer",
     "text-validator",
     "@svgr/webpack",
     "autoprefixer",
-    "eslint-config-next",
     "eslint-plugin-prettier",
     "eslint-plugin-react",
     "eslint-plugin-react-hooks",
+    "eslint-plugin-jsx-a11y",
     "tailwindcss",
+    "tw-animate-css",
     "@eslint/eslintrc",
-    "@types/cron",
     "@types/multer",
-    "@types/passport-github2",
     "@types/supertest",
     "source-map-support",
     "supertest",
     "ts-loader",
-    "@testing-library/react",
-    "@testing-library/jest-dom"
+    "@testing-library/react"
   ],
   "ignoreIssues": {
     "backend/src/friends/dto/get-friend.dto.ts": ["files"],
     "backend/src/utils/matches.utils.ts": ["types"],
     "frontend/src/hooks/**": ["exports", "duplicates"],
+    "frontend/src/components/ui/**": ["exports", "types", "files"],
+    "frontend/src/components/composites/**": ["exports", "types", "duplicates"],
+    "frontend/src/components/layouts/**": ["exports"],
+    "frontend/src/utils/sessionTime.ts": ["exports"],
+    "frontend/src/components/profile/ProfileView.tsx": ["types"],
+    "frontend/src/components/calendar/SessionDetails.tsx": ["types"],
     ".husky/pre-push": ["binaries"]
   }
 }

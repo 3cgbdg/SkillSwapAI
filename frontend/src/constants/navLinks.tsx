@@ -27,6 +27,3 @@ export function isNavLinkActive(pathname: string, href: string) {
   }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
-
-/** @deprecated Use isNavLinkActive */
-export const isNavActive = isNavLinkActive;

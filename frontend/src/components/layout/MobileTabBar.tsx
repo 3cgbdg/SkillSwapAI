@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { navLinks, isNavActive } from "@/constants/navLinks";
+import { navLinks, isNavLinkActive } from "@/constants/navLinks";
 import { cn } from "@/lib/utils";
 
 const MobileTabBar = () => {
@@ -16,7 +16,7 @@ const MobileTabBar = () => {
     >
       <ul className="mx-auto flex max-w-lg items-stretch justify-around px-1 pb-[env(safe-area-inset-bottom)]">
         {navLinks.map((item) => {
-          const active = isNavActive(path, item.link);
+          const active = isNavLinkActive(path, item.link);
           return (
             <li key={item.link} className="flex-1">
               <Link
