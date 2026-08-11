@@ -51,6 +51,13 @@ const eslintConfig = [
     },
   },
   {
+    // Fixed third-party brand-mark colors (Google "G" logo), not themeable.
+    files: ["src/components/auth/GoogleAuthButton.tsx"],
+    rules: {
+      "no-restricted-syntax": "off",
+    },
+  },
+  {
     files: [
       "src/app/**/*.{js,jsx,ts,tsx}",
       "src/features/**/*.{js,jsx,ts,tsx}",

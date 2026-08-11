@@ -14,7 +14,6 @@ export function GoogleAuthButton({ className }: { className?: string }) {
       )}
     >
       {/* Google's official brand-mark colors — fixed, not part of this app's theme. */}
-      { }
       <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
         <path
           fill="#FFC107"
@@ -33,7 +32,6 @@ export function GoogleAuthButton({ className }: { className?: string }) {
           d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 26c0-1.341-.138-2.65-.389-3.917z"
         />
       </svg>
-      { }
       Continue with Google
     </Link>
   );
