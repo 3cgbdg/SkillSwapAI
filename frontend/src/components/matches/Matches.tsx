@@ -18,7 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { EmptyState } from "@/components/composites";
+import { DataEmpty } from "@/components/composites";
 import { InlineSkillPicker } from "@/components/matches/InlineSkillPicker";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -223,7 +223,7 @@ const Matches = ({
       <div className="mx-auto grid max-w-[450px] gap-6 md:mx-0 md:w-fit md:max-w-full md:grid-cols-2 xl:grid-cols-3">
         {filteredMatch.length === 0 ? (
           <div className="col-span-full">
-            <EmptyState
+            <DataEmpty
               icon={Users}
               title={
                 option === "active"
@@ -239,7 +239,7 @@ const Matches = ({
               {option === "available" ? (
                 <InlineSkillPicker mode="learn" />
               ) : null}
-            </EmptyState>
+            </DataEmpty>
           </div>
         ) : (
           filteredMatch.map((match) => (

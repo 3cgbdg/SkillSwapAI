@@ -5,6 +5,7 @@ import useMatches from "@/hooks/useMatches";
 import useSessions from "@/hooks/useSessions";
 import {
   Award,
+  BookOpen,
   Calendar,
   MessageSquare,
   Sparkles,
@@ -13,7 +14,6 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect } from "react";
 
 import {
   DataEmpty,
@@ -21,6 +21,7 @@ import {
   StatTile,
   TaskChecklistLink,
 } from "@/components/composites";
+import { WarmScholarEmptyArt } from "@/components/illustrations/WarmScholarEmptyArt";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import { PageBody, PageSection } from "@/components/layouts";
 import { buttonVariants } from "@/components/ui/button";
@@ -62,52 +63,8 @@ const Page = () => {
   const showStats =
     (user?.completedSessionsCount ?? 0) > 0 ||
     knownCount > 0 ||
+    learnCount > 0 ||
     matches.length > 0;
-
-  useEffect(() => {
-    // #region agent log
-    fetch("http://127.0.0.1:7877/ingest/c055a23c-4c84-4eb5-84c0-8abae4e46ddd", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "ee6149",
-      },
-      body: JSON.stringify({
-        sessionId: "ee6149",
-        hypothesisId: "H4",
-        location: "dashboard/page.tsx",
-        message: "dashboard aggregate state",
-        data: {
-          profileLoading,
-          matchesLoading,
-          sessionsLoading,
-          hasUser: Boolean(user),
-          knownCount,
-          learnCount,
-          completedSessionsCount: user?.completedSessionsCount ?? null,
-          matchesLen: matches.length,
-          sessionsLen: sessions.length,
-          showStats,
-          apiBase:
-            typeof process.env.NEXT_PUBLIC_API_URL === "string"
-              ? process.env.NEXT_PUBLIC_API_URL.slice(0, 40)
-              : "missing",
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
-  }, [
-    profileLoading,
-    matchesLoading,
-    sessionsLoading,
-    user,
-    knownCount,
-    learnCount,
-    matches.length,
-    sessions.length,
-    showStats,
-  ]);
 
   return (
     <PageBody>
@@ -226,7 +183,9 @@ const Page = () => {
                 Complete your profile
               </Link>
             }
-          />
+          >
+            <WarmScholarEmptyArt className="text-primary h-16 w-24" />
+          </DataEmpty>
         )}
       </PageSection>
 
@@ -269,8 +228,19 @@ const Page = () => {
 
       {showStats ? (
         <PageSection title="Your progress">
-          <div className="grid grid-cols-3 gap-3">
-            <StatTile icon={Award} value={knownCount} label="Skills" />
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <StatTile
+              icon={Award}
+              value={knownCount}
+              label="Can teach"
+              tone="teach"
+            />
+            <StatTile
+              icon={BookOpen}
+              value={learnCount}
+              label="Want to learn"
+              tone="learn"
+            />
             <StatTile
               icon={Star}
               value={user?.completedSessionsCount ?? 0}

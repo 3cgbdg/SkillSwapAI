@@ -11,6 +11,8 @@ import { Controller, useForm } from "react-hook-form";
 import { AuthBrand } from "@/components/auth/AuthBrand";
 import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 import { SkillPicker } from "@/components/auth/SkillPicker";
+import { Stepper } from "@/components/composites";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -25,6 +27,14 @@ import {
   passwordStrengthScore,
 } from "@/utils/passwordStrength";
 import { Progress } from "@/components/ui/progress";
+
+const STEPS = ["Account", "Skills", "Confirm"] as const;
+const TOTAL_STEPS = STEPS.length;
+
+const STEP_FIELDS = {
+  1: ["name", "email", "password", "confirmPassword"],
+  2: ["knownSkills", "skillsToLearn"],
+} as const satisfies Record<number, (keyof signUpFormData)[]>;
 
 function PasswordField({
   id,
@@ -72,6 +82,7 @@ export function SignupForm() {
   const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [step, setStep] = useState(1);
 
   const {
     register,
@@ -79,6 +90,7 @@ export function SignupForm() {
     handleSubmit,
     watch,
     setValue,
+    trigger,
     formState: { errors },
   } = useForm<signUpFormData>({
     resolver: zodResolver(signUpSchema),
@@ -113,6 +125,14 @@ export function SignupForm() {
     onError: (err: Error) => showErrorToast(err.message),
   });
 
+  const goNext = async () => {
+    const fields = STEP_FIELDS[step as keyof typeof STEP_FIELDS];
+    const valid = await trigger(fields);
+    if (valid) setStep((s) => Math.min(TOTAL_STEPS, s + 1));
+  };
+
+  const goBack = () => setStep((s) => Math.max(1, s - 1));
+
   return (
     <Card className="w-full max-w-lg border shadow-lg">
       <CardContent className="flex flex-col gap-6 pt-10">
@@ -123,99 +143,188 @@ export function SignupForm() {
             Create your account to connect and learn.
           </p>
         </div>
+        <Stepper steps={[...STEPS]} currentStep={step} className="px-2" />
         <form
           className="flex flex-col gap-4"
-          onSubmit={handleSubmit((data) => mutation.mutate(data))}
+          onSubmit={handleSubmit((data) => {
+            if (step === TOTAL_STEPS) mutation.mutate(data);
+          })}
         >
-          <Field label="Full Name" htmlFor="name" error={errors.name?.message}>
-            <div className="relative">
-              <User className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-              <Input id="name" className="pl-9" {...register("name")} />
-            </div>
-          </Field>
-          <Field label="Email" htmlFor="email" error={errors.email?.message}>
-            <div className="relative">
-              <Mail className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-              <Input id="email" className="pl-9" {...register("email")} />
-            </div>
-          </Field>
-          <PasswordField
-            id="password"
-            label="Password"
-            error={errors.password?.message}
-            showPassword={showPassword}
-            onToggle={() => setShowPassword((v) => !v)}
-            {...register("password")}
-          />
-          {passwordValue ? (
-            <div className="flex flex-col gap-1">
-              <Progress value={(strength / 4) * 100} className="h-1.5" />
-              <p className="text-muted-foreground text-xs">
-                Strength: {passwordStrengthLabel(strength)}
-              </p>
-            </div>
-          ) : null}
-          <PasswordField
-            id="confirmPassword"
-            label="Confirm Password"
-            error={errors.confirmPassword?.message}
-            showPassword={showConfirmPassword}
-            onToggle={() => setShowConfirmPassword((v) => !v)}
-            {...register("confirmPassword")}
-          />
-          <SkillPicker
-            label="Skills I Know"
-            placeholder="e.g., Web Development"
-            skills={knownSkills}
-            onChange={(skills) =>
-              setValue("knownSkills", skills, { shouldValidate: true })
-            }
-            badgeVariant="teach"
-            error={errors.knownSkills?.message}
-          />
-          <SkillPicker
-            label="Skills To Learn"
-            placeholder="e.g., UI/UX Design"
-            skills={skillsToLearn}
-            onChange={(skills) =>
-              setValue("skillsToLearn", skills, { shouldValidate: true })
-            }
-            badgeVariant="learn"
-            error={errors.skillsToLearn?.message}
-          />
-          <Controller
-            name="checkBox"
-            control={control}
-            render={({ field }) => (
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="terms"
-                    checked={field.value}
-                    onCheckedChange={(checked) =>
-                      field.onChange(checked === true)
-                    }
-                  />
-                  <Label htmlFor="terms" className="text-sm font-normal">
-                    Accept Terms and Conditions
-                  </Label>
+          {step === 1 ? (
+            <>
+              <Field
+                label="Full Name"
+                htmlFor="name"
+                error={errors.name?.message}
+              >
+                <div className="relative">
+                  <User className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                  <Input id="name" className="pl-9" {...register("name")} />
                 </div>
-                {errors.checkBox ? (
-                  <p className="text-destructive text-sm">
-                    {errors.checkBox.message}
+              </Field>
+              <Field
+                label="Email"
+                htmlFor="email"
+                error={errors.email?.message}
+              >
+                <div className="relative">
+                  <Mail className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                  <Input id="email" className="pl-9" {...register("email")} />
+                </div>
+              </Field>
+              <PasswordField
+                id="password"
+                label="Password"
+                error={errors.password?.message}
+                showPassword={showPassword}
+                onToggle={() => setShowPassword((v) => !v)}
+                {...register("password")}
+              />
+              {passwordValue ? (
+                <div className="flex flex-col gap-1">
+                  <Progress value={(strength / 4) * 100} className="h-1.5" />
+                  <p className="text-muted-foreground text-xs">
+                    Strength: {passwordStrengthLabel(strength)}
                   </p>
-                ) : null}
+                </div>
+              ) : null}
+              <PasswordField
+                id="confirmPassword"
+                label="Confirm Password"
+                error={errors.confirmPassword?.message}
+                showPassword={showConfirmPassword}
+                onToggle={() => setShowConfirmPassword((v) => !v)}
+                {...register("confirmPassword")}
+              />
+              <Button
+                type="button"
+                className="w-full"
+                size="lg"
+                onClick={goNext}
+              >
+                Continue
+              </Button>
+            </>
+          ) : null}
+
+          {step === 2 ? (
+            <>
+              <SkillPicker
+                label="Skills I Know"
+                placeholder="e.g., Web Development"
+                skills={knownSkills}
+                onChange={(skills) =>
+                  setValue("knownSkills", skills, { shouldValidate: true })
+                }
+                badgeVariant="teach"
+                error={errors.knownSkills?.message}
+              />
+              <SkillPicker
+                label="Skills To Learn"
+                placeholder="e.g., UI/UX Design"
+                skills={skillsToLearn}
+                onChange={(skills) =>
+                  setValue("skillsToLearn", skills, { shouldValidate: true })
+                }
+                badgeVariant="learn"
+                error={errors.skillsToLearn?.message}
+              />
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  size="lg"
+                  onClick={goBack}
+                >
+                  Back
+                </Button>
+                <Button
+                  type="button"
+                  className="flex-1"
+                  size="lg"
+                  onClick={goNext}
+                >
+                  Continue
+                </Button>
               </div>
-            )}
-          />
-          <Button
-            type="submit"
-            className="w-full"
-            size="lg"
-            loading={mutation.isPending}
-          >
-            Sign up
-          </Button>
+            </>
+          ) : null}
+
+          {step === 3 ? (
+            <>
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <p className="text-muted-foreground text-xs font-medium">
+                    You can teach
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {knownSkills.map((skill) => (
+                      <Badge key={skill} variant="teach">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <p className="text-muted-foreground text-xs font-medium">
+                    You want to learn
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {skillsToLearn.map((skill) => (
+                      <Badge key={skill} variant="learn">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <Controller
+                name="checkBox"
+                control={control}
+                render={({ field }) => (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="terms"
+                        checked={field.value}
+                        onCheckedChange={(checked) =>
+                          field.onChange(checked === true)
+                        }
+                      />
+                      <Label htmlFor="terms" className="text-sm font-normal">
+                        Accept Terms and Conditions
+                      </Label>
+                    </div>
+                    {errors.checkBox ? (
+                      <p className="text-destructive text-sm">
+                        {errors.checkBox.message}
+                      </p>
+                    ) : null}
+                  </div>
+                )}
+              />
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  size="lg"
+                  onClick={goBack}
+                >
+                  Back
+                </Button>
+                <Button
+                  type="submit"
+                  className="flex-1"
+                  size="lg"
+                  loading={mutation.isPending}
+                >
+                  Sign up
+                </Button>
+              </div>
+            </>
+          ) : null}
         </form>
       </CardContent>
       <CardFooter className="flex flex-col gap-4 border-t">
