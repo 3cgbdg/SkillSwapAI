@@ -33,7 +33,7 @@ export default function InboxPage() {
       {tab === "requests" ? (
         <InboxRequestsPanel />
       ) : (
-        <div className="hidden flex-1 items-center justify-center md:flex">
+        <div className="flex flex-1 items-center justify-center">
           <ChatsEmptyLanding />
         </div>
       )}
