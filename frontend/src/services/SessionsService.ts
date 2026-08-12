@@ -18,30 +18,6 @@ class SessionsService {
 
   async getTodaysSessions(): Promise<ISession[]> {
     const res = await api.get("/sessions/today");
-    // #region agent log
-    fetch("http://127.0.0.1:7877/ingest/c055a23c-4c84-4eb5-84c0-8abae4e46ddd", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "ee6149",
-      },
-      body: JSON.stringify({
-        sessionId: "ee6149",
-        hypothesisId: "H1-H2",
-        location: "SessionsService.ts:getTodaysSessions",
-        message: "today sessions response",
-        data: {
-          isArray: Array.isArray(res),
-          dataLen: Array.isArray((res as { data?: unknown })?.data)
-            ? (res as { data: unknown[] }).data.length
-            : Array.isArray(res)
-              ? (res as unknown[]).length
-              : null,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
     return res.data;
   }
 

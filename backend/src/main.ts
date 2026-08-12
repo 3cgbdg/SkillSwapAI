@@ -51,24 +51,6 @@ async function bootstrap() {
 
   const port = Number(configService.get<string>('PORT') ?? 5200);
   await app.listen(port, '0.0.0.0');
-  // #region agent log
-  fetch('http://127.0.0.1:7877/ingest/c055a23c-4c84-4eb5-84c0-8abae4e46ddd', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Debug-Session-Id': 'ee6149',
-    },
-    body: JSON.stringify({
-      sessionId: 'ee6149',
-      hypothesisId: 'H-backend-boot',
-      location: 'main.ts:bootstrap',
-      message: 'API listening',
-      data: { port, globalPrefix: 'api' },
-      timestamp: Date.now(),
-      runId: 'post-fix',
-    }),
-  }).catch(() => {});
-  // #endregion
 }
 
 void bootstrap().catch((err) => {
