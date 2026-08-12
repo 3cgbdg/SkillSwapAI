@@ -34,7 +34,10 @@ export function useHeaderSearch() {
       }
       await mutationSearch.mutateAsync(chars);
     },
-    [mutationSearch]
+    // mutationSearch itself is a new object every render; depending on it
+    // recreates `search` every render and loops the effect below forever.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [mutationSearch.mutateAsync]
   );
 
   useEffect(() => {
