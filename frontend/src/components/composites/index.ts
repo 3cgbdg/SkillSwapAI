@@ -1,7 +1,6 @@
 export { AsyncBoundary } from "./AsyncBoundary";
-export { AuthBackdrop } from "./AuthBackdrop";
 export { TaskChecklistLink } from "./TaskChecklistLink";
-export { DataEmpty, EmptyState } from "./DataEmpty";
+export { DataEmpty } from "./DataEmpty";
 export {
   FloatingPanel,
   FloatingPanelRoot,
@@ -14,5 +13,6 @@ export type { SegmentedOption } from "./SegmentedControl";
 export { SkeletonKit } from "./SkeletonKit";
 export { SkillPill, SkillPillList } from "./SkillPill";
 export { StatTile } from "./StatTile";
+export { Stepper } from "./Stepper";
 export { UserRow } from "./UserRow";
 export { MatchProgressPanel } from "./MatchProgressPanel";

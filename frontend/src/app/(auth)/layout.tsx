@@ -1,4 +1,4 @@
-import { AuthBackdrop } from "@/components/composites/AuthBackdrop";
+import { AuthSplitPane } from "@/components/layouts";
 
 export default async function AuthLayout({
   children,
@@ -6,11 +6,8 @@ export default async function AuthLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="relative flex min-h-dvh items-center justify-center py-2">
-      <AuthBackdrop />
-      <div id="main-content" className="relative z-10 w-full">
-        {children}
-      </div>
+    <div id="main-content">
+      <AuthSplitPane>{children}</AuthSplitPane>
     </div>
   );
 }

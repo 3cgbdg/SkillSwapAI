@@ -19,8 +19,11 @@ export function Logo({
     >
       <rect width="32" height="32" rx="8" className="fill-primary" />
       <path
-        d="M10 22V10h4.2c2.4 0 3.9 1.2 3.9 3.1 0 1.3-.7 2.3-1.9 2.8L20 22h-3.2l-3.4-5.4H13V22H10Zm3-8.2h1c1.1 0 1.7-.5 1.7-1.4S15.1 11 14 11H13v2.8Z"
-        className="fill-primary-foreground"
+        d="M19 12.6c0-2-2.1-2.8-4.1-2.8s-4 .9-4 2.7c0 3.6 8.6 1.8 8.6 5.8 0 2-2.2 3.1-4.4 3.1s-4.2-1-4.3-3.1"
+        className="stroke-primary-foreground"
+        strokeWidth="2.6"
+        strokeLinecap="round"
+        fill="none"
       />
       <circle cx="22.5" cy="11.5" r="2.5" className="fill-brand-accent" />
     </svg>
