@@ -11,7 +11,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { ChatMessageList } from "@/components/chat/ChatMessageList";
-import { EmptyState } from "@/components/composites";
+import { DataEmpty } from "@/components/composites";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -154,7 +154,7 @@ export function ChatThread({
                 onRetryMessage={onRetryMessage}
               />
             ) : (
-              <EmptyState
+              <DataEmpty
                 icon={MessageSquare}
                 title="Start the conversation"
                 description="Send a message to begin chatting."

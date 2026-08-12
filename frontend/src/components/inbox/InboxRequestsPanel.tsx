@@ -1,7 +1,7 @@
 "use client";
 
 import NotificationsList from "@/components/layout/headerComponents/NotificationsList";
-import { AsyncBoundary, EmptyState } from "@/components/composites";
+import { AsyncBoundary, DataEmpty } from "@/components/composites";
 import { Spinner } from "@/components/ui/spinner";
 import useFriends from "@/hooks/useFriends";
 import RequestsService from "@/services/RequestsService";
@@ -78,7 +78,7 @@ export function InboxRequestsPanel() {
           onDeleteRequest={(data) => mutationRequestDelete.mutate(data)}
         />
       ) : (
-        <EmptyState
+        <DataEmpty
           icon={Inbox}
           title="No pending requests"
           description="Friend and session invites will show up here."

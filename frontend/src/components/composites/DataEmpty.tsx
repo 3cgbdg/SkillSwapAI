@@ -51,6 +51,3 @@ export function DataEmpty({
     </Empty>
   );
 }
-
-/** @deprecated Use DataEmpty from composites */
-export const EmptyState = DataEmpty;

@@ -3,7 +3,7 @@
 import { Suspense } from "react";
 
 import Calendar from "@/components/calendar/Calendar";
-import { AsyncBoundary, EmptyState } from "@/components/composites";
+import { AsyncBoundary, DataEmpty } from "@/components/composites";
 import {
   Card,
   CardContent,
@@ -38,7 +38,7 @@ const Page = () => {
         <h2 className="text-2xl font-bold leading-8">Upcoming sessions</h2>
         <AsyncBoundary isLoading={isLoading} isError={isError} error={error}>
           {upcoming.length === 0 ? (
-            <EmptyState
+            <DataEmpty
               icon={CalendarDays}
               title="No upcoming sessions"
               description="Schedule a session with a learning partner from your matches or inbox."

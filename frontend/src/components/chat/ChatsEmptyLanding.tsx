@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MessageSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import { EmptyState } from "@/components/composites";
+import { DataEmpty } from "@/components/composites";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import useFriends from "@/hooks/useFriends";
 import ChatsService from "@/services/ChatsService";
@@ -31,7 +31,7 @@ export function ChatsEmptyLanding() {
   const list = friends?.slice(0, 8) ?? [];
 
   return (
-    <EmptyState
+    <DataEmpty
       icon={MessageSquare}
       title="Start a conversation"
       description="Pick a friend to open a chat, or search in the sidebar."
@@ -68,6 +68,6 @@ export function ChatsEmptyLanding() {
           Add friends from Matches to chat here.
         </p>
       )}
-    </EmptyState>
+    </DataEmpty>
   );
 }
