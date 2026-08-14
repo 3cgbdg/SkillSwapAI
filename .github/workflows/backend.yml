@@ -10,30 +10,21 @@ on:
     branches: [main, dev]
     paths:
       - "backend/**"
-      - ".github/workflows/backend.yml"  # Change 3: PR path consistency
+      - ".github/workflows/backend.yml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# Change 2: Least-privilege token scope
 permissions:
   contents: read
-
-env:
-  AWS_REGION: eu-central-1
-  ECR_REPOSITORY: skillswap-backend
-  ECS_CLUSTER: skillswap-cluster
-  ECS_SERVICE: skillswap-backend-task-service-kg42kvgw
-  CONTAINER_NAME: backend
-  ECS_TASK_DEFINITION: skillswap-backend-task
 
 jobs:
   # ─── 1. FORMAT, LINT, TYPES & TEST ─────────────────────────────────────────
   lint-and-test:
     name: Format, Lint, Type Check & Test
     runs-on: ubuntu-latest
-    timeout-minutes: 10  # Change 4: Prevent runaway jobs
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: backend
@@ -52,13 +43,13 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2  (Change 1: SHA pin)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Enable pnpm
         run: corepack enable
 
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0  (Change 1: SHA pin)
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "20"
           cache: "pnpm"
@@ -82,80 +73,23 @@ jobs:
       - name: Run unit tests
         run: pnpm test:ci
 
-  # ─── 2. BUILD & PUSH TO ECR ────────────────────────────────────────────────
-  build-and-push:
-    name: Build & Push to ECR
+  # ─── 2. PRISMA MIGRATE (Render auto-deploys on push) ───────────────────────
+  migrate:
+    name: Prisma Migrate Deploy
     runs-on: ubuntu-latest
-    timeout-minutes: 20  # Change 4: Prevent runaway jobs
+    timeout-minutes: 10
     needs: lint-and-test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    outputs:
-      image: ${{ steps.build-image.outputs.image }}
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2  (Change 1: SHA pin)
-
-      # TODO: Migrate to OIDC — replace IAM keys with role-to-assume
-      # See: https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722  # v4.1.0  (Change 1: SHA pin)
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@062b18b96a7aff071d4dc91bc00c4c1a7945b076  # v2.0.1  (Change 1: SHA pin)
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2  # v3.10.0  (Change 1: SHA pin)
-
-      - name: Build and push image to ECR
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83  # v6.18.0  (Changes 1 & 9: SHA pin + v5→v6)
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
-        with:
-          context: ./backend
-          push: true
-          tags: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }},${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Output image ID
-        id: build-image
-        run: |
-          echo "image=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}" >> $GITHUB_OUTPUT
-
-  # ─── 3. PRISMA MIGRATE + ECS DEPLOY ───────────────────────────────────────
-  deploy:
-    name: Prisma Migrate & ECS Deploy
-    runs-on: ubuntu-latest
-    timeout-minutes: 20  # Change 4: Prevent runaway jobs
-    needs: build-and-push
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
-    steps:
-      # NOTE: Checkout is required here — Prisma migrate deploy reads prisma/ from the repo
-      - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2  (Change 1: SHA pin)
-
-      # TODO: Migrate to OIDC — replace IAM keys with role-to-assume
-      # See: https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722  # v4.1.0  (Change 1: SHA pin)
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Enable pnpm
         run: corepack enable
 
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0  (Change 1: SHA pin)
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "20"
           cache: "pnpm"
@@ -170,61 +104,3 @@ jobs:
         run: pnpm exec prisma migrate deploy
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
-      - name: Download current ECS task definition
-        run: |
-          aws ecs describe-task-definition \
-            --task-definition ${{ env.ECS_TASK_DEFINITION }} \
-            --query taskDefinition \
-            > task-definition.json
-
-      - name: Update ECS task definition with new image
-        id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@138c24f321fdbdf7edee4a685519d253cae2cdea  # v1.9.0  (Change 1: SHA pin; v1.5.3 tag no longer exists upstream)
-        with:
-          task-definition: task-definition.json
-          container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ needs.build-and-push.outputs.image }}
-
-      - name: Deploy to Amazon ECS
-        uses: aws-actions/amazon-ecs-deploy-task-definition@176bcc0288c49ee545288583859af21ee17f4b2c  # v2.3.1  (Change 1: SHA pin)
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ env.ECS_SERVICE }}
-          cluster: ${{ env.ECS_CLUSTER }}
-          wait-for-service-stability: true
-
-      # Change 6: Smoke test to validate deployment at application level
-      - name: Smoke test deployment
-        run: |
-          echo "⏳ Waiting 30s for service to stabilize..."
-          sleep 30
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            --max-time 10 --retry 3 --retry-delay 10 \
-            "http://skillswap-alb-496974982.eu-central-1.elb.amazonaws.com/health")
-          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
-            echo "✅ Backend smoke test passed! HTTP $STATUS"
-          else
-            echo "❌ Backend smoke test failed! HTTP $STATUS"
-            exit 1
-          fi
-
-      # Change 5: Clean up old ECR images — keep 5 most recent to control storage costs
-      - name: Clean up old ECR images
-        run: |
-          echo "🧹 Cleaning up old ECR images (keeping 5 most recent)..."
-          IMAGES_TO_DELETE=$(aws ecr describe-images \
-            --repository-name ${{ env.ECR_REPOSITORY }} \
-            --query 'sort_by(imageDetails,& imagePushedAt)[:-5].imageDigest' \
-            --output text)
-
-          if [ -n "$IMAGES_TO_DELETE" ] && [ "$IMAGES_TO_DELETE" != "None" ]; then
-            for digest in $IMAGES_TO_DELETE; do
-              aws ecr batch-delete-image \
-                --repository-name ${{ env.ECR_REPOSITORY }} \
-                --image-ids imageDigest=$digest
-            done
-            echo "✅ Cleaned up old ECR images"
-          else
-            echo "ℹ️ No old images to clean up"
-          fi

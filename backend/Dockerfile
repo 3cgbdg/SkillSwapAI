@@ -12,6 +12,11 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 
+# Dummy DATABASE_URL so prisma.config.ts's env('DATABASE_URL') resolves at
+# build time — `prisma generate` never connects to a database, it just needs
+# the var to exist. Render injects the real DATABASE_URL at runtime.
+ENV DATABASE_URL="postgresql://user:password@localhost:5432/db"
+
 RUN pnpm exec prisma generate
 
 RUN pnpm run build
