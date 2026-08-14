@@ -6,9 +6,6 @@ const nextConfig: NextConfig = {
     root: path.join(__dirname),
   },
   output: "standalone",
-  experimental: {
-    viewTransition: true,
-  },
   images: {
     remotePatterns: [
       {
