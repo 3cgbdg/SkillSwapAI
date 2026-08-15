@@ -1431,6 +1431,56 @@ off-scale magic numbers are a design problem whether or not ESLint objects.
 ---
 
 **11. Rebuild the match/plan detail screen.**
+`[x]` **Status: PARTIALLY VERIFIED** (mechanical fully verified; browser
+gate blocked by an environment limitation the plan itself anticipated — see
+below). Normalized all 5 ad-hoc heading instances (4 distinct treatments)
+onto the h2/h3 steps with `font-heading`, dropping every `text-xl/2xl/3xl`
+and `leading-6/7/8/9`. Wrapped the screen in `PageBody` + a new top-level
+`PageHeader` ("Training plan with {name}"); the hero card's own title
+downgrades to `text-h3` now that `PageHeader` owns the page-level `h1`.
+Wrapped the modules block in `PageSection title="Training modules"`. Fixed
+`<ol className="list-disc">` → `<ul>` (semantic bug — disc-style list wrapped
+in an ordered-list tag) and dropped the trailing-colon `"Benefits:"` label
+(renamed to "Key benefits"). Gave `grid grid-cols-3` (unconditional, no
+breakpoint) an explicit mobile base: `grid-cols-1 sm:grid-cols-3` — kept the
+children's existing bare/`sm:`/`xl:` `col-span-*` values unchanged rather
+than rewriting them, since a bare `col-span-3` already degrades gracefully
+against a 1-column explicit template (confirmed this is the lower-risk fix
+before committing to it, by first trying — then reverting — a version that
+rewrote every child's breakpoints, which would have also desynced from
+`MatchProgressPanel`'s own hard-coded `sm:col-span-1`, a composite this step
+doesn't own).
+
+`tsc`/lint clean. A12's own grep (`<h[1-3][^>]*className="[^"]*(text-(xl|2xl|3xl)|leading-[6-9])`)
+returns nothing for this file.
+
+**Browser gate could not be completed as designed, and this needed a real
+attempt before being written off.** No account had an existing plan, so per
+the plan's own fallback ("if that is unavailable, use an account whose plan
+already exists") a real one had to be generated live: added a friend, hit
+"Generate plan", and let the BullMQ `ai` queue run against the real
+`OPENAI_API_KEY` in `backend/.env`. It never completed — `AiQueueProcessor`
+logs `Match generation failed... 401 Incorrect API key provided` on every
+retry. This is a genuinely invalid/expired key, not a code defect, and not
+something in this step's (or this plan's) scope to fix. Cleared the stuck
+"Generating…" banner's `sessionStorage` key afterward so it stopped
+retrying and spamming the API (it was contributing to the session's
+already-known 429 pattern).
+
+**The responsive grid choreography specifically was still verified live**,
+via the same synthetic-DOM-injection technique that isolated step 9's grid
+bug — built the exact `grid-template-columns` + `grid-column: span N`
+combination this page uses (not the real components, since those need
+`plan` data this environment can't produce) at both viewports. At 390px
+(1-column template): `col-span-3` children rendered at full container width
+(390px) and stacked as separate rows — confirms graceful clamping, no
+implicit-column blowout. At 1280px (3-column template): a `span 3` row took
+the full width, then a `span 2` + `span 1` pair sat side-by-side on the next
+row — exactly the intended hero-full-width, partner+progress-split layout.
+**What remains unverified**: the loading dialog and the actual rendered
+heading/list markup with real plan content, since no plan could be
+generated end-to-end. Recorded as a real, bounded gap rather than assumed
+away.
 
 File: `frontend/src/app/(main)/matches/[id]/page.tsx`.
 
