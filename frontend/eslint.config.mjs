@@ -70,6 +70,8 @@ const eslintConfig = [
       "src/features/**/*.{js,jsx,ts,tsx}",
       "src/components/matches/**/*.{js,jsx,ts,tsx}",
       "src/components/profile/**/*.{js,jsx,ts,tsx}",
+      "src/components/chat/**/*.{js,jsx,ts,tsx}",
+      "src/components/inbox/**/*.{js,jsx,ts,tsx}",
     ],
     rules: {
       "no-restricted-syntax": [

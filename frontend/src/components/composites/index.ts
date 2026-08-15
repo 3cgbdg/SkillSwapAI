@@ -1,4 +1,5 @@
 export { AsyncBoundary } from "./AsyncBoundary";
+export { ChatBubble } from "./ChatBubble";
 export { TaskChecklistLink } from "./TaskChecklistLink";
 export { DataEmpty } from "./DataEmpty";
 export {
@@ -7,6 +8,7 @@ export {
   FloatingPanelSurface,
 } from "./FloatingPanel";
 export { MetricRing } from "./MetricRing";
+export { PresenceDot } from "./PresenceDot";
 export { QuickLinkTile } from "./QuickLinkTile";
 export { SectionPanel } from "./SectionPanel";
 export { SegmentedControl } from "./SegmentedControl";

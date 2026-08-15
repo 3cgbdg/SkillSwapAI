@@ -1607,6 +1607,86 @@ do not coincide in this folder.
 ---
 
 **13. Rebuild the chat / inbox surfaces.**
+`[x]` **Status: VERIFIED** (mechanical + browser; see step 1's screenshot
+caveat). Deleted `SplitPane.tsx`/`DetailPane.tsx` (0 real consumers,
+confirmed by grep) and their `layouts/index.ts` exports; deleted `--pane-min`
+from `globals.css` in the same commit-worthy change (A3 requires deletion,
+not wiring-up, per the plan). Removed the now-stale `layouts/**`
+`ignoreIssues` entry from `knip.json`.
+
+**Deleting `SplitPane` surfaced a second dead dependency knip alone
+wouldn't have caught cleanly**: `react-resizable-panels` (only consumer was
+`SplitPane`) and `ui/resizable.tsx` (only consumer was `SplitPane`, and
+`ui/**` is knip-exempted so the orphaned file itself was invisible to knip —
+only the now-unreachable *dependency* surfaced). Removed both.
+
+**`pnpm remove` surfaced a real, pre-existing infrastructure bug, unrelated
+to this plan.** The committed `pnpm-lock.yaml` has pinned a broken
+`next@16.2.4` (missing an internal Turbopack module,
+`instrument-module-getter`) since before this session touched anything —
+confirmed via `git show HEAD:frontend/pnpm-lock.yaml`. The dev server had
+actually been running `16.3.0` (present in the pnpm store from some
+out-of-band install pre-dating this plan) the entire session; `pnpm remove`'s
+relink snapped `node_modules` back to what the lockfile actually specified,
+exposing the drift as a 500 on every route. Fixed properly rather than
+reverting to the broken pin: `pnpm add next@16.3.0`, which bumped
+`package.json`'s range from `^16.0.7` to `^16.3.0` — a real, visible
+dependency change, called out here rather than folded silently into an
+unrelated commit.
+
+Chat-specific work: `ChatComposer.tsx`'s hand-rolled footer → `CardFooter`
+(already carries `border-t`, matching exactly). `ChatMessageList.tsx`: the
+message bubble's `rounded-2xl` extracted into a new `ChatBubble` composite;
+the date-separator chip → a real `Badge` (`variant="status"`, so it inherits
+the new 24px badge scale instead of a hand-rolled `rounded-full` span);
+loosened rhythm (`gap-3`→`gap-4` between groups, `gap-1`→`gap-1.5` within a
+group). `ChatSidebar.tsx` (7 violations): dropped the redundant
+`rounded-xl`/`overflow-hidden` (Card's own base class already has both) and
+the now-superseded `min-h-[min(75dvh,800px)]` (step 6's outer-wrapper calc()
+already bounds this Card's real height, making its own copy dead weight);
+rebuilt the search-input wrapper without a redundant outer
+border+`rounded-2xl` shell (Input's own primitive border now shows, icon
+absolutely positioned inside); extracted the presence dot into a new
+`PresenceDot` composite; swapped the collapsed-mode avatar button for the
+`Button` primitive. `ChatThread.tsx` (4 violations): dropped the redundant
+`rounded-xl` for the same reason as ChatSidebar; the header wrapper became a
+proper `CardHeader` — required adding a `bordered` boolean prop to the
+`CardHeader` primitive itself, since the old pattern (`[.border-b]:` CSS hint
+keyed off a literal `border-b` class the *consumer* had to pass) is exactly
+what the layering rule now forbids passing from feature code; the ellipsis
+dropdown trigger → `buttonVariants({ variant: "ghost", size: "icon" })`.
+`ChatsEmptyLanding.tsx`: the hand-rolled friend-picker button → `UserRow`.
+
+**Side effect on an out-of-scope file, reasoned through rather than
+ignored.** `CardHeader`'s `bordered` prop replaces the old `[.border-b]:`
+selector-based auto-padding trick. `calendar/SessionDetails.tsx` (out of
+scope per the plan) passes a literal `border-b ... pb-2` to `CardHeader` —
+under the *old* mechanism, the selector-matched padding (`pb-(--card-spacing)`,
+24px) had higher specificity than its own explicit `pb-2`, silently winning;
+with the hint removed, its own `pb-2` now actually applies. This changes
+that file's rendered padding, but arguably *fixes* a previously-dead
+declaration rather than breaking a working one. Not fixed further (out of
+scope); confirmed `/schedule` itself still renders with no console errors —
+could not exercise the `SessionDetails` dialog specifically (no seeded
+session to click into).
+
+tsc, lint (0 errors in `chat/**` + `inbox/**`), `grep -n 'pane-min'` (no
+matches), knip (clean after the dependency cleanup), vitest (6/6) all pass.
+
+Browser gate: smoke set at 1280px, plus `/inbox`, `/inbox?tab=requests`, and
+`/inbox/<chatId>` at both widths and both themes. Desktop `/inbox/<chatId>`
+now measures **zero** overflow (main scroll/client height exactly equal —
+better than step 6's residual ~6px, likely tightened by the `CardHeader`
+padding math). Mobile confirmed via the same fresh-navigation technique as
+step 6 (resize alone doesn't reliably re-trigger the `MOBILE_MEDIA_QUERY`
+listener): sidebar correctly hidden on `/inbox/<chatId>`, "Back to inbox"
+link present, composer visible, zero overflow. Edge case: sent a real
+message through the rebuilt `ChatComposer`/`CardFooter`, confirmed it posts
+and renders in the new `ChatBubble`; the date separator confirmed as an
+actual `Badge` via `data-slot`/`data-variant`. **Session expired mid-step**
+(likely from the dependency-fix disruption) — re-authenticated via the real
+login flow rather than assuming state, per the plan's own emphasis on not
+faking verification.
 
 Files: `frontend/src/app/(main)/(chat)/layout.tsx`;
 `frontend/src/app/(main)/(chat)/inbox/page.tsx`;

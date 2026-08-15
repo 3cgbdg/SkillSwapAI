@@ -3,6 +3,7 @@
 import { Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 
 export function ChatComposer({
@@ -17,8 +18,8 @@ export function ChatComposer({
   onTyping: () => void;
 }) {
   return (
-    <div className="border-border bg-card shrink-0 border-t">
-      <div className="flex items-end gap-3 p-4 md:px-6">
+    <CardFooter className="bg-card shrink-0 p-0">
+      <div className="flex w-full items-end gap-3 p-4 md:px-6">
         <Textarea
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -45,6 +46,6 @@ export function ChatComposer({
           <Send size={16} />
         </Button>
       </div>
-    </div>
+    </CardFooter>
   );
 }

@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 import { ChatMessageList } from "@/components/chat/ChatMessageList";
 import { DataEmpty } from "@/components/composites";
 import { buttonVariants } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -70,12 +70,12 @@ export function ChatThread({
       <Link href="/inbox" className={cn(buttonVariants(), "w-fit md:hidden")}>
         Back to inbox
       </Link>
-      <Card className="flex min-h-[calc(100dvh_-_var(--header-h)_-_var(--space-page)_*_2_-_3.25rem)] flex-1 flex-col overflow-hidden rounded-xl p-0 md:min-h-[calc(100dvh_-_var(--header-h)_-_var(--space-page)_*_2_-_4.5rem)]">
-        <div className="border-border shrink-0 border-b">
+      <Card className="flex min-h-[calc(100dvh_-_var(--header-h)_-_var(--space-page)_*_2_-_3.25rem)] flex-1 flex-col p-0 md:min-h-[calc(100dvh_-_var(--header-h)_-_var(--space-page)_*_2_-_4.5rem)]">
+        <CardHeader bordered className="shrink-0 p-0">
           <div className="flex items-center justify-between gap-2 px-4 py-4 md:px-6">
             <div className="flex items-center gap-3">
               <HoverCard>
-                <HoverCardTrigger className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
+                <HoverCardTrigger className="outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
                   <UserAvatar
                     name={currentChat?.friend.name}
                     imageUrl={currentChat?.friend.imageUrl}
@@ -105,7 +105,7 @@ export function ChatThread({
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger
-                className="hover:bg-muted inline-flex size-8 items-center justify-center rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                className={buttonVariants({ variant: "ghost", size: "icon" })}
                 aria-label="Chat options"
               >
                 <EllipsisVertical className="size-5" />
@@ -139,7 +139,7 @@ export function ChatThread({
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </div>
+        </CardHeader>
 
         <div
           ref={containerRef}
