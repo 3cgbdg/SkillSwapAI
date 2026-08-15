@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "skillswap-ai-v3.s3.eu-central-1.amazonaws.com",
+        hostname: "skillswapai.s3.eu-north-1.amazonaws.com",
         pathname: "/**",
       },
       {
