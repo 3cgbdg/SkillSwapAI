@@ -87,7 +87,7 @@ export function SwapAxis({
       />
       <span
         aria-hidden
-        className="animate-swap-in text-muted-foreground mt-1 shrink-0 text-body font-medium"
+        className="text-muted-foreground mt-1 shrink-0 animate-[swap-in_var(--duration-slower)_var(--ease-spring)_both] text-body font-medium motion-reduce:animate-none"
       >
         ↔
       </span>

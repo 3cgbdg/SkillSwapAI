@@ -33,8 +33,8 @@ export function ProfileView({
             imageUrl={profile.imageUrl}
             size="xl"
           />
-          <div className="flex w-full flex-col items-center gap-2 text-center md:items-start md:text-left">
-            <h1 className="font-heading text-h1">{profile.name}</h1>
+          <div className="flex w-full flex-col items-center gap-4 text-center md:items-start md:text-left">
+            <h2 className="font-heading text-h1">{profile.name}</h2>
             {editHref ? (
               <Link
                 href={editHref}
@@ -51,9 +51,9 @@ export function ProfileView({
             </div>
           ) : null}
           {actions ? (
-            <div className="flex w-full flex-col gap-2">
+            <div className="flex w-full flex-col gap-4">
               <h3 className="font-heading text-h3">Actions</h3>
-              <div className="mt-1 flex flex-wrap items-center gap-3">
+              <div className="mt-1 flex flex-wrap items-center gap-4">
                 {actions}
               </div>
             </div>

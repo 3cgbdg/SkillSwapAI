@@ -89,7 +89,7 @@ const Page = () => {
             elevation="raised"
             className="max-w-md"
           >
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between text-body-sm">
                 <span className="font-medium">Complete your profile</span>
                 <span className="text-primary font-semibold tabular-nums">
@@ -97,7 +97,7 @@ const Page = () => {
                 </span>
               </div>
               <Progress value={completeness} />
-              <ul className="mt-1 flex flex-col gap-1.5 text-body-sm">
+              <ul className="mt-1 flex flex-col gap-4 text-body-sm">
                 <TaskChecklistLink
                   done={knownCount > 0}
                   label="Add a skill you can teach"
@@ -146,7 +146,7 @@ const Page = () => {
                 style={{ animationDelay: `${index * 60}ms` }}
               >
                 <Card elevation="interactive" className="h-full">
-                  <CardHeader className="flex flex-row items-center gap-3">
+                  <CardHeader className="flex flex-row items-center gap-4">
                     <UserAvatar
                       name={match.other.name}
                       imageUrl={match.other.imageUrl}
@@ -192,10 +192,10 @@ const Page = () => {
         {sessionsLoading ? (
           <SkeletonKit.Row />
         ) : upcoming.length > 0 ? (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-4">
             {upcoming.map((item) => (
               <Card key={item.id} elevation="raised">
-                <CardHeader className="flex flex-row items-center gap-3 pb-2">
+                <CardHeader className="flex flex-row items-center gap-4 pb-2">
                   <Calendar className="text-primary size-5 shrink-0" />
                   <div>
                     <CardTitle className="text-base">{item.title}</CardTitle>

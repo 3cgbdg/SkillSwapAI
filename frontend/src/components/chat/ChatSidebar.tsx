@@ -58,7 +58,7 @@ const ChatSidebar = () => {
       <div className="mb-4 flex flex-col gap-1.5">
         <div
           className={cn(
-            "flex items-center gap-2",
+            "flex items-center gap-4",
             isFullyOpen ? "justify-between" : "justify-center"
           )}
         >
@@ -108,7 +108,7 @@ const ChatSidebar = () => {
                           type="button"
                           key={friend.id}
                           variant="ghost"
-                          className="justify-start gap-2"
+                          className="justify-start gap-4"
                           onClick={() => {
                             setChars("");
                             createChat({
@@ -136,7 +136,7 @@ const ChatSidebar = () => {
         </p>
       )}
 
-      <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
+      <div className="flex flex-1 flex-col gap-4 overflow-y-auto">
         {chats?.map((chat) =>
           isFullyOpen ? (
             <UserRow

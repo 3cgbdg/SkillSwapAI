@@ -77,7 +77,7 @@ const ModuleAccordion = ({
           <div className="flex max-w-[280px] flex-col gap-2 sm:max-w-[450px] sm:gap-4">
             <div className="flex items-start gap-2 sm:items-center sm:gap-4">
               <Checkbox checked={completed} disabled className="mt-1 sm:mt-0" />
-              <h3 className="break-words text-sm font-semibold leading-5 sm:text-lg sm:leading-7">
+              <h3 className="font-heading text-body break-words font-semibold">
                 {module.title}
               </h3>
             </div>

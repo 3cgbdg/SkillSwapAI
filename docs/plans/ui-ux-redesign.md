@@ -1872,6 +1872,15 @@ are, per Out of scope #8; only the surrounding page shell changes.
 ---
 
 **15. Accessibility, dark-mode and enforcement sweep.**
+`[x]` **Status: PARTIALLY VERIFIED** (mechanical fully green; browser gate
+covers real content/console/contrast/dark-mode/mobile-overflow/keyboard checks
+via DOM inspection rather than screenshots — see caveats below). Files touched
+beyond the plan's list: `frontend/src/components/composites/SwapAxis.tsx`
+(A3 fix), `frontend/src/components/profile/{Profile,ProfileView}.tsx`,
+`frontend/src/app/(main)/profiles/[id]/page.tsx`,
+`frontend/src/app/(main)/(chat)/inbox/page.tsx` (A10/A11 fixes — see below),
+`frontend/src/components/matches/ModuleAccordion.tsx` (A12 fix),
+`frontend/src/components/layout/MobileTabBar.tsx` (deleted, per user decision).
 
 Files: `frontend/eslint.config.mjs`; `frontend/src/styles/globals.css`;
 `frontend/src/app/(main)/layout.tsx`; `knip.json`.
@@ -1947,6 +1956,95 @@ Files: `frontend/eslint.config.mjs`; `frontend/src/styles/globals.css`;
 > that the skip-link at `app/layout.tsx:39–44` still reaches `#main-content`.
 > Also re-run with the OS set to `prefers-reduced-motion: reduce` and confirm no
 > animation plays.
+
+**Results.**
+
+- `check-contrast.mjs`: **44/44 pass**, re-run after all surface changes.
+- `pnpm --dir frontend lint`: **0 errors, 9 warnings** (pre-existing
+  `jsx-a11y/no-static-element-interactions` in the exempt calendar folder and
+  `no-console` in `SocketContext.tsx`; both pre-date this plan and are outside
+  its scope).
+- `pnpm --dir frontend test`: 2 files, 6 tests, all pass.
+- `pnpm --dir frontend format:check`: fails on ~127 files, but this is the
+  known pre-existing Windows-checkout CRLF vs. Prettier LF issue, not a
+  regression — none of the flagged content is a real style violation (verified
+  by inspecting the diff `prettier --write` would produce on a touched file).
+- `pnpm check:types`, `pnpm knip`, `pnpm --dir frontend build`: all clean.
+  `knip` has one pre-existing config hint (redundant `entry` pattern for
+  `check-contrast.mjs`), not an error.
+- **A3** (dead tokens): fixed a real gap — `--duration-slower`/`--ease-spring`
+  were only referenced inside `globals.css` itself (via `.animate-swap-in`,
+  never from a `.tsx` file). `SwapAxis.tsx` now embeds both tokens directly via
+  a Tailwind arbitrary-value `animate-[swap-in_var(--duration-slower)_var(--ease-spring)_both]`
+  utility plus an inline `motion-reduce:animate-none`; the now-dead
+  `.animate-swap-in` class and its `prefers-reduced-motion` entry were removed
+  from `globals.css`. `--page-gutter`/`--content-max` already passed (consumed
+  by `Container.tsx`). `--pane-min` confirmed absent everywhere.
+- **A6, A7, A13**: all pass as specified — `card.tsx` shows `--spacing(6)`/
+  `--spacing(4)`, `PageBody.tsx` shows `--space-section`/`--space-stack`,
+  `Container.tsx` shows `content-max`/`page-gutter` and no `max-w-7xl`.
+- **A8**: re-ran the step-5 density grep — **36** (target ≤36, exact).
+- **A12**: found and fixed one real pre-existing violation missed by step 10's
+  narrower scope — `ModuleAccordion.tsx:80`'s `<h3 className="... text-sm
+  font-semibold leading-5 sm:text-lg sm:leading-7">` normalized to
+  `font-heading text-body font-semibold`. Grep is now clean.
+- **A10/A11**: found a real gap — `/profile`, `/profiles/[id]` and `/inbox`
+  had **zero** `@/components/layouts` consumption anywhere in their render
+  tree, despite being on A10/A11's own enumerated list. Fixed by wrapping each
+  in `PageBody`/`PageHeader`: `Profile.tsx` gets `PageHeader title="Your
+  profile"`; `profiles/[id]/page.tsx` gets `PageHeader title={`${profile.name}'s
+  profile`}` (and `ProfileView`'s internal name `<h1>` was demoted to `<h2>`
+  to avoid a duplicate top-level heading, matching the pattern already used in
+  `matches/[id]/page.tsx`); `(chat)/inbox/page.tsx` gets `PageHeader
+  title="Inbox"`. All eight enumerated routes now verified importing from
+  `@/components/layouts` (`/discover` and `/learning` via `Matches.tsx`,
+  transitively). Re-ran A8/A12 after these edits to confirm no regression.
+- `MobileTabBar` decision: surfaced to the user per the plan's explicit
+  instruction not to decide unilaterally. User chose **delete** — removed
+  `frontend/src/components/layout/MobileTabBar.tsx` and its `knip.json`
+  `ignore` entry; `tsc`/`lint`/`knip`/`test` all re-confirmed clean afterward.
+- `src/features/**` glob: already carried a "forward-looking, doesn't exist
+  yet" comment from earlier work in this step; left as-is.
+
+**Browser gate caveats.** The Browser pane's screenshot compositing was
+unavailable in this environment (`the Browser pane is not displayed, so the
+page is not compositing frames`), so visual screenshot comparison across the
+full route × width × theme matrix was not possible. In its place, verification
+used DOM/console/network inspection, which is a real but narrower signal:
+- Content sanity (`get_page_text`) confirmed correct rendering, post-fix, on
+  `/dashboard`, `/discover`, `/schedule`, `/profile`, `/profiles/[id]`,
+  `/inbox`, in both light and dark (dark confirmed via `documentElement`
+  gaining the `dark` class and `body` computed background flipping to a dark
+  `lab()` value).
+- Mobile (390×844) checked for horizontal overflow
+  (`scrollWidth`/`clientWidth`) on `/dashboard`, `/profile`, `/schedule` — no
+  overflow on any; `/schedule`'s calendar correctly swaps to a stacked
+  day-list layout rather than staying in the desktop grid.
+- Keyboard: the skip-link (`app/layout.tsx`) is the first `Tab` stop, targets
+  a real `#main-content` `<main>`, and shows a visible focus ring
+  (`box-shadow` ring layer present) under a real (unconditional `focus:`)
+  keyframe. Subsequent stops use the primitives' `focus-visible:` variant,
+  which Chrome's focus-visible heuristic does not reliably arm for
+  CDP-synthetic key events — a tooling limitation, not a demonstrated bug.
+  Verified the mechanism structurally instead:
+  `focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/80`
+  is present on `button.tsx`, `input.tsx`, and `textarea.tsx` (from step 4,
+  unchanged by this step).
+- `/matches/<id>` was not exercised live — the fresh QA account created for
+  this session's browser gate (the prior session's authenticated session had
+  expired; `OPENAI_API_KEY` is known-invalid per step 11's finding, so no
+  active match/plan exists to generate one) has no matches. `/inbox/<chatId>`
+  was likewise not exercised for the same reason (no chats exist for a
+  friendless fresh account).
+- `prefers-reduced-motion: reduce` was verified statically rather than by
+  toggling the OS setting live (not controllable from this browser tool):
+  confirmed every custom keyframe with a `.tsx` consumer (`fade-up`,
+  `fade-in`) is listed in the `@media (prefers-reduced-motion: reduce)` block,
+  and `swap-in` (used only via the new Tailwind arbitrary-value utility) is
+  covered by its own inline `motion-reduce:animate-none`. `blink` has zero
+  `.tsx` consumers anywhere in the codebase and pre-dates this entire plan
+  (introduced in `ac541f7`, before any of the 15 steps) — left as-is; a
+  general dead-code sweep of code this plan never touched is out of scope.
 
 ---
 

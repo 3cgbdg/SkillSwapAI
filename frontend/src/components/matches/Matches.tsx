@@ -147,7 +147,7 @@ const Matches = ({
       {isPending || pendingPartnerId ? (
         <SectionPanel
           className="border-primary/30 bg-primary/5"
-          contentClassName="flex items-start gap-3"
+          contentClassName="flex items-start gap-4"
         >
           <AlertCircle className="text-primary mt-0.5 size-5 shrink-0" />
           <div>
@@ -172,7 +172,7 @@ const Matches = ({
                 <DropdownMenuTrigger
                   className={cn(
                     buttonVariants({ variant: "outline" }),
-                    "gap-2 bg-background"
+                    "gap-4 bg-background"
                   )}
                 >
                   <Users size={16} />
@@ -196,7 +196,7 @@ const Matches = ({
               <DropdownMenuTrigger
                 className={cn(
                   buttonVariants({ variant: "outline" }),
-                  "min-w-52 gap-2 bg-background"
+                  "min-w-52 gap-4 bg-background"
                 )}
               >
                 <Search size={16} />

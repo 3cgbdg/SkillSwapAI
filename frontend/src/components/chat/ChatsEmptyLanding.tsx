@@ -40,7 +40,7 @@ export function ChatsEmptyLanding() {
       {isFetching ? (
         <p className="text-muted-foreground text-sm">Loading friends…</p>
       ) : list.length > 0 ? (
-        <div className="mt-2 flex w-full max-w-md flex-col gap-2">
+        <div className="mt-2 flex w-full max-w-md flex-col gap-4">
           {list.map((friend) => (
             <UserRow
               key={friend.id}

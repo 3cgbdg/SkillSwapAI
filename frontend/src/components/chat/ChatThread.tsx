@@ -66,14 +66,14 @@ export function ChatThread({
   const router = useRouter();
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <Link href="/inbox" className={cn(buttonVariants(), "w-fit md:hidden")}>
         Back to inbox
       </Link>
       <Card className="flex min-h-[calc(100dvh_-_var(--header-h)_-_var(--space-page)_*_2_-_3.25rem)] flex-1 flex-col p-0 md:min-h-[calc(100dvh_-_var(--header-h)_-_var(--space-page)_*_2_-_4.5rem)]">
         <CardHeader bordered className="shrink-0 p-0">
-          <div className="flex items-center justify-between gap-2 px-4 py-4 md:px-6">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between gap-4 px-4 py-4 md:px-6">
+            <div className="flex items-center gap-4">
               <HoverCard>
                 <HoverCardTrigger className="outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
                   <UserAvatar

@@ -10,6 +10,7 @@ import { differenceInHours, intervalToDuration } from "date-fns";
 import { BookOpen, GraduationCap } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SectionPanel, StatTile, UserRow } from "@/components/composites";
+import { PageBody, PageHeader } from "@/components/layouts";
 import { ProfileView } from "@/components/profile/ProfileView";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -121,10 +122,14 @@ const Profile = () => {
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <PageBody>
+      <PageHeader
+        title="Your profile"
+        description="Manage the skills you teach and the ones you're learning."
+      />
       <ProfileView profile={user} editHref="/profile/edit" />
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2">
         <StatTile
           icon={GraduationCap}
           label="Skills I teach"
@@ -156,7 +161,7 @@ const Profile = () => {
             <Spinner size="lg" />
           </div>
         ) : user.aiSuggestionSkills && user.aiSuggestionSkills.length > 0 ? (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-4">
             {user.aiSuggestionSkills.map((skill) => (
               <UserRow
                 key={skill}
@@ -189,7 +194,7 @@ const Profile = () => {
           </span>
         )}
       </SectionPanel>
-    </div>
+    </PageBody>
   );
 };
 

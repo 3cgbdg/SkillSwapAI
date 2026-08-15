@@ -111,7 +111,7 @@ const MatchCard = ({
           : undefined
       }
     >
-      <CardHeader className="grid grid-cols-[auto_minmax(8rem,1fr)_auto] items-start gap-3 text-left">
+      <CardHeader className="grid grid-cols-[auto_minmax(8rem,1fr)_auto] items-start gap-4 text-left">
         <HoverCard>
           <HoverCardTrigger>
             <UserAvatar
@@ -171,7 +171,7 @@ const MatchCard = ({
           learn={match.other.skillsToLearn}
         />
       </CardContent>
-      <CardFooter className="mt-auto flex items-center gap-2 border-t pt-4">
+      <CardFooter className="mt-auto flex items-center gap-4 border-t pt-4">
         <Button
           size="sm"
           className="flex-1"

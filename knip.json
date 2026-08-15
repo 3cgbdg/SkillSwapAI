@@ -14,7 +14,6 @@
     }
   },
   "ignore": [
-    "frontend/src/components/layout/MobileTabBar.tsx",
     "frontend/src/components/layout/headerComponents/NavigationMenu.tsx",
     "frontend/src/components/layout/headerComponents/SearchInput.tsx",
     "frontend/src/components/layout/headerComponents/SearchInputMobile.tsx",

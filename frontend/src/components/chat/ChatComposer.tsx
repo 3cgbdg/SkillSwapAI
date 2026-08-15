@@ -19,7 +19,7 @@ export function ChatComposer({
 }) {
   return (
     <CardFooter className="bg-card shrink-0 p-0">
-      <div className="flex w-full items-end gap-3 p-4 md:px-6">
+      <div className="flex w-full items-end gap-4 p-4 md:px-6">
         <Textarea
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {

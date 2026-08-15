@@ -123,7 +123,7 @@ const Page = () => {
             <CardContent className="flex flex-col gap-4 p-0">
               <p>{currentMatch.aiExplanation}</p>
               {currentMatch.keyBenefits?.length ? (
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-4">
                   <h3 className="font-heading text-h3">Key benefits</h3>
                   <ul className="list-disc pl-5">
                     {currentMatch.keyBenefits.map((benefit) => (
@@ -147,7 +147,7 @@ const Page = () => {
                   {currentMatch.other.name}
                 </h2>
               </div>
-              <div className="mt-4 flex w-full flex-col gap-3">
+              <div className="mt-4 flex w-full flex-col gap-4">
                 <Button
                   className="justify-start gap-5"
                   onClick={() =>
@@ -180,7 +180,7 @@ const Page = () => {
 
           <MatchProgressPanel>
             {plan ? (
-              <div className="flex w-full max-w-sm flex-col gap-3">
+              <div className="flex w-full max-w-sm flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
                   <h3 className="font-heading text-h3">Overall progress</h3>
                   <p className="text-muted-foreground text-body-sm">

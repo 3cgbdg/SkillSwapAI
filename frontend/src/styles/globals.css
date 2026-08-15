@@ -112,10 +112,6 @@
     }
   }
 
-  .animate-swap-in {
-    animation: swap-in var(--duration-slower) var(--ease-spring) both;
-  }
-
   @keyframes swap-in {
     from {
       opacity: 0;
@@ -130,8 +126,7 @@
   @media (prefers-reduced-motion: reduce) {
     .animate-blink,
     .animate-fade-up,
-    .animate-fade-in,
-    .animate-swap-in {
+    .animate-fade-in {
       animation: none;
     }
   }
