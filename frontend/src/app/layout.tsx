@@ -12,11 +12,14 @@ import { cn } from "@/lib/utils";
 const FrauncesFont = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin"],
+  weight: "variable",
+  axes: ["SOFT", "WONK"],
 });
 
 const InterFont = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {

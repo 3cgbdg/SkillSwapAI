@@ -885,6 +885,14 @@ checking `rounded-3xl`/`rounded-4xl` usage (`rounded-4xl` is used once, in
 ---
 
 **3. Extend the type scale to 6 steps and configure the fonts properly.**
+`[x]` **Status: PARTIALLY VERIFIED.** `tsc --noEmit` and `lint` clean; also ran
+a full `pnpm --dir frontend build` (not required by this step, but it's the
+only available signal that `weight: "variable"` + `axes: ["SOFT","WONK"]` on
+Fraunces and the static `["400","500","600","700"]` weight array on Inter are
+accepted by Next's font loader) — build succeeded, 18 routes prerendered,
+generated woff2 files are 10-85KB each (no runaway payload). Browser gate not
+run — cannot visually confirm Fraunces renders with its SOFT/WONK character or
+inspect the network panel; Docker still unavailable.
 
 Files: `frontend/src/styles/globals.css` (`@theme inline`, lines 46–56);
 `frontend/src/app/layout.tsx` (lines 12–20).
