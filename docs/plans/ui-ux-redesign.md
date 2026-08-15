@@ -991,6 +991,24 @@ this repo) and export any wrapper through the composites barrel.
 ---
 
 **5. Re-scale the card and elevation system.**
+`[x]` **Status: VERIFIED** (mechanical + browser; see step 1's screenshot
+caveat). `--card-spacing` default → `--spacing(6)` (24px), `sm` → `--spacing(4)`
+(16px). `cardVariants`: `flat` = `border border-border` hairline (was `ring-1
+ring-foreground/10`), `raised`/`interactive` = `bg-surface-raised shadow-sm`
+(was `ring-1 ring-foreground/5`, no surface change), interactive keeps the
+existing hover-lift/active-scale. Base class `text-sm` → `text-body`.
+Light-mode shadow alphas doubled-ish (6%/4% → 12%/8% sm; 7%/5% → 14%/10% md;
+8%/5% → 16%/10% lg) so they're perceptible against the near-white surface.
+A8 baseline density grep re-run: **73** (unchanged — this step doesn't touch
+route spacing, screens 7-14 do; recorded here per the plan for step 15's
+re-check). Lint/tsc clean; grep confirms no `text-sm` in the base `cva()` arg
+and `--spacing(6)`/`--spacing(4)` present. Live in the browser: a default
+card-content computed to 24px padding (a route with its own `p-8` override —
+the dashboard hero, not yet migrated until step 8 — still shows 32px, as
+expected); `raised`/`interactive` cards compute `background-color` to the
+exact `--surface-raised` L value and `box-shadow` to the exact updated
+`--elev-shadow-sm` alpha, confirmed in both themes on `/discover`; `/schedule`
+renders with no overflow and no new console errors.
 
 Files: `frontend/src/components/ui/card.tsx`;
 `frontend/src/styles/globals.css` (`--elev-shadow-*`).

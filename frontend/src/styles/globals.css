@@ -166,11 +166,11 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --elev-shadow-sm:
-    0 1px 2px oklch(0.24 0.02 285 / 6%), 0 1px 3px oklch(0.24 0.02 285 / 4%);
+    0 1px 2px oklch(0.24 0.02 285 / 12%), 0 1px 3px oklch(0.24 0.02 285 / 8%);
   --elev-shadow-md:
-    0 4px 6px oklch(0.24 0.02 285 / 7%), 0 2px 4px oklch(0.24 0.02 285 / 5%);
+    0 4px 6px oklch(0.24 0.02 285 / 14%), 0 2px 4px oklch(0.24 0.02 285 / 10%);
   --elev-shadow-lg:
-    0 10px 15px oklch(0.24 0.02 285 / 8%), 0 4px 6px oklch(0.24 0.02 285 / 5%);
+    0 10px 15px oklch(0.24 0.02 285 / 16%), 0 4px 6px oklch(0.24 0.02 285 / 10%);
   --radius: 0.75rem;
   --sidebar: var(--card);
   --sidebar-foreground: var(--foreground);
