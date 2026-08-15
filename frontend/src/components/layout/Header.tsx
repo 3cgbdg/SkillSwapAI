@@ -110,8 +110,10 @@ const Header = () => {
       <CommandPalette />
       <header className="border-border bg-card relative flex items-center justify-between border-b px-2 py-3 md:px-6">
         <div className="flex grow items-center gap-2 md:gap-4">
-          <SidebarTrigger className="md:hidden" />
-          <HeaderLogo />
+          <SidebarTrigger />
+          <div className="md:hidden">
+            <HeaderLogo />
+          </div>
         </div>
 
         <div className="relative flex items-center gap-2 md:gap-4">
