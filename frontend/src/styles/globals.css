@@ -112,10 +112,26 @@
     }
   }
 
+  .animate-swap-in {
+    animation: swap-in var(--duration-slower) var(--ease-spring) both;
+  }
+
+  @keyframes swap-in {
+    from {
+      opacity: 0;
+      transform: scale(0.5) rotate(-15deg);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .animate-blink,
     .animate-fade-up,
-    .animate-fade-in {
+    .animate-fade-in,
+    .animate-swap-in {
       animation: none;
     }
   }

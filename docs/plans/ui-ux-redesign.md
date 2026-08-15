@@ -1152,6 +1152,37 @@ above now depends on it being true.
 ---
 
 **7. Add the `SwapAxis` composite and fix the teach/learn semantics.**
+`[x]` **Status: VERIFIED** (mechanical + browser; see step 1's screenshot
+caveat). New `SwapAxis.tsx`: teach column always renders before learn in DOM
+order, fixed icon pairing (`GraduationCap`/`BookOpen`), owns its own
+radius/border/surface so route code stays legal under the layering rule.
+`SkillPill` now has a real consumer (used inside `SwapAxis`'s columns). Added
+the `--ease-spring`/`--duration-slower` connector entrance (`animate-swap-in`
+keyframe) and listed it in the `prefers-reduced-motion` block.
+`SwapAxis.test.tsx`: 3 tests (teach-before-learn DOM order, `variant="learn"`
+maps to the learn token class and not teach, overflow `+N` renders past
+`max`) — all pass.
+
+**Found and fixed a real gap in the test setup, not just this test.**
+`vitest.setup.ts` never registered `@testing-library/react`'s `cleanup()` —
+harmless until now because `user.test.ts` (the only prior test) never
+touches the DOM. Without it, `render()` calls leak across `it()` blocks in
+the same file and multi-element queries start failing nondeterministically
+(caught this directly: `getByText` found 2 "Python" nodes on the second
+test). Added `afterEach(cleanup)` to the shared setup file so this doesn't
+bite the next composite test either. Also dropped `@testing-library/react`
+from `knip.json`'s `ignoreDependencies` now that it's genuinely used
+(knip's own hint flagged this as redundant after the change).
+
+Pre-flight enforcement check (temporarily added `matches`/`profile`/`chat`/
+`inbox`/`calendar` to the layering glob, ran lint, reverted): violation
+counts matched the plan exactly — `matches` 4, `profile` 2, `chat` 15,
+`inbox` 0, `calendar` 10.
+
+`pnpm --dir frontend exec vitest run src/components/composites/SwapAxis.test.tsx`
+green (3/3), full `pnpm --dir frontend test` green (6/6), lint/tsc/knip clean.
+Browser gate: smoke set at 1280px, both themes — no visual change (expected,
+`SwapAxis` is unconsumed until steps 9/12), no new console errors.
 
 Files: new `frontend/src/components/composites/SwapAxis.tsx` and
 `SwapAxis.test.tsx`; edit `frontend/src/components/composites/SkillPill.tsx` and

@@ -43,8 +43,7 @@
     "@types/supertest",
     "source-map-support",
     "supertest",
-    "ts-loader",
-    "@testing-library/react"
+    "ts-loader"
   ],
   "ignoreIssues": {
     "backend/src/friends/dto/get-friend.dto.ts": ["files"],
