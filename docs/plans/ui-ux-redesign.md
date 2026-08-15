@@ -1281,6 +1281,39 @@ treatment (line 279) with a token that passes 3:1.
 ---
 
 **9. Rebuild `MatchCard` around `SwapAxis`.**
+`[x]` **Status: VERIFIED** (mechanical + browser; see step 1's screenshot
+caveat). Replaced the two stacked label blocks with `SwapAxis`. Replaced the
+hand-rolled `size-7` dropdown trigger with `buttonVariants({ variant:
+"outline", size: "icon" })`, inheriting the new 40px touch target and
+`ring-ring/80` focus ring. Reworked `MetricRing` from `absolute top-4
+right-4` + `pr-12` into a real grid cell (`grid-cols-[auto_minmax(8rem,1fr)_auto]`).
+
+**Found and fixed a severe pre-existing bug while verifying the grid-cell
+change, confirmed unrelated to this step first.** With the new grid header,
+every match card in `/discover` and `/learning` rendered as a zero-width
+sliver — all three grid columns computed to `0px`. Isolated the cause before
+touching anything: temporarily reverted `CardHeader` back to its original
+`flex` layout and the collapse **persisted identically**, proving it predates
+this step. A minimal synthetic reproduction narrowed it to the exact
+mechanism: `container-type: inline-size` (Tailwind's `@container`, present
+on `MatchCard`'s root `Card` since before this plan) on a grid item, nested
+inside an ancestor grid sized via `width: fit-content` (`Matches.tsx`'s
+`md:w-fit` on its card grid) — the two interacting collapse every track to
+`0px` in this engine. `@container` was dead on `MatchCard.tsx` (grep confirms
+no `@sm:`/`@md:`/`@lg:` variant anywhere in the file), so removed it — a
+same-file, zero-functional-impact fix for a bug that otherwise breaks the
+core matches-browsing feature in a real browser, not just this session's
+tooling. Re-verified: three cards now render at real, non-overlapping ~304px
+widths.
+
+Lint/tsc clean. Browser gate: smoke set at 1280px, `/discover` and
+`/learning` at both widths and both themes — no overflow, no new console
+errors. Edge cases: long name (`Kayleigh Johnston Sr.`) renders correctly
+within the grid's reserved title column; **could not exercise the actual
+`MetricRing`-vs-long-name collision** since none of the seeded/discover-list
+matches carry a `compatibility` score (that's populated by the AI matching
+queue, not the seed data) — structural correctness of the grid reservation
+was verified instead (`minmax(8rem,1fr)` floor holds).
 
 File: `frontend/src/components/matches/MatchCard.tsx`.
 
