@@ -3,7 +3,8 @@
 import { Suspense } from "react";
 
 import Calendar from "@/components/calendar/Calendar";
-import { AsyncBoundary, DataEmpty } from "@/components/composites";
+import { AsyncBoundary, DataEmpty, SkeletonKit } from "@/components/composites";
+import { PageBody, PageHeader, PageSection } from "@/components/layouts";
 import {
   Card,
   CardContent,
@@ -11,7 +12,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { SkeletonKit } from "@/components/composites";
 import useSessions from "@/hooks/useSessions";
 import { format, isToday } from "date-fns";
 import { CalendarDays } from "lucide-react";
@@ -29,14 +29,20 @@ const Page = () => {
     );
 
   return (
-    <div className="flex flex-col gap-10">
+    <PageBody>
+      <PageHeader title="Schedule" />
+
       <Suspense fallback={<SkeletonKit.CalendarWeekFallback />}>
         <Calendar />
       </Suspense>
 
-      <section className="flex flex-col gap-4">
-        <h2 className="text-2xl font-bold leading-8">Upcoming sessions</h2>
-        <AsyncBoundary isLoading={isLoading} isError={isError} error={error}>
+      <PageSection title="Upcoming sessions">
+        <AsyncBoundary
+          isLoading={isLoading}
+          isError={isError}
+          error={error}
+          loadingFallback={<SkeletonKit.CardGrid count={2} />}
+        >
           {upcoming.length === 0 ? (
             <DataEmpty
               icon={CalendarDays}
@@ -69,8 +75,8 @@ const Page = () => {
             </div>
           )}
         </AsyncBoundary>
-      </section>
-    </div>
+      </PageSection>
+    </PageBody>
   );
 };
 

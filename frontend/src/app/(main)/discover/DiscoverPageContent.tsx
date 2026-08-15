@@ -6,8 +6,7 @@ import { Users } from "lucide-react";
 import Link from "next/link";
 
 import Matches from "@/components/matches/Matches";
-import { AsyncBoundary, DataEmpty } from "@/components/composites";
-import { WarmScholarEmptyArt } from "@/components/illustrations/WarmScholarEmptyArt";
+import { AsyncBoundary, DataEmpty, SkeletonKit } from "@/components/composites";
 import useMatches from "@/hooks/useMatches";
 import MatchesService from "@/services/MatchesService";
 import type { IMatch } from "@/types/match";
@@ -30,7 +29,12 @@ function MatchesResult({
   emptyDescription: ReactNode;
 }) {
   return (
-    <AsyncBoundary isLoading={isLoading} isError={isError} error={error}>
+    <AsyncBoundary
+      isLoading={isLoading}
+      isError={isError}
+      error={error}
+      loadingFallback={<SkeletonKit.MatchesPage />}
+    >
       {matches && matches.length > 0 ? (
         <Matches matches={matches} option={option} />
       ) : (
@@ -38,9 +42,7 @@ function MatchesResult({
           icon={Users}
           title={emptyTitle}
           description={emptyDescription}
-        >
-          <WarmScholarEmptyArt className="text-primary h-16 w-24" />
-        </DataEmpty>
+        />
       )}
     </AsyncBoundary>
   );

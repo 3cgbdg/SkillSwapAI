@@ -2,14 +2,9 @@
 
 import { useEffect } from "react";
 
+import { WarmScholarEmptyArt } from "@/components/illustrations/WarmScholarEmptyArt";
+import { PageHeader } from "@/components/layouts";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 export default function MainError({
   error,
@@ -28,19 +23,21 @@ export default function MainError({
 
   return (
     <div className="flex min-h-[50vh] items-center justify-center p-4">
-      <Card elevation="raised" className="max-w-md w-full">
-        <CardHeader>
-          <CardTitle>Something went wrong</CardTitle>
-          <CardDescription>
-            {error.message || "An unexpected error occurred."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button type="button" onClick={reset}>
-            Try again
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="w-full max-w-md">
+        <PageHeader
+          className="flex-col items-center text-center sm:flex-col sm:items-center"
+          illustration={
+            <WarmScholarEmptyArt className="text-primary h-16 w-24" />
+          }
+          title="Something went wrong"
+          description={error.message || "An unexpected error occurred."}
+          actions={
+            <Button type="button" onClick={reset}>
+              Try again
+            </Button>
+          }
+        />
+      </div>
     </div>
   );
 }

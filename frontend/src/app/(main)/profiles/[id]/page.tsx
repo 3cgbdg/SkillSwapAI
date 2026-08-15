@@ -6,7 +6,7 @@ import ProfilesService from "@/services/ProfilesService";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, MessageSquareMore } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { AsyncBoundary } from "@/components/composites";
+import { AsyncBoundary, SkeletonKit } from "@/components/composites";
 import { Button } from "@/components/ui/button";
 
 export default function PublicProfilePage() {
@@ -37,7 +37,12 @@ export default function PublicProfilePage() {
   });
 
   return (
-    <AsyncBoundary isLoading={isLoading} isError={isError} error={error}>
+    <AsyncBoundary
+      isLoading={isLoading}
+      isError={isError}
+      error={error}
+      loadingFallback={<SkeletonKit.PublicProfileGrid />}
+    >
       {profile ? (
         <ProfileView
           profile={profile}

@@ -1767,6 +1767,69 @@ screen to migrate.
 ---
 
 **14. Empty, loading and error states — and the `/schedule` route shell.**
+`[x]` **Status: VERIFIED** (mechanical + browser; see step 1's screenshot
+caveat). `/schedule`: wrapped in `PageBody` + `PageHeader` ("Schedule") +
+`PageSection` ("Upcoming sessions"), dropped the ad-hoc `text-2xl font-bold
+leading-8` heading. `DataEmpty`: dropped `border-dashed` (now `bg-muted/30`
+alone); added an `illustration?: boolean` prop defaulting to `true` so
+`WarmScholarEmptyArt` renders automatically — the 2 call sites that
+previously had to manually pass it as `children` (dashboard, discover) had
+that now-redundant pass removed; `icon` becomes a fallback used only when a
+caller explicitly opts out with `illustration={false}` (no call site does,
+matching "the default rather than an opt-in").
+
+`not-found.tsx` and `(main)/error.tsx`: replaced the plain `Card` with
+`PageHeader` (centered/stacked via a className override) plus the same
+illustration, giving both real page-header treatment instead of a bare
+title+description box.
+
+**`SkeletonKit`: re-tuned every dimension against measurements, not just
+guesses — two of my first-pass numbers were caught this way.** `PageHeader`,
+`ProfilePage`, and `PublicProfileGrid` skeletons rebuilt to match the actual
+new layouts (dashboard's hero shrank from a big card to `PageHeader` +
+`SectionPanel`; `ProfilePage`/`ProfileView` moved from stacked blocks to a
+`grid md:grid-cols-5` with one `SwapAxis` panel, not two). `ChatLayoutSkeleton`
+now uses the same `--header-h`/`--space-page` calc() as the real chat pane
+(step 6/13), not the old `min(75dvh,800px)` guess. Measured real elements
+live and corrected two skeletons that were off enough to cause a visible
+jump: `QuickLinkTile` is 149px, not the 112px (`h-28`) I'd guessed —
+corrected to `h-36` (144px); a real `MatchCard` is 442px, not the 256px
+(`h-64`) I'd guessed — corrected to `h-[440px]`. `StatTile` (46px measured)
+was already a close match to `h-12` (48px), left alone. `CardBlock`/`CardGrid`
+is shared between `/discover`'s full `MatchCard` (442px, now correctly
+matched) and the dashboard's simpler match-preview cards (not independently
+measured — no real match data available to render one live); calibrated to
+the larger, more failure-prone case deliberately, since an oversized skeleton
+just shrinks slightly on load while an undersized one visibly jumps.
+
+**`AsyncBoundary`: audited every call site rather than blindly wrapping
+all of them.** Of 9 total, only 5 actually pass `isLoading` (the other 4 pass
+`isError` only and never show a loading state through this component at
+all, so a `loadingFallback` there would be dead code). Gave each of the 5 the
+matching `SkeletonKit` entry: `(chat)/layout.tsx` →
+`ChatLayoutSkeleton`, `DiscoverPageContent.tsx` → `MatchesPage`,
+`profiles/[id]/page.tsx` → `PublicProfileGrid`, `schedule/page.tsx` →
+`CardGrid count={2}`. Left `Header.tsx`'s `NotificationsBell` on
+`AsyncBoundary`'s bare-spinner default deliberately — it's a small
+icon-button loading state, not a page region, and none of the page-level
+skeletons fit that context without looking wrong.
+
+tsc, lint, knip, vitest (6/6) all pass.
+
+Browser gate: `/does-not-exist` (404) and `/does-not-exist-test-2` at
+1280px/390px, both themes — illustration renders, `<h1>` in Fraunces, no
+overflow. `/schedule`, `/dashboard`, `/discover`, `/inbox` at both widths,
+dark mode spot-checked — no overflow, `DataEmpty` illustrations confirmed
+present via `svg[role="img"]` count. Edge case (no matches/no sessions):
+already the live state for the test account — both dashboard `DataEmpty`s
+render with illustrations. **Investigated one console entry rather than
+dismissing it**: a "Hydration failed" error appeared once; did not reproduce
+on a fresh, isolated navigation to a new 404 URL, and this session's
+console-message buffer is already known to persist stale entries across
+navigations (established in earlier steps) — treated as a one-time Turbopack
+HMR artifact from mid-edit hot-reload, not a reproducible defect, since a
+genuine hydration bug in a static server component with no client-only
+state would be expected to reproduce deterministically.
 
 Files: `frontend/src/components/composites/{DataEmpty,SkeletonKit,AsyncBoundary}.tsx`;
 `frontend/src/app/not-found.tsx`; `frontend/src/app/(main)/error.tsx`;

@@ -1,7 +1,7 @@
 "use client";
 
 import ChatSidebar from "@/components/chat/ChatSidebar";
-import { AsyncBoundary } from "@/components/composites";
+import { AsyncBoundary, SkeletonKit } from "@/components/composites";
 import { useQuery } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
 import ChatsService from "@/services/ChatsService";
@@ -33,7 +33,12 @@ export default function ChatLayout({
   const showSidebar = isMobile === null ? true : !isMobile || !id;
 
   return (
-    <AsyncBoundary isLoading={isLoading} isError={isError} error={error}>
+    <AsyncBoundary
+      isLoading={isLoading}
+      isError={isError}
+      error={error}
+      loadingFallback={<SkeletonKit.ChatLayoutSkeleton />}
+    >
       <div className="flex min-h-[calc(100dvh_-_var(--header-h)_-_var(--space-page)_*_2)] flex-col gap-4 md:min-h-[calc(100dvh_-_var(--header-h)_-_var(--space-page)_*_2_-_4.5rem)] md:flex-row md:gap-6">
         {showSidebar ? <ChatSidebar /> : null}
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>

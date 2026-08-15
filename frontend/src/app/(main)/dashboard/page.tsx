@@ -23,7 +23,6 @@ import {
   StatTile,
   TaskChecklistLink,
 } from "@/components/composites";
-import { WarmScholarEmptyArt } from "@/components/illustrations/WarmScholarEmptyArt";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import { PageBody, PageHeader, PageSection } from "@/components/layouts";
 import { buttonVariants } from "@/components/ui/button";
@@ -185,9 +184,7 @@ const Page = () => {
                 Complete your profile
               </Link>
             }
-          >
-            <WarmScholarEmptyArt className="text-primary h-16 w-24" />
-          </DataEmpty>
+          />
         )}
       </PageSection>
 
