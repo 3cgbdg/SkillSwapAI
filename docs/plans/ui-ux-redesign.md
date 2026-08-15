@@ -860,6 +860,9 @@ already passes those, and mirroring "for symmetry" would regress it.
 ---
 
 **2. Build the surface ladder and wire the dead tokens.**
+`[x]` **Status: PARTIALLY VERIFIED.** `check:contrast` (44/44), `lint` (0
+errors, 9 warnings), `knip` (clean), `tsc --noEmit` (clean) all pass. Browser
+gate not run — Docker still unavailable (see step 1's status note).
 
 File: `frontend/src/styles/globals.css`.
 
