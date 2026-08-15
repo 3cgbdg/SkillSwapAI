@@ -34,10 +34,22 @@ function SwapAxisColumn({
         <span>{label}</span>
       </div>
       <div className="flex flex-wrap gap-1.5">
-        {visible.map((skill) => (
-          <SkillPill key={skill.title} label={skill.title} variant={variant} />
-        ))}
-        {overflow > 0 ? <Badge variant="outline">+{overflow}</Badge> : null}
+        {skills.length === 0 ? (
+          <span className="text-muted-foreground text-body-sm">
+            No skills yet
+          </span>
+        ) : (
+          <>
+            {visible.map((skill) => (
+              <SkillPill
+                key={skill.title}
+                label={skill.title}
+                variant={variant}
+              />
+            ))}
+            {overflow > 0 ? <Badge variant="outline">+{overflow}</Badge> : null}
+          </>
+        )}
       </div>
     </div>
   );

@@ -69,6 +69,7 @@ const eslintConfig = [
       "src/app/**/*.{js,jsx,ts,tsx}",
       "src/features/**/*.{js,jsx,ts,tsx}",
       "src/components/matches/**/*.{js,jsx,ts,tsx}",
+      "src/components/profile/**/*.{js,jsx,ts,tsx}",
     ],
     rules: {
       "no-restricted-syntax": [

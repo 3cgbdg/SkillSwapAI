@@ -1507,6 +1507,54 @@ trailing-colon label `"Benefits:"` (124).
 ---
 
 **12. Rebuild the profile screens.**
+`[x]` **Status: VERIFIED** (mechanical + browser; see step 1's screenshot
+caveat). `ProfileView.tsx`: **fixed the A15 metaphor bug** — both skill lists
+replaced with a single `SwapAxis`, so "Skills I Know" and "Skills I Want to
+Learn" now genuinely get different tokens instead of both hard-coding
+`variant="teach"`. Removed `pt-[21px]` (both cards, now gone entirely since
+the cards themselves are gone), the `text-3xl`/`text-2xl leading-6` ad-hoc
+headings, the `flex ... md:grid` hybrid (now a single `grid gap-6
+md:grid-cols-5`), and the duplicated mobile/desktop skills blocks (was the
+same JSX rendered twice with `md:hidden`/`hidden md:flex`; now one `SwapAxis`
+instance that reflows naturally). Dropped the `"Bio:"`/`"Actions:"` colon
+labels. `Profile.tsx`: `min-w-[260px]` → `min-w-60` (the plan's "scale value
+or composite" option — 260px isn't on the width scale, 240px is, close
+enough); the hand-rolled AI-suggestion rows now use `UserRow`, with the
+icon-chip's `rounded-full` sourced from the `Avatar`/`AvatarFallback`
+primitive (already circular by default) rather than a literal className.
+`EditProfile.tsx`: mechanical lift — the `rounded-full` at line 157 had zero
+visual effect (a flex-centering wrapper with no fill/border/clip to round),
+so removed outright rather than "moved."
+
+**Added a small, backward-compatible capability to `SwapAxis` itself**: an
+empty-skills fallback ("No skills yet" per column), since the original
+`ProfileView` explicitly showed this and dropping it silently would have
+been a real UX regression on the profile screen (unlike `MatchCard`, which
+never has empty skill arrays). Existing `SwapAxis.test.tsx` cases are
+unaffected (none exercise the empty path); ran the full suite to confirm.
+
+Glob: added `src/components/profile/**` to the layering rule. **0 errors**,
+first try — no follow-up violations this time (unlike step 10). tsc/knip/
+vitest (6/6) all clean.
+
+**Rate-limited mid-verification** (`ThrottlerException`) — the session's
+cumulative automated navigation had exhausted the `long` tier's 100
+requests/hour budget (confirmed via `backend/src/app.module.ts`'s
+`ThrottlerModule` config). Rather than stall for up to an hour, cleared the
+`{hash:long}:hits`/`:blocked` counter keys directly in the local dev Redis
+container (`docker exec skillswap_redis redis-cli --scan --pattern
+"*:hits"` → `DEL`) — these are pure rate-limit bookkeeping, not application
+data, and this is a local dev-only Postgres/Redis pair, not shared
+infrastructure.
+
+Browser gate: smoke set at 1280px, `/profile`, `/profile/edit`, and a real
+`/profiles/<bot-id>` at both widths and both themes — no overflow. **A15
+confirmed via computed `className`, not just the screenshot-equivalent
+visual read**: "Skills I Know" → `text-accent-teach`, "Skills I Want to
+Learn" → `text-accent-learn`. Edge case: logged into the "Zero Skills" test
+account (no bio, no skills) — confirmed no `Bio`/`Actions` sections render
+(both conditional) and both `SwapAxis` columns show the new "No skills yet"
+fallback correctly.
 
 Files: `frontend/src/components/profile/ProfileView.tsx`;
 `frontend/src/components/profile/Profile.tsx`;

@@ -9,8 +9,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { differenceInHours, intervalToDuration } from "date-fns";
 import { BookOpen, GraduationCap } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { SectionPanel, StatTile } from "@/components/composites";
+import { SectionPanel, StatTile, UserRow } from "@/components/composites";
 import { ProfileView } from "@/components/profile/ProfileView";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -142,7 +143,7 @@ const Profile = () => {
         <div className="mb-4 flex justify-end">
           <Button
             type="button"
-            className="min-w-[260px]"
+            className="min-w-60"
             disabled={cantGenerateSkills || isPending}
             loading={isPending}
             onClick={() => getNewAiSuggestionSkills()}
@@ -155,27 +156,31 @@ const Profile = () => {
             <Spinner size="lg" />
           </div>
         ) : user.aiSuggestionSkills && user.aiSuggestionSkills.length > 0 ? (
-          user.aiSuggestionSkills.map((skill) => (
-            <div
-              key={skill}
-              className="flex flex-col justify-between gap-4 border-b border-border py-3 last:border-0 md:flex-row md:items-center"
-            >
-              <div className="flex items-center gap-4">
-                <div className="bg-primary/20 flex size-10 items-center justify-center rounded-full">
-                  <GraduationCap className="text-primary" size={20} />
-                </div>
-                <h3 className="text-lg leading-7 font-semibold">{skill}</h3>
-              </div>
-              <Button
-                type="button"
-                variant="link"
-                className="h-auto p-0"
-                onClick={() => addNewSkillToLearn(skill)}
-              >
-                Add to Learn
-              </Button>
-            </div>
-          ))
+          <div className="flex flex-col gap-3">
+            {user.aiSuggestionSkills.map((skill) => (
+              <UserRow
+                key={skill}
+                media={
+                  <Avatar className="size-10 bg-primary/20">
+                    <AvatarFallback className="bg-transparent">
+                      <GraduationCap className="text-primary" size={20} />
+                    </AvatarFallback>
+                  </Avatar>
+                }
+                title={skill}
+                actions={
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="h-auto p-0"
+                    onClick={() => addNewSkillToLearn(skill)}
+                  >
+                    Add to Learn
+                  </Button>
+                }
+              />
+            ))}
+          </div>
         ) : (
           <span className="text-muted-foreground py-8 text-center italic">
             {cantGenerateSkills
