@@ -931,6 +931,24 @@ it is why it lands before any screen work.
 ---
 
 **4. Re-scale the control primitives.**
+`[x]` **Status: VERIFIED** (mechanical + browser; see step 1's note on the
+screenshot caveat). `tsc --noEmit` and `lint` clean; the A9 grep
+(`text-(sm|xs)` in button/badge base `cva()` argument) returns no match — the
+one hit is in `xs`'s size variant, which the acceptance criterion explicitly
+allows. Also strengthened the focus ring from `ring-ring/50` to `ring-ring/80`
+across button/input/textarea/badge/item — computed the blended contrast by
+hand (same alpha-compositing math as the contrast script): at /50 light-mode
+was only 1.79:1 against background, at /80 it's 3.41-3.42:1 (dark: 5.95/5.46),
+clearing A18's 3:1. Live in the browser: default `Button` computed height
+40px, `Input` 40px, `Badge` 24px. `/profile/edit`'s invalid-name path shows
+the validation message, but `EditProfile.tsx` doesn't actually set
+`aria-invalid` on the input (pre-existing gap in that route, not touched by
+this step's file list) — set it directly to confirm the ring/border styling
+itself renders correctly at the new 40px size, which it does. Console showed
+the same pre-existing 401/429 pattern plus WebSocket-upgrade failures
+(Socket.IO falls back to polling successfully, confirmed via a direct fetch to
+the polling endpoint) — an environment artifact unrelated to this step's
+CSS-only changes.
 
 Files: `frontend/src/components/ui/{button,input,textarea,badge,item,field}.tsx`.
 

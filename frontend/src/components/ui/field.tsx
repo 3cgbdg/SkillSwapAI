@@ -25,7 +25,7 @@ export function Field({
   return (
     <div className={cn("flex flex-col gap-2", className)}>
       {label ? (
-        <Label htmlFor={htmlFor} className="text-sm font-medium">
+        <Label htmlFor={htmlFor} className="text-body-sm font-medium">
           {label}
         </Label>
       ) : null}
@@ -36,7 +36,7 @@ export function Field({
         </p>
       ) : null}
       {error ? (
-        <p id={errorId} className="text-destructive text-sm" role="alert">
+        <p id={errorId} className="text-destructive text-body-sm" role="alert">
           {error}
         </p>
       ) : null}
