@@ -113,7 +113,7 @@ const MatchCard = ({
     >
       <CardHeader className="grid grid-cols-[auto_minmax(8rem,1fr)_auto] items-start gap-3 text-left">
         <HoverCard>
-          <HoverCardTrigger className="rounded-full">
+          <HoverCardTrigger>
             <UserAvatar
               name={match.other.name}
               imageUrl={match.other.imageUrl}

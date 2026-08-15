@@ -1333,6 +1333,57 @@ ring. Rework the `MetricRing` from `absolute top-4 right-4` + `pr-12`
 
 **10. Adopt the page frame in Discover / Learning, and clear the `matches`
 folder for its glob commit.**
+`[x]` **Status: VERIFIED** (mechanical + browser; see step 1's screenshot
+caveat). Replaced the inline `<h1>` + description with `PageHeader` +
+`PageBody`, moved the "Generating your AI training plan" banner into
+`SectionPanel`, replaced the four arbitrary `min-w-[…]`/`max-w-[450px]`
+values with scale classes (`min-w-52/56/60`) and dropped the `md:w-fit`
+grid sizing entirely in favor of a plain responsive `grid gap-(--space-stack)
+sm:grid-cols-2 xl:grid-cols-3` (see below for why `w-fit` specifically had to
+go, not just get renamed). `ModuleAccordion.tsx`: mechanical lift
+(`rounded-[10px]` → `rounded-md`, `gap-[7px]` → `gap-2`).
+
+**The mechanical lift alone didn't clear the folder — two more violations
+surfaced once the glob actually went on, both pre-existing, both fixed
+in-scope.** (1) `rounded-md` on `ModuleAccordion.tsx`'s item still matched
+`no-restricted-syntax` (any `rounded-*`, not just arbitrary brackets, is
+banned in feature code) — moving a magic number to a scale token doesn't
+exempt it from the rule, only moving it out of route code does. Added a
+`variant` prop (`divider` | `card`) to the `AccordionItem` primitive itself
+(`ui/accordion.tsx`, its only other consumer, so safe) and pointed
+`ModuleAccordion.tsx` at `variant="card"`. (2) `MatchCard.tsx:116`
+(`rounded-full` on the avatar's `HoverCardTrigger`) — the plan's own
+inventory table assigned this to step 9, but step 9's actual instructions
+never mentioned it, so it was never touched; `Avatar` already bakes in
+`rounded-full` internally, so the wrapper's copy was redundant — removed.
+
+**Why `w-fit` had to go, not just get a token name:** it's half of the exact
+mechanism that caused step 9's zero-width grid collapse
+(`container-type: inline-size` + an ancestor grid sized via
+`width: fit-content`). Step 9 fixed its half (`MatchCard`'s dead
+`@container`); leaving `w-fit` in place here would have left the other half
+of a fragile, already-proven-to-break pattern live for no reason — `max-w-[450px]`
+already needed replacing per this step's own instructions, and the page is
+now wrapped in `PageBody`'s `Container`, which already owns max-width, so
+`w-fit`'s job (bound the grid's width) is redundant.
+
+Glob: added `src/components/matches/**` to `eslint.config.mjs`'s layering
+rule (added first, then lint run per the plan — no grep proxy). **0 errors**
+in the folder. tsc/knip clean.
+
+Browser gate: smoke set at 1280px, `/discover`, `/learning`, and
+`/discover?skill=react`-style filtering at both widths and both themes — no
+overflow. Edge case: filtered to a nonexistent skill, confirmed the internal
+`DataEmpty` + `InlineSkillPicker` renders correctly under `PageHeader`
+(the top-level empty state in `DiscoverPageContent.tsx`, a different,
+untouched file, still has no page frame — out of this step's explicit file
+scope, noted not silently accepted).
+
+**Backend died mid-verification with no crash log** (last log line was a
+normal "Watching for file changes", then nothing — not the disk-full/socket
+issue from earlier, disk had 7.1GB free this time). Restarted it and
+continued; not investigated further since it self-resolved and is
+infrastructure, not app code.
 
 Files: `frontend/src/components/matches/Matches.tsx`;
 `frontend/src/components/matches/ModuleAccordion.tsx`.

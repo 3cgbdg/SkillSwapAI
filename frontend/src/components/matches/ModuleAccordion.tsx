@@ -71,10 +71,7 @@ const ModuleAccordion = ({
   });
 
   return (
-    <AccordionItem
-      value={itemValue}
-      className="rounded-[10px] border border-border bg-muted/40 px-4"
-    >
+    <AccordionItem value={itemValue} variant="card">
       <AccordionTrigger className="min-h-[94px] py-4 hover:no-underline">
         <div className="flex w-full flex-row items-start justify-between gap-2 sm:items-center">
           <div className="flex max-w-[280px] flex-col gap-2 sm:max-w-[450px] sm:gap-4">
@@ -134,7 +131,7 @@ const ModuleAccordion = ({
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Clock size={16} />
-          <div className="flex items-center gap-[7px]">
+          <div className="flex items-center gap-2">
             <span className="font-semibold text-foreground">Timeline:</span>
             <span>{module.timeline} weeks</span>
           </div>
