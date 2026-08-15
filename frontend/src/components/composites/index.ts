@@ -1,5 +1,6 @@
 export { AsyncBoundary } from "./AsyncBoundary";
 export { ChatBubble } from "./ChatBubble";
+export { DashboardMatchCard } from "./DashboardMatchCard";
 export { TaskChecklistLink } from "./TaskChecklistLink";
 export { DataEmpty } from "./DataEmpty";
 export {
