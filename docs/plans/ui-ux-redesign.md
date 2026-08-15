@@ -774,16 +774,26 @@ network no unexpected 4xx/5xx. The **smoke set** is `/dashboard`, `/discover`,
 ---
 
 **1. Add a re-runnable contrast checker and fix the failing light-mode tokens.**
-`[x]` **Status: PARTIALLY VERIFIED.** `check:contrast` (44/44 pairs, gate
-proven to fail on revert), `lint` (0 errors, 9 warnings ≤ 10 baseline), and
-`knip` (clean) all pass. The browser gate did **not** run: Docker Desktop's
-backend was stuck on a stale `AF_UNIX` socket
-(`%LOCALAPPDATA%\Docker\run\dockerInference`, "The file cannot be accessed by
-the system") that survived killing every Docker process and had no running
-WSL distro holding it — likely needs a host reboot to clear. Per user
-direction, this step (and the plan generally) proceeds on mechanical evidence
-only until Docker is available again; re-run the smoke-set browser gate for
-this step once it is.
+`[x]` **Status: VERIFIED** (mechanical + browser, with a caveat). `check:contrast`
+(44/44 pairs, gate proven to fail on revert), `lint` (0 errors, 9 warnings ≤ 10
+baseline), and `knip` (clean) all pass. Docker was initially stuck on a stale
+`AF_UNIX` socket (`%LOCALAPPDATA%\Docker\run\dockerInference`) but recovered
+after killing Docker processes, deleting the socket, and relaunching. Full
+stack brought up (Postgres+Redis via compose, migrate, seed, backend,
+frontend), a real account created via browser signup, a friend added and
+auto-accepted, a chat thread with 2 messages established. Smoke set
+(`/dashboard`, `/discover`, `/inbox`) driven live at 1280px and 390px in both
+themes via DOM/computed-style/console/network inspection: no horizontal
+overflow at 390px in either theme, `--muted`/`--secondary`/`--accent`/
+`--surface-raised` computed as distinct oklch values in both themes (surface
+ladder confirmed live, not just via the token file), body font-size 16px/Inter
+confirmed, Fraunces confirmed on headings. **Caveat: the Browser pane in this
+session does not composite frames, so `computer.screenshot` fails** — no pixel
+screenshots were captured for any step; DOM/style/console/network inspection
+via `javascript_exec` substituted throughout. Console showed only pre-existing
+401s (token-refresh cycle, not new) and some 429s from this session's own
+rapid automated navigation exceeding the ThrottlerGuard's short tier — not a
+defect introduced by this step.
 Also fixed, beyond the step's named token list, because the checked-in pair
 table requires them and no other step owns them: `--brand-accent` (was
 2.00:1/2.03:1 light against background/card, non-text 3:1 requirement — step
@@ -860,9 +870,13 @@ already passes those, and mirroring "for symmetry" would regress it.
 ---
 
 **2. Build the surface ladder and wire the dead tokens.**
-`[x]` **Status: PARTIALLY VERIFIED.** `check:contrast` (44/44), `lint` (0
-errors, 9 warnings), `knip` (clean), `tsc --noEmit` (clean) all pass. Browser
-gate not run — Docker still unavailable (see step 1's status note).
+`[x]` **Status: VERIFIED** (mechanical + browser; see step 1's note on the
+screenshot caveat). `check:contrast` (44/44), `lint` (0 errors, 9 warnings),
+`knip` (clean), `tsc --noEmit` (clean) all pass. Smoke set + `/schedule` driven
+live in both themes; surface-ladder tokens confirmed as 6+ distinct computed
+lightness steps in both light and dark (background < surface < muted <
+surface-raised < secondary < accent, roughly, per theme). No new console
+errors or overflow.
 
 File: `frontend/src/styles/globals.css`.
 
@@ -885,14 +899,14 @@ checking `rounded-3xl`/`rounded-4xl` usage (`rounded-4xl` is used once, in
 ---
 
 **3. Extend the type scale to 6 steps and configure the fonts properly.**
-`[x]` **Status: PARTIALLY VERIFIED.** `tsc --noEmit` and `lint` clean; also ran
-a full `pnpm --dir frontend build` (not required by this step, but it's the
-only available signal that `weight: "variable"` + `axes: ["SOFT","WONK"]` on
-Fraunces and the static `["400","500","600","700"]` weight array on Inter are
-accepted by Next's font loader) — build succeeded, 18 routes prerendered,
-generated woff2 files are 10-85KB each (no runaway payload). Browser gate not
-run — cannot visually confirm Fraunces renders with its SOFT/WONK character or
-inspect the network panel; Docker still unavailable.
+`[x]` **Status: VERIFIED** (mechanical + browser; see step 1's note on the
+screenshot caveat). `tsc --noEmit` and `lint` clean; full `pnpm --dir frontend
+build` succeeds (18 routes, woff2 10-85KB each). Live in the browser:
+`getComputedStyle(document.body).fontFamily` is `"Inter, \"Inter
+Fallback\""` at `fontSize: 16px`; dashboard `<h1>` computed `fontFamily` is
+`"Fraunces, \"Fraunces Fallback\""` at `fontWeight: 700`. Cannot confirm the
+SOFT/WONK axis *rendering* itself (that requires a pixel comparison the
+screenshot outage rules out here) — only that the font-face loads and applies.
 
 Files: `frontend/src/styles/globals.css` (`@theme inline`, lines 46–56);
 `frontend/src/app/layout.tsx` (lines 12–20).
