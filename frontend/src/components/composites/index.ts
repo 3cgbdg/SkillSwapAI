@@ -7,6 +7,7 @@ export {
   FloatingPanelSurface,
 } from "./FloatingPanel";
 export { MetricRing } from "./MetricRing";
+export { QuickLinkTile } from "./QuickLinkTile";
 export { SectionPanel } from "./SectionPanel";
 export { SegmentedControl } from "./SegmentedControl";
 export type { SegmentedOption } from "./SegmentedControl";

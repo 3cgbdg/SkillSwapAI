@@ -1233,6 +1233,34 @@ Verified counts under the actual rule: **`matches` 4, `profile` 2, `chat` 15,
 ---
 
 **8. Rebuild the dashboard.**
+`[x]` **Status: VERIFIED** (mechanical + browser; see step 1's screenshot
+caveat). Replaced the hand-rolled hero `Card` with `PageHeader` (welcome
+copy) + `SectionPanel` (completeness progress/checklist). Moved `QuickLink`
+into a new `QuickLinkTile` composite (exported from the barrel). Widened the
+two `gap-3` grids (stat tiles, quick-access) to `--space-stack`. Dropped
+`text-sm` from the match-card description and the "View all" link in favour
+of the body/body-sm steps.
+
+**The brand-accent icon instruction is already satisfied — no change made.**
+The plan's step 8 text says to "replace the failing `text-brand-accent` icon
+treatment... with a token that passes 3:1," written when `--brand-accent`
+itself was 2.00:1. Step 1 (per explicit user direction, since the checked-in
+contrast table required it and no other step owned it) already darkened
+`--brand-accent` to 4.85:1/4.92:1 light. `text-brand-accent` on the
+`QuickLinkTile` icon now passes 3:1 as-is, so swapping to a different token
+would be undoing a fix that already landed rather than applying one — left
+the class alone.
+
+Lint/tsc clean. Browser gate: smoke set at 1280px, `/dashboard` at 1280px
+and 390px in both themes — no horizontal overflow, `PageHeader`'s `<h1>`
+renders in Fraunces at the right size, `SectionPanel` picks up the new card
+padding/elevation. **Edge case (both required sub-cases exercised):** created
+a second account, then stripped its skills via `/profile/edit` since signup
+itself enforces `.min(1)` on both lists — confirmed `needsOnboarding` renders
+(0% completeness, onboarding copy) and both `DataEmpty` states (matches,
+sessions) render correctly under the new layout. Noticed and left alone (out
+of scope, pre-existing, unrelated to files this step touches): a Base UI dev
+warning about an uncontrolled `FieldControl` in the onboarding skill picker.
 
 File: `frontend/src/app/(main)/dashboard/page.tsx`; new
 `frontend/src/components/composites/QuickLinkTile.tsx` (+ barrel export).
