@@ -26,7 +26,8 @@ export default function AppSidebar() {
         <Link href="/dashboard" className="flex items-center gap-2 px-2">
           <Logo size={32} className="shrink-0" />
           <span className="truncate font-heading text-sm font-semibold group-data-[collapsible=icon]:hidden">
-            SkillSwap
+            <span className="text-primary">Skill</span>
+            <span className="text-brand-accent">Swap</span> AI
           </span>
         </Link>
       </SidebarHeader>

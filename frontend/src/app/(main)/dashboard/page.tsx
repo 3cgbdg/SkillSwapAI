@@ -1,23 +1,11 @@
 "use client";
 
-import useProfile from "@/hooks/useProfile";
-import useMatches from "@/hooks/useMatches";
-import useSessions from "@/hooks/useSessions";
-import {
-  Award,
-  BookOpen,
-  Calendar,
-  MessageSquare,
-  Sparkles,
-  Star,
-  User,
-  Users,
-} from "lucide-react";
+import { Award, BookOpen, Calendar, Sparkles, Star, Users } from "lucide-react";
 import Link from "next/link";
 
 import {
+  DashboardMatchCard,
   DataEmpty,
-  QuickLinkTile,
   SectionPanel,
   SkeletonKit,
   StatTile,
@@ -25,19 +13,16 @@ import {
 } from "@/components/composites";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import { PageBody, PageHeader, PageSection } from "@/components/layouts";
+import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { UserAvatar } from "@/components/ui/user-avatar";
+import useMatches from "@/hooks/useMatches";
+import useProfile from "@/hooks/useProfile";
+import useSessions from "@/hooks/useSessions";
 import { formatSessionTimeRange } from "@/utils/sessionTime";
 
-const Page = () => {
+const DashboardPage = () => {
   const { data: user, isLoading: profileLoading } = useProfile();
   const { data: matches = [], isLoading: matchesLoading } = useMatches();
   const { data: sessions = [], isLoading: sessionsLoading } = useSessions();
@@ -54,12 +39,12 @@ const Page = () => {
   const needsOnboarding = !loading && (knownCount === 0 || learnCount === 0);
 
   const upcoming = sessions
-    .filter((s) => new Date(s.startsAt) >= now)
-    .slice(0, 3);
+    .filter((session) => new Date(session.startsAt) >= now)
+    .slice(0, 2);
 
   const topMatches = [...matches]
     .sort((a, b) => (b.compatibility ?? 0) - (a.compatibility ?? 0))
-    .slice(0, 3);
+    .slice(0, 2);
 
   const showStats =
     (user?.completedSessionsCount ?? 0) > 0 ||
@@ -67,37 +52,118 @@ const Page = () => {
     learnCount > 0 ||
     matches.length > 0;
 
+  const welcomeName = user?.name?.trim();
+
   return (
     <PageBody>
-      {needsOnboarding ? <OnboardingWizard /> : null}
-
       {loading ? (
         <SkeletonKit.PageHeader />
       ) : (
-        <>
-          <PageHeader
-            eyebrow="Welcome back"
-            title={user?.name ?? "there"}
-            description={
-              needsOnboarding
-                ? "Finish setting up your skills to unlock better matches."
-                : "Pick a next step below — your learning loop continues here."
-            }
-          />
+        <PageHeader
+          eyebrow={
+            welcomeName ? `Welcome back, ${welcomeName}` : "Welcome back"
+          }
+          title="Keep your learning moving"
+          description="Continue with your next session or meet someone who can help you learn."
+          actions={
+            <Link href="/matches" className={buttonVariants({ size: "lg" })}>
+              <Sparkles className="size-4" aria-hidden />
+              Find a partner
+            </Link>
+          }
+        />
+      )}
+
+      {needsOnboarding ? <OnboardingWizard /> : null}
+
+      <div className="grid items-start gap-(--space-section) lg:grid-cols-3">
+        <PageSection
+          title="Next up"
+          className="lg:col-span-2"
+          action={
+            <Link
+              href="/schedule"
+              className="text-primary text-body-sm font-semibold hover:underline"
+            >
+              View schedule
+            </Link>
+          }
+        >
+          {sessionsLoading ? (
+            <SkeletonKit.Row />
+          ) : upcoming.length > 0 ? (
+            <div className="flex flex-col gap-3">
+              {upcoming.map((session) => (
+                <Card key={session.id} elevation="raised" size="sm">
+                  <CardContent className="flex items-center gap-4">
+                    <Calendar
+                      className="text-primary size-5 shrink-0"
+                      aria-hidden
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-heading font-semibold">
+                        {session.title}
+                      </p>
+                      <p className="text-muted-foreground text-body-sm">
+                        {formatSessionTimeRange(
+                          session.startsAt,
+                          session.endsAt
+                        )}
+                        {session.friend?.name
+                          ? ` · with ${session.friend.name}`
+                          : ""}
+                      </p>
+                    </div>
+                    <Badge variant="status" className="hidden sm:inline-flex">
+                      {session.status === "AGREED" ? "Confirmed" : "Pending"}
+                    </Badge>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <DataEmpty
+              icon={Calendar}
+              illustration={false}
+              title="Nothing scheduled yet"
+              description="Turn a promising match into a focused learning session."
+              action={
+                <Link href="/schedule" className={buttonVariants()}>
+                  Schedule a session
+                </Link>
+              }
+            />
+          )}
+        </PageSection>
+
+        {profileLoading ? (
+          <SkeletonKit.Row />
+        ) : (
           <SectionPanel
-            title="Profile completeness"
+            title="Profile strength"
+            description="A complete profile makes every recommendation more useful."
             elevation="raised"
-            className="max-w-md"
+            footer={
+              <Link
+                href="/profile"
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                Manage profile
+              </Link>
+            }
           >
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between text-body-sm">
-                <span className="font-medium">Complete your profile</span>
+                <span className="font-medium">Profile complete</span>
                 <span className="text-primary font-semibold tabular-nums">
                   {completeness}%
                 </span>
               </div>
-              <Progress value={completeness} />
-              <ul className="mt-1 flex flex-col gap-4 text-body-sm">
+              <Progress
+                value={completeness}
+                aria-label={`Profile ${completeness}% complete`}
+              />
+              <ul className="flex flex-col gap-2 text-body-sm">
                 <TaskChecklistLink
                   done={knownCount > 0}
                   label="Add a skill you can teach"
@@ -116,109 +182,52 @@ const Page = () => {
               </ul>
             </div>
           </SectionPanel>
-        </>
-      )}
+        )}
+      </div>
 
       <PageSection
-        title="Recommended matches"
+        title="Recommended partners"
         action={
           <Link
             href="/matches"
-            className="text-primary text-body-sm font-medium hover:underline"
+            className="text-primary text-body-sm font-semibold hover:underline"
           >
-            View all
+            View all matches
           </Link>
         }
       >
         {loading ? (
           <SkeletonKit.CardGrid />
         ) : topMatches.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2">
             {topMatches.map((match, index) => (
-              <Link
+              <div
                 key={match.id ?? match.other.id}
-                href={
-                  match.id
-                    ? `/matches/${match.id}`
-                    : `/profiles/${match.other.id}`
-                }
                 className="animate-fade-up"
                 style={{ animationDelay: `${index * 60}ms` }}
               >
-                <Card elevation="interactive" className="h-full">
-                  <CardHeader className="flex flex-row items-center gap-4">
-                    <UserAvatar
-                      name={match.other.name}
-                      imageUrl={match.other.imageUrl}
-                      size="md"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <CardTitle className="truncate">
-                        {match.other.name}
-                      </CardTitle>
-                      <CardDescription className="tabular-nums">
-                        {match.compatibility ?? 0}% match
-                      </CardDescription>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground line-clamp-2">
-                      {match.aiExplanation ||
-                        `${match.other.knownSkills?.[0]?.title ?? "Skills"} ↔ ${match.other.skillsToLearn?.[0]?.title ?? "learning"}`}
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
+                <DashboardMatchCard
+                  match={match}
+                  href={
+                    match.id
+                      ? `/matches/${match.id}`
+                      : `/profiles/${match.other.id}`
+                  }
+                />
+              </div>
             ))}
           </div>
         ) : (
           <DataEmpty
             icon={Sparkles}
-            title="No matches yet"
-            description="Add skills you teach and want to learn — then we’ll find partners for you."
+            title="No partners to recommend yet"
+            description="Tell us what you can teach and what you want to learn, and we’ll look for a two-way fit."
             action={
               <Link
                 href="/profile"
                 className={buttonVariants({ variant: "outline" })}
               >
                 Complete your profile
-              </Link>
-            }
-          />
-        )}
-      </PageSection>
-
-      <PageSection title="Today's sessions">
-        {sessionsLoading ? (
-          <SkeletonKit.Row />
-        ) : upcoming.length > 0 ? (
-          <div className="flex flex-col gap-4">
-            {upcoming.map((item) => (
-              <Card key={item.id} elevation="raised">
-                <CardHeader className="flex flex-row items-center gap-4 pb-2">
-                  <Calendar className="text-primary size-5 shrink-0" />
-                  <div>
-                    <CardTitle className="text-base">{item.title}</CardTitle>
-                    <CardDescription>
-                      {formatSessionTimeRange(item.startsAt, item.endsAt)}
-                      {item.friend?.name ? ` · with ${item.friend.name}` : ""}
-                    </CardDescription>
-                  </div>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <DataEmpty
-            icon={Calendar}
-            title="No upcoming sessions"
-            description="Schedule a session with a match to see it on your timeline."
-            action={
-              <Link
-                href="/calendar"
-                className={buttonVariants({ variant: "outline" })}
-              >
-                Open calendar
               </Link>
             }
           />
@@ -249,17 +258,8 @@ const Page = () => {
           </div>
         </PageSection>
       ) : null}
-
-      <PageSection title="Quick access">
-        <div className="grid grid-cols-2 gap-(--space-stack) sm:grid-cols-4">
-          <QuickLinkTile href="/profile" icon={User} label="My Profile" />
-          <QuickLinkTile href="/matches" icon={Users} label="Matches" />
-          <QuickLinkTile href="/inbox" icon={MessageSquare} label="Chat" />
-          <QuickLinkTile href="/calendar" icon={Calendar} label="Calendar" />
-        </div>
-      </PageSection>
     </PageBody>
   );
 };
 
-export default Page;
+export default DashboardPage;

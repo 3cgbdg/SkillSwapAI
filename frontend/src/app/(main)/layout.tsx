@@ -1,7 +1,6 @@
 import AuthClientUpload from "@/components/AuthClientUpload";
 import ComingSessionWarning from "@/components/ComingSessionWarning";
 import FriendList from "@/components/friends/FriendList";
-import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
 import AppSidebar from "@/components/layout/Sidebar";
 import { AppShell, AppShellMain } from "@/components/layouts";
@@ -25,7 +24,6 @@ export default async function MainLayout({
         header={<Header />}
         sidebar={<AppSidebar />}
         main={<AppShellMain>{children}</AppShellMain>}
-        footer={<Footer />}
       />
     </SidebarProvider>
   );
