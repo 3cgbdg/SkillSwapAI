@@ -70,7 +70,7 @@ export function ChatThread({
       <Link href="/inbox" className={cn(buttonVariants(), "w-fit md:hidden")}>
         Back to inbox
       </Link>
-      <Card className="flex min-h-[min(70dvh,720px)] flex-1 flex-col overflow-hidden rounded-xl p-0">
+      <Card className="flex min-h-[calc(100dvh_-_var(--header-h)_-_var(--space-page)_*_2_-_3.25rem)] flex-1 flex-col overflow-hidden rounded-xl p-0 md:min-h-[calc(100dvh_-_var(--header-h)_-_var(--space-page)_*_2_-_4.5rem)]">
         <div className="border-border shrink-0 border-b">
           <div className="flex items-center justify-between gap-2 px-4 py-4 md:px-6">
             <div className="flex items-center gap-3">

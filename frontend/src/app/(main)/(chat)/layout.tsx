@@ -34,7 +34,7 @@ export default function ChatLayout({
 
   return (
     <AsyncBoundary isLoading={isLoading} isError={isError} error={error}>
-      <div className="flex min-h-[min(75dvh,800px)] flex-col gap-4 md:flex-row md:gap-6">
+      <div className="flex min-h-[calc(100dvh_-_var(--header-h)_-_var(--space-page)_*_2)] flex-col gap-4 md:min-h-[calc(100dvh_-_var(--header-h)_-_var(--space-page)_*_2_-_4.5rem)] md:flex-row md:gap-6">
         {showSidebar ? <ChatSidebar /> : null}
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
       </div>

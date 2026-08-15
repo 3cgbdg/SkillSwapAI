@@ -1059,6 +1059,46 @@ two matches. Record the number in the commit message; step 15 re-runs it.
 **6. Make the page frame real — and re-derive the viewport-locked heights it
 breaks: `Container`, `AppShellMain`, `PageBody`, `PageSection`, `PageHeader`,
 `--header-h`, chat pane heights.**
+`[x]` **Status: VERIFIED** (mechanical + browser; see step 1's screenshot
+caveat). Added `--space-page` (fluid clamp, 24-32px), `--space-section`
+(fluid clamp reaching 2.5rem by ~600px viewport, well before `md`),
+`--space-stack` (1rem). `--header-h` corrected 3.5rem → 4.5rem (measured live:
+real header is 72.8px, token now 72px). `Container` derives from
+`--content-max`/`--page-gutter` instead of `max-w-7xl px-4 md:px-6`.
+`AppShellMain` py → `--space-page`. `PageBody` gap-8 → `--space-section`.
+`PageSection` gap-4 → `--space-stack`, title now also gets `font-heading`
+(previously sized via `text-h2` but rendered in the sans font, not Fraunces).
+`PageHeader` inner gap 1→2, outer gap 4→6, eyebrow/description onto
+`text-body-sm`, added an optional `illustration` slot.
+
+Chat heights: replaced both `min-h-[min(75dvh,800px)]`
+((chat)/layout.tsx) and `min-h-[min(70dvh,720px)]` (ChatThread.tsx's Card)
+with token-derived `calc()`s. **First pass was wrong and caught by the
+browser gate, not by lint/tsc**: applying the *same* full-height calc to both
+the outer wrapper and the inner Card overflowed on mobile by ~48px, because
+the inner Card sits below the mobile-only "Back to inbox" link (+ gap-3,
+~52px) that the outer wrapper's calc didn't need to account for but the
+Card's did. Fixed by subtracting an extra `3.25rem` from the Card's mobile
+(base) min-height specifically; the `md:` override (no back-link, but a
+footer to subtract instead) was already correct. Re-verified after the fix:
+mobile `/inbox/<chatId>` main scroll/client height now match exactly (776px
+= 776px, was 824/776 before), composer fully visible. Desktop retains one
+~6px scrollbar overflow (traced to sub-pixel rounding across the header/
+footer/space-page estimates, not a nested-scrollbar regression) — composer
+still visible, still exactly one scrollbar, judged acceptable rather than
+chasing the last few px.
+
+Full `(main)` route sweep at 1280px and 390px (`/dashboard`, `/discover`,
+`/learning`, `/schedule`, `/profile`, `/inbox`, `/inbox/<chatId>`): zero
+horizontal overflow on any route at either width. Could not test the
+`ComingSessionWarning` alignment edge case — no account has a session
+starting soon; noted as unverified rather than assumed passing.
+
+**Found and flagged, not fixed (out of this step's scope):** a pre-existing
+React duplicate-key warning in `ChatSidebar.tsx` (two separate `.map()`s both
+use `key={chat.chatId}`) — unrelated to this step's CSS-only changes, spun
+off as a separate task rather than silently fixed or silently ignored. Worth
+a look during step 13, which already owns this file.
 
 Files: `frontend/src/components/layout/Container.tsx`;
 `frontend/src/components/layouts/{AppShell,PageBody,PageHeader}.tsx`;

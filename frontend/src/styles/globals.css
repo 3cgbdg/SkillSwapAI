@@ -148,12 +148,15 @@
   --border: oklch(0.89 0.012 80);
   --input: oklch(0.62 0.02 285);
   --ring: oklch(0.42 0.12 285);
-  --header-h: 3.5rem;
+  --header-h: 4.5rem;
   --sidebar-w: 16rem;
   --sidebar-w-collapsed: 3.5rem;
   --page-gutter: 1rem;
   --content-max: 80rem;
   --pane-min: 20rem;
+  --space-page: clamp(1.5rem, 1.25rem + 1vw, 2rem);
+  --space-section: clamp(1.5rem, 1rem + 4vw, 2.5rem);
+  --space-stack: 1rem;
   --z-dropdown: 1000;
   --z-overlay: 1100;
   --z-modal: 1200;
