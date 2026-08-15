@@ -2,7 +2,10 @@
 
 import { format } from "date-fns";
 import { AlertCircle, CheckCheck, RotateCcw } from "lucide-react";
+import { useCallback } from "react";
 
+import { ChatBubble } from "@/components/composites";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { IMessage } from "@/types/types";
@@ -14,30 +17,30 @@ function MessageBubble({
   msg,
   isMine,
   isLastInGroup,
-  messageRef,
+  flatIdx,
+  registerMessageRef,
   onRetry,
 }: {
   msg: ExtendedMessage;
   isMine: boolean;
   isLastInGroup: boolean;
-  messageRef?: (el: HTMLDivElement | null) => void;
+  flatIdx: number;
+  registerMessageRef: (index: number, el: HTMLDivElement | null) => void;
   onRetry?: () => void;
 }) {
+  const messageRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      if (flatIdx >= 0) registerMessageRef(flatIdx, el);
+    },
+    [flatIdx, registerMessageRef]
+  );
+
   return (
     <div
       ref={messageRef}
       className={cn("flex flex-col", isMine && "items-end")}
     >
-      <div
-        className={cn(
-          "max-w-[85%] rounded-2xl px-3 py-2 text-sm",
-          isMine
-            ? "bg-primary text-primary-foreground"
-            : "bg-surface-raised text-foreground border border-border",
-          msg.failed && "ring-2 ring-destructive/50",
-          msg.pending && "opacity-80"
-        )}
-      >
+      <ChatBubble isMine={isMine} failed={msg.failed} pending={msg.pending}>
         <p className="wrap-anywhere leading-5">{msg.content}</p>
         {isLastInGroup ? (
           <div
@@ -78,7 +81,7 @@ function MessageBubble({
             ) : null}
           </div>
         ) : null}
-      </div>
+      </ChatBubble>
     </div>
   );
 }
@@ -97,22 +100,17 @@ export function ChatMessageList({
   const flatIndexById = new Map(flatMessages.map((m, i) => [m.id, i] as const));
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       {items.map((item) => {
         if (item.type === "separator") {
           return (
-            <div
-              key={item.key}
-              className="text-muted-foreground flex justify-center py-1 text-xs font-medium"
-            >
-              <span className="bg-muted/60 rounded-full px-3 py-1">
-                {item.label}
-              </span>
+            <div key={item.key} className="flex justify-center py-1">
+              <Badge variant="status">{item.label}</Badge>
             </div>
           );
         }
         return (
-          <div key={item.key} className="flex flex-col gap-1">
+          <div key={item.key} className="flex flex-col gap-1.5">
             {item.messages.map((msg, idx) => {
               const flatIdx = flatIndexById.get(msg.id) ?? -1;
               return (
@@ -121,11 +119,8 @@ export function ChatMessageList({
                   msg={msg as ExtendedMessage}
                   isMine={item.isMine}
                   isLastInGroup={idx === item.messages.length - 1}
-                  messageRef={
-                    flatIdx >= 0
-                      ? (el) => registerMessageRef(flatIdx, el)
-                      : undefined
-                  }
+                  flatIdx={flatIdx}
+                  registerMessageRef={registerMessageRef}
                   onRetry={
                     (msg as ExtendedMessage).failed && onRetryMessage
                       ? () => onRetryMessage(msg as ExtendedMessage)

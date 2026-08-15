@@ -73,7 +73,7 @@ export function AppShellMain({
   className?: string;
 }) {
   return (
-    <Container className={cn("py-2 sm:py-6 md:py-8", className)}>
+    <Container className={cn("py-(--space-page)", className)}>
       {children}
     </Container>
   );

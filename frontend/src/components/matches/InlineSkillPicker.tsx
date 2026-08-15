@@ -40,7 +40,7 @@ export function InlineSkillPicker({
 
   return (
     <form
-      className="flex w-full max-w-md flex-col gap-2 sm:flex-row"
+      className="flex w-full max-w-md flex-col gap-4 sm:flex-row"
       onSubmit={(e) => {
         e.preventDefault();
         const title = value.trim();

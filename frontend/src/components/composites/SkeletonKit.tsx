@@ -3,20 +3,18 @@ import { cn } from "@/lib/utils";
 
 function PageHeader() {
   return (
-    <div className="flex flex-col gap-4">
-      <Skeleton className="h-48 w-full rounded-xl" />
-      <div className="flex max-w-xs flex-col gap-2">
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-2 w-full" />
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-4 w-2/3" />
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-10 w-64" />
       </div>
+      <Skeleton className="h-40 w-full max-w-md rounded-xl" />
     </div>
   );
 }
 
 function CardBlock({ className }: { className?: string }) {
-  return <Skeleton className={cn("h-36 rounded-xl", className)} />;
+  return <Skeleton className={cn("h-[440px] rounded-xl", className)} />;
 }
 
 function CardGrid({ count = 3 }: { count?: number }) {
@@ -30,12 +28,12 @@ function CardGrid({ count = 3 }: { count?: number }) {
 }
 
 function Row({ className }: { className?: string }) {
-  return <Skeleton className={cn("h-24 w-full rounded-xl", className)} />;
+  return <Skeleton className={cn("h-28 w-full rounded-xl", className)} />;
 }
 
 function StatRow() {
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-3 gap-4">
       <Skeleton className="h-12 rounded-lg" />
       <Skeleton className="h-12 rounded-lg" />
       <Skeleton className="h-12 rounded-lg" />
@@ -45,9 +43,9 @@ function StatRow() {
 
 function QuickAccess() {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
       {Array.from({ length: 4 }).map((_, i) => (
-        <Skeleton key={i} className="h-24 rounded-xl" />
+        <Skeleton key={i} className="h-36 rounded-xl" />
       ))}
     </div>
   );
@@ -79,10 +77,9 @@ function DashboardPage() {
 
 function ProfilePage() {
   return (
-    <div className="flex flex-col gap-8">
-      <Skeleton className="h-56 w-full rounded-xl" />
-      <Row className="h-40" />
-      <Row className="h-32" />
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
+      <Skeleton className="h-72 w-full rounded-xl md:col-span-3" />
+      <Skeleton className="h-48 w-full rounded-xl md:col-span-2" />
     </div>
   );
 }
@@ -112,21 +109,18 @@ function CalendarWeekFallback() {
 
 function PublicProfileGrid() {
   return (
-    <div className="grid grid-cols-5 gap-6 md:grid">
-      <Skeleton className="col-span-3 h-80 w-full rounded-xl" />
-      <div className="col-span-2 hidden flex-col gap-8 md:flex">
-        <Skeleton className="h-48 w-full rounded-2xl" />
-        <Skeleton className="h-48 w-full rounded-2xl" />
-      </div>
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
+      <Skeleton className="h-80 w-full rounded-xl md:col-span-3" />
+      <Skeleton className="h-48 w-full rounded-xl md:col-span-2" />
     </div>
   );
 }
 
 function ChatLayoutSkeleton() {
   return (
-    <div className="flex min-h-[min(75dvh,800px)] gap-4">
+    <div className="flex min-h-[calc(100dvh_-_var(--header-h)_-_var(--space-page)_*_2_-_4.5rem)] gap-4">
       <Skeleton className="hidden h-full w-[340px] rounded-xl md:block" />
-      <Skeleton className="h-full min-h-[400px] flex-1 rounded-xl" />
+      <Skeleton className="h-full flex-1 rounded-xl" />
     </div>
   );
 }

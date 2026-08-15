@@ -13,8 +13,8 @@ import {
 import { useRouter } from "next/navigation";
 import { useState, type CSSProperties } from "react";
 
-import { MetricRing, SkillPillList } from "@/components/composites";
-import { Button } from "@/components/ui/button";
+import { MetricRing, SwapAxis } from "@/components/composites";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -35,16 +35,6 @@ import {
 } from "@/components/ui/hover-card";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { cn } from "@/lib/utils";
-
-function SkillBadges({
-  skills,
-  variant,
-}: {
-  skills: { title: string }[];
-  variant: "teach" | "learn";
-}) {
-  return <SkillPillList skills={skills} variant={variant} />;
-}
 
 const MatchCard = ({
   match,
@@ -114,16 +104,16 @@ const MatchCard = ({
   return (
     <Card
       elevation="interactive"
-      className="@container flex h-full flex-col"
+      className="flex h-full flex-col"
       style={
         option === "active"
           ? ({ viewTransitionName: `match-${match.id}` } as CSSProperties)
           : undefined
       }
     >
-      <CardHeader className="relative flex flex-row items-start gap-3 text-left">
+      <CardHeader className="grid grid-cols-[auto_minmax(8rem,1fr)_auto] items-start gap-4 text-left">
         <HoverCard>
-          <HoverCardTrigger className="rounded-full">
+          <HoverCardTrigger>
             <UserAvatar
               name={match.other.name}
               imageUrl={match.other.imageUrl}
@@ -145,7 +135,7 @@ const MatchCard = ({
             </Link>
           </HoverCardContent>
         </HoverCard>
-        <div className="min-w-0 flex-1 pr-12">
+        <div className="min-w-0">
           <CardTitle className="truncate text-lg">{match.other.name}</CardTitle>
           {match.aiExplanation ? (
             <button
@@ -167,7 +157,6 @@ const MatchCard = ({
           <MetricRing
             value={match.compatibility}
             label={`${match.compatibility}% compatibility`}
-            className="absolute top-4 right-4"
           />
         ) : null}
       </CardHeader>
@@ -177,20 +166,12 @@ const MatchCard = ({
             {match.aiExplanation}
           </p>
         ) : null}
-        <div className="flex flex-col gap-1.5">
-          <h3 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-            Teaches
-          </h3>
-          <SkillBadges skills={match.other.knownSkills} variant="teach" />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <h3 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-            Wants to learn
-          </h3>
-          <SkillBadges skills={match.other.skillsToLearn} variant="learn" />
-        </div>
+        <SwapAxis
+          teach={match.other.knownSkills}
+          learn={match.other.skillsToLearn}
+        />
       </CardContent>
-      <CardFooter className="mt-auto flex items-center gap-2 border-t pt-4">
+      <CardFooter className="mt-auto flex items-center gap-4 border-t pt-4">
         <Button
           size="sm"
           className="flex-1"
@@ -208,9 +189,7 @@ const MatchCard = ({
         {canAct ? (
           <DropdownMenu>
             <DropdownMenuTrigger
-              className={cn(
-                "border-border inline-flex size-7 items-center justify-center rounded-lg border outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-              )}
+              className={buttonVariants({ variant: "outline", size: "icon" })}
               aria-label="More actions"
             >
               <MoreHorizontal className="size-4" />

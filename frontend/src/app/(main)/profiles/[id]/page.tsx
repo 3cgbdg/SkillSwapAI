@@ -6,7 +6,8 @@ import ProfilesService from "@/services/ProfilesService";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, MessageSquareMore } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { AsyncBoundary } from "@/components/composites";
+import { AsyncBoundary, SkeletonKit } from "@/components/composites";
+import { PageBody, PageHeader } from "@/components/layouts";
 import { Button } from "@/components/ui/button";
 
 export default function PublicProfilePage() {
@@ -37,38 +38,46 @@ export default function PublicProfilePage() {
   });
 
   return (
-    <AsyncBoundary isLoading={isLoading} isError={isError} error={error}>
+    <AsyncBoundary
+      isLoading={isLoading}
+      isError={isError}
+      error={error}
+      loadingFallback={<SkeletonKit.PublicProfileGrid />}
+    >
       {profile ? (
-        <ProfileView
-          profile={profile}
-          actions={
-            <>
-              <Button
-                className="gap-5"
-                onClick={() =>
-                  createChat({
-                    payload: { friendId: id, friendName: profile.name },
-                  })
-                }
-              >
-                <MessageSquareMore size={20} />
-                Message {profile.name}
-              </Button>
-              <Button
-                variant="outline"
-                className="gap-5"
-                onClick={() =>
-                  router.push(
-                    `/schedule?schedule=true&name=${encodeURIComponent(profile.name)}`
-                  )
-                }
-              >
-                <Calendar size={20} />
-                Schedule Session
-              </Button>
-            </>
-          }
-        />
+        <PageBody>
+          <PageHeader title={`${profile.name}'s profile`} />
+          <ProfileView
+            profile={profile}
+            actions={
+              <>
+                <Button
+                  className="gap-5"
+                  onClick={() =>
+                    createChat({
+                      payload: { friendId: id, friendName: profile.name },
+                    })
+                  }
+                >
+                  <MessageSquareMore size={20} />
+                  Message {profile.name}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="gap-5"
+                  onClick={() =>
+                    router.push(
+                      `/schedule?schedule=true&name=${encodeURIComponent(profile.name)}`
+                    )
+                  }
+                >
+                  <Calendar size={20} />
+                  Schedule Session
+                </Button>
+              </>
+            }
+          />
+        </PageBody>
       ) : null}
     </AsyncBoundary>
   );

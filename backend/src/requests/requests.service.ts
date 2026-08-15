@@ -105,7 +105,7 @@ export class RequestsService {
     return {
       from: { select: { id: true, name: true, imageUrl: true } },
       to: { select: { id: true, name: true, imageUrl: true } },
-      session: { select: { title: true, start: true, end: true, date: true } },
+      session: { select: { title: true, startsAt: true, endsAt: true } },
     };
   }
 

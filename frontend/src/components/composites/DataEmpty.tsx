@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { WarmScholarEmptyArt } from "@/components/illustrations/WarmScholarEmptyArt";
 import {
   Empty,
   EmptyContent,
@@ -13,6 +14,7 @@ import { cn } from "@/lib/utils";
 
 export function DataEmpty({
   icon: Icon,
+  illustration = true,
   title,
   description,
   action,
@@ -20,6 +22,7 @@ export function DataEmpty({
   className,
 }: {
   icon?: LucideIcon;
+  illustration?: boolean;
   title: string;
   description?: ReactNode;
   action?: ReactNode;
@@ -27,14 +30,11 @@ export function DataEmpty({
   className?: string;
 }) {
   return (
-    <Empty
-      className={cn(
-        "border-border bg-muted/30 border border-dashed",
-        className
-      )}
-    >
+    <Empty className={cn("bg-muted/30", className)}>
       <EmptyHeader>
-        {Icon ? (
+        {illustration ? (
+          <WarmScholarEmptyArt className="text-primary h-16 w-24" />
+        ) : Icon ? (
           <EmptyMedia variant="icon">
             <Icon className="size-10" aria-hidden />
           </EmptyMedia>

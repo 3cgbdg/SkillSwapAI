@@ -5,7 +5,7 @@
       "project": [".husky/**"]
     },
     "frontend": {
-      "entry": ["src/app/**/*.{ts,tsx}", "src/**/route.ts"],
+      "entry": ["src/app/**/*.{ts,tsx}", "src/**/route.ts", "scripts/check-contrast.mjs"],
       "project": ["src/**/*.{ts,tsx}", "src/**/*.test.ts"]
     },
     "backend": {
@@ -14,7 +14,6 @@
     }
   },
   "ignore": [
-    "frontend/src/components/layout/MobileTabBar.tsx",
     "frontend/src/components/layout/headerComponents/NavigationMenu.tsx",
     "frontend/src/components/layout/headerComponents/SearchInput.tsx",
     "frontend/src/components/layout/headerComponents/SearchInputMobile.tsx",
@@ -43,8 +42,7 @@
     "@types/supertest",
     "source-map-support",
     "supertest",
-    "ts-loader",
-    "@testing-library/react"
+    "ts-loader"
   ],
   "ignoreIssues": {
     "backend/src/friends/dto/get-friend.dto.ts": ["files"],
@@ -52,7 +50,6 @@
     "frontend/src/hooks/**": ["exports", "duplicates"],
     "frontend/src/components/ui/**": ["exports", "types", "files"],
     "frontend/src/components/composites/**": ["exports", "types", "duplicates"],
-    "frontend/src/components/layouts/**": ["exports"],
     "frontend/src/utils/sessionTime.ts": ["exports"],
     "frontend/src/components/profile/ProfileView.tsx": ["types"],
     "frontend/src/components/calendar/SessionDetails.tsx": ["types"],

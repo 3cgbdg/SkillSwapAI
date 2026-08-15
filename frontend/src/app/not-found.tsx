@@ -1,13 +1,8 @@
 import Link from "next/link";
 
+import { WarmScholarEmptyArt } from "@/components/illustrations/WarmScholarEmptyArt";
+import { PageHeader } from "@/components/layouts";
 import { buttonVariants } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 export default function NotFound() {
   return (
@@ -15,19 +10,21 @@ export default function NotFound() {
       id="main-content"
       className="flex min-h-dvh items-center justify-center p-4"
     >
-      <Card elevation="raised" className="w-full max-w-md text-center">
-        <CardHeader>
-          <CardTitle className="font-heading text-h1">Page not found</CardTitle>
-          <CardDescription>
-            The page you&apos;re looking for doesn&apos;t exist or was moved.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Link href="/dashboard" className={buttonVariants()}>
-            Back to dashboard
-          </Link>
-        </CardContent>
-      </Card>
+      <div className="w-full max-w-md">
+        <PageHeader
+          className="flex-col items-center text-center sm:flex-col sm:items-center"
+          illustration={
+            <WarmScholarEmptyArt className="text-primary h-16 w-24" />
+          }
+          title="Page not found"
+          description="The page you're looking for doesn't exist or was moved."
+          actions={
+            <Link href="/dashboard" className={buttonVariants()}>
+              Back to dashboard
+            </Link>
+          }
+        />
+      </div>
     </div>
   );
 }

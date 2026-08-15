@@ -3,6 +3,7 @@
 import { ChatsEmptyLanding } from "@/components/chat/ChatsEmptyLanding";
 import { InboxRequestsPanel } from "@/components/inbox/InboxRequestsPanel";
 import { SegmentedControl } from "@/components/composites";
+import { PageBody, PageHeader } from "@/components/layouts";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export default function InboxPage() {
@@ -19,7 +20,8 @@ export default function InboxPage() {
   };
 
   return (
-    <div className="flex min-h-[50dvh] flex-1 flex-col gap-4">
+    <PageBody className="min-h-[50dvh] flex-1">
+      <PageHeader title="Inbox" />
       <SegmentedControl
         aria-label="Inbox section"
         value={tab}
@@ -37,6 +39,6 @@ export default function InboxPage() {
           <ChatsEmptyLanding />
         </div>
       )}
-    </div>
+    </PageBody>
   );
 }

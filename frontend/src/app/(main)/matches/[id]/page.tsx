@@ -33,6 +33,7 @@ import {
   ProgressTrack,
 } from "@/components/ui/progress";
 import { Accordion } from "@/components/ui/accordion";
+import { PageBody, PageHeader, PageSection } from "@/components/layouts";
 
 const Page = () => {
   const { id } = useParams() as { id: string };
@@ -100,7 +101,7 @@ const Page = () => {
 
   return (
     <AsyncBoundary isError={isError} error={error}>
-      <div className="flex flex-col gap-8">
+      <PageBody>
         <Dialog open={isLoading}>
           <DialogContent showCloseButton={false} className="sm:max-w-sm">
             <DialogTitle className="sr-only">Loading plan</DialogTitle>
@@ -110,23 +111,25 @@ const Page = () => {
           </DialogContent>
         </Dialog>
 
-        <div className="grid gap-8 grid-cols-3">
+        <PageHeader title={`Training plan with ${currentMatch.other.name}`} />
+
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
           <Card className="col-span-3 gap-4 bg-gradient-to-br from-surface-raised to-brand-accent/15 p-8 xl:col-span-2">
             <CardHeader className="p-0">
-              <CardTitle className="font-heading text-h1 leading-9">
-                Your AI-Powered Training Plan with {currentMatch.other.name}
+              <CardTitle className="font-heading text-h3">
+                Your AI-powered training plan
               </CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-4 p-0">
               <p>{currentMatch.aiExplanation}</p>
               {currentMatch.keyBenefits?.length ? (
-                <div className="flex flex-col gap-2">
-                  <h3 className="text-xl leading-7 font-semibold">Benefits:</h3>
-                  <ol className="list-disc pl-5">
+                <div className="flex flex-col gap-4">
+                  <h3 className="font-heading text-h3">Key benefits</h3>
+                  <ul className="list-disc pl-5">
                     {currentMatch.keyBenefits.map((benefit) => (
                       <li key={benefit}>{benefit}</li>
                     ))}
-                  </ol>
+                  </ul>
                 </div>
               ) : null}
             </CardContent>
@@ -140,11 +143,11 @@ const Page = () => {
                   imageUrl={currentMatch.other.imageUrl}
                   size="xl"
                 />
-                <h2 className="text-2xl font-bold leading-8">
+                <h2 className="font-heading text-h2">
                   {currentMatch.other.name}
                 </h2>
               </div>
-              <div className="mt-4 flex w-full flex-col gap-3">
+              <div className="mt-4 flex w-full flex-col gap-4">
                 <Button
                   className="justify-start gap-5"
                   onClick={() =>
@@ -177,12 +180,10 @@ const Page = () => {
 
           <MatchProgressPanel>
             {plan ? (
-              <div className="flex w-full max-w-sm flex-col gap-3">
+              <div className="flex w-full max-w-sm flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <h2 className="text-2xl font-bold leading-8">
-                    Overall Progress
-                  </h2>
-                  <p className="text-sm leading-5 text-muted-foreground">
+                  <h3 className="font-heading text-h3">Overall progress</h3>
+                  <p className="text-muted-foreground text-body-sm">
                     Your AI-generated training journey
                   </p>
                   <p className="mt-4 text-3xl font-bold text-primary">
@@ -200,34 +201,31 @@ const Page = () => {
         </div>
 
         {plan ? (
-          <Card className="w-full p-6">
-            <CardHeader className="mb-6 p-0">
-              <CardTitle className="text-3xl font-bold leading-9">
-                Training Modules
-              </CardTitle>
-              <CardDescription>
+          <PageSection title="Training modules">
+            <Card className="w-full p-6">
+              <CardDescription className="mb-6">
                 Breakdown of your skill exchange journey
               </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4 p-0">
-              <Accordion
-                value={openModule}
-                onValueChange={setOpenModule}
-                className="gap-4"
-              >
-                {plan.modules.map((module: IGeneratedModule, idx: number) => (
-                  <ModuleAccordion
-                    planId={plan.id}
-                    key={module.id}
-                    module={module}
-                    itemValue={String(idx)}
-                  />
-                ))}
-              </Accordion>
-            </CardContent>
-          </Card>
+              <CardContent className="flex flex-col gap-4 p-0">
+                <Accordion
+                  value={openModule}
+                  onValueChange={setOpenModule}
+                  className="gap-4"
+                >
+                  {plan.modules.map((module: IGeneratedModule, idx: number) => (
+                    <ModuleAccordion
+                      planId={plan.id}
+                      key={module.id}
+                      module={module}
+                      itemValue={String(idx)}
+                    />
+                  ))}
+                </Accordion>
+              </CardContent>
+            </Card>
+          </PageSection>
         ) : null}
-      </div>
+      </PageBody>
     </AsyncBoundary>
   );
 };

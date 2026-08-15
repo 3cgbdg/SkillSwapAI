@@ -18,9 +18,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DataEmpty } from "@/components/composites";
+import { DataEmpty, SectionPanel } from "@/components/composites";
+import { PageBody, PageHeader } from "@/components/layouts";
 import { InlineSkillPicker } from "@/components/matches/InlineSkillPicker";
-import { Card, CardContent } from "@/components/ui/card";
 
 const PENDING_JOB_KEY = "skillswap_pending_match_job";
 
@@ -143,42 +143,42 @@ const Matches = ({
   });
 
   return (
-    <div className="flex flex-col gap-7.5">
+    <PageBody>
       {isPending || pendingPartnerId ? (
-        <Card className="border-primary/30 bg-primary/5">
-          <CardContent className="flex items-start gap-3 py-4">
-            <AlertCircle className="text-primary mt-0.5 size-5 shrink-0" />
-            <div>
-              <p className="font-medium">Generating your AI training plan</p>
-              <p className="text-muted-foreground text-sm">
-                You can keep browsing — we&apos;ll refresh Learning when your
-                match is ready.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <SectionPanel
+          className="border-primary/30 bg-primary/5"
+          contentClassName="flex items-start gap-4"
+        >
+          <AlertCircle className="text-primary mt-0.5 size-5 shrink-0" />
+          <div>
+            <p className="font-medium">Generating your AI training plan</p>
+            <p className="text-muted-foreground text-body-sm">
+              You can keep browsing — we&apos;ll refresh Learning when your
+              match is ready.
+            </p>
+          </div>
+        </SectionPanel>
       ) : null}
 
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-wrap items-center justify-between gap-6">
-          <h1 className="font-heading text-h1 text-foreground">
-            {option === "active"
-              ? "Your learning matches"
-              : "Discover partners"}
-          </h1>
-          <div className="flex flex-wrap gap-3">
+      <PageHeader
+        title={
+          option === "active" ? "Your learning matches" : "Discover partners"
+        }
+        description="Explore potential skill exchange partners based on your teaching and learning goals. Connect to swap knowledge!"
+        actions={
+          <>
             {option === "active" && (
               <DropdownMenu>
                 <DropdownMenuTrigger
                   className={cn(
                     buttonVariants({ variant: "outline" }),
-                    "gap-2 bg-background"
+                    "gap-4 bg-background"
                   )}
                 >
                   <Users size={16} />
                   Sort by Compatibility
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-[220px]">
+                <DropdownMenuContent align="end" className="min-w-56">
                   <DropdownMenuItem
                     onClick={() => setSearchParam("sort", "compat-asc")}
                   >
@@ -196,13 +196,13 @@ const Matches = ({
               <DropdownMenuTrigger
                 className={cn(
                   buttonVariants({ variant: "outline" }),
-                  "min-w-[200px] gap-2 bg-background"
+                  "min-w-52 gap-4 bg-background"
                 )}
               >
                 <Search size={16} />
                 Filter by Skill
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-[240px] p-2">
+              <DropdownMenuContent align="end" className="min-w-60 p-2">
                 <Input
                   value={skillFilter}
                   onChange={(e) =>
@@ -213,14 +213,10 @@ const Matches = ({
                 />
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
-        </div>
-        <p className="text-muted-foreground">
-          Explore potential skill exchange partners based on your teaching and
-          learning goals. Connect to swap knowledge!
-        </p>
-      </div>
-      <div className="mx-auto grid max-w-[450px] gap-6 md:mx-0 md:w-fit md:max-w-full md:grid-cols-2 xl:grid-cols-3">
+          </>
+        }
+      />
+      <div className="grid gap-(--space-stack) sm:grid-cols-2 xl:grid-cols-3">
         {filteredMatch.length === 0 ? (
           <div className="col-span-full">
             <DataEmpty
@@ -258,7 +254,7 @@ const Matches = ({
           ))
         )}
       </div>
-    </div>
+    </PageBody>
   );
 };
 

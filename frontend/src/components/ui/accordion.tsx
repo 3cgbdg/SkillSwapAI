@@ -1,4 +1,5 @@
 import { Accordion as AccordionPrimitive } from "@base-ui/react/accordion";
+import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
@@ -13,11 +14,27 @@ function Accordion({ className, ...props }: AccordionPrimitive.Root.Props) {
   );
 }
 
-function AccordionItem({ className, ...props }: AccordionPrimitive.Item.Props) {
+const accordionItemVariants = cva("", {
+  variants: {
+    variant: {
+      divider: "not-last:border-b",
+      card: "rounded-md border border-border bg-muted/40 px-4",
+    },
+  },
+  defaultVariants: {
+    variant: "divider",
+  },
+});
+
+function AccordionItem({
+  className,
+  variant = "divider",
+  ...props
+}: AccordionPrimitive.Item.Props & VariantProps<typeof accordionItemVariants>) {
   return (
     <AccordionPrimitive.Item
       data-slot="accordion-item"
-      className={cn("not-last:border-b", className)}
+      className={cn(accordionItemVariants({ variant }), className)}
       {...props}
     />
   );

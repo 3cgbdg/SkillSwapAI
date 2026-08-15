@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MessageSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import { DataEmpty } from "@/components/composites";
+import { DataEmpty, UserRow } from "@/components/composites";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import useFriends from "@/hooks/useFriends";
 import ChatsService from "@/services/ChatsService";
@@ -40,29 +40,27 @@ export function ChatsEmptyLanding() {
       {isFetching ? (
         <p className="text-muted-foreground text-sm">Loading friends…</p>
       ) : list.length > 0 ? (
-        <ul className="mt-2 flex w-full max-w-md flex-col gap-2">
+        <div className="mt-2 flex w-full max-w-md flex-col gap-4">
           {list.map((friend) => (
-            <li key={friend.id}>
-              <button
-                type="button"
-                className="hover:bg-muted flex w-full items-center gap-3 rounded-lg border border-border px-3 py-2 text-left transition-colors"
-                onClick={() =>
-                  createChat({
-                    friendId: friend.id,
-                    friendName: friend.name || "",
-                  })
-                }
-              >
+            <UserRow
+              key={friend.id}
+              onClick={() =>
+                createChat({
+                  friendId: friend.id,
+                  friendName: friend.name || "",
+                })
+              }
+              media={
                 <UserAvatar
                   name={friend.name}
                   imageUrl={friend.imageUrl}
                   size="sm"
                 />
-                <span className="font-medium">{friend.name}</span>
-              </button>
-            </li>
+              }
+              title={friend.name}
+            />
           ))}
-        </ul>
+        </div>
       ) : (
         <p className="text-muted-foreground text-sm">
           Add friends from Matches to chat here.

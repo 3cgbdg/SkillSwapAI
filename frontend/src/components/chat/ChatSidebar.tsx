@@ -15,7 +15,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { Badge } from "@/components/ui/badge";
-import { UserRow } from "@/components/composites";
+import { PresenceDot, UserRow } from "@/components/composites";
 import { cn } from "@/lib/utils";
 import { withViewTransition } from "@/lib/viewTransition";
 
@@ -50,7 +50,7 @@ const ChatSidebar = () => {
   return (
     <Card
       className={cn(
-        "flex h-full min-h-[min(75dvh,800px)] shrink-0 grow-0 flex-col overflow-hidden rounded-xl py-4 px-3 md:px-4",
+        "flex h-full shrink-0 grow-0 flex-col py-4 px-3 md:px-4",
         isFullyOpen ? "md:w-[340px]" : "md:w-fit",
         "w-full"
       )}
@@ -58,7 +58,7 @@ const ChatSidebar = () => {
       <div className="mb-4 flex flex-col gap-1.5">
         <div
           className={cn(
-            "flex items-center gap-2",
+            "flex items-center gap-4",
             isFullyOpen ? "justify-between" : "justify-center"
           )}
         >
@@ -75,7 +75,7 @@ const ChatSidebar = () => {
           </Button>
         </div>
         {isFullyOpen && (
-          <div className="relative flex justify-between rounded-2xl border border-border p-2 leading-6">
+          <div className="relative flex items-center">
             <Input
               onChange={async (e) => {
                 setChars(e.target.value);
@@ -85,51 +85,48 @@ const ChatSidebar = () => {
               }}
               placeholder="Create a new conversation with..."
               value={chars}
-              className="basis-full border-0 px-2 text-sm shadow-none focus-visible:ring-0"
+              className="pr-10"
             />
-            {!isFetching ? (
-              friends &&
-              chars.length > 0 &&
-              friends.length > 0 && (
-                <div className="absolute left-0 top-full z-50 min-w-[250px]">
-                  <Card className="mt-2 gap-1 p-2">
-                    <div className="flex max-h-[500px] flex-col gap-1">
-                      {friends
-                        .filter((friend) =>
-                          (friend.name || "")
-                            .toLowerCase()
-                            .includes(chars.toLocaleLowerCase())
-                        )
-                        .map((friend) => (
-                          <Button
-                            type="button"
-                            key={friend.id}
-                            variant="ghost"
-                            className="justify-start gap-2 rounded-xl"
-                            onClick={() => {
-                              setChars("");
-                              createChat({
-                                payload: {
-                                  friendId: friend.id,
-                                  friendName: friend.name || "",
-                                },
-                              });
-                            }}
-                          >
-                            <Users size={20} />
-                            {friend.name}
-                          </Button>
-                        ))}
-                    </div>
-                  </Card>
-                </div>
-              )
-            ) : (
-              <Spinner size="sm" className="mr-2" />
-            )}
-            <div className="flex items-center justify-center">
-              <Search size={20} />
+            <div className="text-muted-foreground pointer-events-none absolute right-3 flex items-center justify-center">
+              {isFetching ? <Spinner size="sm" /> : <Search size={20} />}
             </div>
+            {!isFetching &&
+            friends &&
+            chars.length > 0 &&
+            friends.length > 0 ? (
+              <div className="absolute left-0 top-full z-50 min-w-60">
+                <Card className="mt-2 gap-1 p-2">
+                  <div className="flex max-h-[500px] flex-col gap-1">
+                    {friends
+                      .filter((friend) =>
+                        (friend.name || "")
+                          .toLowerCase()
+                          .includes(chars.toLocaleLowerCase())
+                      )
+                      .map((friend) => (
+                        <Button
+                          type="button"
+                          key={friend.id}
+                          variant="ghost"
+                          className="justify-start gap-4"
+                          onClick={() => {
+                            setChars("");
+                            createChat({
+                              payload: {
+                                friendId: friend.id,
+                                friendName: friend.name || "",
+                              },
+                            });
+                          }}
+                        >
+                          <Users size={20} />
+                          {friend.name}
+                        </Button>
+                      ))}
+                  </div>
+                </Card>
+              </div>
+            ) : null}
           </div>
         )}
       </div>
@@ -139,13 +136,13 @@ const ChatSidebar = () => {
         </p>
       )}
 
-      <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
+      <div className="flex flex-1 flex-col gap-4 overflow-y-auto">
         {chats?.map((chat) =>
           isFullyOpen ? (
             <UserRow
               key={chat.chatId}
               className={cn(
-                "border-0 bg-transparent shadow-none",
+                "border-0 bg-transparent",
                 path === `/inbox/${chat.chatId}` && "bg-muted"
               )}
               onClick={() =>
@@ -158,15 +155,7 @@ const ChatSidebar = () => {
                     imageUrl={chat.friend.imageUrl}
                     size="md"
                   />
-                  <span
-                    className={cn(
-                      "absolute bottom-0 right-0 size-3 rounded-full border-2 border-background",
-                      onlineUsers.includes(chat.friend.id)
-                        ? "bg-success"
-                        : "bg-muted-foreground"
-                    )}
-                    aria-hidden
-                  />
+                  <PresenceDot online={onlineUsers.includes(chat.friend.id)} />
                 </div>
               }
               title={chat.friend.name}
@@ -188,11 +177,13 @@ const ChatSidebar = () => {
               }
             />
           ) : (
-            <button
+            <Button
               type="button"
               key={chat.chatId}
+              variant="ghost"
+              size="icon"
+              className="size-12"
               onClick={() => router.push(`/inbox/${chat.chatId}`)}
-              className="flex justify-center rounded-lg p-2 hover:bg-muted"
               aria-label={chat.friend.name}
             >
               <UserAvatar
@@ -200,7 +191,7 @@ const ChatSidebar = () => {
                 imageUrl={chat.friend.imageUrl}
                 size="md"
               />
-            </button>
+            </Button>
           )
         )}
       </div>

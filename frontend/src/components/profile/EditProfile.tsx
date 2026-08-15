@@ -154,7 +154,7 @@ const EditProfile = ({
               <CardTitle className="text-lg leading-7">
                 Profile Picture
               </CardTitle>
-              <div className="mx-auto flex size-30 items-center justify-center rounded-full">
+              <div className="mx-auto flex size-30 items-center justify-center">
                 {!isPending ? (
                   user?.imageUrl ? (
                     <UserAvatar

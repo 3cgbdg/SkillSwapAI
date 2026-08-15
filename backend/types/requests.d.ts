@@ -14,9 +14,8 @@ export interface IRequestUser {
 
 export interface IRequestSession {
   title: string;
-  start: number;
-  end: number;
-  date: Date;
+  startsAt: Date;
+  endsAt: Date;
 }
 
 export interface IRequestWithSession extends PrismaRequest {
