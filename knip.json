@@ -5,7 +5,7 @@
       "project": [".husky/**"]
     },
     "frontend": {
-      "entry": ["src/app/**/*.{ts,tsx}", "src/**/route.ts"],
+      "entry": ["src/app/**/*.{ts,tsx}", "src/**/route.ts", "scripts/check-contrast.mjs"],
       "project": ["src/**/*.{ts,tsx}", "src/**/*.test.ts"]
     },
     "backend": {

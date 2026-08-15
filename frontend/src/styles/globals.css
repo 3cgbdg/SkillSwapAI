@@ -128,15 +128,15 @@
   --muted-foreground: oklch(0.5 0.02 285);
   --accent: oklch(0.97 0.014 75);
   --accent-foreground: var(--foreground);
-  --brand-accent: oklch(0.78 0.15 70);
-  --accent-teach: oklch(0.62 0.13 200);
+  --brand-accent: oklch(0.55 0.15 70);
+  --accent-teach: oklch(0.44 0.13 200);
   --accent-teach-soft: oklch(0.95 0.03 200);
-  --accent-learn: oklch(0.68 0.14 45);
+  --accent-learn: oklch(0.47 0.15 45);
   --accent-learn-soft: oklch(0.96 0.035 45);
   --destructive: oklch(0.55 0.2 25);
-  --success: oklch(0.6 0.14 150);
+  --success: oklch(0.42 0.14 150);
   --border: oklch(0.89 0.012 80);
-  --input: var(--border);
+  --input: oklch(0.62 0.02 285);
   --ring: oklch(0.42 0.12 285);
   --header-h: 3.5rem;
   --sidebar-w: 16rem;
@@ -209,7 +209,7 @@
   --destructive: oklch(0.65 0.2 25);
   --success: oklch(0.72 0.15 145);
   --border: oklch(0.33 0.02 285);
-  --input: var(--border);
+  --input: oklch(0.55 0.02 285);
   --ring: oklch(0.72 0.13 290);
   --elev-shadow-sm: 0 1px 2px oklch(0 0 0 / 40%);
   --elev-shadow-md: 0 4px 12px oklch(0 0 0 / 45%);
@@ -217,7 +217,7 @@
   --session-plum-bg: oklch(0.72 0.13 290 / 22%);
   --session-plum-fg: oklch(0.88 0.06 290);
   --session-amber-bg: oklch(0.8 0.14 70 / 25%);
-  --session-amber-fg: oklch(0.92 0.06 70);
+  --session-amber-fg: oklch(0.95 0.06 70);
   --session-sage-bg: oklch(0.72 0.15 145 / 22%);
   --session-sage-fg: oklch(0.9 0.05 145);
   --session-coral-bg: oklch(0.7 0.18 30 / 24%);

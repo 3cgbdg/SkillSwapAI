@@ -58,6 +58,13 @@ const eslintConfig = [
     },
   },
   {
+    // Node CLI utilities report progress/results via console output by design.
+    files: ["scripts/**/*.{js,mjs}"],
+    rules: {
+      "no-console": "off",
+    },
+  },
+  {
     files: [
       "src/app/**/*.{js,jsx,ts,tsx}",
       "src/features/**/*.{js,jsx,ts,tsx}",

@@ -774,6 +774,24 @@ network no unexpected 4xx/5xx. The **smoke set** is `/dashboard`, `/discover`,
 ---
 
 **1. Add a re-runnable contrast checker and fix the failing light-mode tokens.**
+`[x]` **Status: PARTIALLY VERIFIED.** `check:contrast` (44/44 pairs, gate
+proven to fail on revert), `lint` (0 errors, 9 warnings ≤ 10 baseline), and
+`knip` (clean) all pass. The browser gate did **not** run: Docker Desktop's
+backend was stuck on a stale `AF_UNIX` socket
+(`%LOCALAPPDATA%\Docker\run\dockerInference`, "The file cannot be accessed by
+the system") that survived killing every Docker process and had no running
+WSL distro holding it — likely needs a host reboot to clear. Per user
+direction, this step (and the plan generally) proceeds on mechanical evidence
+only until Docker is available again; re-run the smoke-set browser gate for
+this step once it is.
+Also fixed, beyond the step's named token list, because the checked-in pair
+table requires them and no other step owns them: `--brand-accent` (was
+2.00:1/2.03:1 light against background/card, non-text 3:1 requirement — step
+8's plan to move the dashboard icon to "a token that passes 3:1" only works
+around one usage, it never fixes the shared token itself) and dark
+`--session-amber-fg`/`--session-amber-bg` (was 4.48:1, just under the 4.5:1
+text requirement, not listed in Current State §9's dark table). Both fixed by
+darkening/lightening in place; see commit for exact values.
 
 Files: new `frontend/scripts/check-contrast.mjs`; edit
 `frontend/src/styles/globals.css`.
