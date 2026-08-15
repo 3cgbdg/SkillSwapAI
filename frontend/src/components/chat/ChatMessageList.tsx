@@ -2,6 +2,7 @@
 
 import { format } from "date-fns";
 import { AlertCircle, CheckCheck, RotateCcw } from "lucide-react";
+import { useCallback } from "react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -14,15 +15,24 @@ function MessageBubble({
   msg,
   isMine,
   isLastInGroup,
-  messageRef,
+  flatIdx,
+  registerMessageRef,
   onRetry,
 }: {
   msg: ExtendedMessage;
   isMine: boolean;
   isLastInGroup: boolean;
-  messageRef?: (el: HTMLDivElement | null) => void;
+  flatIdx: number;
+  registerMessageRef: (index: number, el: HTMLDivElement | null) => void;
   onRetry?: () => void;
 }) {
+  const messageRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      if (flatIdx >= 0) registerMessageRef(flatIdx, el);
+    },
+    [flatIdx, registerMessageRef]
+  );
+
   return (
     <div
       ref={messageRef}
@@ -121,11 +131,8 @@ export function ChatMessageList({
                   msg={msg as ExtendedMessage}
                   isMine={item.isMine}
                   isLastInGroup={idx === item.messages.length - 1}
-                  messageRef={
-                    flatIdx >= 0
-                      ? (el) => registerMessageRef(flatIdx, el)
-                      : undefined
-                  }
+                  flatIdx={flatIdx}
+                  registerMessageRef={registerMessageRef}
                   onRetry={
                     (msg as ExtendedMessage).failed && onRetryMessage
                       ? () => onRetryMessage(msg as ExtendedMessage)
