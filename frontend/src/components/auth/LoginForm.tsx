@@ -43,7 +43,7 @@ export function LoginForm() {
   });
 
   return (
-    <Card className="w-full max-w-md border shadow-lg">
+    <Card className="w-full max-w-lg" elevation="raised">
       <CardContent className="flex flex-col gap-6 pt-10">
         <AuthBrand />
         <div className="text-center">
