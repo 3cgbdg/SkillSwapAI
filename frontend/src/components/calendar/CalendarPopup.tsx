@@ -297,7 +297,7 @@ const CalendarPopup = ({
                     key={key}
                     type="button"
                     className={cn(
-                      "h-8 w-8 rounded-full border-2 border-transparent ring-offset-background transition",
+                      "h-8 w-8 rounded-full border-2 border-transparent outline-none ring-offset-background transition hover:scale-105 focus-visible:ring-3 focus-visible:ring-ring/50",
                       selectedColor === key &&
                         "border-primary ring-2 ring-primary"
                     )}

@@ -27,6 +27,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { PageBody, PageHeader } from "@/components/layouts";
 
 const EditProfile = ({
   setIsEditing,
@@ -140,17 +141,20 @@ const EditProfile = ({
   }, [user, setValue]);
 
   return (
-    <div className="flex flex-col gap-7.5">
-      <div className="flex items-center gap-4 justify-between">
-        <h1 className="font-heading text-h1 text-foreground">Edit Profile</h1>
-        <Button type="button" onClick={() => setIsEditing(false)}>
-          Finish editing
-        </Button>
-      </div>
+    <PageBody>
+      <PageHeader
+        title="Edit profile"
+        description="Update your photo, personal details, and skills."
+        actions={
+          <Button type="button" onClick={() => setIsEditing(false)}>
+            Finish editing
+          </Button>
+        }
+      />
       <div className="flex flex-col gap-6">
         <div className="grid gap-6 md:grid-cols-3">
-          <Card className="flex flex-col justify-between gap-4 p-6 md:col-span-1">
-            <CardHeader className="gap-3.5 p-0">
+          <Card className="flex flex-col justify-between gap-4 md:col-span-1">
+            <CardHeader className="gap-3.5">
               <CardTitle className="text-lg leading-7">
                 Profile Picture
               </CardTitle>
@@ -171,7 +175,7 @@ const EditProfile = ({
                 )}
               </div>
             </CardHeader>
-            <CardContent className="flex flex-col gap-3 p-0">
+            <CardContent className="flex flex-col gap-3">
               <label className={cn(buttonVariants(), "w-full cursor-pointer")}>
                 Update Picture
                 <input
@@ -191,12 +195,12 @@ const EditProfile = ({
             </CardContent>
           </Card>
 
-          <Card className="gap-4 p-6 md:col-span-2">
+          <Card className="gap-4 md:col-span-2">
             <form
               className="flex flex-col gap-4"
               onSubmit={handleSubmit(onSubmit)}
             >
-              <CardHeader className="gap-1 p-0">
+              <CardHeader className="gap-1">
                 <CardTitle className="text-lg leading-7">
                   Personal Information
                 </CardTitle>
@@ -204,7 +208,7 @@ const EditProfile = ({
                   Update your personal details and contact information.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="grid gap-3.5 p-0">
+              <CardContent className="grid gap-3.5">
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="name">Name</Label>
                   <Input
@@ -286,7 +290,7 @@ const EditProfile = ({
         </div>
         <AddSkills />
       </div>
-    </div>
+    </PageBody>
   );
 };
 

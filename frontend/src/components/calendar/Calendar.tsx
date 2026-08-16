@@ -92,12 +92,9 @@ const Calendar = () => {
     <AsyncBoundary isError={isError} error={error}>
       <div className="flex flex-col gap-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className="font-heading text-h1 text-foreground">Calendar</h1>
-            <p className="text-muted-foreground text-sm">
-              {format(weekStart, "MMM d")} – {format(weekEnd, "MMM d, yyyy")}
-            </p>
-          </div>
+          <p className="text-muted-foreground text-body-sm font-medium">
+            {format(weekStart, "MMM d")} – {format(weekEnd, "MMM d, yyyy")}
+          </p>
           <div className="flex flex-wrap items-center gap-2">
             <Button
               type="button"

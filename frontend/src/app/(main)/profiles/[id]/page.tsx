@@ -52,7 +52,7 @@ export default function PublicProfilePage() {
             actions={
               <>
                 <Button
-                  className="gap-5"
+                  className="gap-2"
                   onClick={() =>
                     createChat({
                       payload: { friendId: id, friendName: profile.name },
@@ -64,7 +64,7 @@ export default function PublicProfilePage() {
                 </Button>
                 <Button
                   variant="outline"
-                  className="gap-5"
+                  className="gap-2"
                   onClick={() =>
                     router.push(
                       `/schedule?schedule=true&name=${encodeURIComponent(profile.name)}`

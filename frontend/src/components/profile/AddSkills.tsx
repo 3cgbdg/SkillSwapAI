@@ -106,11 +106,11 @@ const AddSkills = () => {
 
   return (
     <div className="grid gap-8 md:grid-cols-2">
-      <Card className="flex flex-col p-6 pt-[21px]">
-        <CardHeader className="mb-4 p-0">
+      <Card className="flex flex-col">
+        <CardHeader className="mb-4">
           <CardTitle className="text-h2 leading-6">Skills I Know</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-1 flex-col p-0">
+        <CardContent className="flex flex-1 flex-col">
           <div className="mb-6 flex max-h-[170px] flex-wrap gap-2 overflow-y-auto">
             {user?.knownSkills && user.knownSkills.length > 0 ? (
               user.knownSkills.map((skill) => (
@@ -192,13 +192,13 @@ const AddSkills = () => {
         </CardContent>
       </Card>
 
-      <Card className="flex flex-col p-6 pt-[21px]">
-        <CardHeader className="mb-4 p-0">
+      <Card className="flex flex-col">
+        <CardHeader className="mb-4">
           <CardTitle className="text-h2 leading-6">
             Skills I Want to Learn
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-1 flex-col p-0">
+        <CardContent className="flex flex-1 flex-col">
           <div className="mb-6 flex max-h-[170px] flex-wrap gap-2 overflow-y-auto">
             {user?.skillsToLearn && user.skillsToLearn.length > 0 ? (
               user.skillsToLearn.map((skill) => (

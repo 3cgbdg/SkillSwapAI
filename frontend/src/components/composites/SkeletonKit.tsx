@@ -118,7 +118,7 @@ function PublicProfileGrid() {
 
 function ChatLayoutSkeleton() {
   return (
-    <div className="flex min-h-[calc(100dvh_-_var(--header-h)_-_var(--space-page)_*_2_-_4.5rem)] gap-4">
+    <div className="flex min-h-[var(--chat-panel-min-h)] gap-4 md:min-h-[var(--chat-panel-min-h-md)]">
       <Skeleton className="hidden h-full w-[340px] rounded-xl md:block" />
       <Skeleton className="h-full flex-1 rounded-xl" />
     </div>

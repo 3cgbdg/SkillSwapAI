@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 export function DataEmpty({
   icon: Icon,
-  illustration = true,
+  illustration,
   title,
   description,
   action,
@@ -22,6 +22,8 @@ export function DataEmpty({
   className,
 }: {
   icon?: LucideIcon;
+  /** Defaults to true only when no icon is given — pass explicitly to show
+   * the mascot alongside/instead of an icon you've also provided. */
   illustration?: boolean;
   title: string;
   description?: ReactNode;
@@ -29,10 +31,11 @@ export function DataEmpty({
   children?: ReactNode;
   className?: string;
 }) {
+  const showIllustration = illustration ?? !Icon;
   return (
     <Empty className={cn("bg-muted/30", className)}>
       <EmptyHeader>
-        {illustration ? (
+        {showIllustration ? (
           <WarmScholarEmptyArt className="text-primary h-16 w-24" />
         ) : Icon ? (
           <EmptyMedia variant="icon">
