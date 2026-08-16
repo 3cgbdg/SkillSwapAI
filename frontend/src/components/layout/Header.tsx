@@ -108,20 +108,38 @@ const Header = () => {
   return (
     <>
       <CommandPalette />
-      <header className="border-border bg-card relative flex items-center justify-between border-b px-2 py-3 md:px-6">
-        <div className="flex grow items-center gap-2 md:gap-4">
+      <header className="border-border bg-card relative flex items-center gap-2 border-b px-2 py-3 md:gap-4 md:px-6">
+        <div className="flex shrink-0 items-center gap-2 md:gap-4">
           <SidebarTrigger />
           <div className="md:hidden">
             <HeaderLogo />
           </div>
         </div>
 
-        <div className="relative flex items-center gap-2 md:gap-4">
+        <Button
+          type="button"
+          variant="outline"
+          className="text-muted-foreground hidden max-w-md min-w-0 flex-1 justify-start gap-2 md:inline-flex"
+          onClick={() =>
+            window.dispatchEvent(
+              new KeyboardEvent("keydown", { key: "k", ctrlKey: true })
+            )
+          }
+        >
+          <Search className="size-4 shrink-0" />
+          <span className="truncate">Search matches, skills, people…</span>
+          <kbd className="bg-muted ml-auto hidden shrink-0 rounded px-1.5 py-0.5 text-xs lg:inline">
+            Ctrl+K
+          </kbd>
+        </Button>
+
+        <div className="relative ml-auto flex shrink-0 items-center gap-2 md:gap-4">
           <Button
             type="button"
             variant="outline"
-            size="sm"
-            className="hidden gap-2 md:inline-flex"
+            size="icon"
+            className="md:hidden"
+            aria-label="Search"
             onClick={() =>
               window.dispatchEvent(
                 new KeyboardEvent("keydown", { key: "k", ctrlKey: true })
@@ -129,10 +147,6 @@ const Header = () => {
             }
           >
             <Search className="size-4" />
-            Search
-            <kbd className="text-muted-foreground hidden text-xs lg:inline">
-              Ctrl+K
-            </kbd>
           </Button>
 
           <AsyncBoundary isLoading={isLoading} isError={isError} error={error}>
