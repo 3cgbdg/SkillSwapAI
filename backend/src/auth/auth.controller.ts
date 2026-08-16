@@ -25,6 +25,7 @@ import type { IReturnMessage, ReturnDataType } from 'types/general';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import { CookiesService } from './cookies.service';
 import { UsersService } from 'src/users/users.service';
+import { GoogleConfiguredGuard } from './google-configured.guard';
 
 import { Throttle } from '@nestjs/throttler';
 
@@ -41,13 +42,13 @@ export class AuthController {
   ) {}
 
   @Get('google')
-  @UseGuards(AuthGuard('google'))
+  @UseGuards(GoogleConfiguredGuard, AuthGuard('google'))
   async googleAuth() {
     // triggers google auth redirect
   }
 
   @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
+  @UseGuards(GoogleConfiguredGuard, AuthGuard('google'))
   async googleAuthRedirect(@Req() req: Request, @Res() res: Response) {
     const profile = req.user as GoogleProfile;
     if (!profile) {
@@ -67,7 +68,7 @@ export class AuthController {
     );
 
     const frontendUrl =
-      this.configService.get<string>('CORS_ORIGIN') || 'http://localhost:3000';
+      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
     return res.redirect(`${frontendUrl}/dashboard`);
   }
 

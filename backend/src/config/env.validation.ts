@@ -25,4 +25,8 @@ export const envValidationSchema = Joi.object({
   AWS_SECRET_ACCESS_KEY: Joi.string().required(),
   ADMIN_SECRET: Joi.string().optional().allow(''),
   SENTRY_DSN: Joi.string().uri().optional().allow(''),
+  GOOGLE_CLIENT_ID: Joi.string().optional().allow(''),
+  GOOGLE_CLIENT_SECRET: Joi.string().optional().allow(''),
+  GOOGLE_CALLBACK_URL: Joi.string().uri().optional().allow(''),
+  FRONTEND_URL: Joi.string().uri().default('http://localhost:3000'),
 });

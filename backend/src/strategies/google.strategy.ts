@@ -22,7 +22,8 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     super({
       clientID: clientID || 'GOOGLE_OAUTH_DISABLED',
       clientSecret: clientSecret || 'GOOGLE_OAUTH_DISABLED',
-      callbackURL: callbackURL || 'http://localhost:5200/auth/google/callback',
+      callbackURL:
+        callbackURL || 'http://localhost:5200/api/auth/google/callback',
       scope: ['email', 'profile'],
     });
   }
