@@ -1,4 +1,4 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Inject, Logger } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
@@ -125,5 +125,13 @@ export class AiQueueProcessor extends WorkerHost {
     job: Job<AiSkillSuggestionsJobPayload>,
   ) {
     await this.aiService.getAiSuggestionSkills(job.data.userId);
+  }
+
+  // The underlying BullMQ Worker extends EventEmitter and crashes the
+  // process on an unhandled 'error' event (e.g. its Redis connection
+  // failing) unless something listens for it.
+  @OnWorkerEvent('error')
+  onError(err: Error) {
+    this.logger.error(`Worker error: ${err.message}`);
   }
 }
