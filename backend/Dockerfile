@@ -54,4 +54,9 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
-CMD ["node", "dist/src/main.js"]
+# prisma migrate deploy only applies pending migrations in order (unlike
+# migrate dev, it never diffs/reconciles schema drift), so it's safe to run
+# unattended on every boot — this is the only place migrations against the
+# real production database happen; nothing else in the deploy pipeline runs
+# them.
+CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node dist/src/main.js"]
