@@ -1,8 +1,8 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
+import { MetricRing } from "@/components/composites/MetricRing";
 import { SwapAxis } from "@/components/composites/SwapAxis";
-import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -37,9 +37,10 @@ export function DashboardMatchCard({
             <CardTitle className="truncate">{match.other.name}</CardTitle>
             <CardDescription>Potential skill-swap partner</CardDescription>
           </div>
-          <Badge variant="secondary" className="tabular-nums">
-            {match.compatibility ?? 0}% match
-          </Badge>
+          <MetricRing
+            value={match.compatibility ?? 0}
+            label={`${match.compatibility ?? 0}% match`}
+          />
         </CardHeader>
         <CardContent className="flex grow flex-col gap-4">
           <SwapAxis

@@ -2,7 +2,6 @@
 
 import NotificationsList from "@/components/layout/headerComponents/NotificationsList";
 import { AsyncBoundary, DataEmpty } from "@/components/composites";
-import { Spinner } from "@/components/ui/spinner";
 import useFriends from "@/hooks/useFriends";
 import RequestsService from "@/services/RequestsService";
 import { IRequest } from "@/types/session";
@@ -59,16 +58,8 @@ export function InboxRequestsPanel() {
     },
   });
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[40dvh] items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    );
-  }
-
   return (
-    <AsyncBoundary isError={isError} error={error}>
+    <AsyncBoundary isLoading={isLoading} isError={isError} error={error}>
       {reqs && reqs.length > 0 ? (
         <NotificationsList
           reqs={reqs}
