@@ -1,8 +1,11 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 import { CreateFriendDto } from './dto/create-friend.dto';
 import { PrismaService } from 'prisma/prisma.service';
 import { ChatGateway } from 'src/webSockets/chat.gateway';
@@ -10,12 +13,14 @@ import { IReturnMessage, ReturnDataType } from 'types/general';
 import { IFriendItem } from 'types/friends';
 
 import { UserUtils } from 'src/utils/user.utils';
+import { CACHE_TTL_LIST_MS, CacheKeys } from 'src/utils/cache-keys';
 
 @Injectable()
 export class FriendsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly chatGateway: ChatGateway,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
   async create(dto: CreateFriendDto, id: string): Promise<IReturnMessage> {
     const user = await this.prisma.user.findUnique({ where: { id: dto.id } });
@@ -35,6 +40,16 @@ export class FriendsService {
       });
     });
 
+    // Becoming friends changes both users' friends lists and their
+    // available-match eligibility (buildAvailableMatchesFilter includes
+    // friendOf/friends in its OR criteria).
+    await Promise.all([
+      this.cacheManager.del(CacheKeys.friendsList(id)),
+      this.cacheManager.del(CacheKeys.friendsList(dto.id)),
+      this.cacheManager.del(CacheKeys.availableMatches(id)),
+      this.cacheManager.del(CacheKeys.availableMatches(dto.id)),
+    ]);
+
     return { message: `${user.name} successfully added to friends!` };
   }
 
@@ -45,6 +60,11 @@ export class FriendsService {
   // }
 
   async findAll(id: string): Promise<ReturnDataType<IFriendItem[]>> {
+    const cacheKey = CacheKeys.friendsList(id);
+    const cached =
+      await this.cacheManager.get<ReturnDataType<IFriendItem[]>>(cacheKey);
+    if (cached) return cached;
+
     const friendships = await this.prisma.friendship.findMany({
       where: {
         OR: [{ user1Id: id }, { user2Id: id }],
@@ -60,7 +80,9 @@ export class FriendsService {
       UserUtils.getOtherUser(id, f.user1, f.user2),
     );
 
-    return { data };
+    const result = { data };
+    await this.cacheManager.set(cacheKey, result, CACHE_TTL_LIST_MS);
+    return result;
   }
 
   async getOnlineFriends(myId: string): Promise<ReturnDataType<string[]>> {
