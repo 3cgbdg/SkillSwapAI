@@ -7,7 +7,6 @@ import { Logger } from 'nestjs-pino';
 import * as Sentry from '@sentry/nestjs';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
-import { LoggerInterceptor } from './common/interceptors/logger.interceptor';
 import { RedisIoAdapter } from './webSockets/redis-io.adapter';
 
 async function bootstrap() {
@@ -40,8 +39,6 @@ async function bootstrap() {
   app.setGlobalPrefix('api', {
     exclude: ['health', 'health/live', 'health/ready'],
   });
-
-  app.useGlobalInterceptors(new LoggerInterceptor());
 
   app.enableCors({
     origin: configService.get<string>('CORS_ORIGIN') || 'http://localhost:3000',

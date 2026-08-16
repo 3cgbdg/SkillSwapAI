@@ -7,14 +7,13 @@ import {
   Query,
   Req,
 } from '@nestjs/common';
-import { ChatsService } from './chats.service';
+import { ChatsService, ChatMessage } from './chats.service';
 import { AuthGuard } from '@nestjs/passport';
 import { GetChatDto } from './dto/get-chat.dto';
 import { CreateChatDto } from './dto/create-chat.dto';
 import type { RequestWithUser } from 'types/auth';
 import { ReturnDataType } from 'types/general';
 import { IChatListItem, IChatResponse } from 'types/chats';
-import { Message } from '../prisma/prisma-exports.js';
 
 @Controller('chats')
 @UseGuards(AuthGuard('jwt'))
@@ -31,7 +30,7 @@ export class ChatsController {
   async findOne(
     @Query() dto: GetChatDto,
     @Req() req: RequestWithUser,
-  ): Promise<ReturnDataType<Message[]>> {
+  ): Promise<ReturnDataType<ChatMessage[]>> {
     return this.chatsService.findOne(req.user.id, dto.with);
   }
 

@@ -1,5 +1,7 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Logger } from '@nestjs/common';
+import { Inject, Logger } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 import { Job } from 'bullmq';
 import { AiService } from 'src/ai/ai.service';
 import { PlansService } from 'src/plans/plans.service';
@@ -7,6 +9,7 @@ import { PrismaService } from 'prisma/prisma.service';
 import { RequestGateway } from 'src/webSockets/request.gateway';
 import { MatchesUtils } from 'src/utils/matches.utils';
 import { UserUtils } from 'src/utils/user.utils';
+import { CacheKeys } from 'src/utils/cache-keys';
 import {
   GenerateMatchJobPayload,
   JOB_GENERATE_MATCH,
@@ -24,6 +27,7 @@ export class AiQueueProcessor extends WorkerHost {
     private readonly plansService: PlansService,
     private readonly prisma: PrismaService,
     private readonly requestGateway: RequestGateway,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {
     super();
   }
@@ -75,6 +79,13 @@ export class AiQueueProcessor extends WorkerHost {
 
         return match.id;
       });
+
+      await Promise.all([
+        this.cacheManager.del(CacheKeys.availableMatches(myId)),
+        this.cacheManager.del(CacheKeys.availableMatches(otherId)),
+        this.cacheManager.del(CacheKeys.activeMatches(myId)),
+        this.cacheManager.del(CacheKeys.activeMatches(otherId)),
+      ]);
 
       const matchDb = await this.prisma.match.findUnique({
         where: { id: matchId },

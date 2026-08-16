@@ -83,7 +83,7 @@ export class SessionsService {
     const startsAt = new Date(dto.startsAt);
     const endsAt = new Date(dto.endsAt);
 
-    const overlappingSessions = await this.prisma.session.findMany({
+    const overlappingCount = await this.prisma.session.count({
       where: {
         users: { some: { id: { in: [myId, friendId] } } },
         startsAt: { lt: endsAt },
@@ -91,7 +91,7 @@ export class SessionsService {
       },
     });
 
-    if (overlappingSessions.length > 0) {
+    if (overlappingCount > 0) {
       throw new BadRequestException('This time range is busy.');
     }
   }

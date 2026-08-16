@@ -1,10 +1,5 @@
 import { IMatchResponse, IAvailableMatchItem } from 'types/matches';
-import {
-  Match as PrismaMatch,
-  User as PrismaUser,
-  Skill as PrismaSkill,
-  Friendship,
-} from '../prisma/prisma-exports.js';
+import { Match as PrismaMatch } from '../prisma/prisma-exports.js';
 import { UserUtils } from './user.utils';
 
 export interface IMatchPrismaResult extends PrismaMatch {
@@ -24,11 +19,14 @@ export interface IMatchPrismaResult extends PrismaMatch {
   };
 }
 
-export interface IUserWithFriendships extends PrismaUser {
-  knownSkills: PrismaSkill[];
-  skillsToLearn: PrismaSkill[];
-  friendOf: Friendship[];
-  friends: Friendship[];
+export interface IUserWithFriendships {
+  id: string;
+  name: string | null;
+  imageUrl: string | null;
+  knownSkills: { id: string; title: string }[];
+  skillsToLearn: { id: string; title: string }[];
+  friendOf: { id: string }[];
+  friends: { id: string }[];
 }
 
 export class MatchesUtils {
@@ -59,12 +57,21 @@ export class MatchesUtils {
     };
   }
 
-  static availableMatchesInclude(myId: string) {
+  static availableMatchesSelect(myId: string) {
     return {
-      knownSkills: true,
-      skillsToLearn: true,
-      friendOf: { where: { OR: [{ user1Id: myId }, { user2Id: myId }] } },
-      friends: { where: { OR: [{ user1Id: myId }, { user2Id: myId }] } },
+      id: true,
+      name: true,
+      imageUrl: true,
+      knownSkills: { select: { id: true, title: true } },
+      skillsToLearn: { select: { id: true, title: true } },
+      friendOf: {
+        where: { OR: [{ user1Id: myId }, { user2Id: myId }] },
+        select: { id: true },
+      },
+      friends: {
+        where: { OR: [{ user1Id: myId }, { user2Id: myId }] },
+        select: { id: true },
+      },
     };
   }
 

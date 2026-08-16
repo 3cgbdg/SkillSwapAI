@@ -15,6 +15,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import type { SocketData } from '../../types/general';
 import type { JwtPayload } from '../../types/auth';
+import { CacheKeys } from '../utils/cache-keys';
 
 @WebSocketGateway({
   cors: {
@@ -96,26 +97,26 @@ export class ChatGateway
   }
 
   async getCurrentOnlineFriends(id: string): Promise<string[]> {
-    const friends1 = await this.prisma.friendship.findMany({
-      where: { user1Id: id },
-      include: { user2: { select: { id: true, name: true } } },
-    });
-    const friends2 = await this.prisma.friendship.findMany({
-      where: { user2Id: id },
-      include: { user1: { select: { id: true, name: true } } },
-    });
+    const [friends1, friends2] = await Promise.all([
+      this.prisma.friendship.findMany({
+        where: { user1Id: id },
+        select: { user2Id: true },
+      }),
+      this.prisma.friendship.findMany({
+        where: { user2Id: id },
+        select: { user1Id: true },
+      }),
+    ]);
     const friendsIds = [
-      ...friends1.map((item) => item.user2.id),
-      ...friends2.map((item) => item.user1.id),
+      ...friends1.map((item) => item.user2Id),
+      ...friends2.map((item) => item.user1Id),
     ];
-    const online: string[] = [];
 
-    for (const fid of friendsIds) {
-      const value = await this.cacheManager.get(`user:online:${fid}`);
-      if (value) online.push(fid);
-    }
+    if (friendsIds.length === 0) return [];
 
-    return online;
+    const keys = friendsIds.map((fid) => `user:online:${fid}`);
+    const values = await this.cacheManager.mget<number>(keys);
+    return friendsIds.filter((_, i) => values[i]);
   }
 
   @SubscribeMessage('updateSeen')
@@ -125,6 +126,7 @@ export class ChatGateway
         where: { id: payload.messageId },
         data: { isSeen: true },
       });
+      await this.cacheManager.del(CacheKeys.chatsList(updatedMessage.toId));
       const isOnline = await this.cacheManager.get<string>(
         `user:online:${updatedMessage.fromId}`,
       );
@@ -213,6 +215,11 @@ export class ChatGateway
       messageId = message.id;
     }
     //otherwise simply creating new message
+
+    await Promise.all([
+      this.cacheManager.del(CacheKeys.chatsList(fromId)),
+      this.cacheManager.del(CacheKeys.chatsList(payload.to)),
+    ]);
 
     const isOnline = await this.cacheManager.get<string>(
       `user:online:${payload.to}`,

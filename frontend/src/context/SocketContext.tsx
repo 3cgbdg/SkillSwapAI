@@ -78,9 +78,16 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       }
     }, 30000);
 
+    let hasConnectedOnce = false;
     sock.on("connect", () => {
       console.log("[SocketContext] Connected to socket with ID:", sock.id);
-      void queryClient.invalidateQueries({ queryKey: ["profile"] });
+      // Only force a profile refetch on this socket's first connect —
+      // reconnects (flaky network, tab backgrounding) shouldn't override the
+      // query's own staleTime with a forced refetch every time.
+      if (!hasConnectedOnce) {
+        hasConnectedOnce = true;
+        void queryClient.invalidateQueries({ queryKey: ["profile"] });
+      }
     });
 
     const handleReceiveMessage = (payload: {

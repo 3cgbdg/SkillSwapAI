@@ -1,25 +1,46 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 import { PrismaService } from 'prisma/prisma.service';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { ReturnDataType } from 'types/general';
 import { IChatListItem, IChatResponse } from 'types/chats';
 import { Message } from '../prisma/prisma-exports.js';
 import { ChatsUtils } from 'src/utils/chats.utils';
+import { CACHE_TTL_LIST_MS, CacheKeys } from 'src/utils/cache-keys';
+
+export type ChatMessage = Pick<
+  Message,
+  'id' | 'content' | 'fromId' | 'createdAt' | 'isSeen'
+>;
 
 @Injectable()
 export class ChatsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+  ) {}
 
   async findOne(
     myId: string,
     friendId: string,
-  ): Promise<ReturnDataType<Message[]>> {
+  ): Promise<ReturnDataType<ChatMessage[]>> {
     const chat = await this.prisma.chat.findFirst({
       where: {
         users: { every: { id: { in: [myId, friendId] } } },
       },
       include: {
-        messages: { orderBy: { createdAt: 'desc' }, take: 200 },
+        messages: {
+          orderBy: { createdAt: 'desc' },
+          take: 200,
+          select: {
+            id: true,
+            content: true,
+            fromId: true,
+            createdAt: true,
+            isSeen: true,
+          },
+        },
       },
     });
 
@@ -30,6 +51,11 @@ export class ChatsService {
   }
 
   async findAll(myId: string): Promise<ReturnDataType<IChatListItem[]>> {
+    const cacheKey = CacheKeys.chatsList(myId);
+    const cached =
+      await this.cacheManager.get<ReturnDataType<IChatListItem[]>>(cacheKey);
+    if (cached) return cached;
+
     const chats = await this.prisma.chat.findMany({
       where: {
         users: { some: { id: myId } },
@@ -42,6 +68,7 @@ export class ChatsService {
         messages: {
           orderBy: { createdAt: 'desc' },
           take: 1,
+          select: { content: true, createdAt: true },
         },
         _count: {
           select: {
@@ -54,9 +81,11 @@ export class ChatsService {
       take: 100,
     });
 
-    return {
+    const result = {
       data: chats.map((chat) => ChatsUtils.mapChatListItem(chat)),
     };
+    await this.cacheManager.set(cacheKey, result, CACHE_TTL_LIST_MS);
+    return result;
   }
 
   async createChat(
@@ -77,6 +106,10 @@ export class ChatsService {
           },
         },
       });
+      await Promise.all([
+        this.cacheManager.del(CacheKeys.chatsList(myId)),
+        this.cacheManager.del(CacheKeys.chatsList(dto.friendId)),
+      ]);
     }
 
     const data: IChatResponse = {

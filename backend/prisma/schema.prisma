@@ -112,6 +112,7 @@ model Message {
   @@index([chatId, createdAt])
   @@index([fromId])
   @@index([toId])
+  @@index([toId, isSeen])
   @@index([createdAt])
 }
 

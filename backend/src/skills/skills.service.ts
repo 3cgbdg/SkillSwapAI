@@ -1,13 +1,23 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 import { PrismaService } from 'prisma/prisma.service';
 import { GetSkillsDto } from './dto/GetSkillsDto';
 import { SkillDto } from './dto/skills.dto';
 import { User } from '../prisma/prisma-exports.js';
 import { IReturnMessage, ReturnDataType } from 'types/general';
+import { CacheKeys } from 'src/utils/cache-keys';
 
 @Injectable()
 export class SkillsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+  ) {}
 
   async findAll(dto: GetSkillsDto): Promise<ReturnDataType<any[]>> {
     const skills = await this.prisma.skill.findMany({
@@ -24,6 +34,7 @@ export class SkillsService {
       where: { id: userId },
       data: { knownSkills: { connect: { id: skill.id } } },
     });
+    await this.cacheManager.del(CacheKeys.availableMatches(userId));
 
     return { message: 'Successfully added!' };
   }
@@ -43,6 +54,7 @@ export class SkillsService {
       where: { id: user.id },
       data: { skillsToLearn: { connect: { id: skill.id } } },
     });
+    await this.cacheManager.del(CacheKeys.availableMatches(user.id));
 
     return { message: 'Successfully added!' };
   }
@@ -55,6 +67,7 @@ export class SkillsService {
       where: { id: userId },
       data: { knownSkills: { disconnect: { title: dto.title } } },
     });
+    await this.cacheManager.del(CacheKeys.availableMatches(userId));
     return { message: 'Successfully removed!' };
   }
 
@@ -66,6 +79,7 @@ export class SkillsService {
       where: { id: userId },
       data: { skillsToLearn: { disconnect: { title: dto.title } } },
     });
+    await this.cacheManager.del(CacheKeys.availableMatches(userId));
     return { message: 'Successfully removed!' };
   }
 

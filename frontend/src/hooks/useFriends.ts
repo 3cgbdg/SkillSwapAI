@@ -14,6 +14,7 @@ export const useFriends = () => {
   const query = useQuery<IFriend[]>({
     queryKey: ["friends"],
     queryFn: async () => FriendsService.getFriends(),
+    staleTime: 1000 * 60 * 2,
   });
 
   // tracking error and showing it
