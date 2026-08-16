@@ -114,13 +114,16 @@ const Page = () => {
         <PageHeader title={`Training plan with ${currentMatch.other.name}`} />
 
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
-          <Card className="col-span-3 gap-4 bg-gradient-to-br from-surface-raised to-brand-accent/15 p-8 xl:col-span-2">
-            <CardHeader className="p-0">
+          <Card
+            className="col-span-3 gap-4 bg-gradient-to-br from-surface-raised to-brand-accent/15 xl:col-span-2"
+            elevation="raised"
+          >
+            <CardHeader>
               <CardTitle className="font-heading text-h3">
                 Your AI-powered training plan
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col gap-4 p-0">
+            <CardContent className="flex flex-col gap-4">
               <p>{currentMatch.aiExplanation}</p>
               {currentMatch.keyBenefits?.length ? (
                 <div className="flex flex-col gap-4">
@@ -135,21 +138,19 @@ const Page = () => {
             </CardContent>
           </Card>
 
-          <Card className="col-span-3 h-fit p-6 sm:col-span-2 xl:col-span-1">
-            <CardContent className="flex flex-col gap-7 p-0 md:flex-col md:items-center md:gap-4">
-              <div className="flex basis-full flex-col items-center gap-4">
-                <UserAvatar
-                  name={currentMatch.other.name}
-                  imageUrl={currentMatch.other.imageUrl}
-                  size="xl"
-                />
-                <h2 className="font-heading text-h2">
-                  {currentMatch.other.name}
-                </h2>
-              </div>
+          <Card className="col-span-3 h-fit sm:col-span-2 xl:col-span-1">
+            <CardContent className="flex flex-col items-center gap-4">
+              <UserAvatar
+                name={currentMatch.other.name}
+                imageUrl={currentMatch.other.imageUrl}
+                size="xl"
+              />
+              <h2 className="font-heading text-h2">
+                {currentMatch.other.name}
+              </h2>
               <div className="mt-4 flex w-full flex-col gap-4">
                 <Button
-                  className="justify-start gap-5"
+                  className="justify-start gap-2"
                   onClick={() =>
                     createChat({
                       payload: {
@@ -164,7 +165,7 @@ const Page = () => {
                 </Button>
                 <Button
                   variant="outline"
-                  className="justify-start gap-5"
+                  className="justify-start gap-2"
                   onClick={() =>
                     router.push(
                       `/calendar?schedule=true&name=${encodeURIComponent(currentMatch.other.name)}`
@@ -202,11 +203,13 @@ const Page = () => {
 
         {plan ? (
           <PageSection title="Training modules">
-            <Card className="w-full p-6">
-              <CardDescription className="mb-6">
-                Breakdown of your skill exchange journey
-              </CardDescription>
-              <CardContent className="flex flex-col gap-4 p-0">
+            <Card className="w-full">
+              <CardHeader>
+                <CardDescription>
+                  Breakdown of your skill exchange journey
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
                 <Accordion
                   value={openModule}
                   onValueChange={setOpenModule}
