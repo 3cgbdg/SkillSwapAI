@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
@@ -17,7 +17,8 @@ import { WebSocketsModule } from './webSockets/webSockets.module';
 import { AppController } from './app.controller';
 import { AdminModule } from './admin/admin.module';
 import { CacheModule } from '@nestjs/cache-manager';
-import { ThrottlerModule, ThrottlerGuard, seconds } from '@nestjs/throttler';
+import { ThrottlerModule, seconds } from '@nestjs/throttler';
+import { ResilientThrottlerGuard } from './common/guards/resilient-throttler.guard';
 import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 import Redis from 'ioredis';
 import { APP_GUARD } from '@nestjs/core';
@@ -81,9 +82,16 @@ import { envValidationSchema } from './config/env.validation';
           return { throttlers };
         }
 
+        const throttlerRedisClient = new Redis(redisOptions);
+        throttlerRedisClient.on('error', (err) =>
+          new Logger('ThrottlerStorageRedis').error(
+            `Redis error: ${err.message}`,
+          ),
+        );
+
         return {
           throttlers,
-          storage: new ThrottlerStorageRedisService(new Redis(redisOptions)),
+          storage: new ThrottlerStorageRedisService(throttlerRedisClient),
         };
       },
     }),
@@ -106,7 +114,7 @@ import { envValidationSchema } from './config/env.validation';
   providers: [
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: ResilientThrottlerGuard,
     },
   ],
 })
