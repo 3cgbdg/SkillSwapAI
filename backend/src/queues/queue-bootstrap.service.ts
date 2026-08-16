@@ -14,7 +14,14 @@ export class QueueBootstrapService implements OnModuleInit {
   constructor(
     @InjectQueue(QUEUE_MAINTENANCE)
     private readonly maintenanceQueue: Queue,
-  ) {}
+  ) {
+    // Queue extends EventEmitter and crashes the process on an unhandled
+    // 'error' event (e.g. its Redis connection failing) unless something
+    // listens for it.
+    this.maintenanceQueue.on('error', (err) =>
+      this.logger.error(`Queue error: ${err.message}`),
+    );
+  }
 
   async onModuleInit() {
     // Registering these jobs requires a working Redis connection. If Redis

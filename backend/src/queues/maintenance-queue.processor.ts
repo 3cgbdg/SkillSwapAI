@@ -1,4 +1,5 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Logger } from '@nestjs/common';
+import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import {
   JOB_AUTO_ACCEPT_FRIENDS,
@@ -9,6 +10,8 @@ import { AutoAcceptService } from 'src/tasks/auto-accept.service';
 
 @Processor(QUEUE_MAINTENANCE)
 export class MaintenanceQueueProcessor extends WorkerHost {
+  private readonly logger = new Logger(MaintenanceQueueProcessor.name);
+
   constructor(private readonly autoAcceptService: AutoAcceptService) {
     super();
   }
@@ -21,5 +24,13 @@ export class MaintenanceQueueProcessor extends WorkerHost {
     if (job.name === JOB_AUTO_ACCEPT_SESSIONS) {
       await this.autoAcceptService.runAutoAcceptSessions();
     }
+  }
+
+  // The underlying BullMQ Worker extends EventEmitter and crashes the
+  // process on an unhandled 'error' event (e.g. its Redis connection
+  // failing) unless something listens for it.
+  @OnWorkerEvent('error')
+  onError(err: Error) {
+    this.logger.error(`Worker error: ${err.message}`);
   }
 }
