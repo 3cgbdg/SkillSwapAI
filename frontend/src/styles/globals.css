@@ -165,6 +165,10 @@
   --page-gutter: 1rem;
   --content-max: 80rem;
   --space-page: clamp(1.5rem, 1.25rem + 1vw, 2rem);
+  --chat-panel-min-h: calc(100dvh - var(--header-h) - var(--space-page) * 2);
+  --chat-panel-min-h-md: calc(
+    100dvh - var(--header-h) - var(--space-page) * 2 - 4.5rem
+  );
   --space-section: clamp(1.5rem, 1rem + 4vw, 2.5rem);
   --space-stack: 1rem;
   --z-dropdown: 1000;
