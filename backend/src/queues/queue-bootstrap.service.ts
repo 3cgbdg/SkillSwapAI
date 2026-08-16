@@ -17,28 +17,42 @@ export class QueueBootstrapService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    await this.maintenanceQueue.add(
-      JOB_AUTO_ACCEPT_FRIENDS,
-      {},
-      {
-        repeat: { every: 30_000 },
-        jobId: JOB_AUTO_ACCEPT_FRIENDS,
-        removeOnComplete: true,
-        removeOnFail: 100,
-      },
-    );
+    // Registering these jobs requires a working Redis connection. If Redis
+    // is unavailable (or, as happened in production, its request quota is
+    // exhausted), letting this reject would block Nest's bootstrap forever
+    // since onModuleInit hooks are awaited before app.listen() — the whole
+    // API would never come up just because a background maintenance queue
+    // couldn't register. Log and continue instead.
+    try {
+      await this.maintenanceQueue.add(
+        JOB_AUTO_ACCEPT_FRIENDS,
+        {},
+        {
+          repeat: { every: 30_000 },
+          jobId: JOB_AUTO_ACCEPT_FRIENDS,
+          removeOnComplete: true,
+          removeOnFail: 100,
+        },
+      );
 
-    await this.maintenanceQueue.add(
-      JOB_AUTO_ACCEPT_SESSIONS,
-      {},
-      {
-        repeat: { every: 30_000 },
-        jobId: JOB_AUTO_ACCEPT_SESSIONS,
-        removeOnComplete: true,
-        removeOnFail: 100,
-      },
-    );
+      await this.maintenanceQueue.add(
+        JOB_AUTO_ACCEPT_SESSIONS,
+        {},
+        {
+          repeat: { every: 30_000 },
+          jobId: JOB_AUTO_ACCEPT_SESSIONS,
+          removeOnComplete: true,
+          removeOnFail: 100,
+        },
+      );
 
-    this.logger.log('Registered repeatable maintenance jobs');
+      this.logger.log('Registered repeatable maintenance jobs');
+    } catch (err) {
+      this.logger.error(
+        `Failed to register repeatable maintenance jobs, continuing without them: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
   }
 }
