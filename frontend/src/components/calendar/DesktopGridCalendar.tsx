@@ -184,20 +184,21 @@ const DesktopGridCalendar = ({
                     >
                       <div className="flex items-start justify-between gap-1">
                         <span className="line-clamp-2">{session.title}</span>
-                        {session.description != null || session.meetingLink ? (
+                        {session.description || session.meetingLink ? (
                           <Popover>
                             <PopoverTrigger
+                              render={
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon-xs"
+                                  tabIndex={-1}
+                                />
+                              }
                               className="inline-flex shrink-0"
                               aria-label="View session details"
                             >
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon-xs"
-                                tabIndex={-1}
-                              >
-                                <ReceiptText size={14} />
-                              </Button>
+                              <ReceiptText size={14} />
                             </PopoverTrigger>
                             <PopoverContent className="w-80 p-0" align="end">
                               <SessionDetails

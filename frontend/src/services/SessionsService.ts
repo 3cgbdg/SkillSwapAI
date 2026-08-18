@@ -16,11 +16,6 @@ class SessionsService {
     return this.getSessionsRange(from, to);
   }
 
-  async getTodaysSessions(): Promise<ISession[]> {
-    const res = await api.get("/sessions/today");
-    return res.data;
-  }
-
   async createSession(
     data: Omit<createSessionFormData, "friendName">
   ): Promise<{ session: ISession; message: string }> {
