@@ -16,6 +16,7 @@ export { SegmentedControl } from "./SegmentedControl";
 export type { SegmentedOption } from "./SegmentedControl";
 export { SkeletonKit } from "./SkeletonKit";
 export { SkillPill, SkillPillList } from "./SkillPill";
+export { StarRating } from "./StarRating";
 export { StatTile } from "./StatTile";
 export { Stepper } from "./Stepper";
 export { SwapAxis } from "./SwapAxis";

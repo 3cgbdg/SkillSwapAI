@@ -26,6 +26,7 @@ import { ProfilesService } from 'src/profiles/profiles.service';
 import { CookiesService } from './cookies.service';
 import { UsersService } from 'src/users/users.service';
 import { GoogleConfiguredGuard } from './google-configured.guard';
+import { ReviewsService } from 'src/reviews/reviews.service';
 
 import { Throttle } from '@nestjs/throttler';
 
@@ -39,6 +40,7 @@ export class AuthController {
     private readonly profilesService: ProfilesService,
     private readonly cookiesService: CookiesService,
     private readonly usersService: UsersService,
+    private readonly reviewsService: ReviewsService,
   ) {}
 
   @Get('google')
@@ -104,13 +106,19 @@ export class AuthController {
 
   @Get('profile')
   @UseGuards(AuthGuard('jwt'))
-  async profile(
-    @Req() request: RequestWithUser,
-  ): Promise<ReturnDataType<Omit<User, 'password'>>> {
-    const data = await this.usersService.findUniqueUserWithSkills(
-      request.user.id,
-    );
-    return { data };
+  async profile(@Req() request: RequestWithUser): Promise<
+    ReturnDataType<
+      Omit<User, 'password'> & {
+        averageRating: number | null;
+        reviewCount: number;
+      }
+    >
+  > {
+    const [user, { averageRating, reviewCount }] = await Promise.all([
+      this.usersService.findUniqueUserWithSkills(request.user.id),
+      this.reviewsService.getRatingSummary(request.user.id),
+    ]);
+    return { data: { ...user, averageRating, reviewCount } };
   }
 
   @Post('refresh')

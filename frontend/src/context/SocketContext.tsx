@@ -124,10 +124,22 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       showErrorToast(payload.message || "Failed to generate match");
     };
 
+    const onReviewPrompt = (payload: { sessionTitle?: string }) => {
+      showSuccessToast(
+        payload.sessionTitle
+          ? `How was "${payload.sessionTitle}"? Leave a review.`
+          : "You have a session to review."
+      );
+      void queryClient.invalidateQueries({
+        queryKey: ["reviews", "reviewable"],
+      });
+    };
+
     sock.on("receiveMessage", handleReceiveMessage);
     sock.on("aiSuggestionsReady", onAiSkillsSuggestion);
     sock.on("matchReady", onMatchReady);
     sock.on("matchFailed", onMatchFailed);
+    sock.on("reviewPrompt", onReviewPrompt);
 
     return () => {
       clearInterval(intervalHeartbeat);
@@ -135,6 +147,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       sock.off("aiSuggestionsReady", onAiSkillsSuggestion);
       sock.off("matchReady", onMatchReady);
       sock.off("matchFailed", onMatchFailed);
+      sock.off("reviewPrompt", onReviewPrompt);
       sock.disconnect();
     };
   }, [user, queryClient, router]);

@@ -9,6 +9,7 @@ import { useParams, useRouter } from "next/navigation";
 import { AsyncBoundary, SkeletonKit } from "@/components/composites";
 import { PageBody, PageHeader } from "@/components/layouts";
 import { Button } from "@/components/ui/button";
+import { useUserReviews } from "@/hooks/useReviews";
 
 export default function PublicProfilePage() {
   const { id } = useParams() as { id: string };
@@ -24,6 +25,8 @@ export default function PublicProfilePage() {
     queryKey: ["profile", id],
     queryFn: () => ProfilesService.getProfileById(id),
   });
+
+  const { data: reviewsResult, isLoading: reviewsLoading } = useUserReviews(id);
 
   const { mutate: createChat } = useMutation({
     mutationFn: async ({
@@ -49,6 +52,10 @@ export default function PublicProfilePage() {
           <PageHeader title={`${profile.name}'s profile`} />
           <ProfileView
             profile={profile}
+            reviews={{
+              items: reviewsResult?.reviews ?? [],
+              isLoading: reviewsLoading,
+            }}
             actions={
               <>
                 <Button

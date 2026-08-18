@@ -22,5 +22,6 @@ export type ModuleStatus = any;
 export type Session = any;
 /** Prisma `Request` model (friend/session requests), not Express.Request */
 export type Request = any;
+export type Review = any;
 
 export const Prisma: any = {};

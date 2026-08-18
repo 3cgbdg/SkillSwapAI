@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 
 import Calendar from "@/components/calendar/Calendar";
 import { AsyncBoundary, DataEmpty, SkeletonKit } from "@/components/composites";
@@ -9,17 +9,23 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import useSessions from "@/hooks/useSessions";
+import { useReviewableSessions } from "@/hooks/useReviews";
 import { format, isToday } from "date-fns";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, Star } from "lucide-react";
+import { RateSessionDialog } from "@/components/reviews/RateSessionDialog";
 
 import { formatSessionTimeRange, sessionStartDate } from "@/utils/sessionTime";
 
 const Page = () => {
   const { data: sessions = [], isLoading, isError, error } = useSessions();
+  const { data: reviewableSessions = [] } = useReviewableSessions();
+  const [ratingSessionId, setRatingSessionId] = useState<string | null>(null);
   const now = new Date();
 
   const upcoming = sessions
@@ -27,6 +33,10 @@ const Page = () => {
     .sort(
       (a, b) => sessionStartDate(a).getTime() - sessionStartDate(b).getTime()
     );
+
+  const ratingSession = reviewableSessions.find(
+    (s) => s.id === ratingSessionId
+  );
 
   return (
     <PageBody>
@@ -76,6 +86,49 @@ const Page = () => {
           )}
         </AsyncBoundary>
       </PageSection>
+
+      {reviewableSessions.length > 0 ? (
+        <PageSection title="Past sessions to rate">
+          <div className="grid gap-4 md:grid-cols-2">
+            {reviewableSessions.map((session) => (
+              <Card key={session.id}>
+                <CardHeader>
+                  <CardTitle className="text-lg">{session.title}</CardTitle>
+                  <CardDescription>
+                    {format(sessionStartDate(session), "EEEE, MMM d")}
+                    {session.friend?.name
+                      ? ` · with ${session.friend.name}`
+                      : ""}
+                  </CardDescription>
+                </CardHeader>
+                <CardFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => setRatingSessionId(session.id)}
+                  >
+                    <Star size={16} />
+                    Rate this session
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </PageSection>
+      ) : null}
+
+      {ratingSession ? (
+        <RateSessionDialog
+          open={Boolean(ratingSessionId)}
+          onOpenChange={(open) => {
+            if (!open) setRatingSessionId(null);
+          }}
+          sessionId={ratingSession.id}
+          sessionTitle={ratingSession.title}
+          friendName={ratingSession.friend?.name}
+        />
+      ) : null}
     </PageBody>
   );
 };

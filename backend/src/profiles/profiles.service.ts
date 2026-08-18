@@ -7,6 +7,12 @@ import { IReturnMessage, ReturnDataType } from 'types/general';
 import { AiJobsService } from 'src/queues/ai-jobs.service';
 import { GoogleProfile } from 'types/auth';
 import { UsersService } from 'src/users/users.service';
+import { ReviewsService } from 'src/reviews/reviews.service';
+
+type ProfileWithRating = Partial<User> & {
+  averageRating: number | null;
+  reviewCount: number;
+};
 
 @Injectable()
 export class ProfilesService {
@@ -15,9 +21,10 @@ export class ProfilesService {
     private readonly s3Service: S3Service,
     private readonly aiJobsService: AiJobsService,
     private readonly usersService: UsersService,
+    private readonly reviewsService: ReviewsService,
   ) {}
 
-  async findOne(id: string): Promise<ReturnDataType<Partial<User> | null>> {
+  async findOne(id: string): Promise<ReturnDataType<ProfileWithRating | null>> {
     const profile = await this.prisma.user.findUnique({
       where: { id },
       include: {
@@ -32,7 +39,10 @@ export class ProfilesService {
 
     const { password: _password, ...userWithoutPassword } = profile;
     void _password;
-    return { data: userWithoutPassword };
+    const { averageRating, reviewCount } =
+      await this.reviewsService.getRatingSummary(id);
+
+    return { data: { ...userWithoutPassword, averageRating, reviewCount } };
   }
 
   async updateProfileAvatarImage(
