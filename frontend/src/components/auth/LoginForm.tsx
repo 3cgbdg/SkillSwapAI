@@ -33,9 +33,9 @@ export function LoginForm() {
 
   const mutation = useMutation({
     mutationFn: async (data: logInFormData) => AuthService.logIn(data),
-    onSuccess: async (data) => {
+    onSuccess: (data) => {
       showSuccessToast(data.message);
-      await queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.clear();
       router.push("/dashboard");
       router.refresh();
     },

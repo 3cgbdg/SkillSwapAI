@@ -4,7 +4,6 @@ import "@/styles/globals.css";
 import QueryProvider from "@/providers/QueryProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { SocketProvider } from "@/context/SocketContext";
-import CheckEmptyPath from "@/components/CheckEmptyPath";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -49,7 +48,6 @@ export default function RootLayout({
           <QueryProvider>
             <SocketProvider>
               <TooltipProvider>
-                <CheckEmptyPath />
                 {children}
                 <Toaster />
               </TooltipProvider>
