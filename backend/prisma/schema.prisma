@@ -49,6 +49,8 @@ model User {
   friends                  Friendship[] @relation("UserFriends")
   friendOf                 Friendship[] @relation("UserFriendsInverse")
   lastSkillsGenerationDate DateTime?
+  reviewsGiven             Review[]     @relation("reviewsGiven")
+  reviewsReceived          Review[]     @relation("reviewsReceived")
 
   @@index([isBot])
 }
@@ -117,21 +119,42 @@ model Message {
 }
 
 model Session {
-  id          String        @id @default(uuid())
-  title       String
-  description String?
-  status      SessionStatus @default(PENDING)
-  startsAt    DateTime
-  endsAt      DateTime
-  timeZone    String        @default("UTC")
-  color       String
-  users       User[]        @relation("userSessions")
-  request     Request[]     @relation("sessionRequest")
-  meetingLink String?
+  id               String        @id @default(uuid())
+  title            String
+  description      String?
+  status           SessionStatus @default(PENDING)
+  startsAt         DateTime
+  endsAt           DateTime
+  timeZone         String        @default("UTC")
+  color            String
+  users            User[]        @relation("userSessions")
+  request          Request[]     @relation("sessionRequest")
+  reviews          Review[]      @relation("sessionReviews")
+  reviewPromptedAt DateTime?
+  meetingLink      String?
 
   @@index([startsAt])
   @@index([startsAt, endsAt])
   @@index([status])
+  @@index([status, endsAt, reviewPromptedAt])
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  session    Session  @relation("sessionReviews", fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId  String
+  reviewer   User     @relation("reviewsGiven", fields: [reviewerId], references: [id], onDelete: Cascade)
+  reviewerId String
+  reviewee   User     @relation("reviewsReceived", fields: [revieweeId], references: [id], onDelete: Cascade)
+  revieweeId String
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  @@unique([sessionId, reviewerId])
+  @@index([revieweeId, createdAt])
+  @@index([sessionId])
+  @@index([reviewerId])
 }
 
 model Match {
