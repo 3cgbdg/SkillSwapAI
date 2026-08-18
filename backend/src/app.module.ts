@@ -72,7 +72,7 @@ import { envValidationSchema } from './config/env.validation';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const throttlers = [
-          { name: 'short', ttl: seconds(10), limit: 3 },
+          { name: 'short', ttl: seconds(10), limit: 30 },
           { name: 'medium', ttl: seconds(60), limit: 25 },
           { name: 'long', ttl: seconds(3600), limit: 100 },
         ];

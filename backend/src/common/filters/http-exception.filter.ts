@@ -38,7 +38,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
       errorBody = { message: 'Resource already exists' };
     } else if (exception instanceof Error) {
       this.logger.error(exception.message, exception.stack);
-      errorBody = { message: exception.message };
     }
 
     response.status(status).json({
