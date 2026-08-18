@@ -185,13 +185,15 @@ const EditProfile = ({
                   className="hidden"
                 />
               </label>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => deleteAvatarImage()}
-              >
-                Remove Picture
-              </Button>
+              {user?.imageUrl ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => deleteAvatarImage()}
+                >
+                  Remove Picture
+                </Button>
+              ) : null}
             </CardContent>
           </Card>
 
