@@ -12,6 +12,7 @@ import { SessionsModule } from './sessions/sessions.module';
 import { MatchesModule } from './matches/matches.module';
 import { S3Module } from './s3/s3module';
 import { PlansModule } from './plans/plans.module';
+import { ReviewsModule } from './reviews/reviews.module';
 import { AiModule } from './ai/ai.module';
 import { WebSocketsModule } from './webSockets/webSockets.module';
 import { AppController } from './app.controller';
@@ -106,6 +107,7 @@ import { envValidationSchema } from './config/env.validation';
     SessionsModule,
     MatchesModule,
     PlansModule,
+    ReviewsModule,
     AiModule,
     WebSocketsModule,
     AdminModule,

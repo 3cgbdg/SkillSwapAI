@@ -66,6 +66,7 @@ export class RequestGateway
         for (const [key, event] of [
           [`pending_match_ready:${payload.userId}`, 'matchReady'],
           [`pending_match_failed:${payload.userId}`, 'matchFailed'],
+          [`pending_review_prompt:${payload.userId}`, 'reviewPrompt'],
         ] as const) {
           const pending = await this.cacheManager.get(key);
           if (pending) {
@@ -153,6 +154,15 @@ export class RequestGateway
       toId,
       'matchFailed',
       `pending_match_failed:${toId}`,
+      payload,
+    );
+  }
+
+  async notifyReviewPrompt(toId: string, payload: unknown) {
+    await this.emitOrCachePending(
+      toId,
+      'reviewPrompt',
+      `pending_review_prompt:${toId}`,
       payload,
     );
   }

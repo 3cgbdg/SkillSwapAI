@@ -4,6 +4,7 @@ import { Queue } from 'bullmq';
 import {
   JOB_AUTO_ACCEPT_FRIENDS,
   JOB_AUTO_ACCEPT_SESSIONS,
+  JOB_PROMPT_SESSION_REVIEWS,
   QUEUE_MAINTENANCE,
 } from './queue.constants';
 
@@ -48,6 +49,19 @@ export class QueueBootstrapService implements OnModuleInit {
         {
           repeat: { every: 30_000 },
           jobId: JOB_AUTO_ACCEPT_SESSIONS,
+          removeOnComplete: true,
+          removeOnFail: 100,
+        },
+      );
+
+      await this.maintenanceQueue.add(
+        JOB_PROMPT_SESSION_REVIEWS,
+        {},
+        {
+          // Coarser cadence than auto-accept: session-end granularity is
+          // minutes, not seconds, so there's no urgency to catch it within 30s.
+          repeat: { every: 60_000 },
+          jobId: JOB_PROMPT_SESSION_REVIEWS,
           removeOnComplete: true,
           removeOnFail: 100,
         },

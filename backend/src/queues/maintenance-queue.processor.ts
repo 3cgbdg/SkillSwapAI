@@ -4,15 +4,20 @@ import { Job } from 'bullmq';
 import {
   JOB_AUTO_ACCEPT_FRIENDS,
   JOB_AUTO_ACCEPT_SESSIONS,
+  JOB_PROMPT_SESSION_REVIEWS,
   QUEUE_MAINTENANCE,
 } from './queue.constants';
 import { AutoAcceptService } from 'src/tasks/auto-accept.service';
+import { ReviewPromptService } from 'src/tasks/review-prompt.service';
 
 @Processor(QUEUE_MAINTENANCE)
 export class MaintenanceQueueProcessor extends WorkerHost {
   private readonly logger = new Logger(MaintenanceQueueProcessor.name);
 
-  constructor(private readonly autoAcceptService: AutoAcceptService) {
+  constructor(
+    private readonly autoAcceptService: AutoAcceptService,
+    private readonly reviewPromptService: ReviewPromptService,
+  ) {
     super();
   }
 
@@ -23,6 +28,10 @@ export class MaintenanceQueueProcessor extends WorkerHost {
     }
     if (job.name === JOB_AUTO_ACCEPT_SESSIONS) {
       await this.autoAcceptService.runAutoAcceptSessions();
+      return;
+    }
+    if (job.name === JOB_PROMPT_SESSION_REVIEWS) {
+      await this.reviewPromptService.runPromptSessionReviews();
     }
   }
 

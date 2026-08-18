@@ -12,6 +12,7 @@ import { PlansModule } from 'src/plans/plans.module';
 import { WebSocketsModule } from 'src/webSockets/webSockets.module';
 import { AiJobsService } from './ai-jobs.service';
 import { AutoAcceptService } from 'src/tasks/auto-accept.service';
+import { ReviewPromptService } from 'src/tasks/review-prompt.service';
 
 @Global()
 @Module({
@@ -41,6 +42,7 @@ import { AutoAcceptService } from 'src/tasks/auto-accept.service';
     MaintenanceQueueProcessor,
     QueueBootstrapService,
     AutoAcceptService,
+    ReviewPromptService,
     AiJobsService,
   ],
   exports: [BullModule, AiJobsService],
