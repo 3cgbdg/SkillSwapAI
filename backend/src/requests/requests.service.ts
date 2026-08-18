@@ -159,8 +159,18 @@ export class RequestsService {
     });
   }
 
-  async deleteOne(requestId: string): Promise<IReturnMessage> {
-    await this.prisma.request.deleteMany({ where: { id: requestId } });
+  async deleteOne(requestId: string, userId: string): Promise<IReturnMessage> {
+    const { count } = await this.prisma.request.deleteMany({
+      where: {
+        id: requestId,
+        OR: [{ fromId: userId }, { toId: userId }],
+      },
+    });
+
+    if (count === 0) {
+      throw new NotFoundException('Request not found');
+    }
+
     return { message: 'Request successfully cleared' };
   }
 }

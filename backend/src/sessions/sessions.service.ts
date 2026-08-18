@@ -176,7 +176,11 @@ export class SessionsService {
       where: { id: dto.requestId },
     });
 
-    if (!originalReq) {
+    if (
+      !originalReq ||
+      originalReq.sessionId !== sessionId ||
+      originalReq.toId !== myId
+    ) {
       throw new NotFoundException('Original request not found');
     }
 
@@ -219,7 +223,11 @@ export class SessionsService {
       where: { id: dto.requestId },
     });
 
-    if (!originalReq) {
+    if (
+      !originalReq ||
+      originalReq.sessionId !== sessionId ||
+      originalReq.toId !== myId
+    ) {
       throw new NotFoundException('Original request not found');
     }
 

@@ -27,7 +27,10 @@ export class ChatsService {
   ): Promise<ReturnDataType<ChatMessage[]>> {
     const chat = await this.prisma.chat.findFirst({
       where: {
-        users: { every: { id: { in: [myId, friendId] } } },
+        AND: [
+          { users: { some: { id: myId } } },
+          { users: { some: { id: friendId } } },
+        ],
       },
       include: {
         messages: {
@@ -94,7 +97,10 @@ export class ChatsService {
   ): Promise<ReturnDataType<IChatResponse>> {
     let chat = await this.prisma.chat.findFirst({
       where: {
-        users: { every: { id: { in: [myId, dto.friendId] } } },
+        AND: [
+          { users: { some: { id: myId } } },
+          { users: { some: { id: dto.friendId } } },
+        ],
       },
     });
 

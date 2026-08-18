@@ -120,12 +120,28 @@ export class ChatGateway
   }
 
   @SubscribeMessage('updateSeen')
-  async updateSeenMessage(client: Socket, payload: { messageId: string }) {
+  async updateSeenMessage(
+    client: Socket<any, any, any, SocketData>,
+    payload: { messageId: string },
+  ) {
+    const myId = client.data.userId;
+    if (!myId) return;
+
     try {
-      const updatedMessage = await this.prisma.message.update({
-        where: { id: payload.messageId },
+      // Only the recipient of a message can mark it as seen — scoping the
+      // update by toId prevents an unrelated client from tampering with
+      // read-receipt state on messages it isn't party to.
+      const { count } = await this.prisma.message.updateMany({
+        where: { id: payload.messageId, toId: myId },
         data: { isSeen: true },
       });
+      if (count === 0) return;
+
+      const updatedMessage = await this.prisma.message.findUnique({
+        where: { id: payload.messageId },
+      });
+      if (!updatedMessage) return;
+
       await this.cacheManager.del(CacheKeys.chatsList(updatedMessage.toId));
       const isOnline = await this.cacheManager.get<string>(
         `user:online:${updatedMessage.fromId}`,

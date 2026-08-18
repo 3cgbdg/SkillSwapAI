@@ -33,7 +33,10 @@ export class RequestsController {
   }
 
   @Delete(':id')
-  async deleteOne(@Param('id') requestId: string): Promise<IReturnMessage> {
-    return this.requestsService.deleteOne(requestId);
+  async deleteOne(
+    @Param('id') requestId: string,
+    @Req() req: RequestWithUser,
+  ): Promise<IReturnMessage> {
+    return this.requestsService.deleteOne(requestId, req.user.id);
   }
 }
