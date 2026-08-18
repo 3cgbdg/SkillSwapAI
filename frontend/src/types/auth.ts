@@ -9,4 +9,6 @@ export interface IUser {
   bio: string;
   completedSessionsCount: number;
   lastSkillsGenerationDate: string;
+  averageRating?: number | null;
+  reviewCount?: number;
 }

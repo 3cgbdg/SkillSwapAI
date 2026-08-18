@@ -15,11 +15,15 @@ import { ProfileView } from "@/components/profile/ProfileView";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { useUserReviews } from "@/hooks/useReviews";
 
 const Profile = () => {
   const { data: user } = useProfile();
   const queryClient = useQueryClient();
   const [timeLeft, setTimeLeft] = useState<string | null>(null);
+  const { data: reviewsResult, isLoading: reviewsLoading } = useUserReviews(
+    user?.id
+  );
 
   const { mutate: addNewSkillToLearn } = useMutation({
     mutationFn: async (title: string) => {
@@ -127,7 +131,14 @@ const Profile = () => {
         title="Your profile"
         description="Manage the skills you teach and the ones you're learning."
       />
-      <ProfileView profile={user} editHref="/profile/edit" />
+      <ProfileView
+        profile={user}
+        editHref="/profile/edit"
+        reviews={{
+          items: reviewsResult?.reviews ?? [],
+          isLoading: reviewsLoading,
+        }}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <StatTile
