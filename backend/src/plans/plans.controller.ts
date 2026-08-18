@@ -1,6 +1,7 @@
-import { Controller, Get, Param, UseGuards, Patch } from '@nestjs/common';
+import { Controller, Get, Param, UseGuards, Patch, Req } from '@nestjs/common';
 import { PlansService } from './plans.service';
 import { AuthGuard } from '@nestjs/passport';
+import type { RequestWithUser } from 'types/auth';
 import { IModuleUpdateResponse } from 'types/plans';
 
 @Controller('plans')
@@ -9,15 +10,20 @@ export class PlansController {
   constructor(private readonly plansService: PlansService) {}
 
   @Get(':id')
-  async getPlan(@Param('id') matchId: string) {
-    return this.plansService.getPlan(matchId);
+  async getPlan(@Param('id') matchId: string, @Req() req: RequestWithUser) {
+    return this.plansService.getPlan(matchId, req.user.id);
   }
 
   @Patch(':planId/modules/:moduleId/status/completed')
   async updateStatusToCompeted(
     @Param('planId') planId: string,
     @Param('moduleId') moduleId: string,
+    @Req() req: RequestWithUser,
   ): Promise<IModuleUpdateResponse> {
-    return this.plansService.updateStatusToCompeted(planId, moduleId);
+    return this.plansService.updateStatusToCompeted(
+      planId,
+      moduleId,
+      req.user.id,
+    );
   }
 }

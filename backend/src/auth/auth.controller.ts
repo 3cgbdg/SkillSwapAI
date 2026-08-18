@@ -114,23 +114,18 @@ export class AuthController {
   }
 
   @Post('refresh')
-  @UseGuards(AuthGuard('jwt'))
   async refreshToken(
-    @Req() req: RequestWithUser,
+    @Req() req: Request,
     @Res() res: Response,
   ): Promise<Response<IReturnMessage>> {
     const refreshToken = (req.cookies as Record<string, string | undefined>)[
       'refresh_token'
     ];
-    console.log(
-      '[AuthController] Refresh token found in cookies:',
-      !!refreshToken,
-    );
     if (!refreshToken) {
       throw new HttpException('No refresh token', HttpStatus.UNAUTHORIZED);
     }
     const payload: JwtPayload =
-      await this.authService.decodeToken(refreshToken);
+      await this.authService.verifyRefreshToken(refreshToken);
 
     const newAccessToken = this.authService.createAccessToken(payload.userId);
     this.cookiesService.setCookies(res, newAccessToken, refreshToken);

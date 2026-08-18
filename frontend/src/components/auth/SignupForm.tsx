@@ -116,9 +116,9 @@ export function SignupForm() {
         data.skillsToLearn
       );
     },
-    onSuccess: async (data) => {
+    onSuccess: (data) => {
       showSuccessToast(data.message);
-      await queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.clear();
       router.push("/dashboard");
       router.refresh();
     },

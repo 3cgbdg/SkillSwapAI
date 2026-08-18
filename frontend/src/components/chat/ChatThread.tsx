@@ -75,7 +75,14 @@ export function ChatThread({
           <div className="flex items-center justify-between gap-4 px-4 py-4 md:px-6">
             <div className="flex items-center gap-4">
               <HoverCard>
-                <HoverCardTrigger className="outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
+                <HoverCardTrigger
+                  href={
+                    currentChat
+                      ? `/profiles/${currentChat.friend.id}`
+                      : undefined
+                  }
+                  className="outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                >
                   <UserAvatar
                     name={currentChat?.friend.name}
                     imageUrl={currentChat?.friend.imageUrl}

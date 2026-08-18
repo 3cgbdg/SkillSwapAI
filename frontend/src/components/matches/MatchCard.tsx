@@ -1,4 +1,3 @@
-import Link from "next/link";
 import useFriends from "@/hooks/useFriends";
 import { IChat, IMatch } from "@/types/types";
 import { UseMutateFunction } from "@tanstack/react-query";
@@ -113,7 +112,7 @@ const MatchCard = ({
     >
       <CardHeader className="grid grid-cols-[auto_minmax(8rem,1fr)_auto] items-start gap-4 text-left">
         <HoverCard>
-          <HoverCardTrigger>
+          <HoverCardTrigger href={`/profiles/${match.other.id}`}>
             <UserAvatar
               name={match.other.name}
               imageUrl={match.other.imageUrl}
@@ -127,12 +126,6 @@ const MatchCard = ({
                 ? `${match.compatibility}% compatibility`
                 : "Skill swap partner"}
             </p>
-            <Link
-              href={`/profiles/${match.other.id}`}
-              className="text-primary mt-2 inline-block text-xs font-medium"
-            >
-              View profile
-            </Link>
           </HoverCardContent>
         </HoverCard>
         <div className="min-w-0">

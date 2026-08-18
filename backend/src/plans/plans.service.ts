@@ -14,7 +14,10 @@ import { PlansUtils } from 'src/utils/plans.utils';
 @Injectable()
 export class PlansService {
   constructor(private readonly prisma: PrismaService) {}
-  async getPlan(matchId: string): Promise<ReturnDataType<Plan>> {
+  async getPlan(
+    matchId: string,
+    userId: string,
+  ): Promise<ReturnDataType<Plan>> {
     const match = await this.prisma.match.findUnique({
       where: { id: matchId },
       include: {
@@ -22,6 +25,9 @@ export class PlansService {
       },
     });
     if (!match) throw new NotFoundException('Match was not found!');
+    if (match.initiatorId !== userId && match.otherId !== userId) {
+      throw new ForbiddenException('You are not part of this match');
+    }
 
     return { data: match.plan as Plan };
   }
@@ -75,13 +81,20 @@ export class PlansService {
   async updateStatusToCompeted(
     planId: string,
     moduleId: string,
+    userId: string,
   ): Promise<IModuleUpdateResponse> {
     const plan = await this.prisma.plan.findUnique({
       where: { id: planId },
-      include: { modules: { select: { id: true, status: true } } },
+      include: {
+        modules: { select: { id: true, status: true } },
+        match: { select: { initiatorId: true, otherId: true } },
+      },
     });
 
     if (!plan) throw new NotFoundException('Plan not found');
+    if (plan.match.initiatorId !== userId && plan.match.otherId !== userId) {
+      throw new ForbiddenException('You are not part of this match');
+    }
 
     const remainingModules = plan.modules.filter(
       (m) => m.status !== 'COMPLETED',

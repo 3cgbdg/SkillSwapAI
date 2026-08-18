@@ -27,6 +27,10 @@ export class AiJobsService {
           removeOnComplete: true,
         },
       )
-      .catch(() => {});
+      .catch((err: Error) =>
+        this.logger.error(
+          `Failed to enqueue skill suggestions for user ${userId}: ${err.message}`,
+        ),
+      );
   }
 }

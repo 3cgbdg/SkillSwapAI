@@ -31,6 +31,13 @@ export class FriendsService {
       throw new BadRequestException('You are already friends with this user');
     }
 
+    const pendingRequest = await this.prisma.request.findFirst({
+      where: { fromId: dto.id, toId: id, type: 'FRIEND' },
+    });
+    if (!pendingRequest) {
+      throw new BadRequestException('No pending friend request from this user');
+    }
+
     await this.prisma.$transaction(async (tx) => {
       await tx.friendship.create({
         data: { user1Id: dto.id, user2Id: id },

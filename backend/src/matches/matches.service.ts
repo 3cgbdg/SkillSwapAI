@@ -38,6 +38,13 @@ export class MatchesService {
       );
     }
 
+    const isFriend = await this.doesFriendshipExist(myId, otherId);
+    if (!isFriend) {
+      throw new ForbiddenException(
+        'You can only generate a training plan with a friend',
+      );
+    }
+
     const jobId = randomUUID();
     const job = await this.aiQueue.add(
       JOB_GENERATE_MATCH,
@@ -140,6 +147,21 @@ export class MatchesService {
   ): Promise<boolean> {
     const count = await this.prisma.match.count({
       where: MatchesUtils.getMatchFilter(myId, otherId),
+    });
+    return count > 0;
+  }
+
+  private async doesFriendshipExist(
+    myId: string,
+    otherId: string,
+  ): Promise<boolean> {
+    const count = await this.prisma.friendship.count({
+      where: {
+        OR: [
+          { user1Id: myId, user2Id: otherId },
+          { user2Id: myId, user1Id: otherId },
+        ],
+      },
     });
     return count > 0;
   }

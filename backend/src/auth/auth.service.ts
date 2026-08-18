@@ -3,7 +3,6 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { CreateAuthDto } from './dto/create-auth.dto';
@@ -91,7 +90,7 @@ export class AuthService {
     });
 
     if (!user || !user.password)
-      throw new NotFoundException('Invalid credentials');
+      throw new UnauthorizedException('Invalid credentials');
 
     const isPasswordValid = await bcrypt.compare(dto.password, user.password);
     if (!isPasswordValid)
@@ -108,11 +107,24 @@ export class AuthService {
     return this.jwtService.sign({ userId });
   }
 
-  async decodeToken(token: string): Promise<JwtPayload> {
+  async verifyRefreshToken(token: string): Promise<JwtPayload> {
+    let payload: JwtPayload;
     try {
-      return this.jwtService.decode(token);
+      payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+      });
     } catch {
-      throw new UnauthorizedException('Invalid token');
+      throw new UnauthorizedException('Invalid or expired refresh token');
     }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { id: true },
+    });
+    if (!user) {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+
+    return payload;
   }
 }

@@ -21,6 +21,7 @@ import {
 import { DataEmpty, SectionPanel } from "@/components/composites";
 import { PageBody, PageHeader } from "@/components/layouts";
 import { InlineSkillPicker } from "@/components/matches/InlineSkillPicker";
+import { useSocket } from "@/context/SocketContext";
 
 const PENDING_JOB_KEY = "skillswap_pending_match_job";
 
@@ -32,6 +33,7 @@ const Matches = ({
   option: "available" | "active";
 }) => {
   const { data: activeMatches = [], refetch: refetchActive } = useMatches();
+  const { socket } = useSocket();
   const searchParams = useSearchParams();
   const router = useRouter();
   const skillFilter = searchParams.get("skill") ?? "";
@@ -68,6 +70,19 @@ const Matches = ({
       showSuccessToast("Your training plan is ready — check Learning.");
     }
   }, [activeMatches, pendingPartnerId]);
+
+  useEffect(() => {
+    if (!socket || !pendingPartnerId) return;
+    const onMatchFailed = (payload: { otherId?: string }) => {
+      if (payload.otherId && payload.otherId !== pendingPartnerId) return;
+      sessionStorage.removeItem(PENDING_JOB_KEY);
+      setPendingPartnerId(null);
+    };
+    socket.on("matchFailed", onMatchFailed);
+    return () => {
+      socket.off("matchFailed", onMatchFailed);
+    };
+  }, [socket, pendingPartnerId]);
 
   const setSearchParam = (key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams.toString());
