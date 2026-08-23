@@ -1,12 +1,13 @@
-import Link from "next/link";
-
 import { cn } from "@/lib/utils";
 
 export function GoogleAuthButton({ className }: { className?: string }) {
   const href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
 
   return (
-    <Link
+    // A plain <a>, not next/link's <Link>: this is a genuine cross-origin
+    // redirect into the backend's OAuth flow, not an internal app route, and
+    // needs a real full-page navigation rather than client-side routing.
+    <a
       href={href}
       className={cn(
         "border-border bg-background hover:bg-muted flex w-full items-center justify-center gap-3 rounded-lg border px-4 py-2.5 text-sm font-semibold transition-colors",
@@ -33,6 +34,6 @@ export function GoogleAuthButton({ className }: { className?: string }) {
         />
       </svg>
       Continue with Google
-    </Link>
+    </a>
   );
 }
