@@ -1,15 +1,21 @@
 import Link from "next/link";
 
 import { Logo } from "@/components/brand/Logo";
+import { cn } from "@/lib/utils";
 
-const HeaderLogo = () => {
+/**
+ * Same lockup as the in-app HeaderLogo, but pointing at the public landing
+ * page rather than /dashboard.
+ */
+export function MarketingLogo({ className }: { className?: string }) {
   return (
     <Link
-      href="/dashboard"
-      className="group flex w-fit items-center gap-2 transition-colors"
+      href="/"
+      className={cn(
+        "group flex w-fit items-center gap-2 transition-colors",
+        className
+      )}
     >
-      {/* Rotating 180° swaps the teach and learn circles around the lens — the
-          mark performs the exchange it stands for. */}
       <Logo
         size={32}
         className="transition-transform duration-[var(--duration-slow)] group-hover:rotate-180"
@@ -19,6 +25,4 @@ const HeaderLogo = () => {
       </span>
     </Link>
   );
-};
-
-export default HeaderLogo;
+}

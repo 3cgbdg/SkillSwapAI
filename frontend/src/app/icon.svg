@@ -1,5 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="8" fill="#48408B"/>
-  <path d="M19 12.6c0-2-2.1-2.8-4.1-2.8s-4 .9-4 2.7c0 3.6 8.6 1.8 8.6 5.8 0 2-2.2 3.1-4.4 3.1s-4.2-1-4.3-3.1" stroke="#FEFCF7" stroke-width="2.6" stroke-linecap="round" fill="none"/>
-  <circle cx="22.5" cy="11.5" r="2.5" fill="#F4A437"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="5 5 38 38" fill="none">
+  <!-- Static file, so the design tokens can't be referenced by name here.
+       These are the resolved sRGB values of accent-teach / accent-learn /
+       primary; the media query mirrors the app's dark palette. -->
+  <style>
+    .teach { fill: #00656F; }
+    .learn { fill: #9B3500; }
+    .lens  { fill: #48408B; }
+    @media (prefers-color-scheme: dark) {
+      .teach { fill: #13BBC2; }
+      .learn { fill: #FC9B6F; }
+      .lens  { fill: #A495F0; }
+    }
+  </style>
+  <circle cx="17.5" cy="24" r="11" class="teach"/>
+  <circle cx="30.5" cy="24" r="11" class="learn"/>
+  <path d="M24 15.13A11 11 0 0 1 24 32.87A11 11 0 0 1 24 15.13Z" class="lens"/>
 </svg>

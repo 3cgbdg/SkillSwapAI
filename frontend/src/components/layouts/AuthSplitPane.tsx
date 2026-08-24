@@ -1,27 +1,13 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { CalendarClock, MessagesSquare, Sparkles } from "lucide-react";
 
 import { SkillSwapMark } from "@/components/illustrations/SkillSwapMark";
-
-const highlights = [
-  {
-    icon: Sparkles,
-    title: "AI-matched partners",
-    description: "We pair you with people whose skills complete yours.",
-  },
-  {
-    icon: MessagesSquare,
-    title: "Built-in chat",
-    description: "Message your match without leaving the app.",
-  },
-  {
-    icon: CalendarClock,
-    title: "Simple scheduling",
-    description: "Book and track sessions from one calendar.",
-  },
-];
+import {
+  HIGHLIGHTS,
+  SITE_SUBHEADLINE,
+  SITE_TAGLINE,
+} from "@/components/marketing/content";
 
 export function AuthSplitPane({ children }: { children: ReactNode }) {
   return (
@@ -45,16 +31,15 @@ export function AuthSplitPane({ children }: { children: ReactNode }) {
 
           <div className="flex flex-col gap-3">
             <h2 className="font-heading text-display leading-[1.05] font-semibold">
-              Swap skills. Grow together.
+              {SITE_TAGLINE}
             </h2>
             <p className="text-base text-primary-foreground/80">
-              SkillSwap AI matches you with people who can teach what you want
-              to learn — and want to learn what you can teach.
+              {SITE_SUBHEADLINE}
             </p>
           </div>
 
           <ul className="flex flex-col gap-5">
-            {highlights.map(({ icon: Icon, title, description }) => (
+            {HIGHLIGHTS.map(({ icon: Icon, title, description }) => (
               <li key={title} className="flex items-start gap-3">
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-foreground/10">
                   <Icon className="size-4.5" aria-hidden />
