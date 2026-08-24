@@ -3,7 +3,6 @@ import { Fraunces, Inter } from "next/font/google";
 import "@/styles/globals.css";
 import QueryProvider from "@/providers/QueryProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
-import { SocketProvider } from "@/context/SocketContext";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -46,12 +45,13 @@ export default function RootLayout({
         </a>
         <ThemeProvider>
           <QueryProvider>
-            <SocketProvider>
-              <TooltipProvider>
-                {children}
-                <Toaster />
-              </TooltipProvider>
-            </SocketProvider>
+            {/* SocketProvider deliberately lives in (main)/layout.tsx, not here:
+                it fetches the profile and chat list on mount, which 401s (and
+                toasts) for logged-out visitors on public and auth routes. */}
+            <TooltipProvider>
+              {children}
+              <Toaster />
+            </TooltipProvider>
           </QueryProvider>
         </ThemeProvider>
       </body>

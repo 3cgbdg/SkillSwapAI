@@ -69,15 +69,18 @@ api.interceptors.response.use(
       error.message = Array.isArray(msg) ? msg.join(", ") : msg;
     }
 
-    // Standardize throttle/unauthorized toasts to avoid spamming
-    const isAuthPage =
+    // Standardize throttle/unauthorized toasts to avoid spamming.
+    // Never toast "Unauthorized" on pages a logged-out visitor is *meant* to
+    // see — the landing page and every auth screen — so a stray unauthenticated
+    // request can't greet a first-time visitor with an error.
+    const isPublicPage =
       typeof window !== "undefined" &&
-      (window.location.pathname === "/auth/login" ||
-        window.location.pathname === "/auth/signup");
+      (window.location.pathname === "/" ||
+        window.location.pathname.startsWith("/auth"));
 
     if (error.response?.status === 429) {
       showErrorToast(error.message, "throttle-error");
-    } else if (error.response?.status === 401 && !isAuthPage) {
+    } else if (error.response?.status === 401 && !isPublicPage) {
       showErrorToast(error.message, "auth-error");
     }
 
