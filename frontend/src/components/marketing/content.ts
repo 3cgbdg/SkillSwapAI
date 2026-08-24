@@ -78,7 +78,7 @@ export const HOW_IT_WORKS_STEPS: readonly HowItWorksStep[] = [
   {
     title: "Get matched, get a plan",
     description:
-      "Compare explainable matches, choose the right partner, and get a structured learning journey with modules and resources.",
+      "Connect with a partner whose skills mirror yours, then get a structured learning journey with modules, resources, and the reasoning behind the pairing.",
   },
   {
     title: "Meet, learn, review",
