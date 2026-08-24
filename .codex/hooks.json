@@ -1,0 +1,19 @@
+{
+  "description": "Project lifecycle hooks mirroring the repository's Claude safety enforcement.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^Bash$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/block-git-bypass.mjs\"",
+            "commandWindows": "powershell.exe -NoProfile -NonInteractive -Command \"$root = git rev-parse --show-toplevel; node (Join-Path $root '.codex/hooks/block-git-bypass.mjs')\"",
+            "timeout": 10,
+            "statusMessage": "Enforcing repository Git hook safety"
+          }
+        ]
+      }
+    ]
+  }
+}
