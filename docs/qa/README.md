@@ -1,6 +1,6 @@
 # SkillSwapAI QA agent kit
 
-This repository includes a project-scoped QA engineer for Codex and Claude, four reusable QA skills, Playwright MCP connectivity, and a Codex safety hook matching the existing Claude git-hook policy.
+This repository includes a project-scoped QA engineer for Codex and Claude, four reusable QA skills, Playwright MCP connectivity, and a Codex safety hook matching the existing Claude git-hook policy. Universal QA behavior is generated from the versioned [qa-agent-kit](https://github.com/3cgbdg/qa-agent-kit); `.qa-agent/profile.json` is SkillSwapAI's only project-specific source.
 
 ## Use the agent
 
@@ -64,6 +64,8 @@ Validate the agent/skill/hook package:
 pnpm qa:validate
 ```
 
+This validates the upstream source/version, project-profile and generated-file digests, Claude/Codex parity, MCP parity, and safety-hook behavior.
+
 Run existing automated checks:
 
 ```bash
@@ -73,6 +75,17 @@ pnpm check:types
 ```
 
 The repository has Playwright MCP configured for interactive testing. A persistent `@playwright/test` suite is intentionally added only when a requested feature needs committed browser regression coverage; the `qa-automation` skill defines that setup standard.
+
+## Updating the agent
+
+Edit `.qa-agent/profile.json` for SkillSwapAI-only facts. Edit the upstream kit for universal QA behavior, then render from a checkout of `qa-agent-kit`:
+
+```bash
+node /path/to/qa-agent-kit/scripts/render.mjs --profile .qa-agent/profile.json --target .
+pnpm qa:validate
+```
+
+Generated agent and skill files are committed for offline use. Do not edit them directly.
 
 ## Codex hook trust
 
