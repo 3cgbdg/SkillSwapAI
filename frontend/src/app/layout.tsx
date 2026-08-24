@@ -21,7 +21,15 @@ const InterFont = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "SkillSwapAI",
+  // Required so routes below can use relative URLs (canonical, openGraph.url);
+  // a relative URL-based metadata field without this is a build error.
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
+  ),
+  title: {
+    default: "SkillSwapAI",
+    template: "%s · SkillSwapAI",
+  },
   description: "SkillSwap AI is a skills exchange platform",
 };
 
