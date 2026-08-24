@@ -4,7 +4,7 @@
 
 SkillSwapAI connects people who want to learn with those who want to teach. The system utilizes Artificial Intelligence to analyze user profiles and provide intelligent matchmaking, facilitating real-time communication and learning sessions.
 
-![Project Status](https://img.shields.io/badge/Status-MVP_Live-success)
+![Project Status](https://img.shields.io/badge/Status-Live_Product-success)
 ![Tech Stack](https://img.shields.io/badge/Stack-Full_Stack-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
@@ -18,14 +18,14 @@ The project follows a **microservices-based architecture**, ensuring separation 
 
 
 
-* **Frontend (Client):** Next.js application for user interaction.
+* **Frontend (Client):** Next.js 16 application for product discovery, learning plans, scheduling, and real-time collaboration.
 * **Core Backend (NestJS):** NestJS server handling users, chats, sessions, core business logic, and AI matchmaking/recommendations (via an in-process LangGraph.js + OpenAI integration).
 * **External Services:** PostgreSQL (Neon.tech), AWS S3 (Storage), OpenAI API.
 
 ## 🛠 Tech Stack
 
 ### Frontend
-* **Framework:** Next.js 15 (React)
+* **Framework:** Next.js 16 (React 19)
 * **Language:** TypeScript
 * **Styling:** TailwindCSS
 * **State Management:** Redux Toolkit
@@ -42,7 +42,15 @@ The project follows a **microservices-based architecture**, ensuring separation 
 * **Containerization:** Docker (for services), Docker Compose (for local orchestration).
 * **Database:** PostgreSQL (Cloud-hosted on Neon.tech).
 * **Storage:** AWS S3 (via AWS SDK).
-* **Deployment:** Vercel (Frontend) + Render (Backend Services).
+* **Deployment:** AWS ECR/ECS pipelines for frontend and backend services.
+
+## Product Experience
+
+| AI partner discovery | Personalized learning plan |
+| --- | --- |
+| ![SkillSwap AI matching](docs/portfolio/skillswap-01-matches.png) | ![SkillSwap learning plan](docs/portfolio/skillswap-02-plan.png) |
+
+![SkillSwap real-time chat](docs/portfolio/skillswap-03-chat.png)
 
 ## ✨ Key Features
 
@@ -101,17 +109,9 @@ Git hooks: **pre-commit** runs lint-staged (Prettier + ESLint on staged files); 
     * Frontend: `http://localhost:3000`
     * Backend API: `http://localhost:4000`
 
-## 🐛 Known Issues & Roadmap
-
-This project is currently in the **Active MVP Phase**.
-* **Socket Synchronization:** Occasionally, a page refresh might be required to verify the initial connection in a new chat room due to race conditions. Fix is planned for v1.1.
-
 ## 👨‍💻 Author
 
 **Bogdan Tytysh**
 * Full-Stack Engineer (NestJS, TypeScript, AWS)
 * [LinkedIn](https://www.linkedin.com/in/bogdan-tytysh-0b76b1290)
 * [GitHub](https://github.com/3cgbdg)
-
----
-*Built as a showcase of modern cloud-native architecture.*

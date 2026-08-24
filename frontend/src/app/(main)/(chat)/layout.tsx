@@ -8,6 +8,7 @@ import ChatsService from "@/services/ChatsService";
 import { useParams } from "next/navigation";
 
 import { MOBILE_MEDIA_QUERY } from "@/constants/breakpoints";
+import { Card } from "@/components/ui/card";
 
 export default function ChatLayout({
   children,
@@ -39,10 +40,10 @@ export default function ChatLayout({
       error={error}
       loadingFallback={<SkeletonKit.ChatLayoutSkeleton />}
     >
-      <div className="flex min-h-[var(--chat-panel-min-h)] flex-col gap-4 md:min-h-[var(--chat-panel-min-h-md)] md:flex-row md:gap-6">
+      <Card className="flex min-h-[var(--chat-panel-min-h)] flex-col gap-0 p-0 md:min-h-[var(--chat-panel-min-h-md)] md:flex-row">
         {showSidebar ? <ChatSidebar /> : null}
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
-      </div>
+      </Card>
     </AsyncBoundary>
   );
 }

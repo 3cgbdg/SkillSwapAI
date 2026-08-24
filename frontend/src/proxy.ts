@@ -6,9 +6,9 @@ const AUTH_PATHS = ["/auth/login", "/auth/signup", "/auth/forgot-password"];
 const PUBLIC_PATHS = ["/"];
 
 /** Public subtrees, e.g. "/legal" once terms/privacy land (prefix match). */
-const PUBLIC_PREFIXES: string[] = [];
+const PUBLIC_PREFIXES = ["/portfolio"];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const hasSession = Boolean(
     request.cookies.get("access_token") ?? request.cookies.get("refresh_token")
