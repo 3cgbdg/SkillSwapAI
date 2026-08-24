@@ -9,10 +9,10 @@ import type { LucideIcon } from "lucide-react";
  * be shared.
  */
 
-export const SITE_TAGLINE = "Swap skills. Grow together.";
+export const SITE_TAGLINE = "Find your match. Follow the plan. Grow together.";
 
 export const SITE_SUBHEADLINE =
-  "SkillSwap AI matches you with people who can teach what you want to learn — and want to learn what you can teach.";
+  "SkillSwap AI ranks reciprocal partners, explains why the exchange works, and builds a learning journey you can follow together.";
 
 type Highlight = {
   icon: LucideIcon;
@@ -23,8 +23,9 @@ type Highlight = {
 export const HIGHLIGHTS: readonly Highlight[] = [
   {
     icon: Sparkles,
-    title: "AI-matched partners",
-    description: "We pair you with people whose skills complete yours.",
+    title: "Explainable AI matches",
+    description:
+      "Every journey opens with a compatibility score and the AI's reasoning for the pairing.",
   },
   {
     icon: MessagesSquare,
@@ -77,7 +78,7 @@ export const HOW_IT_WORKS_STEPS: readonly HowItWorksStep[] = [
   {
     title: "Get matched, get a plan",
     description:
-      "We find someone whose skills complement yours and generate a structured training plan with modules and resources for both of you.",
+      "Compare explainable matches, choose the right partner, and get a structured learning journey with modules and resources.",
   },
   {
     title: "Meet, learn, review",
@@ -87,8 +88,8 @@ export const HOW_IT_WORKS_STEPS: readonly HowItWorksStep[] = [
 ];
 
 export const CLOSING_CTA = {
-  title: "Someone out there wants to learn what you know.",
+  title: "The right learning partner is closer than you think.",
   description:
-    "Create an account, list two or three skills, and see who SkillSwap pairs you with.",
+    "Add what you can teach and what you want to learn. SkillSwap will rank the exchange and build the path forward.",
   action: "Get started free",
 } as const;

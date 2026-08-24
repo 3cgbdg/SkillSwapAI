@@ -16,7 +16,7 @@ export function ExampleSwap({ className }: { className?: string }) {
       elevation="raised"
       className={cn("w-full max-w-lg", className)}
       role="img"
-      aria-label="Example swap: Maya teaches Spanish and wants React; Sam teaches React and wants Spanish."
+      aria-label="Example swap: Maya teaches TypeScript and wants Product Design; Alex teaches Product Design and wants TypeScript."
     >
       <CardContent className="flex flex-col gap-5">
         <p className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
@@ -24,31 +24,31 @@ export function ExampleSwap({ className }: { className?: string }) {
         </p>
 
         <div className="flex items-center gap-3">
-          <UserAvatar name="Maya O" size="md" />
+          <UserAvatar name="Maya Chen" size="md" />
           <div className="flex min-w-0 flex-col gap-1.5">
-            <p className="font-medium">Maya</p>
+            <p className="font-medium">Maya Chen</p>
             <div className="flex flex-wrap items-center gap-1.5">
-              <SkillPill label="Spanish" variant="teach" />
+              <SkillPill label="TypeScript" variant="teach" />
               <ArrowRight
                 className="text-muted-foreground size-3.5 shrink-0"
                 aria-hidden
               />
-              <SkillPill label="React" variant="learn" />
+              <SkillPill label="Product Design" variant="learn" />
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <UserAvatar name="Sam K" size="md" />
+          <UserAvatar name="Alex M" size="md" />
           <div className="flex min-w-0 flex-col gap-1.5">
-            <p className="font-medium">Sam</p>
+            <p className="font-medium">Alex</p>
             <div className="flex flex-wrap items-center gap-1.5">
-              <SkillPill label="React" variant="teach" />
+              <SkillPill label="Product Design" variant="teach" />
               <ArrowRight
                 className="text-muted-foreground size-3.5 shrink-0"
                 aria-hidden
               />
-              <SkillPill label="Spanish" variant="learn" />
+              <SkillPill label="TypeScript" variant="learn" />
             </div>
           </div>
         </div>

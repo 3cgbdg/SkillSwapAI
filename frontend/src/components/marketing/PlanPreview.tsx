@@ -6,27 +6,27 @@ import { cn } from "@/lib/utils";
 
 const MODULES = [
   {
-    title: "Present-tense conversation",
+    title: "TypeScript foundations",
     weeks: "Week 1",
-    resource: "Warm-up script + 20 core verbs",
+    resource: "Types, interfaces, and a guided refactor",
     done: true,
   },
   {
-    title: "Past tense, and telling a story",
+    title: "Reusable React patterns",
     weeks: "Week 2",
-    resource: "Graded reader, chapters 1–3",
+    resource: "Props, state, and typed composition",
     done: true,
   },
   {
-    title: "Ordering, asking, negotiating",
+    title: "Data and API boundaries",
     weeks: "Week 3",
-    resource: "Roleplay prompts for both of you",
+    resource: "Query layer and error-state exercise",
     done: false,
   },
   {
-    title: "Holding a 20-minute conversation",
+    title: "Ship a real feature together",
     weeks: "Week 4",
-    resource: "Recorded check-in + review",
+    resource: "Pair review, polish, and reflection",
     done: false,
   },
 ];
@@ -41,13 +41,13 @@ export function PlanPreview({ className }: { className?: string }) {
     <Card
       elevation="raised"
       role="img"
-      aria-label="A four-week AI-generated training plan for learning Spanish, with two modules complete, each listing a timeline and a suggested resource."
+      aria-label="A four-week AI-generated TypeScript learning journey with two modules complete, each listing a timeline and a suggested resource."
       className={cn("w-full max-w-md", className)}
     >
       <CardHeader bordered className="gap-1">
-        <CardTitle className="text-lg">Your plan: Spanish</CardTitle>
+        <CardTitle className="text-lg">TypeScript learning journey</CardTitle>
         <p className="text-muted-foreground text-body-sm">
-          Generated for you and Maya · 4 modules
+          Generated for you and Maya · 50% complete
         </p>
       </CardHeader>
 
