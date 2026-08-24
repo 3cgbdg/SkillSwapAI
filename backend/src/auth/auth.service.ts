@@ -54,7 +54,7 @@ export class AuthService {
 
     if (!user) throw new InternalServerErrorException('Error creating user');
 
-    this.aiJobsService.enqueueSkillSuggestions(user.id);
+    void this.aiJobsService.enqueueSkillSuggestions(user.id);
 
     return AuthUtils.generateTokens(
       user.id,

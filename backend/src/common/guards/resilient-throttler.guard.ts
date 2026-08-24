@@ -4,6 +4,7 @@ import {
   ThrottlerGuard,
   ThrottlerRequest,
 } from '@nestjs/throttler';
+import { ErrorLogThrottle } from '../logging/error-log-throttle';
 
 /**
  * Rate limiting is not critical enough to take the whole API down with it.
@@ -16,6 +17,7 @@ import {
 @Injectable()
 export class ResilientThrottlerGuard extends ThrottlerGuard {
   private readonly resilientLogger = new Logger(ResilientThrottlerGuard.name);
+  private readonly errorLogThrottle = new ErrorLogThrottle();
 
   protected async handleRequest(
     requestProps: ThrottlerRequest,
@@ -26,11 +28,13 @@ export class ResilientThrottlerGuard extends ThrottlerGuard {
       if (err instanceof ThrottlerException) {
         throw err;
       }
-      this.resilientLogger.error(
-        `Throttler storage unavailable, allowing request through: ${
-          err instanceof Error ? err.message : String(err)
-        }`,
-      );
+      if (this.errorLogThrottle.shouldLog(err)) {
+        this.resilientLogger.error(
+          `Throttler storage unavailable, allowing request through: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        );
+      }
       return true;
     }
   }

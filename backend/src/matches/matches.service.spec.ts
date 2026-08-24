@@ -1,7 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getQueueToken } from '@nestjs/bullmq';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { ForbiddenException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { MatchesService } from './matches.service';
 import { PrismaService } from 'prisma/prisma.service';
 import { QUEUE_AI } from 'src/queues/queue.constants';
@@ -58,6 +61,16 @@ describe('MatchesService', () => {
 
       expect(queueAdd).toHaveBeenCalled();
       expect(result.jobId).toBeDefined();
+    });
+
+    it('returns a retryable service error when Redis cannot enqueue work', async () => {
+      prisma.match.count.mockResolvedValue(0);
+      prisma.friendship.count.mockResolvedValue(1);
+      queueAdd.mockRejectedValue(new Error('Redis quota exceeded'));
+
+      await expect(service.enqueueActiveMatch('me', 'friend')).rejects.toThrow(
+        ServiceUnavailableException,
+      );
     });
   });
 });

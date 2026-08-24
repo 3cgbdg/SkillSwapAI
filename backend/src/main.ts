@@ -41,7 +41,7 @@ async function bootstrap() {
   app.enableShutdownHooks();
 
   const redisIoAdapter = new RedisIoAdapter(app, configService);
-  redisIoAdapter.connectToRedis();
+  await redisIoAdapter.connectToRedis();
   app.useWebSocketAdapter(redisIoAdapter);
 
   app.use(cookieParser());

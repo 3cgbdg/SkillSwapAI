@@ -7,10 +7,12 @@ import {
   JOB_PROMPT_SESSION_REVIEWS,
   QUEUE_MAINTENANCE,
 } from './queue.constants';
+import { ErrorLogThrottle } from 'src/common/logging/error-log-throttle';
 
 @Injectable()
 export class QueueBootstrapService implements OnModuleInit {
   private readonly logger = new Logger(QueueBootstrapService.name);
+  private readonly errorLogThrottle = new ErrorLogThrottle();
 
   constructor(
     @InjectQueue(QUEUE_MAINTENANCE)
@@ -19,9 +21,11 @@ export class QueueBootstrapService implements OnModuleInit {
     // Queue extends EventEmitter and crashes the process on an unhandled
     // 'error' event (e.g. its Redis connection failing) unless something
     // listens for it.
-    this.maintenanceQueue.on('error', (err) =>
-      this.logger.error(`Queue error: ${err.message}`),
-    );
+    this.maintenanceQueue.on('error', (err) => {
+      if (this.errorLogThrottle.shouldLog(err)) {
+        this.logger.error(`Queue error: ${err.message}`);
+      }
+    });
   }
 
   async onModuleInit() {

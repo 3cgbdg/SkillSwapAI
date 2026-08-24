@@ -31,6 +31,12 @@ import {
   buildIoredisOptions,
 } from './config/redis.config';
 import { envValidationSchema } from './config/env.validation';
+import {
+  LOG_REDACTION_MARKER,
+  sanitizeHttpRequestLog,
+  sanitizeHttpResponseLog,
+} from './common/logging/http-log-sanitizer';
+import { ErrorLogThrottle } from './common/logging/error-log-throttle';
 
 @Module({
   imports: [
@@ -38,6 +44,29 @@ import { envValidationSchema } from './config/env.validation';
       pinoHttp: {
         autoLogging: true,
         quietReqLogger: true,
+        serializers: {
+          req: sanitizeHttpRequestLog,
+          res: sanitizeHttpResponseLog,
+        },
+        redact: {
+          paths: [
+            'req.headers.authorization',
+            'req.headers.cookie',
+            'req.headers["proxy-authorization"]',
+            'req.headers["x-admin-key"]',
+            'req.query.access_token',
+            'req.query.client_secret',
+            'req.query.code',
+            'req.query.id_token',
+            'req.query.password',
+            'req.query.refresh_token',
+            'req.query.session_state',
+            'req.query.state',
+            'req.query.token',
+            'res.headers["set-cookie"]',
+          ],
+          censor: LOG_REDACTION_MARKER,
+        },
       },
     }),
     ConfigModule.forRoot({
@@ -84,11 +113,13 @@ import { envValidationSchema } from './config/env.validation';
         }
 
         const throttlerRedisClient = new Redis(redisOptions);
-        throttlerRedisClient.on('error', (err) =>
-          new Logger('ThrottlerStorageRedis').error(
-            `Redis error: ${err.message}`,
-          ),
-        );
+        const redisLogger = new Logger('ThrottlerStorageRedis');
+        const errorLogThrottle = new ErrorLogThrottle();
+        throttlerRedisClient.on('error', (err) => {
+          if (errorLogThrottle.shouldLog(err)) {
+            redisLogger.error(`Redis error: ${err.message}`);
+          }
+        });
 
         return {
           throttlers,

@@ -105,7 +105,7 @@ export class ProfilesService {
     const userId = await this.usersService.findOrCreateGoogleUser(profile);
 
     // generate ai suggestions for the new user
-    this.aiJobsService.enqueueSkillSuggestions(userId);
+    void this.aiJobsService.enqueueSkillSuggestions(userId);
 
     return userId;
   }

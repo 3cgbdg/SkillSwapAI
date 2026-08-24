@@ -9,6 +9,7 @@ import { Message } from '../prisma/prisma-exports.js';
 import { ChatsUtils } from 'src/utils/chats.utils';
 import { CACHE_TTL_LIST_MS, CacheKeys } from 'src/utils/cache-keys';
 import { FriendshipUtils } from 'src/utils/friendship.utils';
+import { cacheDel, cacheGet, cacheSet } from 'src/common/cache/resilient-cache';
 
 export type ChatMessage = Pick<
   Message,
@@ -56,8 +57,10 @@ export class ChatsService {
 
   async findAll(myId: string): Promise<ReturnDataType<IChatListItem[]>> {
     const cacheKey = CacheKeys.chatsList(myId);
-    const cached =
-      await this.cacheManager.get<ReturnDataType<IChatListItem[]>>(cacheKey);
+    const cached = await cacheGet<ReturnDataType<IChatListItem[]>>(
+      this.cacheManager,
+      cacheKey,
+    );
     if (cached) return cached;
 
     const chats = await this.prisma.chat.findMany({
@@ -88,7 +91,7 @@ export class ChatsService {
     const result = {
       data: chats.map((chat) => ChatsUtils.mapChatListItem(chat)),
     };
-    await this.cacheManager.set(cacheKey, result, CACHE_TTL_LIST_MS);
+    await cacheSet(this.cacheManager, cacheKey, result, CACHE_TTL_LIST_MS);
     return result;
   }
 
@@ -121,8 +124,8 @@ export class ChatsService {
         },
       });
       await Promise.all([
-        this.cacheManager.del(CacheKeys.chatsList(myId)),
-        this.cacheManager.del(CacheKeys.chatsList(dto.friendId)),
+        cacheDel(this.cacheManager, CacheKeys.chatsList(myId)),
+        cacheDel(this.cacheManager, CacheKeys.chatsList(dto.friendId)),
       ]);
     }
 
