@@ -7,14 +7,18 @@ import { SITE_SUBHEADLINE, SITE_TAGLINE } from "@/components/marketing/content";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 
-const REASSURANCE = ["Free to join", "No card needed", "Two skills to start"];
+const REASSURANCE = [
+  "Explainable matches",
+  "AI learning journey",
+  "Chat and scheduling built in",
+];
 
 export function MarketingHero() {
   return (
     <section aria-labelledby="hero-heading" className="py-16 md:py-24">
       <Container className="grid items-center gap-14 lg:grid-cols-2 lg:gap-16">
         <div className="animate-fade-up flex flex-col items-start gap-6">
-          <Badge variant="secondary">AI-matched skill exchange</Badge>
+          <Badge variant="secondary">AI matching + guided learning</Badge>
 
           <h1
             id="hero-heading"

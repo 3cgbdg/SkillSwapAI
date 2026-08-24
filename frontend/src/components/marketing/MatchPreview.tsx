@@ -23,24 +23,28 @@ export function MatchPreview({ className }: { className?: string }) {
     <Card
       elevation="raised"
       role="img"
-      aria-label="A match card for Maya, 92% compatible — she teaches Spanish and Illustration, and wants to learn React and TypeScript."
+      aria-label="An AI match card for Maya Chen, 96% compatible — she teaches TypeScript and React, and wants to learn Product Design and UX Research."
       className={cn("w-full max-w-sm", className)}
     >
       <CardHeader className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-4">
-        <UserAvatar name="Maya O" size="lg" />
+        <UserAvatar name="Maya Chen" size="lg" />
         <div className="min-w-0">
-          <CardTitle className="truncate text-lg">Maya</CardTitle>
+          <CardTitle className="truncate text-lg">Maya Chen</CardTitle>
           <p className="text-primary mt-1 text-xs font-semibold">
             Why this match?
           </p>
         </div>
-        <MetricRing value={92} label="92% compatibility" />
+        <MetricRing value={96} label="96% compatibility" />
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="flex flex-col gap-4">
+        <p className="border-primary/20 bg-primary/5 text-muted-foreground rounded-xl border px-3 py-2 text-xs leading-5">
+          Strong two-way fit: Maya can guide your TypeScript goals while your
+          product design experience supports what she wants to learn.
+        </p>
         <SwapAxis
-          teach={[{ title: "Spanish" }, { title: "Illustration" }]}
-          learn={[{ title: "React" }, { title: "TypeScript" }]}
+          teach={[{ title: "TypeScript" }, { title: "React" }]}
+          learn={[{ title: "Product Design" }, { title: "UX Research" }]}
         />
       </CardContent>
 
@@ -52,7 +56,7 @@ export function MatchPreview({ className }: { className?: string }) {
           )}
         >
           <Book className="size-4" aria-hidden />
-          Generate plan
+          Start learning journey
         </span>
       </CardFooter>
     </Card>

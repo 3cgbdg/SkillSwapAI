@@ -11,22 +11,22 @@ import { PlanPreview } from "@/components/marketing/PlanPreview";
 import { Reveal } from "@/components/marketing/Reveal";
 
 const DESCRIPTION =
-  "SkillSwap AI matches you with people who can teach what you want to learn — and want to learn what you can teach. Free to join.";
+  "SkillSwap AI finds reciprocal learning partners, explains every match, and generates a structured learning journey with chat and scheduling built in.";
 
 export const metadata: Metadata = {
-  title: { absolute: "SkillSwapAI — Swap skills. Grow together." },
+  title: { absolute: "SkillSwapAI — AI matching and guided skill exchange" },
   description: DESCRIPTION,
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     url: "/",
     siteName: "SkillSwapAI",
-    title: "SkillSwapAI — Swap skills. Grow together.",
+    title: "SkillSwapAI — AI matching and guided skill exchange",
     description: DESCRIPTION,
   },
   twitter: {
     card: "summary_large_image",
-    title: "SkillSwapAI — Swap skills. Grow together.",
+    title: "SkillSwapAI — AI matching and guided skill exchange",
     description: DESCRIPTION,
   },
 };
@@ -40,20 +40,20 @@ export default function LandingPage() {
           the part nobody else generates. */}
       <MarketingSection labelledBy="plan-heading">
         <FeatureRow
-          eyebrow="What makes it work"
-          title="You get a plan, not just a name"
+          eyebrow="Your learning journey"
+          title="A match becomes a plan you can finish"
           headingId="plan-heading"
           visual={<PlanPreview />}
         >
           <p>
-            Being introduced to someone is the easy part. The hard part is
-            knowing what to actually do in week one — so SkillSwap writes that
-            for you.
+            A compatibility score is only useful when it leads somewhere.
+            SkillSwap turns the exchange into an ordered path with a visible
+            goal, progress, and next step.
           </p>
           <p>
-            Every match comes with a structured plan: modules in order, a
-            realistic timeline, and specific resources for both sides of the
-            trade. Tick things off as you go.
+            Every journey includes modules, a realistic timeline, resources,
+            partner context, chat, and scheduling — all connected in the same
+            workspace.
           </p>
         </FeatureRow>
       </MarketingSection>
@@ -62,17 +62,18 @@ export default function LandingPage() {
         <FeatureRow
           reverse
           eyebrow="How matching works"
-          title="Matched on what you can actually trade"
+          title="See why the exchange works before you commit"
           headingId="match-heading"
           visual={<ExampleSwap />}
         >
           <p>
             Tell us what you can teach and what you want to learn. SkillSwap
-            looks for the people whose lists are the mirror image of yours.
+            surfaces the people whose skills are the mirror image of yours.
           </p>
           <p>
-            You&apos;ll see why each match was made and how well you fit before
-            you reach out to anyone.
+            You see their teaching strengths and learning goals up front. Once
+            you connect and start a journey together, you get a compatibility
+            score and the AI&apos;s reasoning for the pairing.
           </p>
         </FeatureRow>
       </MarketingSection>
