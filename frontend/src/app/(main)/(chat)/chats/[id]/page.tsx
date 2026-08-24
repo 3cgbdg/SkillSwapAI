@@ -13,6 +13,7 @@ import { AsyncBoundary } from "@/components/composites";
 import { ChatComposer } from "@/components/chat/ChatComposer";
 import { ChatThread } from "@/components/chat/ChatThread";
 import { groupChatMessages, TEMP_MESSAGE_PREFIX } from "@/utils/chatMessages";
+import { showErrorToast } from "@/utils/toast";
 
 type ExtendedMessage = IMessage & { pending?: boolean; failed?: boolean };
 
@@ -192,6 +193,19 @@ const Page = () => {
       );
     };
 
+    const handleMessageError = (payload?: { message?: string }) => {
+      showErrorToast(payload?.message || "Message could not be sent");
+      queryClient.setQueryData(
+        ["messages", currentChat.friend.id],
+        (old: ExtendedMessage[] = []) =>
+          old.map((message) =>
+            message.pending
+              ? { ...message, pending: false, failed: true }
+              : message
+          )
+      );
+    };
+
     const onTyping = ({ from }: { from: string }) => {
       if (from === currentChat.friend.id) setIsTyping(true);
     };
@@ -202,6 +216,7 @@ const Page = () => {
     socket.on("receiveMessage", handleReceiveMessage);
     socket.on("messageSent", handleMessageSent);
     socket.on("updateSeen", handleUpdateSeen);
+    socket.on("messageError", handleMessageError);
     socket.on("typing", onTyping);
     socket.on("stopTyping", onStopTyping);
 
@@ -209,6 +224,7 @@ const Page = () => {
       socket.off("receiveMessage", handleReceiveMessage);
       socket.off("messageSent", handleMessageSent);
       socket.off("updateSeen", handleUpdateSeen);
+      socket.off("messageError", handleMessageError);
       socket.off("typing", onTyping);
       socket.off("stopTyping", onStopTyping);
     };

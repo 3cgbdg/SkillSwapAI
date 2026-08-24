@@ -16,6 +16,7 @@ import type { Cache } from 'cache-manager';
 import type { SocketData } from '../../types/general';
 import type { JwtPayload } from '../../types/auth';
 import { CacheKeys } from '../utils/cache-keys';
+import { FriendshipUtils } from '../utils/friendship.utils';
 
 @WebSocketGateway({
   cors: {
@@ -157,22 +158,24 @@ export class ChatGateway
   }
 
   @SubscribeMessage('typing')
-  handleTyping(
+  async handleTyping(
     client: Socket<any, any, any, SocketData>,
     payload: { to: string },
   ) {
     const fromId = client.data.userId;
     if (!fromId || !payload?.to) return;
+    if (!(await this.areFriends(fromId, payload.to))) return;
     this.server.to(`user:${payload.to}`).emit('typing', { from: fromId });
   }
 
   @SubscribeMessage('stopTyping')
-  handleStopTyping(
+  async handleStopTyping(
     client: Socket<any, any, any, SocketData>,
     payload: { to: string },
   ) {
     const fromId = client.data.userId;
     if (!fromId || !payload?.to) return;
+    if (!(await this.areFriends(fromId, payload.to))) return;
     this.server.to(`user:${payload.to}`).emit('stopTyping', { from: fromId });
   }
 
@@ -182,6 +185,14 @@ export class ChatGateway
     payload: { to: string; message: string },
   ) {
     const fromId = client.data.userId;
+    if (!fromId || !payload?.to || !payload?.message?.trim()) return;
+    if (!(await this.areFriends(fromId, payload.to))) {
+      client.emit('messageError', {
+        message: 'You can only message friends',
+      });
+      return;
+    }
+
     // saving in db
     const chat = await this.prisma.chat.findFirst({
       where: {
@@ -248,5 +259,16 @@ export class ChatGateway
         id: messageId,
       });
     }
+  }
+
+  private async areFriends(
+    firstUserId: string,
+    secondUserId: string,
+  ): Promise<boolean> {
+    if (firstUserId === secondUserId) return false;
+    const count = await this.prisma.friendship.count({
+      where: FriendshipUtils.buildPairFilter(firstUserId, secondUserId),
+    });
+    return count > 0;
   }
 }

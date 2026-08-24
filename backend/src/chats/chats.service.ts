@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { PrismaService } from 'prisma/prisma.service';
@@ -8,6 +8,7 @@ import { IChatListItem, IChatResponse } from 'types/chats';
 import { Message } from '../prisma/prisma-exports.js';
 import { ChatsUtils } from 'src/utils/chats.utils';
 import { CACHE_TTL_LIST_MS, CacheKeys } from 'src/utils/cache-keys';
+import { FriendshipUtils } from 'src/utils/friendship.utils';
 
 export type ChatMessage = Pick<
   Message,
@@ -95,6 +96,13 @@ export class ChatsService {
     dto: CreateChatDto,
     myId: string,
   ): Promise<ReturnDataType<IChatResponse>> {
+    const friendshipCount = await this.prisma.friendship.count({
+      where: FriendshipUtils.buildPairFilter(myId, dto.friendId),
+    });
+    if (friendshipCount === 0) {
+      throw new ForbiddenException('You can only chat with friends');
+    }
+
     let chat = await this.prisma.chat.findFirst({
       where: {
         AND: [

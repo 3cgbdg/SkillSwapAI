@@ -14,6 +14,7 @@ import { IFriendItem } from 'types/friends';
 
 import { UserUtils } from 'src/utils/user.utils';
 import { CACHE_TTL_LIST_MS, CacheKeys } from 'src/utils/cache-keys';
+import { FriendshipUtils } from 'src/utils/friendship.utils';
 
 @Injectable()
 export class FriendsService {
@@ -99,12 +100,7 @@ export class FriendsService {
 
   async doesFriendshipExist(myId: string, otherId: string): Promise<boolean> {
     const friendshipExists = await this.prisma.friendship.count({
-      where: {
-        OR: [
-          { user1Id: myId, user2Id: otherId },
-          { user2Id: myId, user1Id: otherId },
-        ],
-      },
+      where: FriendshipUtils.buildPairFilter(myId, otherId),
     });
     return friendshipExists > 0;
   }
