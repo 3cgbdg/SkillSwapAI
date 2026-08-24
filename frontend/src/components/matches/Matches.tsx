@@ -1,7 +1,16 @@
 "use client";
 import { IMatch } from "@/types/match";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, Search, Users } from "lucide-react";
+import {
+  AlertCircle,
+  Calendar,
+  Lightbulb,
+  Search,
+  Sparkles,
+  Star,
+  Target,
+  Users,
+} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import MatchCard from "./MatchCard";
@@ -18,10 +27,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DataEmpty, SectionPanel } from "@/components/composites";
+import {
+  DataEmpty,
+  SectionPanel,
+  SkillPill,
+  StatTile,
+} from "@/components/composites";
 import { PageBody, PageHeader } from "@/components/layouts";
 import { InlineSkillPicker } from "@/components/matches/InlineSkillPicker";
 import { useSocket } from "@/context/SocketContext";
+import useProfile from "@/hooks/useProfile";
 
 const PENDING_JOB_KEY = "skillswap_pending_match_job";
 
@@ -33,6 +48,7 @@ const Matches = ({
   option: "available" | "active";
 }) => {
   const { data: activeMatches = [], refetch: refetchActive } = useMatches();
+  const { data: profile } = useProfile();
   const { socket } = useSocket();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -157,6 +173,19 @@ const Matches = ({
     },
   });
 
+  const strongestCompatibility = filteredMatch.reduce(
+    (best, match) => Math.max(best, match.compatibility ?? 0),
+    0
+  );
+  const sharedSkillCount = new Set(
+    filteredMatch.flatMap((match) => [
+      ...match.other.knownSkills.map((skill) => skill.title),
+      ...match.other.skillsToLearn.map((skill) => skill.title),
+    ])
+  ).size;
+  const teachingFocus = profile?.knownSkills?.[0]?.title;
+  const learningFocus = profile?.skillsToLearn?.[0]?.title;
+
   return (
     <PageBody>
       {isPending || pendingPartnerId ? (
@@ -176,10 +205,24 @@ const Matches = ({
       ) : null}
 
       <PageHeader
-        title={
-          option === "active" ? "Your learning matches" : "Discover partners"
+        eyebrow={
+          <span className="text-primary flex items-center gap-2 font-semibold">
+            <Sparkles className="size-4" />
+            {option === "active"
+              ? "AI-generated learning journeys"
+              : "AI partner discovery"}
+          </span>
         }
-        description="Explore potential skill exchange partners based on your teaching and learning goals. Connect to swap knowledge!"
+        title={
+          option === "active"
+            ? "Learn through a real skill exchange"
+            : "Matches built for a real skill swap"
+        }
+        description={
+          option === "active"
+            ? "Continue the plans, sessions, and conversations already moving your skills forward."
+            : "Every recommendation balances what you can teach, what you want to learn, and how strong the two-way fit can be."
+        }
         actions={
           <>
             {option === "active" && (
@@ -231,6 +274,34 @@ const Matches = ({
           </>
         }
       />
+      <SectionPanel
+        className="bg-card"
+        contentClassName="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div className="flex items-center gap-3">
+          <Target className="text-primary size-5 shrink-0" aria-hidden />
+          <div>
+            <p className="font-semibold">
+              {option === "active"
+                ? "Your active learning network"
+                : "Matching for your current goals"}
+            </p>
+            <p className="text-muted-foreground text-body-sm">
+              {teachingFocus || learningFocus
+                ? `${teachingFocus ? `Teach ${teachingFocus}` : "Share your strengths"} · ${learningFocus ? `Learn ${learningFocus}` : "Add a learning goal"}`
+                : "Add teaching and learning skills to sharpen every recommendation."}
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {teachingFocus ? (
+            <SkillPill label={`You teach ${teachingFocus}`} variant="teach" />
+          ) : null}
+          {learningFocus ? (
+            <SkillPill label={`You learn ${learningFocus}`} variant="learn" />
+          ) : null}
+        </div>
+      </SectionPanel>
       <div className="grid gap-(--space-stack) sm:grid-cols-2 xl:grid-cols-3">
         {filteredMatch.length === 0 ? (
           <div className="col-span-full">
@@ -269,6 +340,32 @@ const Matches = ({
           ))
         )}
       </div>
+      {filteredMatch.length > 0 ? (
+        <div className="grid grid-cols-2 gap-(--space-stack) lg:grid-cols-4">
+          <StatTile
+            icon={Users}
+            value={filteredMatch.length}
+            label={
+              option === "active" ? "Active exchanges" : "Relevant partners"
+            }
+          />
+          <StatTile
+            icon={Star}
+            value={strongestCompatibility}
+            label="Top compatibility %"
+          />
+          <StatTile
+            icon={Calendar}
+            value={activeMatches.length}
+            label="Generated plans"
+          />
+          <StatTile
+            icon={Lightbulb}
+            value={sharedSkillCount}
+            label="Skills represented"
+          />
+        </div>
+      ) : null}
     </PageBody>
   );
 };

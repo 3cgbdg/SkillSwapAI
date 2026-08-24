@@ -14,6 +14,8 @@ import { IFriendItem } from 'types/friends';
 
 import { UserUtils } from 'src/utils/user.utils';
 import { CACHE_TTL_LIST_MS, CacheKeys } from 'src/utils/cache-keys';
+import { FriendshipUtils } from 'src/utils/friendship.utils';
+import { cacheDel, cacheGet, cacheSet } from 'src/common/cache/resilient-cache';
 
 @Injectable()
 export class FriendsService {
@@ -51,10 +53,10 @@ export class FriendsService {
     // available-match eligibility (buildAvailableMatchesFilter includes
     // friendOf/friends in its OR criteria).
     await Promise.all([
-      this.cacheManager.del(CacheKeys.friendsList(id)),
-      this.cacheManager.del(CacheKeys.friendsList(dto.id)),
-      this.cacheManager.del(CacheKeys.availableMatches(id)),
-      this.cacheManager.del(CacheKeys.availableMatches(dto.id)),
+      cacheDel(this.cacheManager, CacheKeys.friendsList(id)),
+      cacheDel(this.cacheManager, CacheKeys.friendsList(dto.id)),
+      cacheDel(this.cacheManager, CacheKeys.availableMatches(id)),
+      cacheDel(this.cacheManager, CacheKeys.availableMatches(dto.id)),
     ]);
 
     return { message: `${user.name} successfully added to friends!` };
@@ -68,8 +70,10 @@ export class FriendsService {
 
   async findAll(id: string): Promise<ReturnDataType<IFriendItem[]>> {
     const cacheKey = CacheKeys.friendsList(id);
-    const cached =
-      await this.cacheManager.get<ReturnDataType<IFriendItem[]>>(cacheKey);
+    const cached = await cacheGet<ReturnDataType<IFriendItem[]>>(
+      this.cacheManager,
+      cacheKey,
+    );
     if (cached) return cached;
 
     const friendships = await this.prisma.friendship.findMany({
@@ -88,7 +92,7 @@ export class FriendsService {
     );
 
     const result = { data };
-    await this.cacheManager.set(cacheKey, result, CACHE_TTL_LIST_MS);
+    await cacheSet(this.cacheManager, cacheKey, result, CACHE_TTL_LIST_MS);
     return result;
   }
 
@@ -99,12 +103,7 @@ export class FriendsService {
 
   async doesFriendshipExist(myId: string, otherId: string): Promise<boolean> {
     const friendshipExists = await this.prisma.friendship.count({
-      where: {
-        OR: [
-          { user1Id: myId, user2Id: otherId },
-          { user2Id: myId, user1Id: otherId },
-        ],
-      },
+      where: FriendshipUtils.buildPairFilter(myId, otherId),
     });
     return friendshipExists > 0;
   }

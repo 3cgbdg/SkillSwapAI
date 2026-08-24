@@ -10,6 +10,8 @@ import { RequestGateway } from 'src/webSockets/request.gateway';
 import { MatchesUtils } from 'src/utils/matches.utils';
 import { UserUtils } from 'src/utils/user.utils';
 import { CacheKeys } from 'src/utils/cache-keys';
+import { ErrorLogThrottle } from 'src/common/logging/error-log-throttle';
+import { cacheDel } from 'src/common/cache/resilient-cache';
 import {
   GenerateMatchJobPayload,
   JOB_GENERATE_MATCH,
@@ -21,6 +23,7 @@ import {
 @Processor(QUEUE_AI)
 export class AiQueueProcessor extends WorkerHost {
   private readonly logger = new Logger(AiQueueProcessor.name);
+  private readonly errorLogThrottle = new ErrorLogThrottle();
 
   constructor(
     private readonly aiService: AiService,
@@ -81,10 +84,10 @@ export class AiQueueProcessor extends WorkerHost {
       });
 
       await Promise.all([
-        this.cacheManager.del(CacheKeys.availableMatches(myId)),
-        this.cacheManager.del(CacheKeys.availableMatches(otherId)),
-        this.cacheManager.del(CacheKeys.activeMatches(myId)),
-        this.cacheManager.del(CacheKeys.activeMatches(otherId)),
+        cacheDel(this.cacheManager, CacheKeys.availableMatches(myId)),
+        cacheDel(this.cacheManager, CacheKeys.availableMatches(otherId)),
+        cacheDel(this.cacheManager, CacheKeys.activeMatches(myId)),
+        cacheDel(this.cacheManager, CacheKeys.activeMatches(otherId)),
       ]);
 
       const matchDb = await this.prisma.match.findUnique({
@@ -132,6 +135,8 @@ export class AiQueueProcessor extends WorkerHost {
   // failing) unless something listens for it.
   @OnWorkerEvent('error')
   onError(err: Error) {
-    this.logger.error(`Worker error: ${err.message}`);
+    if (this.errorLogThrottle.shouldLog(err)) {
+      this.logger.error(`Worker error: ${err.message}`);
+    }
   }
 }

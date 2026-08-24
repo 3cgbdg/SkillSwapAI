@@ -13,6 +13,7 @@ import type { Cache } from 'cache-manager';
 import { Inject, OnApplicationShutdown } from '@nestjs/common';
 import type { JwtPayload } from '../../types/auth';
 import type { SocketData } from '../../types/general';
+import { cacheDel, cacheGet, cacheSet } from '../common/cache/resilient-cache';
 @WebSocketGateway({
   cors: {
     origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
@@ -55,12 +56,12 @@ export class RequestGateway
 
         // check for pending AI suggestions
         const pendingKey = `pending_ai_suggestions:${payload.userId}`;
-        const pendingData = await this.cacheManager.get(pendingKey);
+        const pendingData = await cacheGet(this.cacheManager, pendingKey);
         if (pendingData) {
           this.server
             .to(`user:${payload.userId}`)
             .emit('aiSuggestionsReady', pendingData);
-          await this.cacheManager.del(pendingKey);
+          await cacheDel(this.cacheManager, pendingKey);
         }
 
         for (const [key, event] of [
@@ -68,10 +69,10 @@ export class RequestGateway
           [`pending_match_failed:${payload.userId}`, 'matchFailed'],
           [`pending_review_prompt:${payload.userId}`, 'reviewPrompt'],
         ] as const) {
-          const pending = await this.cacheManager.get(key);
+          const pending = await cacheGet(this.cacheManager, key);
           if (pending) {
             this.server.to(`user:${payload.userId}`).emit(event, pending);
-            await this.cacheManager.del(key);
+            await cacheDel(this.cacheManager, key);
           }
         }
       } catch (err: unknown) {
@@ -133,7 +134,7 @@ export class RequestGateway
         this.server.to(roomName).emit('aiSuggestionsReady', payload);
       } else {
         const pendingKey = `pending_ai_suggestions:${toId}`;
-        await this.cacheManager.set(pendingKey, payload, 3600 * 1000); // 1 hour TTL
+        await cacheSet(this.cacheManager, pendingKey, payload, 3600 * 1000); // 1 hour TTL
       }
     } catch (err) {
       console.error('[RequestGateway] Failed to notify AI suggestions:', err);
@@ -181,7 +182,7 @@ export class RequestGateway
       if (count > 0) {
         this.server.to(roomName).emit(event, payload);
       } else {
-        await this.cacheManager.set(pendingKey, payload, 3600 * 1000);
+        await cacheSet(this.cacheManager, pendingKey, payload, 3600 * 1000);
       }
     } catch (err) {
       console.error(`[RequestGateway] Failed to notify ${event}:`, err);

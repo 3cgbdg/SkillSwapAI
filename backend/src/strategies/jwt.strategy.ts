@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Request } from 'express';
@@ -7,9 +7,13 @@ import { PrismaService } from 'prisma/prisma.service';
 import { JwtPayload } from 'types/auth';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
+import { ErrorLogThrottle } from 'src/common/logging/error-log-throttle';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
+  private readonly logger = new Logger(JwtStrategy.name);
+  private readonly cacheErrorLogThrottle = new ErrorLogThrottle();
+
   constructor(
     configService: ConfigService,
     private readonly prisma: PrismaService,
@@ -29,7 +33,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: JwtPayload): Promise<{ id: string }> {
     const cacheKey = `auth:user:${payload.userId}`;
-    const cached = await this.cacheManager.get<{ id: string }>(cacheKey);
+    let cached: { id: string } | undefined;
+    try {
+      cached = await this.cacheManager.get<{ id: string }>(cacheKey);
+    } catch (error) {
+      this.logCacheFailure('read', error);
+    }
     if (cached) {
       return cached;
     }
@@ -43,8 +52,21 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new NotFoundException('User not found');
     }
 
-    await this.cacheManager.set(cacheKey, user, 60_000);
+    try {
+      await this.cacheManager.set(cacheKey, user, 60_000);
+    } catch (error) {
+      this.logCacheFailure('write', error);
+    }
 
     return user;
+  }
+
+  private logCacheFailure(operation: string, error: unknown): void {
+    if (!this.cacheErrorLogThrottle.shouldLog(error)) return;
+    this.logger.warn(
+      `Authentication cache ${operation} failed; using the database: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
   }
 }

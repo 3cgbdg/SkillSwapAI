@@ -11,6 +11,7 @@ import { SkillDto } from './dto/skills.dto';
 import { User } from '../prisma/prisma-exports.js';
 import { IReturnMessage, ReturnDataType } from 'types/general';
 import { CacheKeys } from 'src/utils/cache-keys';
+import { cacheDel } from 'src/common/cache/resilient-cache';
 
 @Injectable()
 export class SkillsService {
@@ -34,7 +35,7 @@ export class SkillsService {
       where: { id: userId },
       data: { knownSkills: { connect: { id: skill.id } } },
     });
-    await this.cacheManager.del(CacheKeys.availableMatches(userId));
+    await cacheDel(this.cacheManager, CacheKeys.availableMatches(userId));
 
     return { message: 'Successfully added!' };
   }
@@ -54,7 +55,7 @@ export class SkillsService {
       where: { id: user.id },
       data: { skillsToLearn: { connect: { id: skill.id } } },
     });
-    await this.cacheManager.del(CacheKeys.availableMatches(user.id));
+    await cacheDel(this.cacheManager, CacheKeys.availableMatches(user.id));
 
     return { message: 'Successfully added!' };
   }
@@ -67,7 +68,7 @@ export class SkillsService {
       where: { id: userId },
       data: { knownSkills: { disconnect: { title: dto.title } } },
     });
-    await this.cacheManager.del(CacheKeys.availableMatches(userId));
+    await cacheDel(this.cacheManager, CacheKeys.availableMatches(userId));
     return { message: 'Successfully removed!' };
   }
 
@@ -79,7 +80,7 @@ export class SkillsService {
       where: { id: userId },
       data: { skillsToLearn: { disconnect: { title: dto.title } } },
     });
-    await this.cacheManager.del(CacheKeys.availableMatches(userId));
+    await cacheDel(this.cacheManager, CacheKeys.availableMatches(userId));
     return { message: 'Successfully removed!' };
   }
 

@@ -3,6 +3,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -17,6 +18,7 @@ import { MatchesUtils } from 'src/utils/matches.utils';
 import { UserUtils } from 'src/utils/user.utils';
 import { JOB_GENERATE_MATCH, QUEUE_AI } from 'src/queues/queue.constants';
 import { CACHE_TTL_LIST_MS, CacheKeys } from 'src/utils/cache-keys';
+import { cacheGet, cacheSet } from 'src/common/cache/resilient-cache';
 
 @Injectable()
 export class MatchesService {
@@ -45,20 +47,28 @@ export class MatchesService {
       );
     }
 
-    const jobId = randomUUID();
-    const job = await this.aiQueue.add(
-      JOB_GENERATE_MATCH,
-      { myId, otherId, jobId },
-      {
-        attempts: 3,
-        backoff: { type: 'exponential', delay: 2000 },
-        removeOnComplete: true,
-        removeOnFail: 50,
-      },
-    );
+    const jobId: string = randomUUID();
+    let queuedJobId: string = jobId;
+    try {
+      const job = await this.aiQueue.add(
+        JOB_GENERATE_MATCH,
+        { myId, otherId, jobId },
+        {
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 2000 },
+          removeOnComplete: true,
+          removeOnFail: 50,
+        },
+      );
+      queuedJobId = String(job.id ?? jobId);
+    } catch {
+      throw new ServiceUnavailableException(
+        'AI generation is temporarily unavailable. Please try again later.',
+      );
+    }
 
     return {
-      jobId: String(job.id ?? jobId),
+      jobId: queuedJobId,
       message:
         'Match generation started. You will be notified when it is ready.',
     };
@@ -68,8 +78,10 @@ export class MatchesService {
     myId: string,
   ): Promise<ReturnDataType<IMatchResponse[]>> {
     const cacheKey = CacheKeys.activeMatches(myId);
-    const cached =
-      await this.cacheManager.get<ReturnDataType<IMatchResponse[]>>(cacheKey);
+    const cached = await cacheGet<ReturnDataType<IMatchResponse[]>>(
+      this.cacheManager,
+      cacheKey,
+    );
     if (cached) return cached;
 
     const matches = await this.prisma.match.findMany({
@@ -94,7 +106,7 @@ export class MatchesService {
       };
     });
     const result = { data };
-    await this.cacheManager.set(cacheKey, result, CACHE_TTL_LIST_MS);
+    await cacheSet(this.cacheManager, cacheKey, result, CACHE_TTL_LIST_MS);
     return result;
   }
 
@@ -102,10 +114,10 @@ export class MatchesService {
     myId: string,
   ): Promise<ReturnDataType<IAvailableMatchItem[]>> {
     const cacheKey = CacheKeys.availableMatches(myId);
-    const cached =
-      await this.cacheManager.get<ReturnDataType<IAvailableMatchItem[]>>(
-        cacheKey,
-      );
+    const cached = await cacheGet<ReturnDataType<IAvailableMatchItem[]>>(
+      this.cacheManager,
+      cacheKey,
+    );
     if (cached) return cached;
 
     const myUser = await this.prisma.user.findUnique({
@@ -137,7 +149,7 @@ export class MatchesService {
 
     const data = users.map((u) => MatchesUtils.mapToAvailableMatch(u));
     const result = { data };
-    await this.cacheManager.set(cacheKey, result, CACHE_TTL_LIST_MS);
+    await cacheSet(this.cacheManager, cacheKey, result, CACHE_TTL_LIST_MS);
     return result;
   }
 

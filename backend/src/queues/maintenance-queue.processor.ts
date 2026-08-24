@@ -9,10 +9,12 @@ import {
 } from './queue.constants';
 import { AutoAcceptService } from 'src/tasks/auto-accept.service';
 import { ReviewPromptService } from 'src/tasks/review-prompt.service';
+import { ErrorLogThrottle } from 'src/common/logging/error-log-throttle';
 
 @Processor(QUEUE_MAINTENANCE)
 export class MaintenanceQueueProcessor extends WorkerHost {
   private readonly logger = new Logger(MaintenanceQueueProcessor.name);
+  private readonly errorLogThrottle = new ErrorLogThrottle();
 
   constructor(
     private readonly autoAcceptService: AutoAcceptService,
@@ -40,6 +42,8 @@ export class MaintenanceQueueProcessor extends WorkerHost {
   // failing) unless something listens for it.
   @OnWorkerEvent('error')
   onError(err: Error) {
-    this.logger.error(`Worker error: ${err.message}`);
+    if (this.errorLogThrottle.shouldLog(err)) {
+      this.logger.error(`Worker error: ${err.message}`);
+    }
   }
 }

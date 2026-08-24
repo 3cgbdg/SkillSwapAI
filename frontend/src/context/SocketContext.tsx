@@ -36,11 +36,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
   }, [chats]);
 
   useEffect(() => {
-    if (!user) {
-      console.log("[SocketContext] No user found, skipping socket connection.");
-      return;
-    }
-    console.log("[SocketContext] Initiating socket connection");
+    if (!user) return;
     const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}`;
     // Socket.IO treats any path in the connection URL as a namespace, not a
     // REST path. NEXT_PUBLIC_API_URL includes "/api" for axios's baseURL, so
@@ -57,30 +53,16 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       transports: ["websocket", "polling"], // Ensure multiple transports are tried
     });
 
-    sock.on("connect_error", (err) => {
-      console.error("[SocketContext] Connection error:", err.message, err);
-    });
-
-    sock.on("disconnect", (reason) => {
-      console.warn("[SocketContext] Disconnected:", reason);
-    });
-
-    sock.on("reconnect_attempt", () => {
-      console.log("[SocketContext] Attempting to reconnect...");
-    });
-
     setSocket(sock);
 
     const intervalHeartbeat = setInterval(() => {
       if (sock.connected) {
-        console.log("[SocketContext] Sending heartbeat...");
         sock.emit("heartbeat");
       }
     }, 30000);
 
     let hasConnectedOnce = false;
     sock.on("connect", () => {
-      console.log("[SocketContext] Connected to socket with ID:", sock.id);
       // Only force a profile refetch on this socket's first connect —
       // reconnects (flaky network, tab backgrounding) shouldn't override the
       // query's own staleTime with a forced refetch every time.

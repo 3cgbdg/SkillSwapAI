@@ -16,6 +16,13 @@ import type { Cache } from 'cache-manager';
 import type { SocketData } from '../../types/general';
 import type { JwtPayload } from '../../types/auth';
 import { CacheKeys } from '../utils/cache-keys';
+import { FriendshipUtils } from '../utils/friendship.utils';
+import {
+  cacheDel,
+  cacheGet,
+  cacheMget,
+  cacheSet,
+} from '../common/cache/resilient-cache';
 
 @WebSocketGateway({
   cors: {
@@ -52,20 +59,27 @@ export class ChatGateway
         console.log(
           `[ChatGateway] User ${payload.userId} connected and joined room: user:${payload.userId}`,
         );
-        await this.cacheManager.set(`user:online:${payload.userId}`, 1, 80000);
+        await cacheSet(
+          this.cacheManager,
+          `user:online:${payload.userId}`,
+          1,
+          80000,
+        );
         const currentOnlineFriends = await this.getCurrentOnlineFriends(
           payload.userId,
         );
 
         client.on('heartbeat', async () => {
-          await this.cacheManager.set(
+          await cacheSet(
+            this.cacheManager,
             `user:online:${payload.userId}`,
             1,
             80000,
           );
         });
         for (const friendId of currentOnlineFriends) {
-          const isOnline = await this.cacheManager.get<string>(
+          const isOnline = await cacheGet<string>(
+            this.cacheManager,
             `user:online:${friendId}`,
           );
           if (isOnline)
@@ -115,7 +129,7 @@ export class ChatGateway
     if (friendsIds.length === 0) return [];
 
     const keys = friendsIds.map((fid) => `user:online:${fid}`);
-    const values = await this.cacheManager.mget<number>(keys);
+    const values = await cacheMget<number>(this.cacheManager, keys);
     return friendsIds.filter((_, i) => values[i]);
   }
 
@@ -142,8 +156,12 @@ export class ChatGateway
       });
       if (!updatedMessage) return;
 
-      await this.cacheManager.del(CacheKeys.chatsList(updatedMessage.toId));
-      const isOnline = await this.cacheManager.get<string>(
+      await cacheDel(
+        this.cacheManager,
+        CacheKeys.chatsList(updatedMessage.toId),
+      );
+      const isOnline = await cacheGet<string>(
+        this.cacheManager,
         `user:online:${updatedMessage.fromId}`,
       );
       if (isOnline) {
@@ -157,22 +175,24 @@ export class ChatGateway
   }
 
   @SubscribeMessage('typing')
-  handleTyping(
+  async handleTyping(
     client: Socket<any, any, any, SocketData>,
     payload: { to: string },
   ) {
     const fromId = client.data.userId;
     if (!fromId || !payload?.to) return;
+    if (!(await this.areFriends(fromId, payload.to))) return;
     this.server.to(`user:${payload.to}`).emit('typing', { from: fromId });
   }
 
   @SubscribeMessage('stopTyping')
-  handleStopTyping(
+  async handleStopTyping(
     client: Socket<any, any, any, SocketData>,
     payload: { to: string },
   ) {
     const fromId = client.data.userId;
     if (!fromId || !payload?.to) return;
+    if (!(await this.areFriends(fromId, payload.to))) return;
     this.server.to(`user:${payload.to}`).emit('stopTyping', { from: fromId });
   }
 
@@ -182,6 +202,14 @@ export class ChatGateway
     payload: { to: string; message: string },
   ) {
     const fromId = client.data.userId;
+    if (!fromId || !payload?.to || !payload?.message?.trim()) return;
+    if (!(await this.areFriends(fromId, payload.to))) {
+      client.emit('messageError', {
+        message: 'You can only message friends',
+      });
+      return;
+    }
+
     // saving in db
     const chat = await this.prisma.chat.findFirst({
       where: {
@@ -233,11 +261,12 @@ export class ChatGateway
     //otherwise simply creating new message
 
     await Promise.all([
-      this.cacheManager.del(CacheKeys.chatsList(fromId)),
-      this.cacheManager.del(CacheKeys.chatsList(payload.to)),
+      cacheDel(this.cacheManager, CacheKeys.chatsList(fromId)),
+      cacheDel(this.cacheManager, CacheKeys.chatsList(payload.to)),
     ]);
 
-    const isOnline = await this.cacheManager.get<string>(
+    const isOnline = await cacheGet<string>(
+      this.cacheManager,
       `user:online:${payload.to}`,
     );
 
@@ -248,5 +277,16 @@ export class ChatGateway
         id: messageId,
       });
     }
+  }
+
+  private async areFriends(
+    firstUserId: string,
+    secondUserId: string,
+  ): Promise<boolean> {
+    if (firstUserId === secondUserId) return false;
+    const count = await this.prisma.friendship.count({
+      where: FriendshipUtils.buildPairFilter(firstUserId, secondUserId),
+    });
+    return count > 0;
   }
 }
