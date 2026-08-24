@@ -8,9 +8,7 @@ export function AuthBrand() {
       <Logo size={44} />
       <div className="text-center">
         <h1 className="font-heading text-2xl leading-8 font-bold">
-          <span className="text-primary">Skill</span>
-          <span className="text-brand-accent">Swap</span>
-          <span className="text-foreground">AI</span>
+          Skill<span className="text-primary">Swap</span>
         </h1>
       </div>
     </div>
