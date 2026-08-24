@@ -1,38 +1,21 @@
-import type { LucideIcon } from "lucide-react";
+import { SUPPORTING_FEATURES } from "@/components/marketing/content";
+import { Reveal } from "@/components/marketing/Reveal";
 
-import { HIGHLIGHTS } from "@/components/marketing/content";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-function FeatureCard({
-  icon: Icon,
-  title,
-  description,
-}: {
-  icon: LucideIcon;
-  title: string;
-  description: string;
-}) {
-  return (
-    <Card elevation="raised" className="h-full">
-      <CardHeader className="gap-3">
-        <span className="flex size-10 items-center justify-center rounded-full bg-accent text-accent-foreground">
-          <Icon className="size-5" aria-hidden />
-        </span>
-        <CardTitle className="text-h3">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-muted-foreground text-body-sm">{description}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
+/**
+ * The supporting capabilities, deliberately given a lighter treatment than the
+ * feature rows above: these are table stakes, not the reason to sign up, so
+ * they read as a strip rather than three headline cards.
+ */
 export function FeatureGrid() {
   return (
-    <ul className="grid gap-6 md:grid-cols-3">
-      {HIGHLIGHTS.map(({ icon, title, description }) => (
+    <ul className="grid gap-8 sm:grid-cols-3">
+      {SUPPORTING_FEATURES.map(({ icon: Icon, title, description }, index) => (
         <li key={title}>
-          <FeatureCard icon={icon} title={title} description={description} />
+          <Reveal delay={index * 90} className="flex flex-col gap-2">
+            <Icon className="text-primary size-5" aria-hidden />
+            <p className="font-heading font-semibold">{title}</p>
+            <p className="text-muted-foreground text-body-sm">{description}</p>
+          </Reveal>
         </li>
       ))}
     </ul>

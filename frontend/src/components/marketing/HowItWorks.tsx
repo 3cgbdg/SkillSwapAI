@@ -1,4 +1,5 @@
 import { HOW_IT_WORKS_STEPS } from "@/components/marketing/content";
+import { Reveal } from "@/components/marketing/Reveal";
 
 function StepCard({
   step,
@@ -25,7 +26,13 @@ export function HowItWorks() {
     <ol className="grid gap-8 md:grid-cols-3">
       {HOW_IT_WORKS_STEPS.map(({ title, description }, index) => (
         <li key={title}>
-          <StepCard step={index + 1} title={title} description={description} />
+          <Reveal delay={index * 90}>
+            <StepCard
+              step={index + 1}
+              title={title}
+              description={description}
+            />
+          </Reveal>
         </li>
       ))}
     </ol>
