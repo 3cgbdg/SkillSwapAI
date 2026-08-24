@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/providers/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { getSiteUrl } from "@/lib/site-url";
 
 const FrauncesFont = Fraunces({
   variable: "--font-fraunces",
@@ -23,9 +24,7 @@ const InterFont = Inter({
 export const metadata: Metadata = {
   // Required so routes below can use relative URLs (canonical, openGraph.url);
   // a relative URL-based metadata field without this is a build error.
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
-  ),
+  metadataBase: new URL(getSiteUrl()),
   title: {
     default: "SkillSwapAI",
     template: "%s · SkillSwapAI",
