@@ -24,6 +24,7 @@
     "test": "pnpm --dir backend test && pnpm --dir frontend test",
     "check:types": "pnpm --dir frontend exec tsc --noEmit && pnpm --dir backend exec prisma generate && pnpm --dir backend exec tsc --noEmit",
     "check": "pnpm format:check && pnpm lint && pnpm check:types && pnpm test",
-    "knip": "knip"
+    "knip": "knip",
+    "qa:validate": "node scripts/qa/validate-qa-kit.mjs"
   }
 }
