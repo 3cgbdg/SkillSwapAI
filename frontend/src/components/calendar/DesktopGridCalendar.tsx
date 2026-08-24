@@ -52,10 +52,10 @@ const DesktopGridCalendar = ({
   const now = new Date();
   const nowFraction = now.getHours() + now.getMinutes() / 60 - hourStart + 1;
 
-  const finishDrag = (dayIndex: number, endHour: number) => {
-    if (dragStartHour === null || !onCreateSlot) return;
-    const startH = Math.min(dragStartHour, endHour);
-    const endH = Math.max(dragStartHour + 1, endHour + 1);
+  const createSlot = (dayIndex: number, startHour: number, endHour: number) => {
+    if (!onCreateSlot) return;
+    const startH = Math.min(startHour, endHour);
+    const endH = Math.max(startHour + 1, endHour + 1);
     const day = tableCells[dayIndex]?.date;
     if (!day) return;
     const starts = new Date(day);
@@ -63,6 +63,11 @@ const DesktopGridCalendar = ({
     const ends = new Date(day);
     ends.setHours(endH, 0, 0, 0);
     onCreateSlot(starts.toISOString(), ends.toISOString());
+  };
+
+  const finishDrag = (dayIndex: number, endHour: number) => {
+    if (dragStartHour === null) return;
+    createSlot(dayIndex, dragStartHour, endHour);
     setDragDay(null);
     setDragStartHour(null);
   };
@@ -124,16 +129,13 @@ const DesktopGridCalendar = ({
                 key={cell.date.toISOString()}
                 className="border-border relative border-r"
                 style={{ height: columnHeight }}
-                onMouseUp={() => {
-                  if (dragDay === dayIndex && dragStartHour !== null) {
-                    finishDrag(dayIndex, dragStartHour);
-                  }
-                }}
               >
                 {hours.map((h, i) => (
-                  <div
+                  <button
+                    type="button"
                     key={h}
                     className="hover:bg-muted/40 border-border/50 absolute right-0 left-0 border-b"
+                    aria-label={`Create a session on ${format(cell.date, "EEEE, MMMM d")} at ${h.toString().padStart(2, "0")}:00`}
                     style={{
                       top: i * rowHeight,
                       height: rowHeight,
@@ -142,10 +144,13 @@ const DesktopGridCalendar = ({
                       setDragDay(dayIndex);
                       setDragStartHour(h);
                     }}
-                    onMouseEnter={() => {
+                    onMouseUp={() => {
                       if (dragDay === dayIndex && dragStartHour !== null) {
-                        setDragStartHour(h);
+                        finishDrag(dayIndex, h);
                       }
+                    }}
+                    onClick={(event) => {
+                      if (event.detail === 0) createSlot(dayIndex, h, h);
                     }}
                   />
                 ))}

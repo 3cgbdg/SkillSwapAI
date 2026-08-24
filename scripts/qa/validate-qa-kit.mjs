@@ -15,7 +15,8 @@ async function text(path) {
 }
 
 function digest(content) {
-  return createHash("sha256").update(content).digest("hex");
+  const canonicalContent = content.replace(/\r\n/gu, "\n");
+  return createHash("sha256").update(canonicalContent).digest("hex");
 }
 
 function assertSkill(content, expectedName, path) {

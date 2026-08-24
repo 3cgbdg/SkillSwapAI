@@ -25,6 +25,7 @@
     "check:types": "pnpm --dir frontend exec tsc --noEmit && pnpm --dir backend exec prisma generate && pnpm --dir backend exec tsc --noEmit",
     "check": "pnpm format:check && pnpm lint && pnpm check:types && pnpm test",
     "knip": "knip",
+    "qa:live": "node --env-file=backend/.env scripts/qa/live-auth-chat-regression.mjs",
     "qa:validate": "node scripts/qa/validate-qa-kit.mjs"
   }
 }
