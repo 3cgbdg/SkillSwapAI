@@ -16,15 +16,15 @@ describe("MarketingHero", () => {
     expect(screen.getByText(SITE_SUBHEADLINE)).toBeInTheDocument();
   });
 
-  it("points both calls to action at the auth routes", () => {
+  it("offers exactly one call to action, pointing at signup", () => {
     render(<MarketingHero />);
 
     expect(
       screen.getByRole("link", { name: /create your free account/i })
     ).toHaveAttribute("href", "/auth/signup");
-    expect(screen.getByRole("link", { name: /^log in$/i })).toHaveAttribute(
-      "href",
-      "/auth/login"
-    );
+
+    // Log in lives in the header and footer; a second large button here just
+    // competes with the primary action.
+    expect(screen.getAllByRole("link")).toHaveLength(1);
   });
 });

@@ -1,4 +1,4 @@
-import { CalendarClock, MessagesSquare, Sparkles } from "lucide-react";
+import { CalendarClock, MessagesSquare, Sparkles, Star } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 /**
@@ -35,6 +35,31 @@ export const HIGHLIGHTS: readonly Highlight[] = [
     icon: CalendarClock,
     title: "Simple scheduling",
     description: "Book and track sessions from one calendar.",
+  },
+];
+
+/**
+ * The landing page's supporting strip. Deliberately NOT `HIGHLIGHTS`: matching
+ * has its own section there, so repeating it would be redundant — and this is
+ * the only place reviews get a mention. The auth panel keeps `HIGHLIGHTS`,
+ * where a compact three-item pitch still wants matching up front.
+ */
+export const SUPPORTING_FEATURES: readonly Highlight[] = [
+  {
+    icon: MessagesSquare,
+    title: "Built-in chat",
+    description: "Message your match without leaving the app.",
+  },
+  {
+    icon: CalendarClock,
+    title: "Shared calendar",
+    description: "Book sessions and see what's coming up, together.",
+  },
+  {
+    icon: Star,
+    title: "Reviews after every session",
+    description:
+      "Rate each session when it's done, so you can see who's reliable before committing.",
   },
 ];
 
