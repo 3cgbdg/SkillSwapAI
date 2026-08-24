@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -11,6 +12,10 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
 async function text(path) {
   return readFile(resolve(root, path), "utf8");
+}
+
+function digest(content) {
+  return createHash("sha256").update(content).digest("hex");
 }
 
 function assertSkill(content, expectedName, path) {
@@ -36,6 +41,31 @@ const skillNames = [
   "qa-browser-testing",
   "qa-automation",
 ];
+
+const manifest = JSON.parse(await text(".qa-agent/manifest.json"));
+assert.equal(manifest.schemaVersion, 1);
+assert.equal(
+  manifest.sourceRepository,
+  "https://github.com/3cgbdg/qa-agent-kit",
+);
+assert.match(manifest.kitVersion, /^\d+\.\d+\.\d+$/u);
+assert.equal(
+  digest(await text(".qa-agent/profile.json")),
+  manifest.profileSha256,
+  "project profile changed without regenerating the QA agent",
+);
+for (const [path, expected] of Object.entries(manifest.files)) {
+  const content = await text(path);
+  assert.equal(
+    digest(content),
+    expected,
+    `${path} drifted from its generated manifest`,
+  );
+  assert.ok(
+    content.includes(`qa-agent-kit v${manifest.kitVersion}`),
+    `${path} lacks its canonical source marker`,
+  );
+}
 
 for (const name of skillNames) {
   const agentPath = `.agents/skills/${name}/SKILL.md`;
@@ -171,7 +201,8 @@ assert.equal(denial.hookSpecificOutput.hookEventName, "PreToolUse");
 assert.equal(denial.hookSpecificOutput.permissionDecision, "deny");
 
 console.log(
-  `QA kit valid: ${codexAgentNames.length} Codex agents cover ${claudeAgentNames.length} Claude agents; ` +
+  `QA kit valid: canonical v${manifest.kitVersion} with ${Object.keys(manifest.files).length} generated files; ` +
+    `${codexAgentNames.length} Codex agents cover ${claudeAgentNames.length} Claude agents; ` +
     `${codexSkillNames.length} Codex skills cover ${claudeSkillNames.length} Claude skills; ` +
     `${mcpNames.length} MCP servers and 1 Codex hook verified.`,
 );
