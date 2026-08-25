@@ -127,7 +127,20 @@ export class AiQueueProcessor extends WorkerHost {
   private async processSkillSuggestions(
     job: Job<AiSkillSuggestionsJobPayload>,
   ) {
-    await this.aiService.getAiSuggestionSkills(job.data.userId);
+    try {
+      await this.aiService.getAiSuggestionSkills(job.data.userId);
+    } catch (error) {
+      if (this.errorLogThrottle.shouldLog(error)) {
+        this.logger.error(
+          `Skill suggestions generation failed for job ${job.id}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
+      // Rethrow so BullMQ's configured attempts/backoff still retries
+      // transient failures instead of silently treating them as done.
+      throw error;
+    }
   }
 
   // The underlying BullMQ Worker extends EventEmitter and crashes the
