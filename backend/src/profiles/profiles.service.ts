@@ -9,7 +9,16 @@ import { GoogleProfile } from 'types/auth';
 import { UsersService } from 'src/users/users.service';
 import { ReviewsService } from 'src/reviews/reviews.service';
 
-type ProfileWithRating = Partial<User> & {
+type PublicProfile = {
+  id: string;
+  name: string | null;
+  imageUrl: string | null;
+  bio: string | null;
+  knownSkills: { title: string }[];
+  skillsToLearn: { title: string }[];
+};
+
+type ProfileWithRating = PublicProfile & {
   averageRating: number | null;
   reviewCount: number;
 };
@@ -25,9 +34,19 @@ export class ProfilesService {
   ) {}
 
   async findOne(id: string): Promise<ReturnDataType<ProfileWithRating | null>> {
+    // This backs GET /profiles/:id, which any authenticated user can call
+    // against any other user's id -- select only what a public profile view
+    // is allowed to show. Email, googleId, isBot, aiSuggestionSkills, and
+    // similar account-internal fields must never leave here. Own-profile
+    // data (including email) is served separately by AuthController's
+    // /auth/profile route.
     const profile = await this.prisma.user.findUnique({
       where: { id },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        imageUrl: true,
+        bio: true,
         skillsToLearn: { select: { title: true } },
         knownSkills: { select: { title: true } },
       },
@@ -37,12 +56,10 @@ export class ProfilesService {
       return { data: null };
     }
 
-    const { password: _password, ...userWithoutPassword } = profile;
-    void _password;
     const { averageRating, reviewCount } =
       await this.reviewsService.getRatingSummary(id);
 
-    return { data: { ...userWithoutPassword, averageRating, reviewCount } };
+    return { data: { ...profile, averageRating, reviewCount } };
   }
 
   async updateProfileAvatarImage(

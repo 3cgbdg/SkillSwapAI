@@ -15,7 +15,6 @@ import {
 import { ProfilesService } from './profiles.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
-import { User } from '../prisma/prisma-exports.js';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import type { RequestWithUser } from 'types/auth';
 import { Throttle } from '@nestjs/throttler';
@@ -27,9 +26,7 @@ export class ProfilesController {
   constructor(private readonly profilesService: ProfilesService) {}
 
   @Get(':id')
-  async findOne(
-    @Param('id') id: string,
-  ): Promise<ReturnDataType<Partial<User> | null>> {
+  async findOne(@Param('id') id: string) {
     return this.profilesService.findOne(id);
   }
 

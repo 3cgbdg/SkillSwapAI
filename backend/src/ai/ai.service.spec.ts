@@ -23,7 +23,12 @@ const mockedBuildSkillsGraph = buildSkillsGraph as jest.Mock;
 describe('AiService', () => {
   let service: AiService;
   let prisma: {
-    user: { findMany: jest.Mock; findUnique: jest.Mock; update: jest.Mock };
+    user: {
+      findMany: jest.Mock;
+      findUnique: jest.Mock;
+      update: jest.Mock;
+      updateMany: jest.Mock;
+    };
     skill: { createMany: jest.Mock };
   };
   let matchInvoke: jest.Mock;
@@ -43,6 +48,7 @@ describe('AiService', () => {
         findMany: jest.fn(),
         findUnique: jest.fn(),
         update: jest.fn(),
+        updateMany: jest.fn(),
       },
       skill: {
         createMany: jest.fn(),
@@ -162,10 +168,32 @@ describe('AiService', () => {
         knownSkills: [],
         lastSkillsGenerationDate: new Date(),
       });
+      // The atomic claim's WHERE clause won't match a row whose
+      // lastSkillsGenerationDate is still within the cooldown window.
+      prisma.user.updateMany.mockResolvedValue({ count: 0 });
 
       await expect(service.getAiSuggestionSkills('a')).rejects.toBeInstanceOf(
         ForbiddenException,
       );
+      expect(skillsInvoke).not.toHaveBeenCalled();
+    });
+
+    it('throws ForbiddenException when a concurrent request already claimed the slot', async () => {
+      // Simulates the race this fix closes: the initial read sees the
+      // cooldown as open, but another concurrent request commits its claim
+      // first, so this request's atomic updateMany matches nothing.
+      prisma.user.findUnique.mockResolvedValue({
+        id: 'a',
+        skillsToLearn: [],
+        knownSkills: [],
+        lastSkillsGenerationDate: null,
+      });
+      prisma.user.updateMany.mockResolvedValue({ count: 0 });
+
+      await expect(service.getAiSuggestionSkills('a')).rejects.toBeInstanceOf(
+        ForbiddenException,
+      );
+      expect(skillsInvoke).not.toHaveBeenCalled();
     });
 
     it('invokes the skills graph, persists suggestions, and notifies the gateway', async () => {
@@ -175,11 +203,22 @@ describe('AiService', () => {
         knownSkills: [{ title: 'Python' }],
         lastSkillsGenerationDate: null,
       });
+      prisma.user.updateMany.mockResolvedValue({ count: 1 });
       const skills = ['A', 'B', 'C', 'D', 'E'];
       skillsInvoke.mockResolvedValue({ result: { skills } });
 
       const result = await service.getAiSuggestionSkills('a');
 
+      expect(prisma.user.updateMany).toHaveBeenCalledWith({
+        where: {
+          id: 'a',
+          OR: [
+            { lastSkillsGenerationDate: null },
+            { lastSkillsGenerationDate: { lt: expect.any(Date) as Date } },
+          ],
+        },
+        data: { lastSkillsGenerationDate: expect.any(Date) as Date },
+      });
       expect(skillsInvoke).toHaveBeenCalledWith({
         skillsToLearn: ['Guitar'],
         knownSkills: ['Python'],
@@ -206,6 +245,7 @@ describe('AiService', () => {
         knownSkills: [],
         lastSkillsGenerationDate: null,
       });
+      prisma.user.updateMany.mockResolvedValue({ count: 1 });
       skillsInvoke.mockResolvedValue({ result: { skills: [] } });
 
       const result = await service.getAiSuggestionSkills('a');
@@ -215,6 +255,28 @@ describe('AiService', () => {
       expect(result).toEqual({
         data: [],
         message: 'Skills successfully generated!',
+      });
+    });
+
+    it('restores the previous generation date if generation fails after claiming the slot', async () => {
+      const previousDate = new Date('2026-01-01T00:00:00.000Z');
+      prisma.user.findUnique.mockResolvedValue({
+        id: 'a',
+        skillsToLearn: [],
+        knownSkills: [],
+        lastSkillsGenerationDate: previousDate,
+      });
+      prisma.user.updateMany.mockResolvedValue({ count: 1 });
+      prisma.user.update.mockResolvedValue({});
+      skillsInvoke.mockRejectedValue(new Error('provider unavailable'));
+
+      await expect(service.getAiSuggestionSkills('a')).rejects.toThrow(
+        'provider unavailable',
+      );
+
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'a' },
+        data: { lastSkillsGenerationDate: previousDate },
       });
     });
   });

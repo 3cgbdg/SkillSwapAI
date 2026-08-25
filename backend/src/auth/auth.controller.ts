@@ -142,7 +142,16 @@ export class AuthController {
   }
 
   @Delete('logout')
-  logout(@Res({ passthrough: true }) res: Response): IReturnMessage {
+  async logout(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<IReturnMessage> {
+    const refreshToken = (req.cookies as Record<string, string | undefined>)[
+      'refresh_token'
+    ];
+    if (refreshToken) {
+      await this.authService.revokeRefreshToken(refreshToken);
+    }
     this.cookiesService.clearCookies(res);
     return { message: 'Successfully logged out!' };
   }

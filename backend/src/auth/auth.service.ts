@@ -3,25 +3,35 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   UnauthorizedException,
+  Inject,
 } from '@nestjs/common';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { PrismaService } from 'prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
+import { createHash } from 'crypto';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AiJobsService } from 'src/queues/ai-jobs.service';
 import { JwtPayload, Tokens } from 'types/auth';
 import { AuthUtils } from 'src/utils/auth.utils';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
+
+const REVOKED_TOKEN_PREFIX = 'auth:revoked-rt:';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly aiJobsService: AiJobsService,
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
   async signup(dto: CreateAuthDto): Promise<Tokens> {
@@ -117,6 +127,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
 
+    if (await this.isRefreshTokenRevoked(token)) {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+
     const user = await this.prisma.user.findUnique({
       where: { id: payload.userId },
       select: { id: true },
@@ -126,5 +140,54 @@ export class AuthService {
     }
 
     return payload;
+  }
+
+  // Logout only clears cookies client-side; a refresh token captured before
+  // logout (device left unattended, log exposure, etc.) would otherwise stay
+  // valid for its full 7-day life. Record its hash here so verifyRefreshToken
+  // rejects it going forward, TTL'd to exactly the token's own remaining
+  // life so the blacklist entry never outlives what it's blocking.
+  async revokeRefreshToken(token: string): Promise<void> {
+    const decoded = this.jwtService.decode<{ exp?: number }>(token);
+    const expiresAt = decoded?.exp;
+    if (!expiresAt) return;
+
+    const ttlMs = expiresAt * 1000 - Date.now();
+    if (ttlMs <= 0) return;
+
+    try {
+      await this.cacheManager.set(
+        REVOKED_TOKEN_PREFIX + this.hashToken(token),
+        true,
+        ttlMs,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Failed to record refresh token revocation: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  private async isRefreshTokenRevoked(token: string): Promise<boolean> {
+    try {
+      return Boolean(
+        await this.cacheManager.get(
+          REVOKED_TOKEN_PREFIX + this.hashToken(token),
+        ),
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Failed to check refresh token revocation; allowing through: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      return false;
+    }
+  }
+
+  private hashToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
   }
 }
