@@ -47,7 +47,7 @@ Install each independently managed package and start infrastructure/app services
 pnpm install
 pnpm --dir frontend install
 pnpm --dir backend install
-docker compose up -d postgres redis
+docker compose up -d db redis
 pnpm --dir backend start:dev
 pnpm --dir frontend dev
 ```

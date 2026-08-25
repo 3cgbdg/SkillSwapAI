@@ -6,7 +6,7 @@ import SkillsService from "@/services/SkillsService";
 import { showErrorToast, showSuccessToast } from "@/utils/toast";
 import useProfile from "@/hooks/useProfile";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { differenceInHours, intervalToDuration } from "date-fns";
+import { intervalToDuration } from "date-fns";
 import { BookOpen, GraduationCap } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SectionPanel, StatTile, UserRow } from "@/components/composites";
@@ -74,21 +74,24 @@ const Profile = () => {
     },
   });
 
-  const cantGenerateSkills = useMemo(() => {
-    if (!user?.lastSkillsGenerationDate) return false;
-    return (
-      differenceInHours(new Date(), new Date(user.lastSkillsGenerationDate)) <=
-      24
+  const nextAvailableDate = useMemo(() => {
+    if (!user?.lastSkillsGenerationDate) return null;
+    return new Date(
+      new Date(user.lastSkillsGenerationDate).getTime() + 24 * 60 * 60 * 1000
     );
   }, [user?.lastSkillsGenerationDate]);
 
-  const updateCountdown = useCallback(() => {
-    if (!user?.lastSkillsGenerationDate) return;
+  // Deliberately not memoized on time: this must re-evaluate against the
+  // real clock on every render (the 1s countdown interval already forces
+  // one), not just when lastSkillsGenerationDate changes — otherwise it
+  // gets stuck at whatever it evaluated to right after generation and never
+  // flips back to false once the cooldown actually elapses.
+  const cantGenerateSkills = Boolean(
+    nextAvailableDate && new Date() < nextAvailableDate
+  );
 
-    const lastDate = new Date(user.lastSkillsGenerationDate);
-    const nextAvailableDate = new Date(
-      lastDate.getTime() + 24 * 60 * 60 * 1000
-    );
+  const updateCountdown = useCallback(() => {
+    if (!nextAvailableDate) return;
     const now = new Date();
 
     if (now >= nextAvailableDate) {
@@ -101,7 +104,7 @@ const Profile = () => {
     const m = (duration.minutes || 0).toString().padStart(2, "0");
     const s = (duration.seconds || 0).toString().padStart(2, "0");
     setTimeLeft(`${h}:${m}:${s}`);
-  }, [user?.lastSkillsGenerationDate]);
+  }, [nextAvailableDate]);
 
   useEffect(() => {
     if (cantGenerateSkills) {

@@ -1,5 +1,5 @@
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
-import { Inject, Logger } from '@nestjs/common';
+import { ForbiddenException, Inject, Logger } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { Job } from 'bullmq';
@@ -127,7 +127,34 @@ export class AiQueueProcessor extends WorkerHost {
   private async processSkillSuggestions(
     job: Job<AiSkillSuggestionsJobPayload>,
   ) {
-    await this.aiService.getAiSuggestionSkills(job.data.userId);
+    try {
+      await this.aiService.getAiSuggestionSkills(job.data.userId);
+    } catch (error) {
+      // The 24h regeneration cooldown (AiService.validateRegenerationDate)
+      // rejects with ForbiddenException. That's an expected, deterministic
+      // outcome -- not a transient failure -- and it fires on every call to
+      // enqueueSkillSuggestions() within the cooldown window, including the
+      // one on every returning Google-OAuth login (profiles.service.ts's
+      // findOrCreateGoogleUser runs it unconditionally, not just for new
+      // signups). Retrying it would just fail identically 3 more times
+      // (wasting the job's attempts/backoff delay) and log at error level
+      // for something that isn't an error, so treat it as a normal no-op
+      // instead of rethrowing.
+      if (error instanceof ForbiddenException) {
+        return;
+      }
+
+      if (this.errorLogThrottle.shouldLog(error)) {
+        this.logger.error(
+          `Skill suggestions generation failed for job ${job.id}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
+      // Rethrow so BullMQ's configured attempts/backoff still retries
+      // transient failures instead of silently treating them as done.
+      throw error;
+    }
   }
 
   // The underlying BullMQ Worker extends EventEmitter and crashes the

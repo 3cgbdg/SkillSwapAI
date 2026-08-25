@@ -98,8 +98,16 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
 
     const onMatchReady = (payload: { match: IMatch; message?: string }) => {
       showSuccessToast(payload.message || "Your training plan is ready!");
-      void queryClient.invalidateQueries({ queryKey: ["matches"] });
-      router.push(`/matches/${payload.match.id}`);
+      // The matches/[id] page redirects away if the new match isn't in its
+      // cached list yet, so the invalidated query must actually be
+      // refetched — and that refetch awaited — before navigating there.
+      // Otherwise the navigation can land before the list updates and the
+      // page bounces the user straight back out.
+      void queryClient
+        .invalidateQueries({ queryKey: ["matches"], refetchType: "all" })
+        .finally(() => {
+          router.push(`/matches/${payload.match.id}`);
+        });
     };
 
     const onMatchFailed = (payload: { message?: string }) => {
