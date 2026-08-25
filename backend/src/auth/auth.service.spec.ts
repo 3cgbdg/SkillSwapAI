@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UnauthorizedException } from '@nestjs/common';
+import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
@@ -13,12 +13,12 @@ jest.mock('bcryptjs', () => ({ compare: jest.fn() }));
 describe('AuthService', () => {
   let service: AuthService;
   let jwtService: { verifyAsync: jest.Mock; decode: jest.Mock };
-  let prisma: { user: { findUnique: jest.Mock } };
+  let prisma: { user: { findUnique: jest.Mock; findFirst: jest.Mock } };
   let cacheManager: { get: jest.Mock; set: jest.Mock };
 
   beforeEach(async () => {
     jwtService = { verifyAsync: jest.fn(), decode: jest.fn() };
-    prisma = { user: { findUnique: jest.fn() } };
+    prisma = { user: { findUnique: jest.fn(), findFirst: jest.fn() } };
     cacheManager = {
       get: jest.fn().mockResolvedValue(undefined),
       set: jest.fn(),
@@ -170,6 +170,48 @@ describe('AuthService', () => {
       expect((unknownEmailError as UnauthorizedException).getStatus()).toBe(
         (wrongPasswordError as UnauthorizedException).getStatus(),
       );
+    });
+  });
+
+  describe('signup', () => {
+    it('gives an identical conflict message whether the name or the email matched', async () => {
+      const dto = {
+        name: 'Taken Name',
+        email: 'new@example.com',
+        password: 'x',
+        confirmPassword: 'x',
+        knownSkills: [],
+        skillsToLearn: [],
+      };
+
+      // The existing user matched on name, not email -- the message must
+      // not reveal that distinction (it also must not confirm/deny that
+      // 'new@example.com' specifically has no account, which it doesn't
+      // here since name is what matched).
+      prisma.user.findFirst.mockResolvedValueOnce({
+        name: 'Taken Name',
+        email: 'someone-else@example.com',
+      });
+      const nameConflict = (await service
+        .signup(dto)
+        .catch((e: unknown) => e)) as ConflictException;
+
+      // The existing user matched on email instead.
+      prisma.user.findFirst.mockResolvedValueOnce({
+        name: 'Someone Else',
+        email: 'new@example.com',
+      });
+      const emailConflict = (await service
+        .signup(dto)
+        .catch((e: unknown) => e)) as ConflictException;
+
+      expect(nameConflict).toBeInstanceOf(ConflictException);
+      expect(emailConflict).toBeInstanceOf(ConflictException);
+      // The message must be identical either way -- it can mention that
+      // *a* conflict exists without confirming *which* field it was, since
+      // confirming "email already exists" specifically would let signup be
+      // used to enumerate registered email addresses.
+      expect(nameConflict.message).toBe(emailConflict.message);
     });
   });
 });

@@ -6,6 +6,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { createHash, timingSafeEqual } from 'crypto';
 import { AdminSeedService } from './admin-seed.service';
 
 @Controller('admin')
@@ -25,9 +26,9 @@ export class AdminController {
    * Protected by ADMIN_SECRET env var.
    */
   @Post('seed')
-  async seedBots(@Headers('x-admin-key') adminKey: string) {
+  async seedBots(@Headers('x-admin-key') adminKey: string | undefined) {
     const secret = this.configService.get<string>('ADMIN_SECRET');
-    if (!secret || adminKey !== secret) {
+    if (!secret || !adminKey || !this.isValidAdminKey(adminKey, secret)) {
       this.logger.warn('Unauthorized seed attempt');
       throw new ForbiddenException('Invalid admin key');
     }
@@ -35,5 +36,16 @@ export class AdminController {
     this.logger.log('Admin seed requested — starting...');
     const result = await this.seedService.seed();
     return result;
+  }
+
+  // A plain !== comparison short-circuits at the first differing byte, so
+  // its timing leaks how many leading characters of a guess were correct.
+  // Hashing both sides to a fixed-length digest first, then comparing with
+  // timingSafeEqual, removes both that leak and the length-mismatch
+  // TypeError timingSafeEqual would otherwise throw on unequal-length input.
+  private isValidAdminKey(provided: string, secret: string): boolean {
+    const providedHash = createHash('sha256').update(provided).digest();
+    const secretHash = createHash('sha256').update(secret).digest();
+    return timingSafeEqual(providedHash, secretHash);
   }
 }

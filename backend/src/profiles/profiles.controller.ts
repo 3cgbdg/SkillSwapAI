@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Param,
   Patch,
@@ -32,7 +33,19 @@ export class ProfilesController {
 
   @Post('me/avatar/upload')
   @Throttle({ short: { limit: 10, ttl: 60_000 } })
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(
+    FileInterceptor('image', {
+      limits: { fileSize: 5 * 1024 * 1024 },
+      fileFilter: (_req, file, cb) => {
+        const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+        if (!allowed.includes(file.mimetype)) {
+          cb(new BadRequestException('Only image files are allowed'), false);
+          return;
+        }
+        cb(null, true);
+      },
+    }),
+  )
   async uploadAvatarImage(
     @UploadedFile() file: Express.Multer.File,
     @Req() req: RequestWithUser,
@@ -52,9 +65,18 @@ export class ProfilesController {
 
   @Patch(':id')
   async updateProfile(
+    @Param('id') id: string,
     @Body() dto: UpdateProfileDto,
     @Req() req: RequestWithUser,
   ): Promise<IReturnMessage> {
+    // The service always scopes the update to req.user.id regardless of
+    // this param, so this couldn't be used to write another user's
+    // profile -- but silently accepting a 200 on a URL naming a different
+    // user's id is a misleading contract that a future refactor could trust
+    // by mistake. Reject the mismatch explicitly instead.
+    if (id !== req.user.id) {
+      throw new ForbiddenException('Cannot update another user’s profile');
+    }
     return this.profilesService.updateProfile(dto, req.user);
   }
 }

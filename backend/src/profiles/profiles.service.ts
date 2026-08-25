@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { User } from '../prisma/prisma-exports.js';
 import { PrismaService } from 'prisma/prisma.service';
 import { S3Service } from 'src/s3/s3.service';
@@ -66,10 +70,39 @@ export class ProfilesService {
     file: Express.Multer.File,
     myId: string,
   ): Promise<ReturnDataType<{ url: string }>> {
+    // The interceptor's fileFilter only trusts the client-supplied
+    // Content-Type header, which is trivial to spoof. Confirm the actual
+    // bytes are one of the image formats we accept before this ever reaches
+    // S3, so a mislabeled non-image file can't be uploaded as an "avatar"
+    // and later served back with that content type to other users.
+    if (!this.hasImageSignature(file.buffer)) {
+      throw new BadRequestException('File is not a valid image');
+    }
+
     const key = `avatars/${Date.now()}_${file.originalname}`;
     const url = await this.s3Service.uploadFile(file, key);
     await this.usersService.updateUserImageUrl(myId, url);
     return { data: { url }, message: 'Image is successfully uploaded' };
+  }
+
+  private hasImageSignature(buffer: Buffer): boolean {
+    const signatures: number[][] = [
+      [0xff, 0xd8, 0xff], // JPEG
+      [0x89, 0x50, 0x4e, 0x47], // PNG
+      [0x47, 0x49, 0x46, 0x38], // GIF
+    ];
+    if (
+      signatures.some((sig) =>
+        buffer.subarray(0, sig.length).equals(Buffer.from(sig)),
+      )
+    ) {
+      return true;
+    }
+    // WEBP: "RIFF" .... "WEBP"
+    return (
+      buffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
+      buffer.subarray(8, 12).toString('ascii') === 'WEBP'
+    );
   }
 
   async deleteProfileAvatarImage(user: User): Promise<IReturnMessage> {

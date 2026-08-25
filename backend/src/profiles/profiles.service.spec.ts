@@ -1,18 +1,27 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { BadRequestException } from '@nestjs/common';
 import { ProfilesService } from './profiles.service';
 import { PrismaService } from 'prisma/prisma.service';
 import { ReviewsService } from 'src/reviews/reviews.service';
+import { S3Service } from 'src/s3/s3.service';
+import { UsersService } from 'src/users/users.service';
 
 describe('ProfilesService', () => {
   let service: ProfilesService;
   let prisma: { user: { findUnique: jest.Mock } };
   let getRatingSummary: jest.Mock;
+  let uploadFile: jest.Mock;
+  let updateUserImageUrl: jest.Mock;
 
   beforeEach(async () => {
     prisma = { user: { findUnique: jest.fn() } };
     getRatingSummary = jest
       .fn()
       .mockResolvedValue({ averageRating: null, reviewCount: 0 });
+    uploadFile = jest
+      .fn()
+      .mockResolvedValue('https://bucket.s3.example/avatars/1_a.png');
+    updateUserImageUrl = jest.fn().mockResolvedValue(undefined);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [ProfilesService],
@@ -20,6 +29,8 @@ describe('ProfilesService', () => {
       .useMocker((token) => {
         if (token === PrismaService) return prisma;
         if (token === ReviewsService) return { getRatingSummary };
+        if (token === S3Service) return { uploadFile };
+        if (token === UsersService) return { updateUserImageUrl };
         return {};
       })
       .compile();
@@ -104,6 +115,65 @@ describe('ProfilesService', () => {
 
       expect(result).toEqual({ data: null });
       expect(getRatingSummary).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('updateProfileAvatarImage', () => {
+    const makeFile = (buffer: Buffer): Express.Multer.File =>
+      ({
+        buffer,
+        originalname: 'avatar.png',
+      }) as Express.Multer.File;
+
+    it('accepts a real PNG and uploads it', async () => {
+      const pngBuffer = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0, 0, 0, 0]);
+
+      const result = await service.updateProfileAvatarImage(
+        makeFile(pngBuffer),
+        'user-1',
+      );
+
+      expect(uploadFile).toHaveBeenCalled();
+      expect(updateUserImageUrl).toHaveBeenCalledWith(
+        'user-1',
+        'https://bucket.s3.example/avatars/1_a.png',
+      );
+      expect(result.data).toEqual({
+        url: 'https://bucket.s3.example/avatars/1_a.png',
+      });
+    });
+
+    it('accepts a real JPEG and uploads it', async () => {
+      const jpegBuffer = Buffer.from([0xff, 0xd8, 0xff, 0, 0, 0, 0, 0]);
+
+      await service.updateProfileAvatarImage(makeFile(jpegBuffer), 'user-1');
+
+      expect(uploadFile).toHaveBeenCalled();
+    });
+
+    it('accepts a real WEBP and uploads it', async () => {
+      const webpBuffer = Buffer.concat([
+        Buffer.from('RIFF', 'ascii'),
+        Buffer.from([0, 0, 0, 0]),
+        Buffer.from('WEBP', 'ascii'),
+      ]);
+
+      await service.updateProfileAvatarImage(makeFile(webpBuffer), 'user-1');
+
+      expect(uploadFile).toHaveBeenCalled();
+    });
+
+    it('rejects a file whose bytes are not a real image, regardless of its claimed name', async () => {
+      // e.g. an .html or .js file renamed to look like an avatar upload --
+      // the client-supplied mimetype/fileFilter can't be trusted, only the
+      // actual bytes can.
+      const htmlBuffer = Buffer.from('<script>alert(1)</script>', 'utf-8');
+
+      await expect(
+        service.updateProfileAvatarImage(makeFile(htmlBuffer), 'user-1'),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(uploadFile).not.toHaveBeenCalled();
+      expect(updateUserImageUrl).not.toHaveBeenCalled();
     });
   });
 });

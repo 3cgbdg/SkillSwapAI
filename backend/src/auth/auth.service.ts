@@ -41,7 +41,7 @@ export class AuthService {
 
     await this.ensureUserDoesNotExist(dto.name, dto.email);
 
-    const hashedPassword = await bcrypt.hash(dto.password, 10);
+    const hashedPassword = await bcrypt.hash(dto.password, 12);
     const user = await this.prisma.user.create({
       data: {
         name: dto.name,
@@ -78,11 +78,14 @@ export class AuthService {
       where: { OR: [{ name }, { email }] },
     });
 
+    // Deliberately doesn't say whether it was the name or the email that
+    // matched: the email is also the login identifier, so confirming
+    // "Email already exists" specifically would let signup be used to
+    // enumerate which email addresses have accounts.
     if (user) {
-      if (user.name === name)
-        throw new ConflictException('Name already exists');
-      if (user.email === email)
-        throw new ConflictException('Email already exists');
+      throw new ConflictException(
+        'An account with this name or email already exists',
+      );
     }
   }
 
